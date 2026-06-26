@@ -1,0 +1,50 @@
+/* 编辑器动态变量覆盖（由 ResumePreview .resume-preview 注入） */
+.resume-template {
+  font-family: var(--font-family, 'Microsoft YaHei', sans-serif) !important;
+  font-size: var(--font-size, 13.5px) !important;
+  line-height: var(--line-height, 1.8) !important;
+}
+
+.resume-template section,
+.resume-template [class*='-section'] {
+  margin-bottom: var(--section-gap, 20px) !important;
+}
+
+.resume-template [class*='-header'] {
+  margin-bottom: var(--section-gap, 20px) !important;
+}
+
+.resume-template [class*='-title'],
+.resume-template .rt-title {
+  color: var(--skin-color, #333) !important;
+  font-size: 1.15em !important;
+  line-height: var(--line-height, 1.8) !important;
+}
+
+.resume-template h1,
+.resume-template .rt-name {
+  font-size: 2em !important;
+  line-height: var(--line-height, 1.8) !important;
+}
+
+.resume-template [class*='-header'] h1 {
+  color: inherit !important;
+}
+
+.resume-template p,
+.resume-template li,
+.resume-template [class*='-text'],
+.resume-template [class*='-desc'],
+.resume-template .rt-text,
+.resume-template .rt-desc {
+  font-size: 1em !important;
+  line-height: var(--line-height, 1.8) !important;
+}
+
+.resume-template [class*='-item-header'] strong {
+  font-size: 1.08em !important;
+}
+
+.resume-template [class*='-skill'] {
+  font-size: 0.92em !important;
+}

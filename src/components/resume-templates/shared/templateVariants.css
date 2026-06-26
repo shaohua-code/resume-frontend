@@ -1,0 +1,129 @@
+/* ========== 20 套全民简历风格变体 ========== */
+
+/* 01 全职业通用：接近全民简历 1004 */
+.rt-v01 .rt-banner { border-bottom-color: #1f2937; }
+.rt-v01 .rt-title { color: #1f2937 !important; }
+.rt-v01 .rt-item { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
+
+/* 02 简约商务：左色条，稳重蓝 */
+.rt-v02 .rt-header { padding-left: 18px; border-left: 6px solid #1e40af; }
+.rt-v02 .rt-banner { text-align: left; border: none; }
+.rt-v02 .rt-name { color: #1e3a8a; letter-spacing: 2px; }
+.rt-v02 .rt-title { color: #1e40af !important; }
+.rt-v02 .rt-item { border-left: 3px solid #dbeafe; }
+
+/* 03 应届校招：清爽蓝白 */
+.rt-v03 .rt-banner { padding: 18px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; }
+.rt-v03 .rt-name { color: #1677ff; }
+.rt-v03 .rt-title { color: #1677ff !important; }
+.rt-v03 .rt-skill { background: #e6f4ff; border-color: #91caff; color: #0958d9; }
+
+/* 04 左右分栏视觉：头部分栏，正文稳定单列 */
+.rt-v04 .rt-header { display: grid; grid-template-columns: 1fr 1.2fr; gap: 22px; align-items: stretch; }
+.rt-v04 .rt-banner { display: flex; flex-direction: column; justify-content: center; text-align: left; padding: 18px; border: none; background: #1f2937; border-radius: 10px; }
+.rt-v04 .rt-name, .rt-v04 .rt-slogan, .rt-v04 .rt-sub-en { color: #fff; }
+.rt-v04 .rt-basic-grid { grid-template-columns: 1fr; gap: 7px; }
+.rt-v04 .rt-title { color: #374151 !important; }
+
+/* 05 顶部色带：强视觉头部 */
+.rt-v05 .rt-header { padding: 22px; background: linear-gradient(135deg, #1677ff, #36cfc9); color: #fff; border-radius: 14px; }
+.rt-v05 .rt-banner { border: none; margin-bottom: 14px; }
+.rt-v05 .rt-name, .rt-v05 .rt-slogan, .rt-v05 .rt-sub-en { color: #fff; }
+.rt-v05 .rt-basic-row { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.24); }
+.rt-v05 .rt-label, .rt-v05 .rt-basic-row span { color: rgba(255,255,255,0.96); }
+.rt-v05 .rt-title { color: #1677ff !important; }
+
+/* 06 表格信息：适合传统 Word 简历 */
+.rt-v06 .rt-basic-grid { display: block; border: 1px solid #d1d5db; border-radius: 8px; overflow: hidden; }
+.rt-v06 .rt-basic-row { border: 0; border-bottom: 1px solid #e5e7eb; border-radius: 0; background: #fff; }
+.rt-v06 .rt-basic-row:last-child { border-bottom: 0; }
+.rt-v06 .rt-label { min-width: 62px; color: #111827; }
+.rt-v06 .rt-item { border-radius: 0; }
+
+/* 07 经典黑白：打印友好 */
+.rt-v07 .rt-banner { border-bottom: 2px solid #000; }
+.rt-v07 .rt-basic-row, .rt-v07 .rt-item { background: #fff; border-color: #111; border-radius: 0; }
+.rt-v07 .rt-title { color: #000 !important; letter-spacing: 2px; }
+.rt-v07 .rt-title::before { border-radius: 0; }
+.rt-v07 .rt-skill { background: #fff; border-color: #111; border-radius: 0; color: #111; }
+
+/* 08 互联网扁平：紫色圆角卡片 */
+.rt-v08 .rt-banner { padding: 18px; background: linear-gradient(135deg, #ede9fe, #f5f3ff); border: 0; border-radius: 16px; }
+.rt-v08 .rt-name { color: #6d28d9; }
+.rt-v08 .rt-title { color: #7c3aed !important; }
+.rt-v08 .rt-item, .rt-v08 .rt-basic-row { border-color: #ddd6fe; background: #faf5ff; }
+.rt-v08 .rt-skill { background: #ede9fe; border-color: #c4b5fd; color: #5b21b6; }
+
+/* 09 行政文职：正式列表 */
+.rt-v09 .rt-banner { border-bottom: 1px solid #9ca3af; }
+.rt-v09 .rt-title { color: #4b5563 !important; letter-spacing: 2px; }
+.rt-v09 .rt-item { border-left: 4px solid #e5e7eb; background: #fcfcfc; }
+
+/* 10 销售市场：红色强调成果 */
+.rt-v10 .rt-header { padding-bottom: 16px; border-bottom: 3px solid #f5222d; }
+.rt-v10 .rt-name { color: #cf1322; }
+.rt-v10 .rt-title { color: #f5222d !important; }
+.rt-v10 .rt-skill { background: #fff1f0; border-color: #ffa39e; color: #a8071a; }
+.rt-v10 .rt-item { border-left: 4px solid #ffccc7; }
+
+/* 11 教育培训：衬线温和 */
+.rt-v11 .rt-name { font-family: Georgia, 'Times New Roman', serif; letter-spacing: 1px; color: #78350f; }
+.rt-v11 .rt-title { font-family: Georgia, serif; color: #92400e !important; }
+.rt-v11 .rt-basic-row, .rt-v11 .rt-item { background: #fffbeb; border-color: #fde68a; }
+
+/* 12 金融会计：严谨黑灰 */
+.rt-v12 .rt-banner { border-bottom: 3px double #111827; }
+.rt-v12 .rt-title { color: #111827 !important; letter-spacing: 3px; text-transform: uppercase; }
+.rt-v12 .rt-basic-row { background: #f3f4f6; }
+.rt-v12 .rt-item { border-radius: 2px; }
+
+/* 13 设计创意：暖色轻块 */
+.rt-v13 .rt-header { padding: 18px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 16px; }
+.rt-v13 .rt-name { color: #ea580c; }
+.rt-v13 .rt-title { color: #ea580c !important; }
+.rt-v13 .rt-item { border-color: #fed7aa; background: #fffaf5; }
+.rt-v13 .rt-skill { background: #ffedd5; border-color: #fdba74; color: #9a3412; }
+
+/* 14 程序员：深色标签 + 等宽点缀 */
+.rt-v14 .rt-banner { text-align: left; padding: 18px; background: #0f172a; border: 0; border-radius: 12px; }
+.rt-v14 .rt-name, .rt-v14 .rt-slogan, .rt-v14 .rt-sub-en { color: #e2e8f0; font-family: Consolas, 'Microsoft YaHei', monospace; }
+.rt-v14 .rt-title { color: #0f172a !important; font-family: Consolas, 'Microsoft YaHei', monospace; }
+.rt-v14 .rt-title span::before { content: '$ '; color: #1677ff; }
+.rt-v14 .rt-skill { font-family: Consolas, monospace; background: #0f172a; color: #4ade80; border-color: #334155; }
+
+/* 15 中英文双语：双语标题 */
+.rt-v15 .rt-title span::after { content: ' / RESUME'; margin-left: 8px; font-size: 0.66em; color: #9ca3af; font-weight: 500; }
+.rt-v15 .rt-banner { border-bottom-color: #475569; }
+.rt-v15 .rt-name { text-transform: uppercase; }
+
+/* 16 时间轴：左侧竖线 */
+.rt-v16 .rt-item { position: relative; margin-left: 10px; padding-left: 20px; border-left: 3px solid #1677ff; }
+.rt-v16 .rt-item::before { content: ''; position: absolute; left: -7px; top: 16px; width: 10px; height: 10px; background: #fff; border: 3px solid #1677ff; border-radius: 50%; }
+.rt-v16 .rt-item-header span { color: #1677ff; font-weight: 700; }
+
+/* 17 技能进度：强化进度条 */
+.rt-v17 .rt-title { color: #1677ff !important; }
+.rt-v17 .rt-skill-bar-track { height: 10px; background: #e6f4ff; }
+.rt-v17 .rt-skill-bar-fill { background: linear-gradient(90deg, #1677ff, #36cfc9); }
+
+/* 18 极简线条：只保留线条 */
+.rt-v18 .rt-basic-row, .rt-v18 .rt-item { background: transparent; border: 0; border-bottom: 1px solid #e5e7eb; border-radius: 0; padding-left: 0; padding-right: 0; }
+.rt-v18 .rt-title { color: #111827 !important; }
+.rt-v18 .rt-title::before { display: none; }
+.rt-v18 .rt-title::after { background: #111827; }
+.rt-v18 .rt-skill { background: transparent; border: 0; border-bottom: 1px dotted #9ca3af; border-radius: 0; padding: 2px 4px; }
+
+/* 19 信封封面：封面感头部 */
+.rt-v19 .rt-header { padding: 32px 24px; border: 2px solid #1f2937; margin-bottom: 26px; }
+.rt-v19 .rt-banner { border: 0; margin-bottom: 0; padding-bottom: 0; }
+.rt-v19 .rt-basic-grid { display: none; }
+.rt-v19 .rt-slogan { margin-top: 12px; font-size: 15px; letter-spacing: 4px; }
+.rt-v19 .rt-sub-en { letter-spacing: 5px; }
+
+/* 20 高端 Executive：高级留白 */
+.rt-v20 .rt-name { font-size: 32px !important; letter-spacing: 6px; font-weight: 300; }
+.rt-v20 .rt-banner { border: none; text-align: left; }
+.rt-v20 .rt-header { padding-bottom: 18px; border-bottom: 1px solid #d1d5db; }
+.rt-v20 .rt-item { margin-bottom: 10px; padding: 8px 0; border: 0; border-bottom: 1px solid #f1f5f9; border-radius: 0; }
+.rt-v20 .rt-title { color: #111827 !important; font-weight: 500; letter-spacing: 4px; text-transform: uppercase; }
+.rt-v20 .rt-title::before { display: none; }
