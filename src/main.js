@@ -15,7 +15,7 @@ import './styles/global.css'
 dayjs.locale('zh-cn')
 
 const app = createApp(App)
-console.log('Vite API URL:', import.meta.env.VITE_API_URL);
+console.log('Vite APIww URL:', import.meta.env.VITE_API_URL);
 
 app.use(createPinia()) // Pinia 状态管理
 app.use(router) // Vue Router 路由
