@@ -3,7 +3,7 @@
 -->
 <script setup>
 import { ref, watch, nextTick } from 'vue'
-import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
+import { LeftOutlined, RightOutlined, UpOutlined, DownOutlined } from '@ant-design/icons-vue'
 import ResumeEditorForm from './ResumeEditorForm.vue'
 
 const resume = defineModel({ type: Object, required: true })
@@ -16,6 +16,9 @@ const props = defineProps({
 
 const tabScrollRef = ref(null)
 const formRef = ref(null)
+
+// 整个编辑面板的折叠状态（true=收起，false=展开）
+const collapsed = ref(false)
 
 // 切换 Tab
 function selectTab(key) {
@@ -55,9 +58,7 @@ defineExpose({ scrollToModule, modules })
 <template>
   <div class="edit-panel">
     <div class="edit-top">
-      <a-button type="text" size="small" class="tab-scroll-btn" @click="scrollTabs(-1)">
-        <LeftOutlined />
-      </a-button>
+      
       <div ref="tabScrollRef" class="edit-tab-scroll">
         <ul class="edit-tab">
           <li
@@ -78,12 +79,15 @@ defineExpose({ scrollToModule, modules })
           </li>
         </ul>
       </div>
-      <a-button type="text" size="small" class="tab-scroll-btn" @click="scrollTabs(1)">
-        <RightOutlined />
-      </a-button>
+
     </div>
 
-    <div ref="editContentRef" class="edit-content">
+    <!-- 中央浮动折叠按钮 -->
+    <div class="panel-collapse-fab" :class="{ collapsed }" @click="collapsed = !collapsed">
+      <component :is="collapsed ? UpOutlined : DownOutlined" />
+    </div>
+
+    <div v-show="!collapsed" ref="editContentRef" class="edit-content">
       <ResumeEditorForm
         ref="formRef"
         v-model="resume"
@@ -115,6 +119,33 @@ defineExpose({ scrollToModule, modules })
 }
 .tab-scroll-btn {
   flex-shrink: 0;
+}
+.panel-collapse-fab {
+  position: absolute;
+  /* 半圆：与编辑面板 Tab 栏同色，视觉上融为一体 */
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 22px;
+  background: #fafafa;             /* 与 .edit-top 同色，融为一体 */
+  border: 1px solid #f0f0f0;      /* 与 .edit-top 底边线同色 */
+  border-bottom: none;            /* 底部无边框，与面板顶部融合 */
+  border-radius: 22px 22px 0 0;   /* 顶部圆角，底部直角（半圆） */
+  /* 阴影：只在底部投影，模拟面板边缘被"切开"的自然阴影 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #1677ff;
+  font-size: 12px;
+  z-index: 60;
+  transition: all 0.2s;
+}
+.panel-collapse-fab:hover {
+  background: #f0f7ff;             /* 悬停时浅蓝高亮 */
+  color: #4096ff;
 }
 .edit-tab-scroll {
   flex: 1;
