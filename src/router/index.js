@@ -4,6 +4,8 @@
  * 需要登录的页面通过 meta.requireAuth 标记，路由守卫自动跳转登录
  */
 import { createRouter, createWebHistory } from 'vue-router'
+import { message } from 'ant-design-vue'
+import { useUserStore } from '@/stores/user'
 
 const routes = [
   {
@@ -42,6 +44,12 @@ const routes = [
     component: () => import('@/views/UserCenter.vue'),
     meta: { title: '用户中心', requireAuth: true },
   },
+  {
+    path: '/admin',
+    name: 'AdminDashboard',
+    component: () => import('@/views/admin/AdminDashboard.vue'),
+    meta: { title: '管理后台', requireAuth: true, roles: ['SUPER_ADMIN', 'ADMIN'], hideLayout: true },
+  },
 ]
 
 const router = createRouter({
@@ -55,6 +63,15 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
   if (to.meta.requireAuth && !token) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
+  } else if (to.meta.roles) {
+    const userStore = useUserStore()
+    // 前端路由只做访问提示，后端接口仍会再次校验角色和权限
+    if (!to.meta.roles.includes(userStore.role)) {
+      message.error('无权访问该页面')
+      next('/')
+      return
+    }
+    next()
   } else {
     next()
   }

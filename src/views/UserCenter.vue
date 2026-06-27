@@ -13,7 +13,13 @@
         <div class="user-detail">
           <h3>{{ userStore.userInfo.nickname }}</h3>
           <p>{{ userStore.userInfo.email }}</p>
+          <div style="margin-top: 8px">
+            <a-tag :color="getRoleColor(userStore.role)">{{ getRoleLabel(userStore.role) }}</a-tag>
+            <a-tag :color="userStore.userInfo.status === 'BANNED' ? 'red' : 'green'">{{ getStatusLabel(userStore.userInfo.status) }}</a-tag>
+          </div>
+          <p style="margin-top: 8px">{{ vipStatusText }}</p>
         </div>
+        <a-button v-if="userStore.role === 'USER'" type="primary" @click="$router.push('/user')">升级VIP</a-button>
         <a-button danger @click="handleLogout">退出登录</a-button>
       </div>
     </a-card>
@@ -46,16 +52,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted, h } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useResumeStore } from '@/stores/resume'
+import { getRoleColor, getRoleLabel, getStatusLabel, getVipStatusText } from '@/constants/roles'
 
 const router = useRouter()
 const userStore = useUserStore()
 const resumeStore = useResumeStore()
 const loading = ref(false)
+const vipStatusText = computed(() => getVipStatusText(userStore.userInfo))
 
 import { getTemplateName } from '@/constants/templateNames'
 const columns = [

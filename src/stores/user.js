@@ -17,6 +17,10 @@ export const useUserStore = defineStore('user', () => {
 
   // 是否已登录
   const isLoggedIn = computed(() => !!token.value)
+  const role = computed(() => userInfo.value.role || 'USER')
+  const permissions = computed(() => userInfo.value.permissions || [])
+  const isAdmin = computed(() => ['SUPER_ADMIN', 'ADMIN'].includes(role.value))
+  const isVip = computed(() => ['VIP', 'SUPER_ADMIN', 'ADMIN'].includes(role.value))
 
   // 是否正在刷新 token，防止并发刷新
   let isRefreshing = false
@@ -27,6 +31,17 @@ export const useUserStore = defineStore('user', () => {
     token.value = res.token
     refreshTokenValue.value = res.refresh_token || refreshTokenValue.value
     expiresAt.value = res.expires_at || 0
+    // 刷新 token 时同步后端返回的最新角色和权限，避免后台改角色后前端仍使用旧状态
+    if (res.role || res.permissions) {
+      userInfo.value = {
+        ...userInfo.value,
+        role: res.role || userInfo.value.role || 'USER',
+        status: res.status || userInfo.value.status || 'ACTIVE',
+        vipExpireTime: res.vip_expire_time || userInfo.value.vipExpireTime || '',
+        permissions: res.permissions || userInfo.value.permissions || [],
+      }
+      localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
+    }
     localStorage.setItem('token', token.value)
     localStorage.setItem('refresh_token', refreshTokenValue.value)
     localStorage.setItem('expires_at', String(expiresAt.value))
@@ -44,7 +59,15 @@ export const useUserStore = defineStore('user', () => {
   // 登录
   async function login(email, code) {
     const res = await loginApi(email, code)
-    userInfo.value = { email: res.email, nickname: res.nickname }
+    userInfo.value = {
+      userId: res.user_id,
+      email: res.email,
+      nickname: res.nickname,
+      role: res.role || 'USER',
+      status: res.status || 'ACTIVE',
+      vipExpireTime: res.vip_expire_time || '',
+      permissions: res.permissions || [],
+    }
     localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
     persistAuth(res)
     message.success('登录成功')
@@ -79,6 +102,11 @@ export const useUserStore = defineStore('user', () => {
     return expiresAt.value * 1000 - Date.now() < 5 * 60 * 1000
   }
 
+  // 前端只负责显示和路由提示，最终权限仍以后端接口校验为准
+  function hasPermission(permission) {
+    return permissions.value.includes(permission)
+  }
+
   // 获取有效 token，必要时自动刷新
   async function getValidToken() {
     if (!token.value) throw new Error('not logged in')
@@ -106,11 +134,16 @@ export const useUserStore = defineStore('user', () => {
     refreshTokenValue,
     expiresAt,
     userInfo,
+    role,
+    permissions,
+    isAdmin,
+    isVip,
     isLoggedIn,
     sendCode,
     login,
     doRefreshToken,
     isTokenExpiringSoon,
+    hasPermission,
     getValidToken,
     logout,
   }

@@ -8,6 +8,8 @@ import { useRoute } from 'vue-router'
 import { DownloadOutlined, CheckOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { useResumeStore } from '@/stores/resume'
+import { useUserStore } from '@/stores/user'
+import { exportResume as exportResumeApi } from '@/api/resume'
 import {
   DEFAULT_SPACING,
   DEFAULT_FONT_SIZE,
@@ -23,6 +25,7 @@ import ResumePreview from '@/components/resume-editor/ResumePreview.vue'
 
 const route = useRoute()
 const resumeStore = useResumeStore()
+const userStore = useUserStore()
 
 const templateId = ref(clampTemplateId(resumeStore.currentTemplateId))
 const currentResumeId = ref(resumeStore.currentResumeId)
@@ -178,9 +181,25 @@ async function handleSave() {
   }
 }
 
+async function ensureCanExport() {
+  if (!userStore.isVip) {
+    message.warning('普通用户暂不支持导出，请升级 VIP 后使用')
+    return false
+  }
+  // 导出前通知后端记录导出行为，同时让后端再次校验 VIP / 管理员权限
+  const saved = await saveResumeData({ silent: true })
+  if (saved?.id) {
+    await exportResumeApi(saved.id)
+    return true
+  }
+  return false
+}
+
 async function handleExportPDF() {
   exporting.value = true
   try {
+    const canExport = await ensureCanExport()
+    if (!canExport) return
     const pages = previewRef.value?.getPdfPageElements?.()
     if (!pages?.length) {
       message.error('未找到简历内容')
@@ -245,6 +264,8 @@ async function handleExportPDF() {
 async function handleExportWord() {
   exporting.value = true
   try {
+    const canExport = await ensureCanExport()
+    if (!canExport) return
     const htmlContent = previewRef.value?.getWordHtml?.()
     if (!htmlContent) {
       message.error('未找到简历内容')
@@ -274,6 +295,40 @@ async function handleExportWord() {
   } catch (e) {
     console.error('[导出Word失败]', e)
     message.error('Word导出失败')
+  } finally {
+    exporting.value = false
+  }
+}
+
+function buildMarkdownList(title, items = []) {
+  if (!items.length) return ''
+  return `\n## ${title}\n${items.map((item) => `- ${item}`).join('\n')}\n`
+}
+
+function buildMarkdownResume() {
+  const projectText = (resume.projects || []).map((item) => {
+    const techStack = Array.isArray(item.tech_stack) ? item.tech_stack.join('、') : item.tech_stack || ''
+    return `### ${item.name || '项目经历'}\n- 角色：${item.role || ''}\n- 时间：${item.start_date || ''} - ${item.end_date || ''}\n- 技术栈：${techStack}\n- 描述：${item.description || ''}`
+  }).join('\n\n')
+  const internshipText = (resume.internships || []).map((item) => {
+    return `### ${item.company || '实习经历'}\n- 岗位：${item.position || ''}\n- 时间：${item.start_date || ''} - ${item.end_date || ''}\n- 描述：${item.description || ''}`
+  }).join('\n\n')
+  // Markdown 导出使用当前编辑态数据，方便 VIP 下载可二次编辑的文本版本
+  return `# ${resume.name || '个人简历'}\n\n${resume.phone || ''} ${resume.email || ''}\n\n## 个人简介\n${resume.summary || ''}\n${buildMarkdownList('技能标签', resume.skills || [])}\n## 项目经历\n${projectText || '暂无'}\n\n## 实习经历\n${internshipText || '暂无'}\n${buildMarkdownList('获奖经历', resume.awards || [])}${buildMarkdownList('证书', resume.certificates || [])}`
+}
+
+async function handleExportMarkdown() {
+  exporting.value = true
+  try {
+    const canExport = await ensureCanExport()
+    if (!canExport) return
+    const { saveAs } = await import('file-saver')
+    const blob = new Blob([buildMarkdownResume()], { type: 'text/markdown;charset=utf-8' })
+    saveAs(blob, `${resume.name || '简历'}_AI简历助手.md`)
+    message.success('Markdown导出成功')
+  } catch (e) {
+    console.error('[导出Markdown失败]', e)
+    message.error('Markdown导出失败')
   } finally {
     exporting.value = false
   }
@@ -344,6 +399,7 @@ onMounted(async () => {
             <a-menu>
               <a-menu-item key="pdf" @click="handleExportPDF">导出 PDF（高清打印）</a-menu-item>
               <a-menu-item key="word" @click="handleExportWord">导出 Word（可编辑）</a-menu-item>
+              <a-menu-item key="markdown" @click="handleExportMarkdown">导出 Markdown（VIP）</a-menu-item>
             </a-menu>
           </template>
         </a-dropdown>

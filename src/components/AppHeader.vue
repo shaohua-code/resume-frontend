@@ -14,6 +14,7 @@
         <a-menu-item key="generate" @click="navTo('/generate')">生成简历</a-menu-item>
         <a-menu-item key="upload" @click="navTo('/upload-optimize')">上传优化</a-menu-item>
         <a-menu-item key="user" @click="navTo('/user')">用户中心</a-menu-item>
+        <a-menu-item v-if="userStore.isAdmin" key="admin" @click="navTo('/admin')">管理后台</a-menu-item>
       </a-menu>
       <div class="header-right">
         <template v-if="userStore.isLoggedIn">
@@ -21,9 +22,14 @@
             <a-button type="text" class="user-btn">
               <UserOutlined />
               <span class="user-name">{{ userStore.userInfo.nickname }}</span>
+              <a-tag :color="getRoleColor(userStore.role)" style="margin-left: 8px">{{ getRoleLabel(userStore.role) }}</a-tag>
             </a-button>
             <template #overlay>
               <a-menu>
+                <a-menu-item disabled>
+                  我的角色：{{ getRoleLabel(userStore.role) }}
+                </a-menu-item>
+                <a-menu-divider />
                 <a-menu-item @click="$router.push('/user')">
                   <UserOutlined /> 个人中心
                 </a-menu-item>
@@ -48,13 +54,14 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { UserOutlined, LogoutOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
+import { getRoleColor, getRoleLabel } from '@/constants/roles'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
 const selectedKeys = computed(() => {
-  const map = { '/': ['home'], '/generate': ['generate'], '/upload-optimize': ['upload'], '/user': ['user'] }
+  const map = { '/': ['home'], '/generate': ['generate'], '/upload-optimize': ['upload'], '/user': ['user'], '/admin': ['admin'] }
   return map[route.path] || ['home']
 })
 

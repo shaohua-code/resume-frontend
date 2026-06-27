@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /**
  * 全局样式
  * 定义基础样式变量、通用布局、滚动条美化等
@@ -15,6 +19,22 @@
   --border-color: #e8e8e8;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   --radius: 8px;
+
+  /* 后台 Dashboard V2 设计 token：作为颜色/阴影/圆角的单一来源，便于后续接入暗黑模式 */
+  --admin-primary: #2563eb;
+  --admin-success: #22c55e;
+  --admin-warning: #f59e0b;
+  --admin-danger: #ef4444;
+  --admin-canvas: #f8fafc;
+  --admin-card: #ffffff;
+  --admin-ink: #1e293b;
+  --admin-muted: #64748b;
+  --admin-line: #e2e8f0;
+  --admin-sidebar: #0f172a;
+  --admin-radius-card: 18px;
+  --admin-radius-banner: 20px;
+  --admin-shadow-soft: 0 4px 20px rgba(15, 23, 42, 0.06);
+  --admin-shadow-lift: 0 12px 32px rgba(37, 99, 235, 0.18);
 }
 
 * {
