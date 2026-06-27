@@ -8,8 +8,13 @@ import { message } from 'ant-design-vue'
 import router from '@/router'
 import { useUserStore } from '@/stores/user'
 
+// 读取 Vite 环境变量：VITE_API_URL 在 Vercel 项目环境变量中配置
+// 本地开发：.env.local 中设置 VITE_API_URL=/（或留空，Vite proxy 会处理 /api）
+// 生产环境：设置为 https://resume-backend-node.onrender.com
+const API_BASE = import.meta.env.VITE_API_URL || ''
+
 const request = axios.create({
-  baseURL: '/api', // 代理到后端 http://localhost:8000/api
+  baseURL: `${API_BASE}/api`,
   timeout: 60000, // 超时60秒（AI生成可能较慢）
 })
 
