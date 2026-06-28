@@ -1,41 +1,142 @@
 <!--
   登录页
-  邮箱验证码登录，首次登录自动注册
-  全屏居中卡片布局
+  两种登录方式 Tab 切换：
+  1. 账号密码登录（用户名/邮箱 + 密码）
+  2. 邮箱验证码登录（首次自动注册）
+  底部提供注册链接
 -->
 <template>
-  <div class="login-page">
-    <div class="login-card">
-      <div class="login-header">
-        <img src="/vite.svg" alt="Logo" class="login-logo" />
-        <h2>AI简历助手</h2>
-        <p>邮箱验证码登录，首次登录自动注册</p>
+  <!-- 外层全屏渐变背景容器 -->
+  <div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-700 p-5">
+    <!-- 登录卡片 -->
+    <div class="w-[420px] rounded-xl bg-white p-10 shadow-2xl">
+      <!-- 顶部 Logo + 标题 -->
+      <div class="mb-6 text-center">
+        <img src="/vite.svg" alt="Logo" class="mx-auto mb-3 h-12 w-12" />
+        <h2 class="mb-1 text-2xl font-bold">AI简历助手</h2>
+        <p class="text-sm text-gray-400">专业简历，让求职更简单</p>
       </div>
-      <a-form :model="form" layout="vertical" @finish="handleLogin" class="login-form">
-        <a-form-item label="邮箱" name="email" :rules="[{ required: true, type: 'email', message: '请输入有效的邮箱地址' }]">
-          <a-input v-model:value="form.email" placeholder="请输入邮箱" size="large" />
-        </a-form-item>
-        <a-form-item label="验证码" name="code" :rules="[{ required: true, message: '请输入验证码' }]">
-          <a-input v-model:value="form.code" placeholder="请输入验证码" size="large">
-            <template #suffix>
-              <a-button type="link" :disabled="countdown > 0" @click="handleSendCode" :loading="sending">
-                {{ countdown > 0 ? `${countdown}s后重发` : '获取验证码' }}
+
+      <!-- 登录方式 Tab 切换 -->
+      <a-tabs :active-key="activeTab" centered @change="activeTab = $event">
+        <!-- Tab 1: 账号密码登录 -->
+        <a-tab-pane key="password" tab="账号密码">
+          <a-form
+            :model="pwdForm"
+            layout="vertical"
+            class="mt-2"
+            @finish="handlePasswordLogin"
+          >
+            <a-form-item
+              label="用户名/邮箱"
+              name="identifier"
+              :rules="[{ required: true, message: '请输入用户名或邮箱' }]"
+            >
+              <a-input
+                :value="pwdForm.identifier"
+                placeholder="请输入用户名或邮箱"
+                size="large"
+                autocomplete="username"
+                @update:value="pwdForm.identifier = $event"
+              />
+            </a-form-item>
+            <a-form-item
+              label="密码"
+              name="password"
+              :rules="[{ required: true, message: '请输入密码' }]"
+            >
+              <a-input-password
+                :value="pwdForm.password"
+                placeholder="请输入密码"
+                size="large"
+                autocomplete="current-password"
+                @update:value="pwdForm.password = $event"
+              />
+            </a-form-item>
+            <a-form-item>
+              <a-button
+                type="primary"
+                html-type="submit"
+                size="large"
+                block
+                :loading="pwdLogging"
+              >
+                登录
               </a-button>
-            </template>
-          </a-input>
-        </a-form-item>
-        <a-form-item>
-          <a-button type="primary" html-type="submit" size="large" block :loading="logging">
-            登录
-          </a-button>
-        </a-form-item>
-      </a-form>
+            </a-form-item>
+          </a-form>
+        </a-tab-pane>
+
+        <!-- Tab 2: 邮箱验证码登录 -->
+        <a-tab-pane key="code" tab="邮箱验证码">
+          <a-form
+            :model="codeForm"
+            layout="vertical"
+            class="mt-2"
+            @finish="handleCodeLogin"
+          >
+            <a-form-item
+              label="邮箱"
+              name="email"
+              :rules="[{ required: true, type: 'email', message: '请输入有效的邮箱地址' }]"
+            >
+              <a-input
+                :value="codeForm.email"
+                placeholder="请输入邮箱"
+                size="large"
+                @update:value="codeForm.email = $event"
+              />
+            </a-form-item>
+            <a-form-item
+              label="验证码"
+              name="code"
+              :rules="[{ required: true, message: '请输入验证码' }]"
+            >
+              <a-input
+                :value="codeForm.code"
+                placeholder="请输入验证码"
+                size="large"
+                @update:value="codeForm.code = $event"
+              >
+                <template #suffix>
+                  <a-button
+                    type="link"
+                    :disabled="codeCountdown > 0"
+                    @click="handleSendCode"
+                    :loading="sending"
+                  >
+                    {{ codeCountdown > 0 ? `${codeCountdown}s后重发` : '获取验证码' }}
+                  </a-button>
+                </template>
+              </a-input>
+            </a-form-item>
+            <a-form-item>
+              <a-button
+                type="primary"
+                html-type="submit"
+                size="large"
+                block
+                :loading="codeLogging"
+              >
+                登录
+              </a-button>
+            </a-form-item>
+            <!-- 首次验证码登录会自动注册提示 -->
+            <p class="-mt-2 text-center text-xs text-gray-400">首次使用将自动注册账号</p>
+          </a-form>
+        </a-tab-pane>
+      </a-tabs>
+
+      <!-- 底部注册引导 -->
+      <div class="mt-4 text-center text-sm text-gray-400">
+        还没有账号？<router-link to="/register" class="font-medium text-blue-600 hover:underline">立即注册</router-link>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 
@@ -43,75 +144,77 @@ const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 
-const form = reactive({ email: '', code: '' })
+// 当前激活的 Tab：password=账号密码 / code=邮箱验证码
+const activeTab = ref('password')
+
+// ===== Tab 1: 账号密码登录 =====
+const pwdForm = reactive({ identifier: '', password: '' })
+const pwdLogging = ref(false)
+
+// 账号密码登录处理：调用 store 登录后跳转
+async function handlePasswordLogin() {
+  pwdLogging.value = true
+  try {
+    await userStore.loginWithPassword(pwdForm.identifier, pwdForm.password)
+    const redirect = route.query.redirect || '/generate'
+    router.push(redirect)
+  } finally {
+    pwdLogging.value = false
+  }
+}
+
+// ===== Tab 2: 邮箱验证码登录 =====
+const codeForm = reactive({ email: '', code: '' })
 const sending = ref(false)
-const logging = ref(false)
-const countdown = ref(0)
+const codeLogging = ref(false)
+const codeCountdown = ref(0)
 let timer = null
 
+// 发送验证码：调用后端发送邮件，同时启动 60s 倒计时
 async function handleSendCode() {
-  if (!form.email) {
-    return
-  }
+  if (!codeForm.email) return
   sending.value = true
   try {
-    const res = await userStore.sendCode(form.email)
-    // 开发环境下验证码直接返回，自动填入
+    const res = await userStore.sendCode(codeForm.email)
+    // 开发环境下后端可能直接返回验证码，自动填入
     if (res?.code) {
-      form.code = res.code
+      codeForm.code = res.code
     }
-    countdown.value = 60
+    // 启动 60s 倒计时，防止频繁发送
+    codeCountdown.value = 60
     timer = setInterval(() => {
-      countdown.value--
-      if (countdown.value <= 0) clearInterval(timer)
+      codeCountdown.value--
+      if (codeCountdown.value <= 0 && timer) {
+        clearInterval(timer)
+        timer = null
+      }
     }, 1000)
   } finally {
     sending.value = false
   }
 }
 
-async function handleLogin() {
-  logging.value = true
+// 验证码登录处理：调用 store 登录后跳转
+async function handleCodeLogin() {
+  codeLogging.value = true
   try {
-    await userStore.login(form.email, form.code)
+    await userStore.login(codeForm.email, codeForm.code)
     const redirect = route.query.redirect || '/generate'
     router.push(redirect)
   } finally {
-    logging.value = false
+    codeLogging.value = false
   }
 }
+
+// 组件卸载时清除倒计时定时器，避免内存泄漏
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
 </script>
 
 <style scoped>
-.login-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-.login-card {
-  width: 400px;
-  padding: 40px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-}
-.login-header {
-  text-align: center;
-  margin-bottom: 32px;
-}
-.login-logo {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 12px;
-}
-.login-header h2 {
-  font-size: 24px;
-  margin-bottom: 4px;
-}
-.login-header p {
-  color: var(--text-secondary);
-  font-size: 14px;
+/* Ant Design Tabs 内部样式需要 :deep 穿透，Tailwind 无法替代 */
+:deep(.ant-tabs-nav) {
+  margin-bottom: 20px;
 }
 </style>

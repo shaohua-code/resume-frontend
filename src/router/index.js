@@ -21,6 +21,12 @@ const routes = [
     meta: { title: '登录', hideLayout: true },
   },
   {
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/Register.vue'),
+    meta: { title: '注册', hideLayout: true },
+  },
+  {
     path: '/generate',
     name: 'Generate',
     component: () => import('@/views/Generate.vue'),

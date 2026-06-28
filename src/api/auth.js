@@ -1,6 +1,9 @@
 /**
  * 认证相关API
- * 发送验证码、验证码登录、刷新 token
+ * - sendCode / login: 邮箱验证码登录
+ * - register: 邮箱验证码 + 用户名 + 密码注册
+ * - loginPassword: 用户名/邮箱 + 密码登录
+ * - refreshToken: 刷新 token
  */
 import request from '@/utils/request'
 
@@ -12,6 +15,16 @@ export function sendCode(email) {
 /** 验证码登录 */
 export function login(email, code) {
   return request.post('/auth/login', { email, code })
+}
+
+/** 邮箱验证码 + 用户名 + 密码注册 */
+export function register(payload) {
+  return request.post('/auth/register', payload)
+}
+
+/** 用户名/邮箱 + 密码登录 */
+export function loginPassword(identifier, password) {
+  return request.post('/auth/loginPassword', { identifier, password })
 }
 
 /** 使用 refresh_token 换取新的 access_token */

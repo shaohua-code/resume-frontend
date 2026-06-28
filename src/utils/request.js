@@ -18,11 +18,18 @@ const request = axios.create({
   timeout: 60000, // 超时60秒（AI生成可能较慢）
 })
 
+// 无需登录即可访问的认证接口，注册/登录页调用时不应触发跳转登录
+const PUBLIC_AUTH_PATHS = ['/auth/sendCode', '/auth/login', '/auth/register', '/auth/loginPassword', '/auth/refresh']
+
+function isPublicAuthRequest(url = '') {
+  return PUBLIC_AUTH_PATHS.some((path) => url === path || url.endsWith(path))
+}
+
 // 请求拦截器：自动在请求头中添加JWT令牌
 request.interceptors.request.use(
   async (config) => {
-    // 刷新接口不需要带 token
-    if (config.url === '/auth/refresh') {
+    // 公开认证接口不带 token，避免未登录用户在注册/登录页被误跳转到登录页
+    if (isPublicAuthRequest(config.url)) {
       return config
     }
     try {
@@ -32,12 +39,15 @@ request.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`
       }
     } catch (e) {
-      // 获取 token 失败时直接跳登录
-      localStorage.removeItem('token')
-      localStorage.removeItem('refresh_token')
-      localStorage.removeItem('expires_at')
-      localStorage.removeItem('userInfo')
-      router.push('/login')
+      // 仅已登录态下 token 失效才清理并跳转；未登录用户继续放行（由业务页自行处理）
+      const hasAuthState = !!localStorage.getItem('token')
+      if (hasAuthState) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('refresh_token')
+        localStorage.removeItem('expires_at')
+        localStorage.removeItem('userInfo')
+        router.push('/login')
+      }
     }
     return config
   },
@@ -52,7 +62,7 @@ request.interceptors.response.use(
       const { status, data } = error.response
       const originalRequest = error.config
 
-      if (status === 401 && originalRequest.url !== '/auth/refresh') {
+      if (status === 401 && !isPublicAuthRequest(originalRequest.url)) {
         try {
           const userStore = useUserStore()
           const newToken = await userStore.doRefreshToken()
