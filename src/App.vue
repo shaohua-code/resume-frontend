@@ -17,7 +17,7 @@
 <script setup>
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
 import AppHeader from '@/components/AppHeader.vue'
-console.log('11212');
+
 
 </script>
 

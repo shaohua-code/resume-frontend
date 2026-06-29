@@ -3,7 +3,7 @@
 # 适配gitee仓库 + 腾讯云npm镜像 + 缓存清理
 
 # ===================== 配置项（根据实际情况修改）=====================
-PROJECT_DIR="/var/www/test-automation-deployment"  # 修正为实际项目目录
+PROJECT_DIR="/var/www/resume-frontend"  # 修正为实际项目目录
 NGINX_HTML_DIR="/usr/share/nginx/html" 
 GIT_BRANCH="master"                  
 YARN_CACHE_DIR="/usr/local/share/.cache/yarn"     # Yarn缓存目录（报错路径）
