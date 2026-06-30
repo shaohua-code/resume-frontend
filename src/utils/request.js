@@ -14,7 +14,7 @@ import { useUserStore } from '@/stores/user'
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
 const request = axios.create({
-  baseURL: `${API_BASE}/api`,
+  baseURL: `/api`,
   timeout: 60000, // 超时60秒（AI生成可能较慢）
 })
 
