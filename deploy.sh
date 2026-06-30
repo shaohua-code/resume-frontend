@@ -1,21 +1,35 @@
 #!/bin/bash
-LOG="/www/wwwroot/deploy_log.txt"
-echo "==== 部署开始 $(date) ====" >> $LOG
+# 前端极简部署脚本，无日志文件、无后端残留代码
+PROJECT_DIR="/var/www/resume-frontend"
+NGINX_HTML_DIR="/usr/share/nginx/html"
+GIT_BRANCH="master"
+YARN_CACHE_DIR="/usr/local/share/.cache/yarn"
 
-# 进入项目目录
-cd /www/wwwroot/resume-backend-node || echo "目录不存在" >> $LOG && exit 1
+# 清理yarn缓存
+clean_yarn(){
+    pkill -f yarn >/dev/null 2>&1
+    [ -d "$YARN_CACHE_DIR" ] && rm -rf "$YARN_CACHE_DIR"
+    mkdir -p "$(dirname $YARN_CACHE_DIR)"
+    chmod -R 775 "$(dirname $YARN_CACHE_DIR)"
+    chown -R root:root "$(dirname $YARN_CACHE_DIR)"
+    yarn config set registry https://registry.npm.taobao.org >/dev/null 2>&1
+}
 
-# 拉取代码
-echo "拉取代码" >> $LOG
-git pull origin main >> $LOG 2>&1
-[ $? -ne 0 ] && echo "git拉取失败，终止部署" >> $LOG && exit 1
+# 主流程
+clean_yarn
+cd $PROJECT_DIR || exit 1
+# 解决git仓库权限报错
+git config --global --add safe.directory "$PROJECT_DIR"
+git reset --hard
+git pull origin $GIT_BRANCH
+rm -f package-lock.json pnpm-lock.yaml yarn.lock
+yarn install --force --network-timeout 100000
+yarn run build
 
-# 安装依赖
-echo "安装依赖" >> $LOG
-npm install >> $LOG 2>&1
+# 静态文件发布到Nginx
+rm -rf $NGINX_HTML_DIR/*
+cp -r dist/* $NGINX_HTML_DIR/
+chown -R nginx:nginx $NGINX_HTML_DIR
+systemctl restart nginx >/dev/null 2>&1
 
-# pm2重启/启动
-echo "重启服务" >> $LOG
-pm2 describe resume-api >/dev/null && pm2 restart resume-api || pm2 start app.js --name resume-api >> $LOG 2>&1
-
-echo "==== 部署完成 $(date) ====" >> $LOG
+echo "前端部署执行完毕"
