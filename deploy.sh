@@ -1,38 +1,37 @@
 #!/bin/bash
-# 前端极简部署脚本 适配非root用户admin
-PROJECT_DIR="/var/www/resume-frontend"
-NGINX_HTML_DIR="/usr/share/nginx/html"
-GIT_BRANCH="master"
-YARN_CACHE_DIR="/usr/local/share/.cache/yarn"
+set -euo pipefail
+LOG_FILE="/www/wwwroot/deploy_log.txt"
+exec >> $LOG_FILE 2>&1
 
-# 清理yarn缓存
-clean_yarn(){
-    pkill -f yarn >/dev/null 2>&1 || true
-    [ -d "$YARN_CACHE_DIR" ] && rm -rf "$YARN_CACHE_DIR"
-    mkdir -p "$(dirname $YARN_CACHE_DIR)"
-    yarn config set registry https://registry.npmmirror.com >/dev/null 2>&1
-}
+echo "===== 部署开始 $(date) ====="
+PROJECT_PATH="/www/wwwroot/120.25.234.199"
 
-# 主部署流程
-clean_yarn
-# 进入前端项目目录
-cd "$PROJECT_DIR" || exit 1
-# 解决git可疑目录报错
-git config --global --add safe.directory "$PROJECT_DIR"
-# 拉取代码
-git reset --hard
-git pull origin "$GIT_BRANCH"
-# 清理锁文件
-rm -f package-lock.json pnpm-lock.yaml yarn.lock
-# 安装依赖打包
-yarn install --force --network-timeout 100000
-yarn run build
+# 新增：解决git dubious ownership 报错
+git config --global --add safe.directory "$PROJECT_PATH"
 
-# 部署静态文件到nginx
-rm -rf "$NGINX_HTML_DIR"/*
-cp -r dist/* "$NGINX_HTML_DIR/"
+# 目录校验
+if [ ! -d "$PROJECT_PATH" ]; then
+    echo "错误：目录不存在 $PROJECT_PATH"
+    exit 1
+fi
+cd "$PROJECT_PATH"
+echo "当前工作目录：$(pwd)"
 
-# 非root无法修改nginx目录归属，注释chown，只重启nginx（需sudo免密）
-sudo systemctl restart nginx >/dev/null 2>&1
+# 清理git残留锁（解决上次中断导致卡住）
+if [ -f .git/index.lock ]; then
+    echo "发现git锁文件，清理..."
+    rm -f .git/index.lock
+fi
 
-echo "前端部署完成"
+# 非交互式拉取，关闭git分页输出避免阻塞
+export GIT_PAGER=cat
+echo "执行 git pull origin main --ff-only"
+git pull --no-progress origin main --ff-only
+
+echo "执行 npm install"
+npm install
+
+echo "执行 npm run build"
+npm run build
+
+echo "===== 部署完成 $(date) ====="
