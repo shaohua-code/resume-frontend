@@ -2,6 +2,7 @@
 
 
 echo "===== 部署开始 $(date) ====="
+# 项目路径 ****重点
 PROJECT_PATH="/www/wwwroot/120.25.234.199"
 
 # 新增：解决git dubious ownership 报错
