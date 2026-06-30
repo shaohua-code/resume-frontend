@@ -18,7 +18,7 @@
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
 import AppHeader from '@/components/AppHeader.vue'
 
-console.log('测试部署是否成功');
+console.log('我是测试部署是否成功');
 
 </script>
 
