@@ -4,9 +4,9 @@
 -->
 <template>
   <a-config-provider :locale="zhCN" :theme="{ token: antdToken }">
-    <div class="relative flex min-h-screen flex-col bg-cream font-sans text-ink antialiased">
+    <div class="relative flex flex-col min-h-screen font-sans antialiased bg-cream text-ink">
       <!-- 全页背景装饰层 -->
-      <div class="page-bg pointer-events-none fixed inset-0 z-0" />
+      <div class="fixed inset-0 z-0 pointer-events-none page-bg" />
       <AppHeader v-if="!$route.meta.hideLayout" />
       <main
         class="relative z-10 flex-1 transition-all duration-300"
@@ -14,7 +14,7 @@
       >
         <router-view />
       </main>
-      <AppFooter v-if="!$route.meta.hideLayout && !$route.meta.hideFooter" />
+ 
     </div>
   </a-config-provider>
 </template>
@@ -25,7 +25,7 @@ import zhCN from 'ant-design-vue/es/locale/zh_CN'
 import { antdToken } from '@/constants/theme'
 import { useTheme } from '@/composables/useTheme'
 import AppHeader from '@/components/AppHeader.vue'
-import AppFooter from '@/components/AppFooter.vue'
+
 
 const { applyCssVariables } = useTheme()
 

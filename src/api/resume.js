@@ -218,4 +218,48 @@ export function getUploadedResume() {
 /** 删除当前用户已上传的 PDF */
 export function deleteUploadedResume() {
   return request.delete('/resume/uploadedFile')
-} 
+}
+
+/**
+ * 使用已上传的 PDF 进行 AI 流式优化（无需重新上传文件）
+ */
+export async function uploadOptimizeExistingStream(targetPosition = '', handlers = {}, model = '') {
+  const { useUserStore } = await import('@/stores/user')
+  const userStore = useUserStore()
+  const token = await userStore.getValidToken()
+
+  const response = await fetch('/api/resume/uploadOptimize/existing/stream', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({
+      target_position: targetPosition,
+      ...(model ? { model } : {}),
+    }),
+  })
+
+  if (!response.ok) {
+    let detail = '优化失败，请重试'
+    try {
+      const errJson = await response.json()
+      detail = errJson.detail || detail
+    } catch (e) {
+      /* ignore */
+    }
+    const err = new Error(detail)
+    handlers.onError?.(err)
+    throw err
+  }
+
+  return readSSEStream(response, handlers)
+}
+
+/** 使用已上传的 PDF 进行 AI 同步优化 */
+export function uploadOptimizeExisting(targetPosition = '', model = '') {
+  return request.post('/resume/uploadOptimize/existing', {
+    target_position: targetPosition,
+    ...(model ? { model } : {}),
+  })
+}

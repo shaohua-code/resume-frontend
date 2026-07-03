@@ -20,6 +20,10 @@ const props = defineProps({
     type: Number,
     default: 0.32,
   },
+  showLabel: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const visibleModules = DEFAULT_MODULES.filter((m) => m.visible).map((m) => m.key)
@@ -54,6 +58,6 @@ const innerStyle = computed(() => ({
       </div>
       <div class="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white/90 to-transparent" />
     </div>
-    <p class="mt-2 text-sm font-medium text-ink">{{ getTemplateName(templateId) }}</p>
+    <p v-if="showLabel" class="mt-2 text-sm font-medium text-ink">{{ getTemplateName(templateId) }}</p>
   </div>
 </template>

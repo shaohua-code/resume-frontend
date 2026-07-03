@@ -1,8 +1,8 @@
 <script setup>
 /**
- * 首屏双 CTA - 主按钮高亮 + 次按钮毛玻璃
+ * 首屏主 CTA - 单按钮高亮，上传入口收敛到 /generate 页内切换
  */
-import { RocketOutlined, CloudUploadOutlined } from '@ant-design/icons-vue'
+import { RocketOutlined, ThunderboltOutlined } from '@ant-design/icons-vue'
 import GradientButton from '@/components/GradientButton.vue'
 
 defineProps({
@@ -12,17 +12,21 @@ defineProps({
   },
 })
 
-const emit = defineEmits(['start', 'upload'])
+const emit = defineEmits(['start'])
 </script>
 
 <template>
-  <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-    <GradientButton variant="heroPrimary" @click="emit('start')">
-      <RocketOutlined />
-      {{ isLoggedIn ? '开始生成简历' : '立即开始' }}
-    </GradientButton>
-    <button class="btn-hero-ghost" @click="emit('upload')">
-      <CloudUploadOutlined /> 上传 PDF 优化
-    </button>
-  </div>
+  <GradientButton
+    variant="heroPrimary"
+    class="inline-flex h-10 min-w-[160px] items-center justify-center gap-2 shadow-lift transition-all duration-200 hover:shadow-float"
+    @click="emit('start')"
+  >
+    <template #prefix>
+      <RocketOutlined class="text-base text-brand" />
+    </template>
+    {{ isLoggedIn ? '开始生成简历' : '立即开始' }}
+    <template #suffix>
+      <ThunderboltOutlined class="text-base text-accent" />
+    </template>
+  </GradientButton>
 </template>

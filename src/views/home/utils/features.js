@@ -12,7 +12,7 @@ export const HOME_FEATURES = [
   {
     icon: '📄',
     title: '上传优化',
-    path: '/upload-optimize',
+    path: '/generate?mode=upload',
     desc: '上传现有 PDF 简历，AI 自动提取并整体优化重写',
     iconBg: 'bg-mint/60',
   },
@@ -47,7 +47,7 @@ export const HOME_FEATURES = [
 ]
 
 export const HOME_STATS = [
-  { value: '10', label: '分钟生成简历' },
+  { value: 'AI', label: '智能一键生成' },
   { value: '20', label: '套专业模板' },
   { value: '100', label: '分 AI 评分' },
 ]

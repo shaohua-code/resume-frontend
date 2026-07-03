@@ -18,7 +18,6 @@
         <a-menu-item key="home" @click="navTo('/')">首页</a-menu-item>
         <a-menu-item key="templates" @click="navTo('/templates')">模板预览</a-menu-item>
         <a-menu-item key="generate" @click="navTo('/generate')">生成简历</a-menu-item>
-        <a-menu-item key="upload" @click="navTo('/upload-optimize')">上传优化</a-menu-item>
         <a-menu-item key="user" @click="navTo('/user')">用户中心</a-menu-item>
         <a-menu-item v-if="userStore.isAdmin" key="admin" @click="navTo('/admin')">管理后台</a-menu-item>
       </a-menu>
@@ -65,7 +64,6 @@
         <a-menu-item key="home" @click="navToMobile('/')">首页</a-menu-item>
         <a-menu-item key="templates" @click="navToMobile('/templates')">模板预览</a-menu-item>
         <a-menu-item key="generate" @click="navToMobile('/generate')">生成简历</a-menu-item>
-        <a-menu-item key="upload" @click="navToMobile('/upload-optimize')">上传优化</a-menu-item>
         <a-menu-item key="user" @click="navToMobile('/user')">用户中心</a-menu-item>
         <a-menu-item v-if="userStore.isAdmin" key="admin" @click="navToMobile('/admin')">管理后台</a-menu-item>
       </a-menu>
@@ -95,7 +93,6 @@ const selectedKeys = computed(() => {
     '/': ['home'],
     '/templates': ['templates'],
     '/generate': ['generate'],
-    '/upload-optimize': ['upload'],
     '/user': ['user'],
     '/admin': ['admin'],
   }
@@ -104,7 +101,8 @@ const selectedKeys = computed(() => {
 
 function navTo(path) {
   const publicPaths = ['/', '/templates']
-  if (!userStore.isLoggedIn && !publicPaths.includes(path)) {
+  const pathname = path.split('?')[0]
+  if (!userStore.isLoggedIn && !publicPaths.includes(pathname)) {
     router.push('/login')
   } else {
     router.push(path)

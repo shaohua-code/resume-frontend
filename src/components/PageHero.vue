@@ -5,7 +5,7 @@
 defineProps({
   title: {
     type: String,
-    default: 'AI简历助手 · 校园版',
+    default: 'AI简历助手',
   },
   subtitle: {
     type: String,
@@ -53,19 +53,20 @@ defineProps({
         <slot name="actions" />
       </div>
 
-      <!-- 统计徽章 -->
+      <!-- 统计徽章：紧凑三列布局 -->
       <div
         v-if="stats.length"
-        class="flex flex-wrap items-center justify-center gap-4 sm:gap-8"
-        :class="compact ? 'mt-4 sm:mt-6' : 'mt-10 sm:mt-12'"
+        class="mx-auto grid max-w-sm grid-cols-3 gap-2 sm:max-w-md sm:gap-3"
+        :class="compact ? 'mt-4 sm:mt-5' : 'mt-10 sm:mt-12'"
       >
-        <template v-for="(stat, index) in stats" :key="stat.label">
-          <div v-if="index > 0" class="hidden h-12 w-px bg-white/40 sm:block" />
-          <div class="stat-glass">
-            <span class="text-4xl font-extrabold text-white drop-shadow-sm sm:text-5xl">{{ stat.value }}</span>
-            <span class="text-sm font-medium text-white/95">{{ stat.label }}</span>
-          </div>
-        </template>
+        <div
+          v-for="stat in stats"
+          :key="stat.label"
+          class="flex flex-col items-center justify-center gap-0.5 rounded-2xl border border-white/25 bg-white/15 px-2 py-2 backdrop-blur-md sm:gap-1 sm:px-3 sm:py-2.5"
+        >
+          <span class="text-base font-bold leading-none text-white drop-shadow-sm sm:text-lg">{{ stat.value }}</span>
+          <span class="text-center text-[10px] leading-tight text-white/85 sm:text-xs">{{ stat.label }}</span>
+        </div>
       </div>
 
       <!-- 额外内容插槽（如 JD 输入模块） -->

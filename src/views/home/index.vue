@@ -1,6 +1,6 @@
 <script setup>
 /**
- * 首页 - Hero + 功能卡 + 模板预览 + 信任背书 + 使用流程
+ * 首页 - Hero + 使用流程 + 功能卡 + 模板预览 + 信任背书
  */
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
@@ -26,23 +26,37 @@ function handleFeatureClick(item) {
   <div class="animate-fade-in">
     <PageHero
       compact
-      title="AI简历助手 · 校园版"
-      subtitle="不会写简历？10分钟拥有一份专业校招简历"
+      title="AI简历助手"
+      subtitle="零基础写简历，快速收获专业求职简历"
       :stats="HOME_STATS"
     >
       <template #actions>
         <HeroActions
           :is-logged-in="userStore.isLoggedIn"
           @start="navTo('/generate')"
-          @upload="navTo('/upload-optimize')"
         />
       </template>
     </PageHero>
 
-    <section class="page-container py-6 sm:py-8">
+    <section class="w-full max-w-5xl px-4 py-6 mx-auto sm:px-6 sm:py-8 lg:px-8">
+      <div class="mb-4 text-center">
+        <h2 class="section-title">使用流程</h2>
+        <p class="mt-1 section-subtitle">四步完成专业简历</p>
+      </div>
+      <GlassCard>
+        <a-steps :current="0" class="flow-steps" direction="vertical" responsive>
+          <a-step title="选择方式" description="上传 PDF 或表单填写" />
+          <a-step title="AI 生成优化" description="AI 自动生成或优化简历" />
+          <a-step title="在线编辑" description="20 套模板自由调整" />
+          <a-step title="导出投递" description="PDF / Word 一键导出" />
+        </a-steps>
+      </GlassCard>
+    </section>
+
+    <section class="py-6 page-container sm:py-8">
       <div class="mb-4 text-center sm:mb-6">
         <h2 class="section-title">核心功能</h2>
-        <p class="section-subtitle mt-1">从生成到优化，全流程 AI 辅助</p>
+        <p class="mt-1 section-subtitle">从生成到优化，全流程 AI 辅助</p>
       </div>
       <FeatureGrid :features="HOME_FEATURES" @click="handleFeatureClick" />
     </section>
@@ -50,21 +64,6 @@ function handleFeatureClick(item) {
     <TemplatePreview />
 
     <TrustOfferWall />
-
-    <section class="mx-auto w-full max-w-5xl px-4 pb-10 sm:px-6 lg:px-8">
-      <div class="mb-4 text-center">
-        <h2 class="section-title">使用流程</h2>
-        <p class="section-subtitle mt-1">四步完成专业简历</p>
-      </div>
-      <GlassCard>
-        <a-steps :current="0" class="flow-steps" direction="vertical" responsive>
-          <a-step title="填写信息" description="输入基本信息和项目经历" />
-          <a-step title="AI 生成" description="AI 自动生成专业简历" />
-          <a-step title="编辑修改" description="在线编辑和优化内容" />
-          <a-step title="导出 PDF" description="一键导出投递简历" />
-        </a-steps>
-      </GlassCard>
-    </section>
   </div>
 </template>
 

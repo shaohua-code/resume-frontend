@@ -56,9 +56,13 @@ const btnClass = computed(() => {
     :html-type="htmlType"
     @click="emit('click', $event)"
   >
-    <span v-if="variant === 'heroPrimary'" class="bg-gradient-to-r from-brand via-brand-light to-accent bg-clip-text text-transparent">
-      <slot />
-    </span>
+    <template v-if="variant === 'heroPrimary'">
+      <slot name="prefix" />
+      <span class="bg-gradient-to-r from-brand via-brand-light to-accent bg-clip-text text-transparent">
+        <slot />
+      </span>
+      <slot name="suffix" />
+    </template>
     <slot v-else />
   </a-button>
 </template>

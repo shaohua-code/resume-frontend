@@ -1,8 +1,8 @@
 <script setup>
 /**
- * 精选模板轮播 - 使用真实模板组件 + 固定演示数据
+ * 精选模板轮播 - centerMode 三列透视 + 放大中心预览
  */
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
 import TemplateMiniPreview from './TemplateMiniPreview.vue'
@@ -10,16 +10,32 @@ import { DEMO_RESUME, FEATURED_TEMPLATE_IDS } from '../utils/demoResume'
 import { TEMPLATE_LIST } from '@/constants/templateRegistry'
 
 const router = useRouter()
+const carouselRef = ref(null)
 
-// 首页轮播展示的模板列表
 const featuredTemplates = computed(() =>
   FEATURED_TEMPLATE_IDS
     .map((id) => TEMPLATE_LIST.find((t) => t.id === id))
     .filter(Boolean),
 )
 
+// 桌面三列 centerMode，移动端单列
+const carouselSettings = {
+  centerMode: true,
+  slidesToShow: 3,
+  infinite: true,
+  responsive: [
+    {
+      breakpoint: 768,
+      settings: {
+        centerMode: false,
+        slidesToShow: 1,
+      },
+    },
+  ],
+}
+
 function goGenerate() {
-  router.push('/generate')
+  router.push('/generate?mode=form')
 }
 
 function goAllTemplates() {
@@ -39,14 +55,20 @@ function goAllTemplates() {
       </button>
     </div>
 
-    <a-carousel autoplay arrows class="template-carousel">
+    <a-carousel
+      ref="carouselRef"
+      autoplay
+      arrows
+      v-bind="carouselSettings"
+      class="template-carousel"
+    >
       <template #prevArrow>
-        <div class="absolute -left-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/90 text-brand-dark shadow-card sm:-left-4 sm:h-10 sm:w-10">
+        <div class="absolute -left-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/90 text-brand-dark shadow-card sm:-left-4 sm:h-10 sm:w-10">
           <LeftOutlined />
         </div>
       </template>
       <template #nextArrow>
-        <div class="absolute -right-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/90 text-brand-dark shadow-card sm:-right-4 sm:h-10 sm:w-10">
+        <div class="absolute -right-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/90 text-brand-dark shadow-card sm:-right-4 sm:h-10 sm:w-10">
           <RightOutlined />
         </div>
       </template>
@@ -54,10 +76,16 @@ function goAllTemplates() {
       <div
         v-for="tpl in featuredTemplates"
         :key="tpl.id"
-        class="flex cursor-pointer flex-col items-center px-2 pb-4"
+        class="template-slide flex cursor-pointer flex-col items-center px-2 pb-4 pt-2"
         @click="goGenerate"
       >
-        <TemplateMiniPreview :template-id="tpl.id" :resume="DEMO_RESUME" />
+        <TemplateMiniPreview
+          :template-id="tpl.id"
+          :resume="DEMO_RESUME"
+          :scale="0.45"
+          :show-label="false"
+        />
+        <p class="mt-2 text-sm font-medium text-ink">{{ tpl.name }}</p>
       </div>
     </a-carousel>
   </section>
@@ -65,7 +93,21 @@ function goAllTemplates() {
 
 <style scoped>
 :deep(.template-carousel .slick-slide) {
-  @apply flex justify-center;
+  @apply flex justify-center transition-all duration-300 ease-out;
+}
+
+:deep(.template-carousel .slick-slide .template-slide) {
+  @apply opacity-50 transition-all duration-300 ease-out;
+  transform: scale(0.75) translateY(8px);
+}
+
+:deep(.template-carousel .slick-slide.slick-center .template-slide) {
+  @apply z-10 opacity-100;
+  transform: scale(1) translateY(0);
+}
+
+:deep(.template-carousel .slick-dots) {
+  @apply -bottom-2;
 }
 
 :deep(.template-carousel .slick-dots li button) {
@@ -74,5 +116,12 @@ function goAllTemplates() {
 
 :deep(.template-carousel .slick-dots li.slick-active button) {
   @apply bg-brand-dark;
+}
+
+@media (max-width: 767px) {
+  :deep(.template-carousel .slick-slide .template-slide) {
+    @apply scale-100 opacity-100;
+    transform: translateY(0);
+  }
 }
 </style>

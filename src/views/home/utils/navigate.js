@@ -5,7 +5,8 @@ const PUBLIC_PATHS = ['/', '/templates']
 
 export function createHomeNavigator(router, userStore) {
   return function navTo(path) {
-    if (userStore.isLoggedIn || PUBLIC_PATHS.includes(path)) {
+    const pathname = path.split('?')[0]
+    if (userStore.isLoggedIn || PUBLIC_PATHS.includes(pathname)) {
       router.push(path)
     } else {
       router.push('/login')

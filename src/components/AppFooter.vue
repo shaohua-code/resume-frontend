@@ -28,7 +28,7 @@ const footerLinks = [
       </nav>
     </div>
     <div class="border-t border-line/40 py-4 text-center">
-      <p class="text-xs text-muted">© {{ new Date().getFullYear() }} AI 简历助手 · 校园版. All rights reserved.</p>
+      <p class="text-xs text-muted">© {{ new Date().getFullYear() }} AI 简历助手. All rights reserved.</p>
     </div>
   </footer>
 </template>

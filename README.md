@@ -26,8 +26,8 @@ views/
 ├── home/index.vue          + components/ + utils/
 ├── login/index.vue         + components/ + utils/
 ├── register/index.vue
-├── generate/index.vue
-├── upload-optimize/index.vue
+├── generate/index.vue      + components/（UploadPanel、FormPanel 双模式）
+├── upload-optimize/        （旧路由，已 redirect 至 /generate?mode=upload）
 ├── user/index.vue
 ├── editor/index.vue        + components/（编辑器子组件）
 └── admin/index.vue         + components/ + utils/
@@ -89,13 +89,28 @@ src/
 | --- | --- |
 | HeroActions | 首屏双 CTA（主按钮 heroPrimary + 次按钮毛玻璃） |
 | FeatureGrid | 6 功能卡片，Hover 上浮 +「立即体验 →」 |
-| TemplatePreview | 精选模板轮播（张三演示数据 + 真实模板组件） |
-| TrustOfferWall | Offer 数量 + 名企 Logo 文字墙 |
+| TemplatePreview | 精选模板 centerMode 三列轮播（放大中心项，左右露出相邻模板） |
+| TrustOfferWall | Offer 数量 + 行业标签 + 匿名证言轮播 |
 | JdInputPanel | JD 输入模块 |
 
 模板预览页：`views/templates/index.vue`（`/templates`）展示全部 20 套模板。
 
-## 六、响应式约定
+首页模块顺序：Hero → 使用流程 → 核心功能 → 精选模板预览 → 信任背书。
+
+## 六、生成页双模式
+
+`/generate` 统一入口，顶部 `a-segmented` 切换：
+
+| 模式 | URL 参数 | 组件 | 说明 |
+| --- | --- | --- | --- |
+| 上传 PDF | `?mode=upload` | `UploadPanel.vue` | PDF 校验、流式优化、已上传简历可直接引用优化 |
+| 表单填写 | `?mode=form` | `FormPanel.vue` | 步骤式表单，项目经历选填 |
+
+旧路由 `/upload-optimize` 自动 redirect 至 `/generate?mode=upload`。
+
+Hero 数据背书（stat-glass）：紧凑胶囊 `min-w-[88px] px-4 py-2.5`，数字 `text-2xl sm:text-3xl`，标签 `text-xs sm:text-sm`。首项文案「AI / 智能一键生成」。
+
+## 七、响应式约定
 
 | 断点 | 策略 |
 | --- | --- |
@@ -108,7 +123,7 @@ src/
 
 AI 简历生成支持 SSE 流式输出（`/resume/generate/stream`），生成页 Step3 展示打字机预览。
 
-## 七、新页面开发 Checklist
+## 八、新页面开发 Checklist
 
 1. 在 `views/{page}/` 创建 `index.vue`
 2. 页面私有组件放 `components/`，工具放 `utils/`
@@ -117,7 +132,7 @@ AI 简历生成支持 SSE 流式输出（`/resume/generate/stream`），生成�
 5. 375px 宽度下验证布局
 6. 参考 [`STYLE_PROMPT.md`](STYLE_PROMPT.md) 获取 AI 风格提示词
 
-## 八、开发与构建
+## 九、开发与构建
 
 ```bash
 npm install
@@ -126,13 +141,13 @@ npm run build    # 生产构建
 npm run preview  # 预览构建
 ```
 
-## 九、注意事项
+## 十、注意事项
 
 1. **简历模板**（`components/resume-templates/`）20 套不在 UI 改造范围，避免影响 PDF 导出
 2. **编辑器组件**位于 `views/editor/components/`
 3. 环境变量：`.env.development` / `.env.production`，勿提交敏感信息
 4. VIP 权限由后端控制
 
-## 十、风格提示词
+## 十一、风格提示词
 
 新增页面或模块时，请复制 [`STYLE_PROMPT.md`](STYLE_PROMPT.md) 中的 Prompt 模板，确保视觉一致。

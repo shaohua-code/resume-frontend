@@ -47,9 +47,7 @@ const routes = [
   },
   {
     path: '/upload-optimize',
-    name: 'UploadOptimize',
-    component: () => import('@/views/upload-optimize/index.vue'),
-    meta: { title: '上传简历优化', requireAuth: true },
+    redirect: (to) => ({ path: '/generate', query: { ...to.query, mode: 'upload' } }),
   },
   {
     path: '/editor/:id?',

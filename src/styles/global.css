@@ -160,9 +160,9 @@ body {
     @apply inline-flex items-center rounded-pill border border-white/50 bg-white/30 px-4 py-1.5 text-xs font-medium text-white backdrop-blur-md;
   }
 
-  /* Hero 数据背书胶囊 - 高对比度玻璃态 */
+  /* Hero 数据背书胶囊 - 紧凑玻璃态 */
   .stat-glass {
-    @apply flex min-w-[120px] flex-col items-center gap-1 rounded-full border border-white/40 bg-white/25 px-6 py-4 backdrop-blur-xl;
+    @apply inline-flex min-w-[96px] flex-col items-center justify-center gap-1 rounded-full border border-white/40 bg-white/25 px-4 py-2.5 backdrop-blur-xl;
   }
 
   /* Hero 主 CTA - 白底实色容器，渐变文字由组件内 span 承载 */

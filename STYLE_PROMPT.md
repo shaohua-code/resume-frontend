@@ -43,22 +43,25 @@
 Semi-transparent frosted glass header (`backdrop-blur-xl`, `bg-white/70`, `border-white/60`). Logo left, horizontal `a-menu` center on desktop, `a-drawer` on mobile. Right: search icon + gradient CTA button「免费开户」.
 
 ### Hero（首屏）
-Full-width gradient hero (`--gradient-hero`). Large bold title, subtitle, **stat-glass** pill badges (large white numbers `text-4xl`, `bg-white/25 backdrop-blur-xl`), dual CTA slot via **HeroActions** (primary: white bg + gradient text `heroPrimary`; secondary: frosted ghost). Mobile compact: `py-6`, title `text-xl`. Optional JD input below.
+Full-width gradient hero (`--gradient-hero`). Large bold title, subtitle, **stat-glass** compact pill badges (`min-w-[88px] px-4 py-2.5`, numbers `text-2xl sm:text-3xl`, labels `text-xs sm:text-sm`), dual CTA slot via **HeroActions** (primary: white bg + gradient text `heroPrimary`; secondary: frosted ghost). Mobile compact: `py-6`, title `text-xl`. Optional JD input below.
 
 ### HeroActions（双 CTA）
 Primary「立即开始」/「开始生成简历」：`GradientButton variant="heroPrimary"`。Secondary「上传 PDF 优化」：`btn-ghost-sm` white border glass. No login button on hero (login stays in AppHeader).
 
 ### stat-glass（数据背书）
-`.stat-glass` — `rounded-full bg-white/25 backdrop-blur-xl border-white/40 min-w-[120px] px-6 py-4`. Number: `text-4xl font-extrabold text-white drop-shadow-sm`. Label: `text-sm text-white/95`.
+`.stat-glass` — `rounded-full bg-white/25 backdrop-blur-xl border-white/40 min-w-[88px] px-4 py-2.5`. Number: `text-2xl sm:text-3xl font-extrabold text-white drop-shadow-sm`. Label: `text-xs sm:text-sm text-white/95`. First stat:「AI / 智能一键生成」.
 
 ### FeatureCard（功能卡片）
 Responsive grid `xs=24 md=12 lg=8 xl=4`. Icon in rounded square, title, description, **「立即体验 →」** link (`text-brand-dark`). Hover: `hover:-translate-y-2 hover:shadow-card-hover`.
 
 ### TemplatePreview（精选模板轮播）
-`a-carousel` autoplay, renders real template components with fixed demo data (张三). Link to `/templates` for full gallery.
+`a-carousel` centerMode 三列透视（桌面 `slidesToShow: 3`，移动端 1 列）。中心 slide `scale(1) opacity-100`，左右相邻 `scale(0.75) opacity-50` 略微下沉。主预览 scale 提升至 0.42~0.48。真实模板组件 + 固定演示数据（张三）。Link to `/templates` for full gallery.
 
 ### TrustOfferWall（信任背书）
-Centered copy with bold offer count. Horizontal logo wall: company abbr text, `opacity-40 grayscale`.
+Centered copy with bold offer count. Industry tag wall（互联网·金融·教育等通用词，无商标，`opacity-60`）。Bottom `a-carousel` 2~3 条匿名评价，首字母圆形头像占位。
+
+### Generate Page（生成页双模式）
+`/generate` 容器页 + `a-segmented` 切换 upload/form。`UploadPanel`：PDF 上传 + 已上传简历直接优化。`FormPanel`：步骤表单，项目经历选填。URL `?mode=upload|form`。
 
 ### Templates Gallery（全部模板）
 `/templates` page — grid of all 20 templates with same demo resume data, click → `/generate`.
