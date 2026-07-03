@@ -24,7 +24,7 @@ const hasData = computed(() => props.announcements.length > 0)
 </script>
 
 <template>
-  <div class="rounded-card bg-white p-5 shadow-soft">
+  <div class="card-base">
     <h3 class="mb-4 text-base font-semibold text-ink">系统公告</h3>
 
     <EmptyState v-if="!hasData" text="暂无公告" />
@@ -33,18 +33,18 @@ const hasData = computed(() => props.announcements.length > 0)
       <li
         v-for="item in announcements"
         :key="item.id"
-        class="flex items-center gap-3 rounded-2xl border border-line p-4 transition-colors hover:bg-canvas"
+        class="flex items-center gap-3 rounded-2xl border border-line p-4 transition-colors hover:bg-cream"
       >
-        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-primary">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-lighter text-brand-dark">
           <Megaphone class="h-5 w-5" />
         </span>
         <div class="min-w-0 flex-1">
           <p class="truncate text-sm font-medium text-ink">{{ item.title }}</p>
           <p class="mt-0.5 text-xs text-muted">{{ formatTime(item.create_time) }}</p>
         </div>
-        <a-tag :color="item.enabled ? 'green' : 'default'">
+        <span :class="item.enabled ? 'badge-success' : 'tag-soft'">
           {{ item.enabled ? '已发布' : '已下线' }}
-        </a-tag>
+        </span>
       </li>
     </ul>
   </div>

@@ -7,24 +7,19 @@
   4. 优化完成后将结果写入 resumeStore.currentResume，跳转到编辑器
 -->
 <template>
-  <div class="upload-page">
-    <!-- 顶部Banner -->
-    <div class="upload-banner">
-      <div class="upload-banner-content">
-        <h1 class="upload-banner-title">
-          <FileTextOutlined class="banner-icon" /> 上传 PDF 简历，AI 一键优化
-        </h1>
-        <p class="upload-banner-desc">
-          上传你已有的 PDF 简历，填写优化方向后，AI 将按该方向提取信息并使用 STAR 法则重写
-        </p>
-      </div>
-    </div>
+  <div class="min-h-[calc(100vh-64px)] animate-fade-in pb-10">
+    <PageHero
+      compact
+      title="上传 PDF 简历，AI 一键优化"
+      subtitle="上传你已有的 PDF 简历，填写优化方向后，AI 将按该方向提取信息并使用 STAR 法则重写"
+    />
 
-    <div class="upload-container">
-      <!-- 已上传文件信息 -->
-      <a-card v-if="existingFile" class="info-card" :bordered="false">
+    <div class="relative z-10 mx-auto -mt-6 max-w-3xl px-4 sm:px-6">
+      <a-card v-if="existingFile" class="card-base mb-4" :bordered="false">
         <template #title>
-          <FileDoneOutlined /> 已上传简历（仅保留最新一份）
+          <span class="flex items-center gap-2 text-base font-semibold text-ink">
+            <FileDoneOutlined class="text-success" /> 已上传简历（仅保留最新一份）
+          </span>
         </template>
         <a-descriptions :column="2" size="small">
           <a-descriptions-item label="文件大小">
@@ -34,17 +29,19 @@
             {{ formatTime(existingFile.mtime) }}
           </a-descriptions-item>
         </a-descriptions>
-        <div class="info-actions">
-          <a-button danger @click="handleDelete" :loading="deleting">
+        <div class="mt-4 flex justify-end">
+          <button class="btn-danger" :disabled="deleting" @click="handleDelete">
             <DeleteOutlined /> 删除已上传的简历
-          </a-button>
+          </button>
         </div>
       </a-card>
 
       <!-- 上传区域 -->
-      <a-card class="form-card" :bordered="false">
+      <a-card class="card-base mb-4" :bordered="false">
         <template #title>
-          <CloudUploadOutlined /> {{ existingFile ? '替换上传（覆盖已有）' : '选择 PDF 简历' }}
+          <span class="flex items-center gap-2 text-base font-semibold text-ink">
+            <CloudUploadOutlined class="text-brand-dark" /> {{ existingFile ? '替换上传（覆盖已有）' : '选择 PDF 简历' }}
+          </span>
         </template>
 
         <a-form layout="vertical">
@@ -54,6 +51,7 @@
               placeholder="如：前端开发工程师 / 行政专员 / 财务会计 / 产品经理"
               size="large"
               allow-clear
+              class="input-field"
             />
           </a-form-item>
 
@@ -63,58 +61,62 @@
             :max-count="1"
             accept="application/pdf"
             :disabled="uploading"
+            class="glass-glow-inner rounded-card border border-dashed border-line/60 bg-white/50 transition-colors hover:border-brand/40"
           >
-            <p class="ant-upload-drag-icon">
-              <InboxOutlined />
+            <p class="ant-upload-drag-icon text-brand-dark">
+              <InboxOutlined class="text-5xl" />
             </p>
-            <p class="ant-upload-text">点击或拖拽 PDF 文件到此处</p>
-            <p class="ant-upload-hint">仅支持 PDF 格式，单个文件不超过 10MB</p>
+            <p class="ant-upload-text text-base font-medium text-ink">点击或拖拽 PDF 文件到此处</p>
+            <p class="ant-upload-hint text-sm text-muted">仅支持 PDF 格式，单个文件不超过 10MB</p>
           </a-upload-dragger>
 
-          <div v-if="uploading" class="progress-area">
-            <a-progress :percent="uploadPercent" status="active" />
-            <div class="progress-text">
+          <div v-if="uploading" class="mt-4 rounded-card bg-cream p-4">
+            <a-progress :percent="uploadPercent" status="active" stroke-color="#00D4FF" />
+            <div class="mt-2 text-center text-sm text-muted">
               {{ uploadPercent < 100 ? `上传中 ${uploadPercent}%` : 'AI 正在优化中，请稍候...' }}
             </div>
           </div>
 
-          <div class="action-buttons">
-            <a-button
-              type="primary"
-              size="large"
+          <div class="mt-6 flex flex-col-reverse items-center justify-center gap-3 sm:flex-row">
+            <button class="btn-ghost w-full sm:w-auto" @click="$router.push('/')">
+              取消
+            </button>
+            <GradientButton
+              class="w-full sm:w-auto"
+              :disabled="!fileList.length || !targetPosition.trim() || uploading"
               :loading="uploading"
-            :disabled="!fileList.length || !targetPosition.trim()"
               @click="handleSubmit"
             >
               <ThunderboltFilled /> 开始 AI 优化
-            </a-button>
-            <a-button size="large" @click="$router.push('/')">取消</a-button>
+            </GradientButton>
           </div>
         </a-form>
       </a-card>
 
       <!-- 优化结果 -->
-      <a-card v-if="optimizeResult" class="result-card" :bordered="false">
+      <a-card v-if="optimizeResult" class="mb-4 rounded-card border-0 bg-white shadow-card" :bordered="false">
         <template #title>
-          <CheckCircleFilled style="color: #52c41a" /> 优化完成
+          <span class="flex items-center gap-2 text-base font-semibold text-ink">
+            <CheckCircleFilled class="text-success" /> 优化完成
+          </span>
         </template>
 
-        <h3 style="margin-bottom: 12px">AI 优化要点</h3>
-        <ul class="notes-list">
-          <li v-for="(note, idx) in optimizeResult.optimization_notes" :key="idx">
-            <BulbOutlined style="color: #faad14" /> {{ note }}
+        <h3 class="mb-3 text-base font-semibold text-ink">AI 优化要点</h3>
+        <ul class="space-y-2">
+          <li v-for="(note, idx) in optimizeResult.optimization_notes" :key="idx" class="flex items-start gap-2 border-b border-dashed border-line/60 py-2 text-sm text-ink-secondary last:border-b-0">
+            <BulbOutlined class="mt-0.5 text-warning" /> {{ note }}
           </li>
-          <li v-if="!optimizeResult.optimization_notes?.length" class="text-muted">
+          <li v-if="!optimizeResult.optimization_notes?.length" class="py-2 text-sm text-muted">
             （AI 未返回优化要点）
           </li>
         </ul>
 
         <a-divider />
 
-        <div class="result-actions">
-          <a-button type="primary" size="large" @click="goEditor">
+        <div class="flex justify-center">
+          <GradientButton @click="goEditor">
             <EditOutlined /> 进入编辑器查看完整简历
-          </a-button>
+          </GradientButton>
         </div>
       </a-card>
     </div>
@@ -143,6 +145,8 @@ import {
   createResume as createApi,
 } from '@/api/resume'
 import { useResumeStore } from '@/stores/resume'
+import PageHero from '@/components/PageHero.vue'
+import GradientButton from '@/components/GradientButton.vue'
 
 const router = useRouter()
 const resumeStore = useResumeStore()
@@ -261,74 +265,16 @@ onMounted(fetchExisting)
 </script>
 
 <style scoped>
-.upload-page {
-  min-height: calc(100vh - 64px);
-  background: #f5f7fa;
+/* 拖拽上传区内部文字颜色统一 */
+:deep(.ant-upload-drag-icon) {
+  @apply mb-2 text-brand-dark;
 }
-.upload-banner {
-  background: linear-gradient(135deg, #722ed1 0%, #9254de 100%);
-  padding: 60px 24px;
-  text-align: center;
-  color: #fff;
+
+:deep(.ant-upload-text) {
+  @apply text-base font-medium text-ink;
 }
-.banner-icon {
-  margin-right: 8px;
-}
-.upload-banner-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 12px;
-}
-.upload-banner-desc {
-  font-size: 16px;
-  opacity: 0.9;
-}
-.upload-container {
-  max-width: 800px;
-  margin: -24px auto 40px;
-  padding: 0 16px;
-}
-.info-card,
-.form-card,
-.result-card {
-  margin-bottom: 16px;
-  border-radius: 8px;
-}
-.info-actions {
-  margin-top: 16px;
-  text-align: right;
-}
-.progress-area {
-  margin: 16px 0 8px;
-}
-.progress-text {
-  text-align: center;
-  color: var(--text-secondary, #666);
-  font-size: 13px;
-}
-.action-buttons {
-  margin-top: 24px;
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-}
-.notes-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.notes-list li {
-  padding: 8px 0;
-  border-bottom: 1px dashed #f0f0f0;
-}
-.notes-list li:last-child {
-  border-bottom: none;
-}
-.text-muted {
-  color: #999;
-}
-.result-actions {
-  text-align: center;
+
+:deep(.ant-upload-hint) {
+  @apply text-sm text-muted;
 }
 </style>

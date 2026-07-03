@@ -1,0 +1,136 @@
+<!--
+  用户中心页 - 个人信息 + 简历列表
+-->
+<template>
+  <div class="page-container animate-fade-in">
+    <h2 class="section-title mb-6">用户中心</h2>
+
+    <a-card class="card-base mb-4" :bordered="false">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <a-avatar :size="64" class="shrink-0 bg-brand-dark text-lg font-bold text-white">
+          {{ userStore.userInfo.nickname?.[0] || 'U' }}
+        </a-avatar>
+        <div class="min-w-0 flex-1">
+          <a-descriptions :column="{ xs: 1, sm: 2 }" size="small">
+            <a-descriptions-item label="昵称">{{ userStore.userInfo.nickname }}</a-descriptions-item>
+            <a-descriptions-item label="邮箱">{{ userStore.userInfo.email }}</a-descriptions-item>
+            <a-descriptions-item label="角色">
+              <span class="badge">{{ getRoleLabel(userStore.role) }}</span>
+            </a-descriptions-item>
+            <a-descriptions-item label="状态">
+              <span :class="userStore.userInfo.status === 'BANNED' ? 'bg-red-50 text-red-600' : 'bg-mint text-emerald-700'" class="inline-flex items-center rounded-pill px-2.5 py-0.5 text-xs font-medium">
+                {{ getStatusLabel(userStore.userInfo.status) }}
+              </span>
+            </a-descriptions-item>
+            <a-descriptions-item label="会员" :span="2">{{ vipStatusText }}</a-descriptions-item>
+          </a-descriptions>
+        </div>
+        <div class="flex shrink-0 flex-wrap items-center gap-3">
+          <GradientButton v-if="userStore.role === 'USER'" ghost size="small">升级 VIP</GradientButton>
+          <GradientButton ghost size="small" class="!border-danger/30 !text-danger hover:!bg-red-50" @click="handleLogout">退出登录</GradientButton>
+        </div>
+      </div>
+    </a-card>
+
+    <a-card class="card-base" :bordered="false">
+      <template #title>
+        <span class="text-base font-semibold text-ink">我的简历</span>
+      </template>
+      <template #extra>
+        <GradientButton size="small" @click="$router.push('/generate')">
+          <PlusOutlined /> 新建简历
+        </GradientButton>
+      </template>
+      <a-table
+        :data-source="resumeStore.resumeList"
+        :columns="columns"
+        :pagination="{ pageSize: 10, total: resumeStore.resumeTotal }"
+        :scroll="{ x: 'max-content' }"
+        row-key="id"
+        :loading="loading"
+        @change="handleTableChange"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'score'">
+            <a-progress :percent="record.score" size="small" :stroke-color="getScoreColor(record.score)" />
+          </template>
+          <template v-if="column.key === 'template_id'">
+            <span class="tag-soft">{{ getTemplateName(record.template_id) }}</span>
+          </template>
+          <template v-if="column.key === 'action'">
+            <div class="flex items-center gap-2">
+              <button class="link-text" @click="$router.push(`/editor/${record.id}`)">编辑</button>
+              <a-popconfirm title="确定删除？" @confirm="handleDelete(record.id)">
+                <button class="text-sm font-medium text-danger transition-colors hover:text-red-500">删除</button>
+              </a-popconfirm>
+            </div>
+          </template>
+        </template>
+        <template #emptyText>
+          <div class="empty-state py-12">
+            <div class="empty-icon">📝</div>
+            <div class="empty-title">还没有简历</div>
+            <div class="empty-desc">点击右上角新建简历，开启你的 AI 简历之旅</div>
+            <GradientButton class="mt-4" @click="$router.push('/generate')">
+              <PlusOutlined /> 新建简历
+            </GradientButton>
+          </div>
+        </template>
+      </a-table>
+    </a-card>
+  </div>
+</template>
+
+<script setup>
+import { computed, ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { PlusOutlined } from '@ant-design/icons-vue'
+import { useUserStore } from '@/stores/user'
+import { useResumeStore } from '@/stores/resume'
+import { getRoleLabel, getStatusLabel, getVipStatusText } from '@/constants/roles'
+import { getTemplateName } from '@/constants/templateNames'
+import THEME from '@/constants/theme'
+import GradientButton from '@/components/GradientButton.vue'
+
+const router = useRouter()
+const userStore = useUserStore()
+const resumeStore = useResumeStore()
+const loading = ref(false)
+const vipStatusText = computed(() => getVipStatusText(userStore.userInfo))
+
+const columns = [
+  { title: '简历标题', dataIndex: 'title', key: 'title' },
+  { title: '模板', dataIndex: 'template_id', key: 'template_id', width: 120 },
+  { title: '评分', dataIndex: 'score', key: 'score', width: 150 },
+  { title: '更新时间', dataIndex: 'update_time', key: 'update_time', width: 180 },
+  { title: '操作', key: 'action', width: 140 },
+]
+
+// 根据分数返回主题色
+function getScoreColor(score) {
+  if (score >= 80) return THEME.chart.success
+  if (score >= 60) return THEME.chart.warning
+  return THEME.chart.danger
+}
+
+onMounted(async () => {
+  loading.value = true
+  await resumeStore.fetchResumeList()
+  loading.value = false
+})
+
+async function handleTableChange(pagination) {
+  loading.value = true
+  await resumeStore.fetchResumeList(pagination.current, pagination.pageSize)
+  loading.value = false
+}
+
+async function handleDelete(id) {
+  await resumeStore.removeResume(id)
+}
+
+function handleLogout() {
+  userStore.logout()
+  router.push('/')
+}
+</script>

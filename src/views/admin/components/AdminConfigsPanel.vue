@@ -41,16 +41,16 @@ onMounted(loadConfigs)
 <template>
   <a-spin :spinning="loading">
     <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
-      <a-card v-for="item in configs" :key="item.config_key" :bordered="false" class="rounded-[28px] shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+      <a-card v-for="item in configs" :key="item.config_key" :bordered="false" class="card-base">
         <template #title>
           <div>
-            <p class="text-base font-semibold text-slate-950">{{ item.config_key }}</p>
-            <p class="mt-1 text-xs text-slate-400">系统配置项</p>
+            <p class="text-base font-semibold text-ink">{{ item.config_key }}</p>
+            <p class="mt-1 text-xs text-muted">系统配置项</p>
           </div>
         </template>
-        <a-textarea :value="configDrafts[item.config_key]" :rows="7" @update:value="configDrafts[item.config_key] = $event" />
-        <a-input :value="item.description" placeholder="配置说明" class="mt-3" @update:value="item.description = $event" />
-        <a-button type="primary" class="mt-3" @click="saveConfig(item)">保存配置</a-button>
+        <a-textarea :value="configDrafts[item.config_key]" :rows="7" class="input-field" @update:value="configDrafts[item.config_key] = $event" />
+        <a-input :value="item.description" placeholder="配置说明" class="input-field mt-3" @update:value="item.description = $event" />
+        <button class="btn-primary mt-3" @click="saveConfig(item)">保存配置</button>
       </a-card>
     </div>
   </a-spin>

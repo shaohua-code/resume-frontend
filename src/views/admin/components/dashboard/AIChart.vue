@@ -5,6 +5,7 @@
  */
 import { computed } from 'vue'
 import BaseChart from '@/components/charts/BaseChart.vue'
+import CHART_COLORS from '../../utils/chartTheme.js'
 
 const props = defineProps({
   months: {
@@ -31,13 +32,13 @@ const option = computed(() => ({
     type: 'category',
     boundaryGap: false,
     data: axisLabels.value,
-    axisLine: { lineStyle: { color: '#e2e8f0' } },
-    axisLabel: { color: '#94a3b8' },
+    axisLine: { lineStyle: { color: '#E8ECEF' } },
+    axisLabel: { color: '#9CA3AF' },
   },
   yAxis: {
     type: 'value',
-    splitLine: { lineStyle: { color: '#f1f5f9' } },
-    axisLabel: { color: '#94a3b8' },
+    splitLine: { lineStyle: { color: '#F7F9FA' } },
+    axisLabel: { color: '#9CA3AF' },
   },
   series: [
     {
@@ -46,14 +47,14 @@ const option = computed(() => ({
       smooth: true,
       showSymbol: false,
       data: props.aiTrend,
-      itemStyle: { color: '#06b6d4' },
+      itemStyle: { color: CHART_COLORS.primary },
       areaStyle: {
         color: {
           type: 'linear',
           x: 0, y: 0, x2: 0, y2: 1,
           colorStops: [
-            { offset: 0, color: 'rgba(6,182,212,0.28)' },
-            { offset: 1, color: 'rgba(37,99,235,0.02)' },
+            { offset: 0, color: 'rgba(125,211,232,0.28)' },
+            { offset: 1, color: 'rgba(125,211,232,0.02)' },
           ],
         },
       },
@@ -63,7 +64,7 @@ const option = computed(() => ({
 </script>
 
 <template>
-  <div class="rounded-card bg-white p-5 shadow-soft">
+  <div class="card-base">
     <div class="mb-2 flex items-center justify-between">
       <h3 class="text-base font-semibold text-ink">AI 调用趋势</h3>
     </div>

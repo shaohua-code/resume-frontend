@@ -26,7 +26,7 @@ const services = computed(() => [
 </script>
 
 <template>
-  <div class="rounded-card bg-white p-5 shadow-soft">
+  <div class="card-base">
     <h3 class="mb-4 text-base font-semibold text-ink">系统运行状态</h3>
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <div
@@ -37,7 +37,7 @@ const services = computed(() => [
         <div class="flex items-center gap-3">
           <span
             class="flex h-10 w-10 items-center justify-center rounded-xl"
-            :class="item.ok ? 'bg-emerald-50 text-success' : 'bg-rose-50 text-danger'"
+            :class="item.ok ? 'bg-mint text-emerald-700' : 'bg-red-50 text-danger'"
           >
             <component :is="item.icon" class="h-5 w-5" />
           </span>

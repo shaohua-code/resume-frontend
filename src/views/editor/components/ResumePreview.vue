@@ -8,9 +8,9 @@
   4. 大模块跨页时，优先保持标题完整，项目条目在合适位置拆分
 -->
 <template>
-  <div class="resume-preview-panel" ref="panelRef">
+  <div ref="panelRef" class="resume-preview-panel">
     <!-- 页面导航栏 -->
-    <div class="page-nav-bar" v-if="pageCount > 1">
+    <div v-if="pageCount > 1" class="page-nav-bar">
       <div class="page-nav-info">
         <span class="page-nav-label">共 {{ pageCount }} 页</span>
       </div>
@@ -18,7 +18,7 @@
         <a-button size="small" :disabled="currentPage <= 1" @click="scrollToPage(currentPage - 1)">
           <LeftOutlined /> 上一页
         </a-button>
-        <a-select size="small" :value="currentPage" style="width: 80px; margin: 0 8px;" @change="scrollToPage">
+        <a-select size="small" :value="currentPage" class="page-nav-select" @change="scrollToPage">
           <a-select-option v-for="p in pageCount" :key="p" :value="p">第 {{ p }} 页</a-select-option>
         </a-select>
         <a-button size="small" :disabled="currentPage >= pageCount" @click="scrollToPage(currentPage + 1)">
@@ -29,7 +29,7 @@
     </div>
 
     <!-- 多页预览：隐藏层测量高度 + 每页 overflow 窗口切片显示 -->
-    <div class="preview-stage" ref="stageRef">
+    <div ref="stageRef" class="preview-stage">
       <!-- 隐藏完整文档：用于分页计算与 PDF 导出 -->
       <div class="measure-layer" aria-hidden="true">
         <div
@@ -58,17 +58,12 @@
       >
         <div
           class="page-viewport"
-          :style="{
-            height: getPageContentHeight(n) + 'px',
-          }"
+          :style="{ height: getPageContentHeight(n) + 'px' }"
         >
           <div
             class="resume-preview"
             :class="'template-' + templateId"
-            :style="{
-              ...previewStyle,
-              marginTop: -(pageBreaks[n - 1] || 0) + 'px',
-            }"
+            :style="{ ...previewStyle, marginTop: -(pageBreaks[n - 1] || 0) + 'px' }"
             @click="handleSectionClick"
           >
             <ResumeTemplate
@@ -516,137 +511,72 @@ defineExpose({
 </script>
 
 <style scoped>
+/* 预览面板：深色背景，突出 A4 白纸 */
 .resume-preview-panel {
-  flex: 1;
-  width: 100%;
-  overflow-y: auto;
-  padding: 24px 24px 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  background: #39394d;
+  @apply relative flex w-full flex-1 flex-col items-center overflow-y-auto px-4 py-6 pb-10;
 }
 
-/* 页面导航栏 */
+/* 页面导航栏：磨砂玻璃 */
 .page-nav-bar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 210mm;
-  padding: 8px 16px;
-  margin-bottom: 16px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e8e8e8;
+  @apply sticky top-0 z-20 mb-4 flex w-[210mm] items-center justify-between rounded-card border border-line/60 bg-white/95 px-4 py-2 shadow-card backdrop-blur-md;
 }
 
 .page-nav-info {
-  display: flex;
-  align-items: center;
+  @apply flex items-center;
 }
 
 .page-nav-label {
-  font-size: 13px;
-  color: #666;
-  font-weight: 500;
+  @apply text-sm font-medium text-ink-secondary;
 }
 
 .page-nav-buttons {
-  display: flex;
-  align-items: center;
+  @apply flex items-center;
+}
+
+.page-nav-select {
+  @apply mx-2 w-24;
 }
 
 /* 多页预览舞台 */
 .preview-stage {
-  width: 210mm;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding-bottom: 40px;
-  position: relative;
+  @apply relative flex w-[210mm] flex-col gap-6 pb-10;
 }
 
 /* 隐藏测量层：移出视口 + opacity 0，保留布局且 html2canvas 可渲染克隆节点 */
 .measure-layer {
-  position: absolute;
-  left: -9999px;
-  top: 0;
-  width: 210mm;
-  opacity: 0;
-  pointer-events: none;
+  @apply pointer-events-none absolute left-[-9999px] top-0 w-[210mm] opacity-0;
 }
 
 /* 每一页：固定 A4 高度（inline style 同步），内容不足时底部留白 */
 .preview-page {
-  position: relative;
-  width: 210mm;
-  overflow: hidden;
-  background: #fff;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  border-radius: 2px;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-.page-viewport {
-  width: 210mm;
-  overflow: hidden;
-  pointer-events: auto;
+  @apply relative w-[210mm] flex-shrink-0 cursor-pointer overflow-hidden rounded-sm bg-white shadow-card transition-shadow duration-300;
 }
 
 .preview-page.active {
-  box-shadow: 0 8px 32px rgba(22, 119, 255, 0.25);
+  @apply shadow-card-hover;
+}
+
+.page-viewport {
+  @apply w-[210mm] overflow-hidden;
 }
 
 /* 页码 */
 .page-number {
-  position: absolute;
-  bottom: 8px;
-  right: 12px;
-  font-size: 12px;
-  color: #1677ff;
-  background: #e6f4ff;
-  padding: 4px 12px;
-  border-radius: 10px;
-  white-space: nowrap;
-  font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  z-index: 3;
-  pointer-events: auto;
-}
-
-.page-number-text {
-  color: #1677ff;
+  @apply absolute bottom-2 right-3 z-[3] whitespace-nowrap rounded-pill bg-brand-lighter px-3 py-1 text-xs font-semibold text-brand shadow-sm;
 }
 
 .page-number-divider {
-  opacity: 0.5;
-  margin: 0 2px;
+  @apply mx-0.5 opacity-50;
 }
 
 .page-number-total {
-  color: #666;
-  font-weight: 500;
+  @apply font-medium text-ink-secondary;
 }
 
 /* 简历预览基础样式 - 使用 CSS 变量支持间距/字号/字体/皮肤动态设置 */
 .resume-preview {
-  width: 210mm;
-  min-height: auto;
-  padding: var(--preview-padding, 40px);
-  font-size: var(--font-size, 13px);
+  @apply w-[210mm] cursor-pointer bg-white px-[var(--preview-padding,40px)] py-[var(--preview-padding,40px)] text-[var(--font-size,13px)] leading-[var(--line-height,1.6)] text-[#2c3e50];
   font-family: var(--font-family, 'Microsoft YaHei', sans-serif);
-  line-height: var(--line-height, 1.6);
-  color: #2c3e50;
-  background: #fff;
-  box-sizing: border-box;
-  cursor: pointer;
 }
 
 /* 模块间距通过 section margin 控制 */

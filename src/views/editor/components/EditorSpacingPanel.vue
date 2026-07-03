@@ -19,95 +19,66 @@ function resetKey(key) {
 </script>
 
 <template>
-  <div class="spacing-panel">
-    <div class="slider-box">
-      <h5 class="slider-label">
-        模块上下间距：<b>{{ spacing.sectionGap }}</b>
+  <div class="w-[320px] py-1">
+    <div class="mb-4">
+      <h5 class="mb-2 text-sm font-medium text-ink">
+        模块上下间距：<b class="font-bold text-brand-dark">{{ spacing.sectionGap }}</b>
       </h5>
-      <div class="slider-control">
+      <div class="flex items-center gap-3">
         <a-slider
           v-model:value="spacing.sectionGap"
           :min="SPACING_RANGES.sectionGap.min"
           :max="SPACING_RANGES.sectionGap.max"
           :step="SPACING_RANGES.sectionGap.step"
+          class="flex-1"
+          :track-style="{ backgroundColor: '#7DD3E8' }"
+          :handle-style="{ borderColor: '#7DD3E8' }"
           @change="emit('change')"
         />
-        <a-button size="small" @click="resetKey('sectionGap')">重置</a-button>
+        <button class="btn-ghost h-7 px-2 py-1 text-xs" @click="resetKey('sectionGap')">重置</button>
       </div>
     </div>
 
-    <div class="slider-box">
-      <h5 class="slider-label">
-        行间距：<b>{{ spacing.lineHeight.toFixed(2) }}</b>
+    <div class="mb-4">
+      <h5 class="mb-2 text-sm font-medium text-ink">
+        行间距：<b class="font-bold text-brand-dark">{{ spacing.lineHeight.toFixed(2) }}</b>
       </h5>
-      <div class="slider-control">
+      <div class="flex items-center gap-3">
         <a-slider
           v-model:value="spacing.lineHeight"
           :min="SPACING_RANGES.lineHeight.min"
           :max="SPACING_RANGES.lineHeight.max"
           :step="SPACING_RANGES.lineHeight.step"
+          class="flex-1"
+          :track-style="{ backgroundColor: '#7DD3E8' }"
+          :handle-style="{ borderColor: '#7DD3E8' }"
           @change="emit('change')"
         />
-        <a-button size="small" @click="resetKey('lineHeight')">重置</a-button>
+        <button class="btn-ghost h-7 px-2 py-1 text-xs" @click="resetKey('lineHeight')">重置</button>
       </div>
     </div>
 
-    <div class="slider-box">
-      <h5 class="slider-label">
-        页面边距：<b>{{ spacing.padding }}</b>
+    <div class="mb-3">
+      <h5 class="mb-2 text-sm font-medium text-ink">
+        页面边距：<b class="font-bold text-brand-dark">{{ spacing.padding }}</b>
       </h5>
-      <div class="slider-control">
+      <div class="flex items-center gap-3">
         <a-slider
           v-model:value="spacing.padding"
           :min="SPACING_RANGES.padding.min"
           :max="SPACING_RANGES.padding.max"
           :step="SPACING_RANGES.padding.step"
+          class="flex-1"
+          :track-style="{ backgroundColor: '#7DD3E8' }"
+          :handle-style="{ borderColor: '#7DD3E8' }"
           @change="emit('change')"
         />
-        <a-button size="small" @click="resetKey('padding')">重置</a-button>
+        <button class="btn-ghost h-7 px-2 py-1 text-xs" @click="resetKey('padding')">重置</button>
       </div>
     </div>
 
-    <div class="page-info">
+    <div class="border-t border-line/60 pt-3 text-xs text-muted">
       简历共 {{ pageCount }} 页
     </div>
   </div>
 </template>
-
-<style scoped>
-.spacing-panel {
-  width: 320px;
-  padding: 4px 0;
-}
-.slider-box {
-  margin-bottom: 16px;
-}
-.slider-box:last-of-type {
-  margin-bottom: 12px;
-}
-.slider-label {
-  margin: 0 0 8px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #333;
-}
-.slider-label b {
-  color: #ff6b35;
-  font-weight: 700;
-}
-.slider-control {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.slider-control :deep(.ant-slider) {
-  flex: 1;
-  margin: 0;
-}
-.page-info {
-  font-size: 12px;
-  color: #888;
-  padding-top: 8px;
-  border-top: 1px solid #f0f0f0;
-}
-</style>

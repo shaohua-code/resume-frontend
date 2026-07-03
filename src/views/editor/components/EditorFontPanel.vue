@@ -11,12 +11,12 @@ const emit = defineEmits(['change'])
 </script>
 
 <template>
-  <div class="font-panel">
-    <div class="font-row">
-      <label class="font-label">字体：</label>
+  <div class="w-[280px] py-2">
+    <div class="mb-4 flex items-center">
+      <label class="w-[72px] flex-shrink-0 text-sm font-medium text-ink">字体：</label>
       <a-select
         v-model:value="fontFamily"
-        style="width: 180px"
+        class="w-[180px]"
         @change="emit('change')"
       >
         <a-select-option v-for="f in FONT_OPTIONS" :key="f.value" :value="f.value">
@@ -24,11 +24,11 @@ const emit = defineEmits(['change'])
         </a-select-option>
       </a-select>
     </div>
-    <div class="font-row">
-      <label class="font-label">文字大小：</label>
+    <div class="flex items-center">
+      <label class="w-[72px] flex-shrink-0 text-sm font-medium text-ink">文字大小：</label>
       <a-select
         v-model:value="fontSize"
-        style="width: 180px"
+        class="w-[180px]"
         @change="emit('change')"
       >
         <a-select-option v-for="s in FONT_SIZE_OPTIONS" :key="s" :value="s">
@@ -38,25 +38,3 @@ const emit = defineEmits(['change'])
     </div>
   </div>
 </template>
-
-<style scoped>
-.font-panel {
-  width: 280px;
-  padding: 8px 0;
-}
-.font-row {
-  display: flex;
-  align-items: center;
-  margin-bottom: 16px;
-}
-.font-row:last-child {
-  margin-bottom: 0;
-}
-.font-label {
-  width: 72px;
-  flex-shrink: 0;
-  font-size: 13px;
-  color: #333;
-  font-weight: 500;
-}
-</style>

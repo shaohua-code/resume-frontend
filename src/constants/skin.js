@@ -4,7 +4,7 @@
  * - color: 颜色色值，UI 用于皮肤色板展示
  * 同步使用方：
  *   - src/views/Editor.vue （皮肤切换面板）
- *   - src/components/resume-editor/ResumePreview.vue （应用 --skin-color 变量）
+ *   - src/views/editor/components/ResumePreview.vue （应用 --skin-color 变量）
  */
 export const SKIN_COLORS = [
   { value: 'blue', color: '#1677ff' },

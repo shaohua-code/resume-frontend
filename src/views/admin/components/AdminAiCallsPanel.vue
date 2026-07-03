@@ -38,13 +38,13 @@ onMounted(loadAiCalls)
 
 <template>
   <div class="space-y-4">
-    <a-card :bordered="false" class="rounded-[28px] shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+    <a-card :bordered="false" class="card-base">
       <div class="flex flex-col gap-3 sm:flex-row">
-        <a-input :value="query.task_type" placeholder="任务类型，如 resume_generate" class="w-full sm:w-72" @update:value="query.task_type = $event" />
-        <a-button type="primary" @click="loadAiCalls">查询记录</a-button>
+        <a-input :value="query.task_type" placeholder="任务类型，如 resume_generate" class="input-field w-full sm:w-72" @update:value="query.task_type = $event" />
+        <button class="btn-primary" @click="loadAiCalls">查询记录</button>
       </div>
     </a-card>
-    <a-card :bordered="false" class="rounded-[28px] shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+    <a-card :bordered="false" class="card-base">
       <a-table
         :columns="columns"
         :data-source="aiCalls"
@@ -56,7 +56,7 @@ onMounted(loadAiCalls)
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'success'">
-            <a-tag :color="record.success ? 'green' : 'red'">{{ record.success ? '成功' : '失败' }}</a-tag>
+            <span :class="record.success ? 'badge-success' : 'tag-soft'">{{ record.success ? '成功' : '失败' }}</span>
           </template>
         </template>
       </a-table>

@@ -42,7 +42,7 @@ const cards = computed(() => [
     label: '用户总数',
     value: props.data.user_count || 0,
     icon: Users,
-    iconBg: 'bg-blue-50 text-primary',
+    iconBg: 'bg-brand-lighter text-brand-dark',
     trend: props.data.user_growth ?? null,
     trendLabel: '较昨日',
   },
@@ -50,14 +50,14 @@ const cards = computed(() => [
     label: 'VIP付费用户',
     value: props.data.vip_count || 0,
     icon: Crown,
-    iconBg: 'bg-amber-50 text-warning',
+    iconBg: 'bg-mint text-emerald-700',
     note: `占比 ${calcPercent(props.data.vip_count, props.data.user_count)}%`,
   },
   {
     label: '今日新增用户',
     value: props.data.today_new_users || 0,
     icon: UserPlus,
-    iconBg: 'bg-emerald-50 text-success',
+    iconBg: 'bg-mint text-emerald-700',
     trend: props.data.user_growth ?? null,
     trendLabel: '较昨日',
   },
@@ -65,21 +65,21 @@ const cards = computed(() => [
     label: '订单总数',
     value: props.data.order_count || 0,
     icon: ShoppingCart,
-    iconBg: 'bg-violet-50 text-violet-600',
+    iconBg: 'bg-cream text-warning',
     note: `待支付 ${props.data.pending_count || 0}`,
   },
   {
     label: 'AI调用次数',
     value: props.data.ai_call_count || 0,
     icon: Bot,
-    iconBg: 'bg-cyan-50 text-cyan-600',
+    iconBg: 'bg-brand-lighter text-brand-dark',
     note: '近一年累计',
   },
   {
     label: '系统运行状态',
     text: systemHealthy.value ? '正常' : '异常',
     icon: Activity,
-    iconBg: systemHealthy.value ? 'bg-emerald-50 text-success' : 'bg-rose-50 text-danger',
+    iconBg: systemHealthy.value ? 'bg-mint text-emerald-700' : 'bg-red-50 text-danger',
     note: systemHealthy.value ? '所有服务正常' : '存在异常服务',
   },
 ])
@@ -90,7 +90,7 @@ const cards = computed(() => [
     <div
       v-for="item in cards"
       :key="item.label"
-      class="flex min-h-[116px] items-center justify-between gap-3 rounded-card bg-white p-4 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lift"
+      class="card-hover flex min-h-[116px] items-center justify-between gap-3 p-4"
     >
       <div class="min-w-0">
         <p class="text-sm text-muted">{{ item.label }}</p>

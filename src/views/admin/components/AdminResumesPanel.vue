@@ -45,14 +45,14 @@ onMounted(loadResumes)
 
 <template>
   <div class="space-y-4">
-    <a-card :bordered="false" class="rounded-[28px] shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+    <a-card :bordered="false" class="card-base">
       <div class="flex flex-col gap-3 sm:flex-row">
-        <a-input :value="query.user_id" placeholder="按用户ID筛选" class="w-full sm:w-80" @update:value="query.user_id = $event" />
-        <a-button type="primary" @click="loadResumes">查询简历</a-button>
+        <a-input :value="query.user_id" placeholder="按用户ID筛选" class="input-field w-full sm:w-80" @update:value="query.user_id = $event" />
+        <button class="btn-primary" @click="loadResumes">查询简历</button>
       </div>
     </a-card>
 
-    <a-card :bordered="false" class="rounded-[28px] shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+    <a-card :bordered="false" class="card-base">
       <a-table
         :columns="columns"
         :data-source="resumes"
@@ -64,14 +64,14 @@ onMounted(loadResumes)
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'action'">
-            <a-button type="link" size="small" @click="showResumeDetail(record)">查看</a-button>
+            <button class="btn-primary-sm" @click="showResumeDetail(record)">查看</button>
           </template>
         </template>
       </a-table>
     </a-card>
 
     <a-modal :open="detailOpen" title="简历详情" width="900px" :footer="null" @update:open="detailOpen = $event">
-      <pre class="max-h-[60vh] overflow-auto rounded-2xl bg-slate-50 p-4 text-xs text-slate-700">{{ resumeDetail }}</pre>
+      <pre class="max-h-[60vh] overflow-auto rounded-2xl bg-cream p-4 text-xs text-ink">{{ resumeDetail }}</pre>
     </a-modal>
   </div>
 </template>

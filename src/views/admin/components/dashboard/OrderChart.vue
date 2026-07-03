@@ -5,6 +5,7 @@
  */
 import { computed } from 'vue'
 import BaseChart from '@/components/charts/BaseChart.vue'
+import CHART_COLORS, { CHART_GRADIENT } from '../../utils/chartTheme.js'
 
 const props = defineProps({
   months: {
@@ -30,13 +31,13 @@ const option = computed(() => ({
   xAxis: {
     type: 'category',
     data: axisLabels.value,
-    axisLine: { lineStyle: { color: '#e2e8f0' } },
-    axisLabel: { color: '#94a3b8' },
+    axisLine: { lineStyle: { color: '#E8ECEF' } },
+    axisLabel: { color: '#9CA3AF' },
   },
   yAxis: {
     type: 'value',
-    splitLine: { lineStyle: { color: '#f1f5f9' } },
-    axisLabel: { color: '#94a3b8' },
+    splitLine: { lineStyle: { color: '#F7F9FA' } },
+    axisLabel: { color: '#9CA3AF' },
   },
   series: [
     {
@@ -50,8 +51,8 @@ const option = computed(() => ({
           type: 'linear',
           x: 0, y: 0, x2: 0, y2: 1,
           colorStops: [
-            { offset: 0, color: '#6d5bff' },
-            { offset: 1, color: '#2563eb' },
+            { offset: 0, color: CHART_GRADIENT.start },
+            { offset: 1, color: CHART_GRADIENT.end },
           ],
         },
       },
@@ -61,7 +62,7 @@ const option = computed(() => ({
 </script>
 
 <template>
-  <div class="rounded-card bg-white p-5 shadow-soft">
+  <div class="card-base">
     <div class="mb-2 flex items-center justify-between">
       <h3 class="text-base font-semibold text-ink">订单趋势</h3>
     </div>

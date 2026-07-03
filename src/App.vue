@@ -1,37 +1,36 @@
 <!--
   根组件
-  包含页面布局：顶部导航栏 + 主内容区
-  根据路由是否需要导航栏来动态显示
+  包含页面布局：顶部导航栏 + 主内容区 + 底部 Footer
 -->
 <template>
-  <a-config-provider :locale="zhCN">
-    <div class="app-container">
+  <a-config-provider :locale="zhCN" :theme="{ token: antdToken }">
+    <div class="relative flex min-h-screen flex-col bg-cream font-sans text-ink antialiased">
+      <!-- 全页背景装饰层 -->
+      <div class="page-bg pointer-events-none fixed inset-0 z-0" />
       <AppHeader v-if="!$route.meta.hideLayout" />
-      <main class="main-content" :class="{ 'no-header': $route.meta.hideLayout }">
+      <main
+        class="relative z-10 flex-1 transition-all duration-300"
+        :class="$route.meta.hideLayout ? 'pt-0' : 'pt-16'"
+      >
         <router-view />
       </main>
+      <AppFooter v-if="!$route.meta.hideLayout" />
     </div>
   </a-config-provider>
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
+import { antdToken } from '@/constants/theme'
+import { useTheme } from '@/composables/useTheme'
 import AppHeader from '@/components/AppHeader.vue'
+import AppFooter from '@/components/AppFooter.vue'
 
-console.log('我是测试部署是否成功');
+const { applyCssVariables } = useTheme()
 
+// 挂载时将 theme.js 变量注入 :root
+onMounted(() => {
+  applyCssVariables()
+})
 </script>
-
-<style scoped>
-.app-container {
-  min-height: 100vh;
-  background: #f5f7fa;
-}
-.main-content {
-  padding-top: 64px;
-  min-height: 100vh;
-}
-.main-content.no-header {
-  padding-top: 0;
-}
-</style>

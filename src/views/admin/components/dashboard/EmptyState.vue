@@ -21,12 +21,12 @@ const emit = defineEmits(['action'])
 
 <template>
   <div class="flex flex-col items-center justify-center gap-3 py-10 text-center">
-    <span class="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-muted">
+    <span class="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-lighter text-brand-dark">
       <Inbox class="h-8 w-8" />
     </span>
     <p class="text-sm text-muted">{{ text }}</p>
-    <a-button v-if="actionText" type="primary" shape="round" @click="emit('action')">
+    <button v-if="actionText" class="btn-primary mt-2" @click="emit('action')">
       {{ actionText }}
-    </a-button>
+    </button>
   </div>
 </template>

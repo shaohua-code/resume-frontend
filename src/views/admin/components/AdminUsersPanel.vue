@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { message } from 'ant-design-vue'
 import { getAdminUsers, resetAdminUserPassword, updateAdminUser } from '@/api/admin'
-import { getRoleColor, getRoleLabel, getStatusLabel } from '@/constants/roles'
+import { getRoleLabel, getStatusLabel } from '@/constants/roles'
 
 const props = defineProps({
   mode: {
@@ -80,21 +80,21 @@ onMounted(loadUsers)
 
 <template>
   <div class="space-y-4">
-    <a-card :bordered="false" class="rounded-[28px] shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+    <a-card :bordered="false" class="card-base">
       <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <a-input :value="query.keyword" placeholder="搜索邮箱/昵称" @update:value="query.keyword = $event" />
-        <a-select :value="query.role" allow-clear placeholder="角色筛选" @update:value="query.role = $event">
+        <a-input :value="query.keyword" placeholder="搜索邮箱/昵称" class="input-field" @update:value="query.keyword = $event" />
+        <a-select :value="query.role" allow-clear placeholder="角色筛选" class="input-field w-full" @update:value="query.role = $event">
           <a-select-option v-for="role in roleOptions" :key="role" :value="role">{{ getRoleLabel(role) }}</a-select-option>
         </a-select>
-        <a-select :value="query.status" allow-clear placeholder="状态筛选" @update:value="query.status = $event">
+        <a-select :value="query.status" allow-clear placeholder="状态筛选" class="input-field w-full" @update:value="query.status = $event">
           <a-select-option value="ACTIVE">正常</a-select-option>
           <a-select-option value="BANNED">已封禁</a-select-option>
         </a-select>
-        <a-button type="primary" @click="loadUsers">查询用户</a-button>
+        <button class="btn-primary" @click="loadUsers">查询用户</button>
       </div>
     </a-card>
 
-    <a-card :bordered="false" class="rounded-[28px] shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+    <a-card :bordered="false" class="card-base">
       <a-table
         :columns="columns"
         :data-source="visibleUsers"
@@ -107,30 +107,30 @@ onMounted(loadUsers)
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'profile'">
             <div>
-              <p class="font-medium text-slate-900">{{ record.nickname || '未设置昵称' }}</p>
-              <p class="mt-1 text-xs text-slate-500">{{ record.email }}</p>
+              <p class="font-medium text-ink">{{ record.nickname || '未设置昵称' }}</p>
+              <p class="mt-1 text-xs text-muted">{{ record.email }}</p>
             </div>
           </template>
           <template v-if="column.key === 'role'">
-            <a-select :value="record.role" class="w-36" @update:value="record.role = $event">
+            <a-select :value="record.role" class="input-field w-36" @update:value="record.role = $event">
               <a-select-option v-for="role in roleOptions" :key="role" :value="role">{{ getRoleLabel(role) }}</a-select-option>
             </a-select>
           </template>
           <template v-if="column.key === 'status'">
-            <a-tag :color="record.status === 'ACTIVE' ? 'green' : 'red'">{{ getStatusLabel(record.status) }}</a-tag>
-            <a-select :value="record.status" class="mt-2 w-28" @update:value="record.status = $event">
+            <span :class="record.status === 'ACTIVE' ? 'badge-success' : 'tag-soft'">{{ getStatusLabel(record.status) }}</span>
+            <a-select :value="record.status" class="input-field mt-2 w-28" @update:value="record.status = $event">
               <a-select-option value="ACTIVE">正常</a-select-option>
               <a-select-option value="BANNED">封禁</a-select-option>
             </a-select>
           </template>
           <template v-if="column.key === 'vip_expire_time'">
-            <a-date-picker :value="record.vip_expire_time" show-time value-format="YYYY-MM-DDTHH:mm:ssZ" class="w-48" @update:value="record.vip_expire_time = $event" />
+            <a-date-picker :value="record.vip_expire_time" show-time value-format="YYYY-MM-DDTHH:mm:ssZ" class="input-field w-48" @update:value="record.vip_expire_time = $event" />
           </template>
           <template v-if="column.key === 'action'">
             <a-space>
-              <a-tag :color="getRoleColor(record.role)">{{ getRoleLabel(record.role) }}</a-tag>
-              <a-button type="link" size="small" @click="saveUser(record)">保存</a-button>
-              <a-button type="link" size="small" @click="resetPassword(record)">重置密码</a-button>
+              <span class="badge">{{ getRoleLabel(record.role) }}</span>
+              <button class="btn-primary-sm" @click="saveUser(record)">保存</button>
+              <button class="btn-ghost-sm" @click="resetPassword(record)">重置密码</button>
             </a-space>
           </template>
         </template>

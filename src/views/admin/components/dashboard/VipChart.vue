@@ -5,6 +5,7 @@
  */
 import { computed } from 'vue'
 import BaseChart from '@/components/charts/BaseChart.vue'
+import CHART_COLORS from '../../utils/chartTheme.js'
 
 const props = defineProps({
   vipCount: {
@@ -43,12 +44,12 @@ const option = computed(() => ({
         formatter: `${vipPercent.value}%`,
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#1e293b',
+        color: '#1F2937',
       },
       labelLine: { show: false },
       data: [
-        { value: props.vipCount, name: 'VIP用户', itemStyle: { color: '#2563eb' } },
-        { value: normalCount.value, name: '普通用户', itemStyle: { color: '#e2e8f0' } },
+        { value: props.vipCount, name: 'VIP用户', itemStyle: { color: CHART_COLORS.primary } },
+        { value: normalCount.value, name: '普通用户', itemStyle: { color: '#E8ECEF' } },
       ],
     },
   ],
@@ -56,7 +57,7 @@ const option = computed(() => ({
 </script>
 
 <template>
-  <div class="rounded-card bg-white p-5 shadow-soft">
+  <div class="card-base">
     <div class="mb-2 flex items-center justify-between">
       <h3 class="text-base font-semibold text-ink">VIP 用户占比</h3>
     </div>

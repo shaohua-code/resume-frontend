@@ -1,24 +1,15 @@
 <script setup>
+/**
+ * 管理后台布局 - a-layout 响应式 + 小屏 Drawer
+ */
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { MenuOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { getRoleLabel, getVipStatusText } from '@/constants/roles'
 import {
-  LayoutDashboard,
-  ShieldCheck,
-  Users,
-  ShoppingCart,
-  Bot,
-  FileText,
-  Megaphone,
-  Cpu,
-  Crown,
-  Settings,
-  Search,
-  Bell,
-  Moon,
-  User,
-  LogOut,
+  LayoutDashboard, ShieldCheck, Users, ShoppingCart, Bot, FileText,
+  Megaphone, Cpu, Crown, Settings, Search, Bell, Moon, User, LogOut,
 } from 'lucide-vue-next'
 import AdminAiCallsPanel from './components/AdminAiCallsPanel.vue'
 import AdminConfigsPanel from './components/AdminConfigsPanel.vue'
@@ -32,8 +23,9 @@ import AdminUsersPanel from './components/AdminUsersPanel.vue'
 const router = useRouter()
 const userStore = useUserStore()
 const activeKey = ref('stats')
-// 顶部搜索关键词，仅用于本地菜单过滤提示
 const searchKeyword = ref('')
+const collapsed = ref(false)
+const drawerOpen = ref(false)
 
 const menuItems = computed(() => [
   { key: 'stats', label: '数据中心', desc: '核心业务大盘', group: '数据中心', permission: 'admin:stats', icon: LayoutDashboard },
@@ -53,7 +45,11 @@ const roleLabel = computed(() => getRoleLabel(userStore.role))
 const vipStatusText = computed(() => getVipStatusText(userStore.userInfo))
 const userInitial = computed(() => userStore.userInfo.nickname?.slice(0, 1) || '管')
 
-// 退出登录后跳转登录页
+function handleMenuSelect(key) {
+  activeKey.value = key
+  drawerOpen.value = false
+}
+
 function handleLogout() {
   userStore.logout()
   router.push('/login')
@@ -61,74 +57,80 @@ function handleLogout() {
 </script>
 
 <template>
-  <div class="flex min-h-screen min-w-[1180px] bg-canvas font-sans text-ink">
-    <AdminSidebar v-model="activeKey" :menus="menuItems" :keyword="searchKeyword" />
+  <a-layout class="min-h-screen bg-cream font-sans text-ink">
+    <!-- 桌面端侧边栏 -->
+    <a-layout-sider
+      v-model:collapsed="collapsed"
+      :breakpoint="'lg'"
+      :collapsed-width="0"
+      :width="248"
+      class="glass border-r border-line/60 !bg-white/75"
+    >
+      <AdminSidebar v-model="activeKey" :menus="menuItems" :keyword="searchKeyword" @select="handleMenuSelect" />
+    </a-layout-sider>
 
-    <main class="flex min-w-0 flex-1 flex-col">
-      <header class="sticky top-0 z-20 flex h-[72px] items-center justify-between border-b border-line bg-white/90 px-6 backdrop-blur-xl">
-        <div class="min-w-0">
-          <p class="text-xs font-medium text-muted">管理中心</p>
-          <h1 class="truncate text-lg font-semibold text-ink">{{ currentMenu?.label || '数据中心' }}</h1>
+    <a-layout class="min-w-0">
+      <a-layout-header class="glass sticky top-0 z-20 flex h-[72px] items-center justify-between gap-3 border-b border-line/60 px-4 sm:px-6">
+        <div class="flex min-w-0 items-center gap-3">
+          <a-button type="text" class="lg:hidden" @click="drawerOpen = true">
+            <MenuOutlined class="text-lg" />
+          </a-button>
+          <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">管理中心</p>
+            <h1 class="truncate text-base font-semibold text-ink sm:text-lg">{{ currentMenu?.label || '数据中心' }}</h1>
+          </div>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex shrink-0 items-center gap-2 sm:gap-4">
           <a-input
-            :value="searchKeyword"
-            placeholder="搜索菜单 / 功能"
+            v-model:value="searchKeyword"
+            placeholder="搜索菜单"
             allow-clear
-            class="w-64"
-            @update:value="searchKeyword = $event"
+            class="hidden w-full max-w-xs sm:block"
           >
             <template #prefix>
               <Search class="h-4 w-4 text-muted" />
             </template>
           </a-input>
-          <a-badge :count="3" size="small">
-            <button type="button" class="flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-slate-100 hover:text-primary">
+          <a-badge :count="3" size="small" class="hidden sm:inline-flex">
+            <button type="button" class="flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-brand-lighter hover:text-brand-dark">
               <Bell class="h-5 w-5" />
             </button>
           </a-badge>
           <a-tooltip title="暗黑模式即将上线">
-            <button type="button" class="flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-slate-100 hover:text-primary">
+            <button type="button" class="hidden h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-brand-lighter hover:text-brand-dark sm:flex">
               <Moon class="h-5 w-5" />
             </button>
           </a-tooltip>
           <a-dropdown placement="bottomRight">
-            <div class="flex cursor-pointer items-center gap-2 rounded-full py-1 pl-1 pr-3 transition-colors hover:bg-slate-100">
-              <div class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-primary">
+            <div class="flex cursor-pointer items-center gap-2 rounded-full py-1 pl-1 pr-2 transition-colors hover:bg-brand-lighter sm:pr-3">
+              <div class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-lighter text-sm font-semibold text-brand-dark">
                 {{ userInitial }}
               </div>
-              <div class="text-left text-sm">
+              <div class="hidden text-left text-sm sm:block">
                 <p class="font-medium leading-tight text-ink">{{ roleLabel }}</p>
                 <p class="text-xs leading-tight text-muted">{{ vipStatusText }}</p>
               </div>
             </div>
             <template #overlay>
               <a-menu>
-                <a-menu-item key="profile" @click="router.push('/user')">
-                  <span class="flex items-center gap-2">
-                    <User class="h-4 w-4" />
-                    个人中心
-                  </span>
+                <a-menu-item @click="router.push('/user')">
+                  <span class="flex items-center gap-2"><User class="h-4 w-4" /> 个人中心</span>
                 </a-menu-item>
                 <a-menu-divider />
-                <a-menu-item key="logout" @click="handleLogout">
-                  <span class="flex items-center gap-2">
-                    <LogOut class="h-4 w-4" />
-                    退出登录
-                  </span>
+                <a-menu-item @click="handleLogout">
+                  <span class="flex items-center gap-2"><LogOut class="h-4 w-4" /> 退出登录</span>
                 </a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
         </div>
-      </header>
+      </a-layout-header>
 
-      <section class="min-w-0 flex-1 overflow-auto p-6">
-        <div v-if="activeKey !== 'stats'" class="mb-5 rounded-card bg-white p-5 shadow-soft">
-          <p class="text-sm font-medium text-primary">AI简历助手后台</p>
-          <h2 class="mt-1 text-xl font-semibold text-ink">{{ currentMenu?.label }} · {{ currentMenu?.desc }}</h2>
+      <a-layout-content class="overflow-auto p-4 sm:p-6">
+        <div v-if="activeKey !== 'stats'" class="card-base mb-5">
+          <p class="text-sm font-medium text-brand-dark">AI 简历助手后台</p>
+          <h2 class="mt-1 text-lg font-semibold text-ink sm:text-xl">{{ currentMenu?.label }} · {{ currentMenu?.desc }}</h2>
         </div>
-
         <AdminStatsPanel v-if="activeKey === 'stats'" />
         <AdminUsersPanel v-if="activeKey === 'admins'" mode="admins" />
         <AdminUsersPanel v-if="activeKey === 'users'" mode="users" />
@@ -139,7 +141,18 @@ function handleLogout() {
         <AdminCrudPanel v-if="activeKey === 'plans'" type="plans" />
         <AdminCrudPanel v-if="activeKey === 'announcements'" type="announcements" />
         <AdminCrudPanel v-if="activeKey === 'models'" type="models" />
-      </section>
-    </main>
-  </div>
+      </a-layout-content>
+    </a-layout>
+
+    <!-- 小屏侧边栏 Drawer -->
+    <a-drawer v-model:open="drawerOpen" placement="left" :width="280" :body-style="{ padding: 0 }">
+      <AdminSidebar v-model="activeKey" :menus="menuItems" :keyword="searchKeyword" @select="handleMenuSelect" />
+    </a-drawer>
+  </a-layout>
 </template>
+
+<style scoped>
+:deep(.ant-layout-sider-children) {
+  @apply flex h-full flex-col;
+}
+</style>

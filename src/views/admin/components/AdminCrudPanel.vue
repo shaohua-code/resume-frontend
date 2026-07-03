@@ -100,16 +100,16 @@ onMounted(loadItems)
 
 <template>
   <div class="space-y-4">
-    <a-card :bordered="false" class="rounded-[28px] shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+    <a-card :bordered="false" class="rounded-card shadow-card">
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-base font-semibold text-slate-950">{{ currentConfig.title }}</p>
-          <p class="mt-1 text-xs text-slate-400">统一维护后台基础资源配置</p>
+          <p class="text-base font-semibold text-ink">{{ currentConfig.title }}</p>
+          <p class="mt-1 text-xs text-muted">统一维护后台基础资源配置</p>
         </div>
-        <a-button type="primary" @click="openModal()">{{ currentConfig.addText }}</a-button>
+        <button class="btn-primary" @click="openModal()">{{ currentConfig.addText }}</button>
       </div>
     </a-card>
-    <a-card :bordered="false" class="rounded-[28px] shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+    <a-card :bordered="false" class="rounded-card shadow-card">
       <a-table
         :columns="currentConfig.columns"
         :data-source="items"
@@ -119,16 +119,16 @@ onMounted(loadItems)
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'enabled'">
-            <a-tag :color="record.enabled ? 'green' : 'red'">{{ record.enabled ? '启用' : '停用' }}</a-tag>
+            <span :class="record.enabled ? 'badge-success' : 'tag-soft'">{{ record.enabled ? '启用' : '停用' }}</span>
           </template>
           <template v-if="column.key === 'vip_only'">
-            <a-tag :color="record.vip_only ? 'gold' : 'blue'">{{ record.vip_only ? 'VIP' : '通用' }}</a-tag>
+            <span :class="record.vip_only ? 'badge' : 'tag-soft'">{{ record.vip_only ? 'VIP' : '通用' }}</span>
           </template>
           <template v-if="column.key === 'action'">
             <a-space>
-              <a-button type="link" size="small" @click="openModal(record)">编辑</a-button>
+              <button class="link-text text-sm" @click="openModal(record)">编辑</button>
               <a-popconfirm title="确定删除？" @confirm="removeItem(record.id)">
-                <a-button type="link" danger size="small">删除</a-button>
+                <button class="text-sm font-medium text-danger transition-colors hover:text-red-500">删除</button>
               </a-popconfirm>
             </a-space>
           </template>

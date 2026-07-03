@@ -19,44 +19,44 @@ const metrics = computed(() => [
     label: '订单总数',
     value: props.data.order_count || 0,
     icon: ShoppingBag,
-    iconClass: 'bg-blue-50 text-primary',
+    iconClass: 'bg-brand-lighter text-brand-dark',
     suffix: '',
   },
   {
     label: '订单金额',
     value: Number(props.data.total_amount || 0),
     icon: Wallet,
-    iconClass: 'bg-emerald-50 text-success',
+    iconClass: 'bg-mint text-emerald-700',
     prefix: '¥',
   },
   {
     label: '已支付金额',
     value: Number(props.data.paid_amount || 0),
     icon: ClipboardCheck,
-    iconClass: 'bg-violet-50 text-violet-600',
+    iconClass: 'bg-cream text-warning',
     prefix: '¥',
   },
   {
     label: '待支付订单',
     value: props.data.pending_count || 0,
     icon: Clock3,
-    iconClass: 'bg-amber-50 text-warning',
+    iconClass: 'bg-cream text-warning',
     suffix: '',
   },
 ])
 </script>
 
 <template>
-  <div class="rounded-card bg-white p-5 shadow-soft">
+  <div class="card-base">
     <div class="mb-5 flex items-center justify-between">
       <h3 class="text-base font-semibold text-ink">业务订单概览</h3>
-      <a-tag color="blue">实时统计</a-tag>
+      <span class="badge">实时统计</span>
     </div>
     <div class="grid grid-cols-2 gap-4">
       <div
         v-for="item in metrics"
         :key="item.label"
-        class="flex items-center gap-3 rounded-2xl bg-canvas p-4"
+        class="flex items-center gap-3 rounded-2xl bg-cream p-4"
       >
         <span class="flex h-11 w-11 items-center justify-center rounded-xl" :class="item.iconClass">
           <component :is="item.icon" class="h-5 w-5" />

@@ -12,7 +12,8 @@ defineProps({
 </script>
 
 <template>
-  <div class="flex flex-col justify-center rounded-card bg-white p-5 shadow-soft" :style="{ minHeight: height }">
+  <!-- minHeight 由父级传入动态设置，属于必须动态计算的样式 -->
+  <div class="card-base flex flex-col justify-center" :style="{ minHeight: height }">
     <a-skeleton active :paragraph="{ rows: 2 }" :title="{ width: '40%' }" />
   </div>
 </template>

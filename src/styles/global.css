@@ -3,38 +3,31 @@
 @tailwind utilities;
 
 /**
- * 全局样式
- * 定义基础样式变量、通用布局、滚动条美化等
+ * 全局基础样式
+ * CSS 变量默认值与 theme.js 保持同步
  */
 
 :root {
-  --primary-color: #1677ff;
-  --success-color: #52c41a;
-  --warning-color: #faad14;
-  --error-color: #ff4d4f;
-  --text-color: #333;
-  --text-secondary: #666;
-  --bg-color: #f5f7fa;
-  --card-bg: #fff;
-  --border-color: #e8e8e8;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --radius: 8px;
-
-  /* 后台 Dashboard V2 设计 token：作为颜色/阴影/圆角的单一来源，便于后续接入暗黑模式 */
-  --admin-primary: #2563eb;
-  --admin-success: #22c55e;
-  --admin-warning: #f59e0b;
-  --admin-danger: #ef4444;
-  --admin-canvas: #f8fafc;
-  --admin-card: #ffffff;
-  --admin-ink: #1e293b;
-  --admin-muted: #64748b;
-  --admin-line: #e2e8f0;
-  --admin-sidebar: #0f172a;
-  --admin-radius-card: 18px;
-  --admin-radius-banner: 20px;
-  --admin-shadow-soft: 0 4px 20px rgba(15, 23, 42, 0.06);
-  --admin-shadow-lift: 0 12px 32px rgba(37, 99, 235, 0.18);
+  --color-brand: #00D4FF;
+  --color-brand-light: #4FACFE;
+  --color-brand-lighter: #E0F7FA;
+  --color-brand-dark: #0891B2;
+  --color-accent: #A855F7;
+  --color-accent-light: #C084FC;
+  --color-cream: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-surface-soft: rgba(255, 255, 255, 0.72);
+  --color-ink: #1E293B;
+  --color-ink-secondary: #64748B;
+  --color-muted: #94A3B8;
+  --color-line: #E2E8F0;
+  --gradient-primary: linear-gradient(90deg, #00D4FF, #4FACFE, #A855F7);
+  --gradient-hero: linear-gradient(135deg, #00D4FF 0%, #4FACFE 50%, #A855F7 100%);
+  --gradient-glow-border: linear-gradient(135deg, #00D4FF, #4FACFE, #A855F7);
+  --shadow-card: 0 2px 12px rgba(30, 41, 59, 0.06), 0 8px 24px rgba(30, 41, 59, 0.04);
+  --shadow-glow: 0 0 20px rgba(0, 212, 255, 0.3), 0 0 40px rgba(168, 85, 247, 0.15);
+  --radius-card: 16px;
+  --radius-button: 10px;
 }
 
 * {
@@ -44,10 +37,11 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  color: var(--text-color);
-  background: var(--bg-color);
+  font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: var(--color-ink);
+  background: var(--color-cream);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 ::-webkit-scrollbar {
@@ -56,23 +50,153 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: #CBD5E1;
   border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
 }
 
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.page-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px;
+@layer components {
+  /* 全页背景：网格 + 渐变光斑 */
+  .page-bg {
+    background-color: var(--color-cream);
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(0, 212, 255, 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
+      linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+  }
+
+  .page-container {
+    @apply relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8;
+  }
+
+  .section-title {
+    @apply text-xl font-semibold text-ink sm:text-2xl;
+  }
+
+  .section-subtitle {
+    @apply text-sm text-ink-secondary;
+  }
+
+  .card-base {
+    @apply rounded-card border border-line/60 bg-surface/80 p-5 shadow-card backdrop-blur-sm transition-all duration-300 ease-smooth;
+  }
+
+  .card-hover {
+    @apply card-base hover:-translate-y-1 hover:border-brand-lighter hover:shadow-card-hover;
+  }
+
+  .panel-soft {
+    @apply rounded-card bg-brand-lighter/50 p-5 shadow-soft;
+  }
+
+  .glass {
+    @apply border border-white/60 bg-white/70 shadow-glass backdrop-blur-xl;
+  }
+
+  /* 霓虹渐变边框容器 */
+  .glass-glow {
+    @apply relative rounded-banner p-[2px];
+    background: var(--gradient-glow-border);
+    box-shadow: var(--shadow-glow);
+  }
+
+  .glass-glow-inner {
+    @apply rounded-banner bg-white/80 p-5 backdrop-blur-xl;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-button px-5 py-2.5 text-sm font-medium text-white shadow-glow transition-all duration-200 ease-smooth active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    background: var(--gradient-primary);
+  }
+
+  .btn-primary:hover {
+    @apply shadow-float;
+    filter: brightness(1.05);
+  }
+
+  .btn-primary-sm {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-button px-3 py-1.5 text-xs font-medium text-white shadow-soft transition-all duration-200 ease-smooth active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    background: var(--gradient-primary);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-button border border-line bg-white/60 px-5 py-2.5 text-sm font-medium text-ink-secondary backdrop-blur-sm transition-all duration-200 ease-smooth hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-ghost-sm {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-button border border-line bg-white/60 px-3 py-1.5 text-xs font-medium text-ink-secondary backdrop-blur-sm transition-all duration-200 ease-smooth hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-mint {
+    @apply inline-flex items-center justify-center gap-2 rounded-button bg-mint px-5 py-2.5 text-sm font-medium text-emerald-700 shadow-sm transition-all duration-200 ease-smooth hover:bg-emerald-200 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-button bg-danger px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 ease-smooth hover:bg-red-500 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .input-field {
+    @apply rounded-button border border-line bg-white/80 px-4 py-2.5 text-sm text-ink placeholder:text-muted backdrop-blur-sm transition-colors duration-200 hover:border-brand/40 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15;
+  }
+
+  .link-text {
+    @apply text-sm font-medium text-brand-dark transition-colors hover:text-brand;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-pill bg-brand-lighter px-2.5 py-0.5 text-xs font-medium text-brand-dark;
+  }
+
+  .badge-glass {
+    @apply inline-flex items-center rounded-pill border border-white/50 bg-white/30 px-4 py-1.5 text-xs font-medium text-white backdrop-blur-md;
+  }
+
+  .badge-success {
+    @apply inline-flex items-center rounded-pill bg-mint px-2.5 py-0.5 text-xs font-medium text-emerald-700;
+  }
+
+  .tag-soft {
+    @apply inline-flex items-center rounded-pill bg-canvas px-2.5 py-0.5 text-xs font-medium text-ink-secondary;
+  }
+
+  .empty-state {
+    @apply flex flex-col items-center justify-center rounded-card border border-line/60 bg-surface/80 p-10 text-center shadow-card backdrop-blur-sm;
+  }
+
+  .empty-icon {
+    @apply mb-4 text-5xl;
+  }
+
+  .empty-title {
+    @apply text-base font-semibold text-ink;
+  }
+
+  .empty-desc {
+    @apply mt-1 text-sm text-muted;
+  }
+
+  .skeleton-soft {
+    @apply animate-shimmer rounded-card bg-gradient-to-r from-canvas via-white to-canvas bg-[length:200%_100%];
+  }
+
+  .modal-fresh {
+    @apply rounded-card border border-line/60 bg-surface/95 shadow-lift backdrop-blur-xl;
+  }
 }
 
-.section-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 24px;
-  color: var(--text-color);
+.input-field .ant-input,
+.input-field .ant-input-number-input,
+.input-field textarea,
+.input-field .ant-select-selector,
+.input-field .ant-picker-input > input {
+  background-color: transparent;
 }

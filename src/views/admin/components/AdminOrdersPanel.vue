@@ -45,19 +45,19 @@ onMounted(loadOrders)
 
 <template>
   <div class="space-y-4">
-    <a-card :bordered="false" class="rounded-[28px] shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+    <a-card :bordered="false" class="card-base">
       <div class="flex flex-col gap-3 sm:flex-row">
-      <a-select :value="query.status" allow-clear placeholder="订单状态" class="w-full sm:w-52" @update:value="query.status = $event">
-        <a-select-option value="PENDING">待支付</a-select-option>
-        <a-select-option value="PAID">已支付</a-select-option>
-        <a-select-option value="CANCELLED">已取消</a-select-option>
-        <a-select-option value="REFUNDED">已退款</a-select-option>
-      </a-select>
-      <a-button type="primary" @click="loadOrders">查询订单</a-button>
+        <a-select :value="query.status" allow-clear placeholder="订单状态" class="input-field w-full sm:w-52" @update:value="query.status = $event">
+          <a-select-option value="PENDING">待支付</a-select-option>
+          <a-select-option value="PAID">已支付</a-select-option>
+          <a-select-option value="CANCELLED">已取消</a-select-option>
+          <a-select-option value="REFUNDED">已退款</a-select-option>
+        </a-select>
+        <button class="btn-primary" @click="loadOrders">查询订单</button>
       </div>
     </a-card>
 
-    <a-card :bordered="false" class="rounded-[28px] shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+    <a-card :bordered="false" class="card-base">
       <a-table
         :columns="columns"
         :data-source="orders"
@@ -69,7 +69,7 @@ onMounted(loadOrders)
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
-            <a-select :value="record.status" class="w-32" @update:value="record.status = $event">
+            <a-select :value="record.status" class="input-field w-32" @update:value="record.status = $event">
               <a-select-option value="PENDING">待支付</a-select-option>
               <a-select-option value="PAID">已支付</a-select-option>
               <a-select-option value="CANCELLED">已取消</a-select-option>
@@ -77,7 +77,7 @@ onMounted(loadOrders)
             </a-select>
           </template>
           <template v-if="column.key === 'action'">
-            <a-button type="link" size="small" @click="saveOrder(record)">保存</a-button>
+            <button class="btn-primary-sm" @click="saveOrder(record)">保存</button>
           </template>
         </template>
       </a-table>

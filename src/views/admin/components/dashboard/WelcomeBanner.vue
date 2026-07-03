@@ -40,28 +40,37 @@ const greeting = computed(() => {
 
 <template>
   <div
-    class="relative flex min-h-[180px] items-center overflow-hidden rounded-banner p-7 text-white shadow-lift"
-    style="background: linear-gradient(135deg, #4f8ef7, #6d5bff)"
+    class="relative flex min-h-[180px] items-center overflow-hidden rounded-banner bg-gradient-to-br from-brand via-brand-light to-mint p-7 text-white shadow-lift"
   >
-    <div class="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/10" />
-    <div class="absolute -bottom-16 right-40 h-44 w-44 rounded-full bg-white/5" />
+    <div class="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/20" />
+    <div class="absolute -bottom-16 right-40 h-44 w-44 rounded-full bg-white/10" />
 
     <div class="relative z-10 flex-1">
       <h2 class="text-2xl font-semibold">👋 {{ greeting }}，{{ nickname }}</h2>
-      <p class="mt-3 text-sm text-blue-50">欢迎回来！今天共有 {{ todayNewUsers }} 位用户生成了 AI 简历。</p>
-      <p class="mt-1 text-sm text-blue-50">继续保持，让更多用户拿到 Offer 🚀</p>
+      <p class="mt-3 text-sm text-white/90">欢迎回来！今天共有 {{ todayNewUsers }} 位用户生成了 AI 简历。</p>
+      <p class="mt-1 text-sm text-white/90">继续保持，让更多用户拿到 Offer 🚀</p>
       <a-segmented
         :value="activeRange"
         :options="timeRanges"
-        class="mt-5"
+        class="welcome-segmented mt-5"
         @change="activeRange = $event"
       />
     </div>
 
     <div class="relative z-10 hidden md:block">
-      <div class="flex h-28 w-28 animate-float items-center justify-center rounded-3xl bg-white/15 backdrop-blur">
+      <div class="flex h-28 w-28 animate-float items-center justify-center rounded-3xl bg-white/20 backdrop-blur">
         <Bot class="h-16 w-16 text-white" />
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* 时间筛选器：选中项使用浅青蓝品牌色 */
+.welcome-segmented :deep(.ant-segmented-item-selected) {
+  @apply bg-white/30 text-white;
+}
+.welcome-segmented :deep(.ant-segmented-item) {
+  @apply text-white/80 transition-colors hover:text-white;
+}
+</style>

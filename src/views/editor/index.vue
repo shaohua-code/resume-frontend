@@ -2,6 +2,176 @@
   简历编辑器页
   全民简历式布局：顶部工具栏 + 中间 A4 预览 + 底部 Tab 编辑区
 -->
+<template>
+  <div class="editor-page">
+    <EditorToolbar
+      v-model:spacing="spacing"
+      v-model:font-size="fontSize"
+      v-model:font-family="fontFamily"
+      v-model:skin="skin"
+      :current-template-name="currentTemplateName"
+      :page-count="pageCount"
+      :saving="saving"
+      :exporting="exporting"
+      :scoring="resumeStore.scoring"
+      @template="showTemplateDrawer = true"
+      @optimize="showOptimizeModal = true"
+      @match="showMatchModal = true"
+      @score="handleScore"
+      @save="handleSave"
+      @export-pdf="handleExportPDF"
+      @export-word="handleExportWord"
+    />
+
+    <main class="editor-main">
+      <div class="preview-area">
+        <ResumePreview
+          ref="previewRef"
+          :resume="resume"
+          :template-id="templateId"
+          :spacing="spacing"
+          :font-size="fontSize"
+          :font-family="fontFamily"
+          :skin="skin"
+          :visible-modules="modules"
+          @section-click="handleSectionClick"
+        />
+        <a-dropdown :disabled="exporting">
+          <button type="button" class="down-big" :disabled="exporting">
+            <DownloadOutlined />
+            下载/导出简历
+          </button>
+          <template #overlay>
+            <a-menu>
+              <a-menu-item key="pdf" @click="handleExportPDF">导出 PDF（高清打印）</a-menu-item>
+              <a-menu-item key="word" @click="handleExportWord">导出 Word（可编辑）</a-menu-item>
+              <a-menu-item key="markdown" @click="handleExportMarkdown">导出 Markdown（VIP）</a-menu-item>
+            </a-menu>
+          </template>
+        </a-dropdown>
+      </div>
+    </main>
+
+    <EditorEditPanel
+      ref="editPanelRef"
+      v-model="resume"
+      v-model:modules="modules"
+      v-model:active-module="activeModule"
+      :highlight-module="highlightModule"
+    />
+
+    <!-- AI优化弹窗 -->
+    <a-modal
+      v-model:open="showOptimizeModal"
+      title="AI优化项目描述"
+      :confirm-loading="resumeStore.optimizing"
+      class="editor-modal"
+      @ok="handleOptimize"
+    >
+      <a-form layout="vertical">
+        <a-form-item label="目标岗位">
+          <a-input :value="optimizeTarget" placeholder="如：前端开发工程师" class="editor-modal-input" @update:value="optimizeTarget = $event" />
+        </a-form-item>
+        <a-form-item label="选择要优化的项目">
+          <a-select :value="optimizeIndex" class="editor-modal-select" @update:value="optimizeIndex = $event">
+            <a-select-option v-for="(p, i) in (resume.projects || [])" :key="i" :value="i">
+              {{ p.name || `项目${i + 1}` }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+      </a-form>
+    </a-modal>
+
+    <!-- JD匹配弹窗 -->
+    <a-modal
+      v-model:open="showMatchModal"
+      title="JD岗位匹配分析"
+      :confirm-loading="resumeStore.matching"
+      width="600px"
+      class="editor-modal"
+      @ok="handleMatch"
+    >
+      <a-form layout="vertical">
+        <a-form-item label="粘贴岗位JD内容">
+          <a-textarea :value="jdText" :rows="6" placeholder="请粘贴岗位的JD描述..." class="editor-modal-textarea" @update:value="jdText = $event" />
+        </a-form-item>
+      </a-form>
+      <div v-if="matchResult" class="match-result">
+        <a-progress
+          :percent="matchResult.match_score"
+          :stroke-color="matchProgressColor"
+          class="mb-3"
+        />
+        <p><strong>岗位关键词：</strong>{{ matchResult.keywords?.join('、') }}</p>
+        <p><strong>缺失技能：</strong>{{ matchResult.missing_skills?.join('、') || '无' }}</p>
+        <p><strong>优化建议：</strong></p>
+        <ul class="list-disc pl-5 text-sm text-ink-secondary">
+          <li v-for="(s, i) in matchResult.suggestions" :key="i">{{ s }}</li>
+        </ul>
+      </div>
+    </a-modal>
+
+    <!-- 模板选择抽屉 -->
+    <a-drawer
+      v-model:open="showTemplateDrawer"
+      title="选择简历模板"
+      placement="right"
+      width="760"
+      root-class-name="template-drawer"
+    >
+      <div class="template-scroll">
+        <div class="template-grid">
+          <div
+            v-for="t in templateList"
+            :key="t.id"
+            class="template-card"
+            :class="{ active: templateId === t.id }"
+            @click="selectTemplate(t.id)"
+          >
+            <div class="template-thumb" :style="{ background: t.color }">
+              <span class="template-num">{{ t.id }}</span>
+              <span class="template-paper-line" />
+              <span class="template-paper-line short" />
+              <span class="template-paper-line" />
+            </div>
+            <div class="template-info">
+              <div class="template-name">{{ t.name }}</div>
+              <div class="template-desc">{{ t.desc }}</div>
+            </div>
+            <div v-if="templateId === t.id" class="template-check">
+              <CheckOutlined />
+            </div>
+          </div>
+        </div>
+      </div>
+    </a-drawer>
+
+    <!-- 评分弹窗 -->
+    <a-modal
+      v-model:open="showScoreModal"
+      title="AI简历评分"
+      :footer="null"
+      width="500px"
+      class="editor-modal"
+    >
+      <div v-if="scoreResult" class="score-result">
+        <div class="score-total">
+          <a-progress type="circle" :percent="scoreResult.total" :size="120" :stroke-color="scoreColor" />
+          <span class="score-label">总分</span>
+        </div>
+        <a-row :gutter="[16, 16]" class="mt-6">
+          <a-col v-for="item in scoreItems" :key="item.key" :span="12">
+            <a-card size="small" class="score-item-card">
+              <a-progress :percent="Math.round((scoreResult[item.key] / item.max) * 100)" :format="() => `${scoreResult[item.key]}/${item.max}`" />
+              <div class="mt-1 text-center text-xs text-ink-secondary">{{ item.label }}</div>
+            </a-card>
+          </a-col>
+        </a-row>
+      </div>
+    </a-modal>
+  </div>
+</template>
+
 <script setup>
 import { reactive, ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
@@ -19,9 +189,9 @@ import {
   applyEditorSettingsToResume,
 } from '@/constants/editorSettings'
 import { TEMPLATE_LIST, getTemplateName, clampTemplateId } from '@/constants/templateRegistry'
-import EditorToolbar from '@/components/resume-editor/EditorToolbar.vue'
-import EditorEditPanel from '@/components/resume-editor/EditorEditPanel.vue'
-import ResumePreview from '@/components/resume-editor/ResumePreview.vue'
+import EditorToolbar from './components/EditorToolbar.vue'
+import EditorEditPanel from './components/EditorEditPanel.vue'
+import ResumePreview from './components/ResumePreview.vue'
 
 const route = useRoute()
 const resumeStore = useResumeStore()
@@ -101,6 +271,22 @@ async function handleOptimize() {
 const showMatchModal = ref(false)
 const jdText = ref('')
 const matchResult = ref(null)
+
+// 根据匹配分数返回进度条颜色
+const matchProgressColor = computed(() => {
+  const score = matchResult.value?.match_score || 0
+  if (score >= 80) return '#10B981'
+  if (score >= 60) return '#F59E0B'
+  return '#EF4444'
+})
+
+// 根据总分返回评分圆环颜色
+const scoreColor = computed(() => {
+  const score = scoreResult.value?.total || 0
+  if (score >= 80) return '#10B981'
+  if (score >= 60) return '#F59E0B'
+  return '#EF4444'
+})
 
 async function handleMatch() {
   if (!jdText.value.trim()) {
@@ -314,7 +500,7 @@ function buildMarkdownResume() {
     return `### ${item.company || '实习经历'}\n- 岗位：${item.position || ''}\n- 时间：${item.start_date || ''} - ${item.end_date || ''}\n- 描述：${item.description || ''}`
   }).join('\n\n')
   // Markdown 导出使用当前编辑态数据，方便 VIP 下载可二次编辑的文本版本
-  return `# ${resume.name || '个人简历'}\n\n${resume.phone || ''} ${resume.email || ''}\n\n## 个人简介\n${resume.summary || ''}\n${buildMarkdownList('技能标签', resume.skills || [])}\n## 项目经历\n${projectText || '暂无'}\n\n## 实习经历\n${internshipText || '暂无'}\n${buildMarkdownList('获奖经历', resume.awards || [])}${buildMarkdownList('证书', resume.certificates || [])}`
+  return `# ${resume.name || '个人简历'}\n\n${resume.phone || ''} ${resume.email || ''}\n\n## 个人简介\n${resume.summary || ''}${buildMarkdownList('技能标签', resume.skills || [])}\n## 项目经历\n${projectText || '暂无'}\n\n## 实习经历\n${internshipText || '暂无'}${buildMarkdownList('获奖经历', resume.awards || [])}${buildMarkdownList('证书', resume.certificates || [])}`
 }
 
 async function handleExportMarkdown() {
@@ -356,331 +542,152 @@ onMounted(async () => {
 })
 </script>
 
-<template>
-  <div class="editor-page">
-    <EditorToolbar
-      v-model:spacing="spacing"
-      v-model:font-size="fontSize"
-      v-model:font-family="fontFamily"
-      v-model:skin="skin"
-      :current-template-name="currentTemplateName"
-      :page-count="pageCount"
-      :saving="saving"
-      :exporting="exporting"
-      :scoring="resumeStore.scoring"
-      @template="showTemplateDrawer = true"
-      @optimize="showOptimizeModal = true"
-      @match="showMatchModal = true"
-      @score="handleScore"
-      @save="handleSave"
-      @export-pdf="handleExportPDF"
-      @export-word="handleExportWord"
-    />
-
-    <main class="editor-main">
-      <div class="preview-area">
-        <ResumePreview
-          ref="previewRef"
-          :resume="resume"
-          :template-id="templateId"
-          :spacing="spacing"
-          :font-size="fontSize"
-          :font-family="fontFamily"
-          :skin="skin"
-          :visible-modules="modules"
-          @section-click="handleSectionClick"
-        />
-        <a-dropdown :disabled="exporting">
-          <button type="button" class="down-big" :disabled="exporting">
-            <DownloadOutlined />
-            下载/导出简历
-          </button>
-          <template #overlay>
-            <a-menu>
-              <a-menu-item key="pdf" @click="handleExportPDF">导出 PDF（高清打印）</a-menu-item>
-              <a-menu-item key="word" @click="handleExportWord">导出 Word（可编辑）</a-menu-item>
-              <a-menu-item key="markdown" @click="handleExportMarkdown">导出 Markdown（VIP）</a-menu-item>
-            </a-menu>
-          </template>
-        </a-dropdown>
-      </div>
-    </main>
-
-    <EditorEditPanel
-      ref="editPanelRef"
-      v-model="resume"
-      v-model:modules="modules"
-      v-model:active-module="activeModule"
-      :highlight-module="highlightModule"
-    />
-
-    <!-- AI优化弹窗 -->
-    <a-modal v-model:open="showOptimizeModal" title="AI优化项目描述" :confirm-loading="resumeStore.optimizing" @ok="handleOptimize">
-      <a-form layout="vertical">
-        <a-form-item label="目标岗位">
-          <a-input v-model:value="optimizeTarget" placeholder="如：前端开发工程师" />
-        </a-form-item>
-        <a-form-item label="选择要优化的项目">
-          <a-select v-model:value="optimizeIndex" style="width: 100%">
-            <a-select-option v-for="(p, i) in (resume.projects || [])" :key="i" :value="i">
-              {{ p.name || `项目${i + 1}` }}
-            </a-select-option>
-          </a-select>
-        </a-form-item>
-      </a-form>
-    </a-modal>
-
-    <!-- JD匹配弹窗 -->
-    <a-modal v-model:open="showMatchModal" title="JD岗位匹配分析" :confirm-loading="resumeStore.matching" width="600px" @ok="handleMatch">
-      <a-form layout="vertical">
-        <a-form-item label="粘贴岗位JD内容">
-          <a-textarea v-model:value="jdText" :rows="6" placeholder="请粘贴岗位的JD描述..." />
-        </a-form-item>
-      </a-form>
-      <div v-if="matchResult" class="match-result">
-        <a-progress :percent="matchResult.match_score" :stroke-color="matchResult.match_score >= 80 ? '#52c41a' : matchResult.match_score >= 60 ? '#faad14' : '#ff4d4f'" />
-        <p><strong>岗位关键词：</strong>{{ matchResult.keywords?.join('、') }}</p>
-        <p><strong>缺失技能：</strong>{{ matchResult.missing_skills?.join('、') || '无' }}</p>
-        <p><strong>优化建议：</strong></p>
-        <ul>
-          <li v-for="(s, i) in matchResult.suggestions" :key="i">{{ s }}</li>
-        </ul>
-      </div>
-    </a-modal>
-
-    <!-- 模板选择抽屉 -->
-    <a-drawer
-      v-model:open="showTemplateDrawer"
-      title="选择简历模板"
-      placement="right"
-      width="760"
-      root-class-name="template-drawer"
-    >
-      <div class="template-scroll">
-        <div class="template-grid">
-          <div
-            v-for="t in templateList"
-            :key="t.id"
-            class="template-card"
-            :class="{ active: templateId === t.id }"
-            @click="selectTemplate(t.id)"
-          >
-            <div class="template-thumb" :style="{ background: t.color }">
-              <span class="template-num">{{ t.id }}</span>
-              <span class="template-paper-line"></span>
-              <span class="template-paper-line short"></span>
-              <span class="template-paper-line"></span>
-            </div>
-            <div class="template-info">
-              <div class="template-name">{{ t.name }}</div>
-              <div class="template-desc">{{ t.desc }}</div>
-            </div>
-            <div v-if="templateId === t.id" class="template-check">
-              <CheckOutlined />
-            </div>
-          </div>
-        </div>
-      </div>
-    </a-drawer>
-
-    <!-- 评分弹窗 -->
-    <a-modal v-model:open="showScoreModal" title="AI简历评分" :footer="null" width="500px">
-      <div v-if="scoreResult" class="score-result">
-        <div class="score-total">
-          <a-progress type="circle" :percent="scoreResult.total" :size="120" :stroke-color="scoreResult.total >= 80 ? '#52c41a' : scoreResult.total >= 60 ? '#faad14' : '#ff4d4f'" />
-          <span class="score-label">总分</span>
-        </div>
-        <a-row :gutter="[16, 16]" style="margin-top: 24px">
-          <a-col v-for="item in scoreItems" :key="item.key" :span="12">
-            <a-card size="small">
-              <a-progress :percent="Math.round((scoreResult[item.key] / item.max) * 100)" :format="() => `${scoreResult[item.key]}/${item.max}`" />
-              <div style="text-align: center; margin-top: 4px; color: #666">{{ item.label }}</div>
-            </a-card>
-          </a-col>
-        </a-row>
-      </div>
-    </a-modal>
-  </div>
-</template>
-
 <style scoped>
+/* 编辑器外层：深色工作区，突出 A4 纸张 */
 .editor-page {
-  min-height: 100vh;
-  background: #39394d;
-}
-.editor-main {
-  padding-top: 70px;
-  padding-bottom: 340px;
-  min-height: 100vh;
-}
-.preview-area {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: calc(100vh - 410px);
-}
-.down-big {
-  position: fixed;
-  right: 32px;
-  bottom: 360px;
-  z-index: 40;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #fff;
-  background: linear-gradient(135deg, #1677ff, #4096ff);
-  border: none;
-  border-radius: 24px;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(22, 119, 255, 0.4);
-  transition: all 0.2s;
-}
-.down-big:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(22, 119, 255, 0.5);
-}
-.down-big:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.match-result {
-  margin-top: 16px;
-  padding: 16px;
-  background: #f6f8fa;
-  border-radius: 8px;
-}
-.match-result p {
-  margin-bottom: 8px;
-}
-.score-result {
-  text-align: center;
-}
-.score-total {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-.score-label {
-  font-size: 16px;
-  font-weight: 600;
-}
-.template-scroll {
-  max-height: calc(100vh - 120px);
-  padding-right: 8px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-.template-scroll::-webkit-scrollbar {
-  width: 8px;
-}
-.template-scroll::-webkit-scrollbar-thumb {
-  background: #c8d6ea;
-  border-radius: 999px;
-}
-.template-scroll::-webkit-scrollbar-thumb:hover {
-  background: #9db6d8;
-}
-.template-scroll::-webkit-scrollbar-track {
-  background: #f3f6fb;
-  border-radius: 999px;
-}
-.template-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  padding-bottom: 8px;
-}
-.template-card {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-height: 116px;
-  padding: 14px;
-  border: 1px solid #e5eaf3;
-  border-radius: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-  background: linear-gradient(180deg, #fff, #fbfdff);
-}
-.template-card:hover {
-  border-color: #1677ff;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(22, 119, 255, 0.14);
-}
-.template-card.active {
-  border-color: #1677ff;
-  background: linear-gradient(180deg, #f0f7ff, #ffffff);
-  box-shadow: 0 8px 20px rgba(22, 119, 255, 0.16);
-}
-.template-thumb {
-  position: relative;
-  width: 72px;
-  height: 92px;
-  padding: 12px 10px;
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  flex-shrink: 0;
-  overflow: hidden;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
-}
-.template-num {
-  color: #fff;
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
-  margin-bottom: 14px;
-}
-.template-paper-line {
-  width: 42px;
-  height: 4px;
-  margin-bottom: 6px;
-  background: rgba(255,255,255,0.72);
-  border-radius: 999px;
-}
-.template-paper-line.short {
-  width: 28px;
-}
-.template-info {
-  flex: 1;
-  min-width: 0;
-}
-.template-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 6px;
-}
-.template-desc {
-  font-size: 12px;
-  line-height: 1.5;
-  color: #6b7280;
-}
-.template-check {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 22px;
-  height: 22px;
-  background: #1677ff;
-  color: #fff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
+  @apply min-h-screen bg-[#39394d];
 }
 
-:deep(.template-drawer .ant-drawer-body) {
-  padding: 18px 16px 18px 20px;
-  background: #f7faff;
+/* 主内容区：留出顶部工具栏 + 底部编辑面板空间 */
+.editor-main {
+  @apply min-h-screen pb-[340px] pt-[70px];
+}
+
+/* 预览区居中 */
+.preview-area {
+  @apply relative flex min-h-[calc(100vh-410px)] flex-col items-center;
+}
+
+/* 右下角大下载按钮 */
+.down-big {
+  @apply fixed bottom-[360px] right-8 z-40 inline-flex items-center gap-2 rounded-pill bg-gradient-to-r from-brand to-brand-light px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60;
+}
+
+/* JD 匹配结果展示 */
+.match-result {
+  @apply mt-4 rounded-card bg-canvas p-4 text-sm text-ink-secondary;
+}
+
+.match-result p {
+  @apply mb-2;
+}
+
+/* 评分结果区 */
+.score-result {
+  @apply text-center;
+}
+
+.score-total {
+  @apply flex flex-col items-center gap-2;
+}
+
+.score-label {
+  @apply text-base font-semibold text-ink;
+}
+
+.score-item-card {
+  @apply rounded-card border border-line/60 shadow-sm;
+}
+
+/* 模板卡片滚动容器 */
+.template-scroll {
+  @apply max-h-[calc(100vh-120px)] overflow-y-auto overscroll-contain pr-2;
+}
+
+.template-scroll::-webkit-scrollbar {
+  @apply w-2;
+}
+
+.template-scroll::-webkit-scrollbar-thumb {
+  @apply rounded-pill bg-line;
+}
+
+.template-scroll::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted;
+}
+
+.template-scroll::-webkit-scrollbar-track {
+  @apply rounded-pill bg-canvas;
+}
+
+/* 模板网格布局 */
+.template-grid {
+  @apply grid grid-cols-2 gap-4 pb-2;
+}
+
+.template-card {
+  @apply relative flex cursor-pointer items-center gap-3.5 rounded-card border border-line/60 bg-gradient-to-b from-white to-canvas/50 p-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-lighter hover:shadow-card;
+}
+
+.template-card.active {
+  @apply border-brand bg-brand-lighter/40 shadow-card-hover;
+}
+
+.template-thumb {
+  @apply relative flex h-20 w-16 flex-shrink-0 flex-col items-center justify-center gap-1.5 overflow-hidden rounded-button;
+}
+
+.template-num {
+  @apply z-10 text-2xl font-bold text-white/90;
+}
+
+.template-paper-line {
+  @apply absolute left-2 right-2 h-0.5 rounded-full bg-white/40;
+}
+
+.template-paper-line:nth-of-type(2) {
+  @apply top-5;
+}
+
+.template-paper-line:nth-of-type(3) {
+  @apply top-9 w-2/3;
+}
+
+.template-paper-line:nth-of-type(4) {
+  @apply top-12;
+}
+
+.template-info {
+  @apply min-w-0 flex-1;
+}
+
+.template-name {
+  @apply truncate text-sm font-semibold text-ink;
+}
+
+.template-desc {
+  @apply mt-0.5 line-clamp-2 text-xs text-muted;
+}
+
+.template-check {
+  @apply absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs text-white;
+}
+
+/* 弹窗统一覆盖：输入框、选择框 */
+.editor-modal :deep(.ant-modal-header) {
+  @apply border-b border-line/60 pb-3;
+}
+
+.editor-modal :deep(.ant-modal-title) {
+  @apply text-base font-semibold text-ink;
+}
+
+.editor-modal-input,
+.editor-modal-select,
+.editor-modal-textarea {
+  @apply rounded-button border-line bg-white px-4 py-2 text-sm text-ink placeholder:text-muted transition-colors hover:border-brand-lighter focus:border-brand focus:ring-2 focus:ring-brand/10;
+}
+
+.editor-modal :deep(.ant-form-item-label > label) {
+  @apply text-sm font-medium text-ink-secondary;
+}
+
+/* 抽屉标题 */
+:global(.template-drawer .ant-drawer-header) {
+  @apply border-b border-line/60;
+}
+
+:global(.template-drawer .ant-drawer-title) {
+  @apply text-base font-semibold text-ink;
 }
 </style>
