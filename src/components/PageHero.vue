@@ -25,7 +25,7 @@ defineProps({
 <template>
   <section
     class="relative overflow-hidden px-4 text-center text-white sm:px-6 lg:px-8"
-    :class="compact ? 'py-12' : 'py-16 sm:py-20'"
+    :class="compact ? 'py-8 sm:py-10' : 'py-16 sm:py-20'"
     style="background: var(--gradient-hero)"
   >
     <!-- 背景装饰光斑 -->
@@ -42,8 +42,8 @@ defineProps({
       </h1>
       <p
         v-if="subtitle"
-        class="mx-auto mb-8 max-w-2xl text-white/90"
-        :class="compact ? 'text-sm sm:text-base' : 'text-base sm:text-lg'"
+        class="mx-auto"
+        :class="compact ? 'mb-4 max-w-2xl text-sm text-white/90 sm:text-base' : 'mb-8 max-w-2xl text-base text-white/90 sm:text-lg'"
       >
         {{ subtitle }}
       </p>
@@ -56,7 +56,8 @@ defineProps({
       <!-- 统计徽章 -->
       <div
         v-if="stats.length"
-        class="mt-10 flex flex-wrap items-center justify-center gap-4 sm:mt-12 sm:gap-8"
+        class="flex flex-wrap items-center justify-center gap-3 sm:gap-6"
+        :class="compact ? 'mt-6' : 'mt-10 sm:mt-12 sm:gap-8'"
       >
         <template v-for="(stat, index) in stats" :key="stat.label">
           <div v-if="index > 0" class="hidden h-10 w-px bg-white/30 sm:block" />

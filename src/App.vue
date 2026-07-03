@@ -14,7 +14,7 @@
       >
         <router-view />
       </main>
-      <AppFooter v-if="!$route.meta.hideLayout" />
+      <AppFooter v-if="!$route.meta.hideLayout && !$route.meta.hideFooter" />
     </div>
   </a-config-provider>
 </template>

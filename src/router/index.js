@@ -12,7 +12,7 @@ const routes = [
     path: '/',
     name: 'Home',
     component: () => import('@/views/home/index.vue'),
-    meta: { title: 'AI简历助手' },
+    meta: { title: 'AI简历助手', hideFooter: true },
   },
   {
     path: '/login',

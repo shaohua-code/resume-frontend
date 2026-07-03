@@ -1,22 +1,19 @@
 <script setup>
 /**
- * 首页 - Hero + JD 输入 + 6 功能卡 + 使用流程
+ * 首页 - Hero + 6 功能卡 + 使用流程（一屏布局）
  */
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { RocketOutlined, UserOutlined, CloudUploadOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 import PageHero from '@/components/PageHero.vue'
 import GlassCard from '@/components/GlassCard.vue'
 import GradientButton from '@/components/GradientButton.vue'
-import JdInputPanel from './components/JdInputPanel.vue'
 import FeatureGrid from './components/FeatureGrid.vue'
 import { HOME_FEATURES, HOME_STATS } from './utils/features'
 import { createHomeNavigator } from './utils/navigate'
 
 const router = useRouter()
 const userStore = useUserStore()
-const jdText = ref('')
 const navTo = createHomeNavigator(router, userStore)
 
 function handleFeatureClick(item) {
@@ -25,8 +22,9 @@ function handleFeatureClick(item) {
 </script>
 
 <template>
-  <div class="animate-fade-in">
+  <div class="flex min-h-[calc(100vh-4rem)] flex-col animate-fade-in">
     <PageHero
+      compact
       title="AI简历助手 · 校园版"
       subtitle="不会写简历？10分钟拥有一份专业校招简历"
       :stats="HOME_STATS"
@@ -57,21 +55,20 @@ function handleFeatureClick(item) {
           <UserOutlined /> 我的简历
         </button>
       </template>
-      <JdInputPanel v-model="jdText" />
     </PageHero>
 
-    <section class="page-container">
-      <div class="mb-10 text-center">
+    <section class="page-container shrink-0 py-4 sm:py-5">
+      <div class="mb-4 text-center sm:mb-5">
         <h2 class="section-title">核心功能</h2>
-        <p class="section-subtitle mt-2">从生成到优化，全流程 AI 辅助</p>
+        <p class="section-subtitle mt-1">从生成到优化，全流程 AI 辅助</p>
       </div>
       <FeatureGrid :features="HOME_FEATURES" @click="handleFeatureClick" />
     </section>
 
-    <section class="mx-auto max-w-5xl px-4 pb-12 sm:px-6 lg:px-8">
-      <div class="mb-10 text-center">
+    <section class="mx-auto w-full max-w-5xl shrink-0 px-4 pb-4 sm:px-6 sm:pb-5 lg:px-8">
+      <div class="mb-4 text-center">
         <h2 class="section-title">使用流程</h2>
-        <p class="section-subtitle mt-2">四步完成专业简历</p>
+        <p class="section-subtitle mt-1">四步完成专业简历</p>
       </div>
       <GlassCard>
         <a-steps :current="0" class="flow-steps" direction="vertical" responsive>
