@@ -25,6 +25,12 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // 按钮视觉变体：heroPrimary 用于首页 Hero 白底渐变字主 CTA
+  variant: {
+    type: String,
+    default: 'primary',
+    validator: (v) => ['primary', 'ghost', 'heroPrimary'].includes(v),
+  },
   htmlType: {
     type: String,
     default: 'button',
@@ -34,7 +40,8 @@ const props = defineProps({
 const emit = defineEmits(['click'])
 
 const btnClass = computed(() => {
-  if (props.ghost) return 'btn-ghost'
+  if (props.variant === 'heroPrimary') return 'btn-hero-primary'
+  if (props.variant === 'ghost' || props.ghost) return 'btn-ghost'
   return props.size === 'small' ? 'btn-primary-sm' : 'btn-primary'
 })
 </script>
@@ -49,6 +56,9 @@ const btnClass = computed(() => {
     :html-type="htmlType"
     @click="emit('click', $event)"
   >
-    <slot />
+    <span v-if="variant === 'heroPrimary'" class="bg-gradient-to-r from-brand via-brand-light to-accent bg-clip-text text-transparent">
+      <slot />
+    </span>
+    <slot v-else />
   </a-button>
 </template>

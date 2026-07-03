@@ -71,9 +71,14 @@
           </a-upload-dragger>
 
           <div v-if="uploading" class="mt-4 rounded-card bg-cream p-4">
-            <a-progress :percent="uploadPercent" status="active" stroke-color="#00D4FF" />
-            <div class="mt-2 text-center text-sm text-muted">
-              {{ uploadPercent < 100 ? `上传中 ${uploadPercent}%` : 'AI 正在优化中，请稍候...' }}
+            <a-progress v-if="uploadPercent < 100 && !streamText" :percent="uploadPercent" status="active" stroke-color="#00D4FF" />
+            <div v-if="uploadPercent < 100 && !streamText" class="mt-2 text-center text-sm text-muted">
+              正在上传并连接 AI...
+            </div>
+            <div v-else>
+              <p class="mb-2 text-center text-sm font-medium text-brand-dark">{{ streamStatus || 'AI 正在优化中...' }}</p>
+              <pre class="max-h-48 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-ink-secondary">{{ displayStreamText }}</pre>
+              <span class="mt-2 inline-block h-4 w-0.5 animate-pulse bg-brand-dark" />
             </div>
           </div>
 
@@ -124,11 +129,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
-  FileTextOutlined,
   FileDoneOutlined,
   CloudUploadOutlined,
   InboxOutlined,
@@ -140,6 +144,7 @@ import {
 } from '@ant-design/icons-vue'
 import {
   uploadOptimizeResume,
+  uploadOptimizeResumeStream,
   getUploadedResume,
   deleteUploadedResume,
   createResume as createApi,
@@ -156,9 +161,18 @@ const targetPosition = ref('')
 const uploading = ref(false)
 const uploadPercent = ref(0)
 const optimizeResult = ref(null)
+const streamText = ref('')
+const streamStatus = ref('')
 
-const existingFile = ref(null) // 已上传的文件元信息
+const existingFile = ref(null)
 const deleting = ref(false)
+
+// 流式文本展示（过长时截取尾部）
+const displayStreamText = computed(() => {
+  if (!streamText.value) return '等待 AI 响应...'
+  const text = streamText.value
+  return text.length > 2000 ? `...${text.slice(-2000)}` : text
+})
 
 // 拦截自动上传，仅记录到 fileList，由按钮统一触发
 function beforeUpload(file) {
@@ -191,20 +205,39 @@ async function handleSubmit() {
   uploading.value = true
   uploadPercent.value = 0
   optimizeResult.value = null
+  streamText.value = ''
+  streamStatus.value = ''
 
   try {
-    const res = await uploadOptimizeResume(realFile, targetPosition.value, (p) => {
-      uploadPercent.value = p
-    })
-    if (res.success) {
-      optimizeResult.value = res.data
-      // 写入 store，供编辑器使用
-      resumeStore.currentResume = res.data.resume
-      // AI 优化成功后立即创建数据库记录，确保后续保存是 update
+    let resultData = null
+
+    try {
+      resultData = await uploadOptimizeResumeStream(realFile, targetPosition.value, {
+        onStatus: (msg) => {
+          uploadPercent.value = 100
+          streamStatus.value = msg
+        },
+        onChunk: (chunk) => {
+          uploadPercent.value = 100
+          streamText.value += chunk
+        },
+      })
+    } catch (streamErr) {
+      console.warn('[UploadOptimize] 流式失败，回退同步接口:', streamErr)
+      uploadPercent.value = 0
+      const res = await uploadOptimizeResume(realFile, targetPosition.value, (p) => {
+        uploadPercent.value = p
+      })
+      if (res.success) resultData = res.data
+    }
+
+    if (resultData) {
+      optimizeResult.value = resultData
+      resumeStore.currentResume = resultData.resume
       try {
         const createRes = await createApi({
-          title: (res.data.resume && res.data.resume.name ? `${res.data.resume.name}的简历` : '未命名简历'),
-          resume_json: res.data.resume,
+          title: resultData.resume?.name ? `${resultData.resume.name}的简历` : '未命名简历',
+          resume_json: resultData.resume,
           template_id: resumeStore.currentTemplateId || 1,
           score: 0,
         })
@@ -215,11 +248,10 @@ async function handleSubmit() {
         console.warn('[UploadOptimize] 自动创建简历失败，保存时将无法更新:', createErr)
       }
       message.success('AI 优化完成')
-      // 刷新已上传文件信息
       await fetchExisting()
     }
   } catch (e) {
-    // request 拦截器已弹出错误提示
+    /* request / fetch 已提示 */
   } finally {
     uploading.value = false
   }

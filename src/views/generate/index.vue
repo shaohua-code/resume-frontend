@@ -246,16 +246,24 @@
           </div>
         </div>
 
-        <!-- Step3: AI生成中 -->
+        <!-- Step3: AI生成中（流式打字机） -->
         <div v-show="currentStep === 2">
           <a-card class="card-base mb-4 py-12 text-center" :bordered="false">
-            <div class="mx-auto max-w-md">
+            <div class="mx-auto max-w-2xl">
               <div class="relative mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-brand-lighter">
                 <a-spin size="large" class="text-brand-dark" />
               </div>
               <h2 class="mb-2 text-xl font-semibold text-brand-dark">AI 正在为你生成专业简历...</h2>
               <p class="mb-6 text-sm text-muted">使用 STAR 法则优化项目描述，突出技术亮点</p>
-              <div class="rounded-card bg-cream p-5 text-left">
+
+              <!-- 流式输出打字机区域 -->
+              <div class="rounded-card border border-line/50 bg-cream p-4 text-left sm:p-5">
+                <p class="mb-2 text-xs font-medium text-brand-dark">实时生成预览</p>
+                <pre class="max-h-48 overflow-y-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-ink-secondary sm:text-sm">{{ displayStreamText }}</pre>
+                <span v-if="resumeStore.generating" class="mt-2 inline-block h-4 w-0.5 animate-pulse bg-brand-dark" />
+              </div>
+
+              <div class="mt-6 rounded-card bg-cream p-5 text-left">
                 <div v-for="(step, idx) in progressSteps" :key="idx" class="flex items-center gap-3 py-2 text-sm" :class="progressClass(idx)">
                   <span class="flex h-5 w-5 items-center justify-center rounded-full text-xs">
                     {{ idx < progressIndex ? '✓' : idx === progressIndex ? '⟳' : '○' }}
@@ -263,7 +271,7 @@
                   {{ step }}
                 </div>
               </div>
-              <p class="mt-6 text-xs text-warning">💡 通常需要 10-30 秒，请耐心等待</p>
+              <p class="mt-6 text-xs text-warning">💡 流式生成中，请耐心等待完成</p>
             </div>
           </a-card>
         </div>
@@ -353,9 +361,18 @@ const progressSteps = [
 // 根据当前生成状态模拟进度索引
 const progressIndex = computed(() => {
   if (currentStep.value !== 2) return progressSteps.length
-  // 简单模拟：每 2 秒前进一步，最高到最后一项
-  const t = Date.now()
-  return Math.min(progressSteps.length - 1, Math.floor(t / 2000) % progressSteps.length)
+  const len = resumeStore.streamText.length
+  if (len > 800) return 3
+  if (len > 400) return 2
+  if (len > 100) return 1
+  return 0
+})
+
+// 打字机展示文本（流式内容过长时仅展示尾部）
+const displayStreamText = computed(() => {
+  const text = resumeStore.streamText
+  if (!text) return '等待 AI 响应...'
+  return text.length > 2000 ? `...${text.slice(-2000)}` : text
 })
 
 // 返回步骤条目的状态样式类

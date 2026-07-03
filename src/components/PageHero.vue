@@ -25,7 +25,7 @@ defineProps({
 <template>
   <section
     class="relative overflow-hidden px-4 text-center text-white sm:px-6 lg:px-8"
-    :class="compact ? 'py-8 sm:py-10' : 'py-16 sm:py-20'"
+    :class="compact ? 'py-6 sm:py-8' : 'py-16 sm:py-20'"
     style="background: var(--gradient-hero)"
   >
     <!-- 背景装饰光斑 -->
@@ -36,7 +36,7 @@ defineProps({
     <div class="relative mx-auto max-w-4xl">
       <h1
         class="mb-4 font-bold tracking-tight"
-        :class="compact ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl lg:text-5xl'"
+        :class="compact ? 'text-xl sm:text-2xl' : 'text-3xl sm:text-4xl lg:text-5xl'"
       >
         {{ title }}
       </h1>
@@ -56,14 +56,14 @@ defineProps({
       <!-- 统计徽章 -->
       <div
         v-if="stats.length"
-        class="flex flex-wrap items-center justify-center gap-3 sm:gap-6"
-        :class="compact ? 'mt-6' : 'mt-10 sm:mt-12 sm:gap-8'"
+        class="flex flex-wrap items-center justify-center gap-4 sm:gap-8"
+        :class="compact ? 'mt-4 sm:mt-6' : 'mt-10 sm:mt-12'"
       >
         <template v-for="(stat, index) in stats" :key="stat.label">
-          <div v-if="index > 0" class="hidden h-10 w-px bg-white/30 sm:block" />
-          <div class="badge-glass flex flex-col items-center gap-1 px-5 py-2">
-            <span class="text-2xl font-bold sm:text-3xl">{{ stat.value }}</span>
-            <span class="text-xs text-white/80">{{ stat.label }}</span>
+          <div v-if="index > 0" class="hidden h-12 w-px bg-white/40 sm:block" />
+          <div class="stat-glass">
+            <span class="text-4xl font-extrabold text-white drop-shadow-sm sm:text-5xl">{{ stat.value }}</span>
+            <span class="text-sm font-medium text-white/95">{{ stat.label }}</span>
           </div>
         </template>
       </div>

@@ -1,14 +1,15 @@
 <script setup>
 /**
- * 首页 - Hero + 6 功能卡 + 使用流程（一屏布局）
+ * 首页 - Hero + 功能卡 + 模板预览 + 信任背书 + 使用流程
  */
 import { useRouter } from 'vue-router'
-import { RocketOutlined, UserOutlined, CloudUploadOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 import PageHero from '@/components/PageHero.vue'
 import GlassCard from '@/components/GlassCard.vue'
-import GradientButton from '@/components/GradientButton.vue'
+import HeroActions from './components/HeroActions.vue'
 import FeatureGrid from './components/FeatureGrid.vue'
+import TemplatePreview from './components/TemplatePreview.vue'
+import TrustOfferWall from './components/TrustOfferWall.vue'
 import { HOME_FEATURES, HOME_STATS } from './utils/features'
 import { createHomeNavigator } from './utils/navigate'
 
@@ -22,7 +23,7 @@ function handleFeatureClick(item) {
 </script>
 
 <template>
-  <div class="flex min-h-[calc(100vh-4rem)] flex-col animate-fade-in">
+  <div class="animate-fade-in">
     <PageHero
       compact
       title="AI简历助手 · 校园版"
@@ -30,42 +31,27 @@ function handleFeatureClick(item) {
       :stats="HOME_STATS"
     >
       <template #actions>
-        <GradientButton ghost class="!border-white/50 !bg-white/15 !text-white hover:!bg-white/25" @click="navTo('/generate')">
-          <RocketOutlined />
-          {{ userStore.isLoggedIn ? '开始生成简历' : '立即开始' }}
-        </GradientButton>
-        <button
-          class="btn-ghost-sm !border-white/50 !bg-white/15 !text-white hover:!bg-white/25"
-          @click="navTo('/upload-optimize')"
-        >
-          <CloudUploadOutlined /> 上传 PDF 优化
-        </button>
-        <button
-          v-if="!userStore.isLoggedIn"
-          class="btn-ghost-sm !border-white/50 !bg-white/15 !text-white hover:!bg-white/25"
-          @click="router.push('/login')"
-        >
-          登录账号
-        </button>
-        <button
-          v-else
-          class="btn-ghost-sm !border-white/50 !bg-white/15 !text-white hover:!bg-white/25"
-          @click="router.push('/user')"
-        >
-          <UserOutlined /> 我的简历
-        </button>
+        <HeroActions
+          :is-logged-in="userStore.isLoggedIn"
+          @start="navTo('/generate')"
+          @upload="navTo('/upload-optimize')"
+        />
       </template>
     </PageHero>
 
-    <section class="page-container shrink-0 py-4 sm:py-5">
-      <div class="mb-4 text-center sm:mb-5">
+    <section class="page-container py-6 sm:py-8">
+      <div class="mb-4 text-center sm:mb-6">
         <h2 class="section-title">核心功能</h2>
         <p class="section-subtitle mt-1">从生成到优化，全流程 AI 辅助</p>
       </div>
       <FeatureGrid :features="HOME_FEATURES" @click="handleFeatureClick" />
     </section>
 
-    <section class="mx-auto w-full max-w-5xl shrink-0 px-4 pb-4 sm:px-6 sm:pb-5 lg:px-8">
+    <TemplatePreview />
+
+    <TrustOfferWall />
+
+    <section class="mx-auto w-full max-w-5xl px-4 pb-10 sm:px-6 lg:px-8">
       <div class="mb-4 text-center">
         <h2 class="section-title">使用流程</h2>
         <p class="section-subtitle mt-1">四步完成专业简历</p>

@@ -16,39 +16,42 @@
         class="nav-menu hidden flex-1 border-b-0 bg-transparent lg:flex"
       >
         <a-menu-item key="home" @click="navTo('/')">首页</a-menu-item>
+        <a-menu-item key="templates" @click="navTo('/templates')">模板预览</a-menu-item>
         <a-menu-item key="generate" @click="navTo('/generate')">生成简历</a-menu-item>
         <a-menu-item key="upload" @click="navTo('/upload-optimize')">上传优化</a-menu-item>
         <a-menu-item key="user" @click="navTo('/user')">用户中心</a-menu-item>
         <a-menu-item v-if="userStore.isAdmin" key="admin" @click="navTo('/admin')">管理后台</a-menu-item>
       </a-menu>
 
-      <div class="ml-auto flex items-center gap-2 sm:gap-3">
-        <a-button type="text" class="hidden text-muted hover:text-brand-dark sm:inline-flex" aria-label="搜索">
+      <div class="ml-auto flex items-center gap-2">
+        <a-button type="text" class="ml-6 hidden text-muted hover:text-brand-dark sm:inline-flex" aria-label="搜索">
           <SearchOutlined class="text-lg" />
         </a-button>
 
-        <template v-if="userStore.isLoggedIn">
-          <a-dropdown>
-            <a-button type="text" class="flex items-center gap-1.5 rounded-button px-2 py-1.5 hover:bg-brand-lighter sm:px-3">
-              <UserOutlined class="text-brand-dark" />
-              <span class="hidden max-w-[100px] truncate text-sm font-medium text-ink sm:inline">{{ userStore.userInfo.nickname }}</span>
-              <a-tag :color="getRoleColor(userStore.role)" class="ml-1 hidden sm:inline-flex">{{ getRoleLabel(userStore.role) }}</a-tag>
-            </a-button>
-            <template #overlay>
-              <a-menu>
-                <a-menu-item disabled>我的角色：{{ getRoleLabel(userStore.role) }}</a-menu-item>
-                <a-menu-divider />
-                <a-menu-item @click="$router.push('/user')"><UserOutlined class="mr-1" /> 个人中心</a-menu-item>
-                <a-menu-divider />
-                <a-menu-item @click="handleLogout"><LogoutOutlined class="mr-1" /> 退出登录</a-menu-item>
-              </a-menu>
-            </template>
-          </a-dropdown>
-        </template>
-        <template v-else>
-          <GradientButton size="small" class="hidden sm:inline-flex" @click="$router.push('/register')">免费开户</GradientButton>
-          <GradientButton size="small" ghost @click="$router.push('/login')">登录</GradientButton>
-        </template>
+        <div class="ml-6 flex items-center gap-3">
+          <template v-if="userStore.isLoggedIn">
+            <a-dropdown>
+              <a-button type="text" class="flex items-center gap-1.5 rounded-button px-2 py-1.5 hover:bg-brand-lighter sm:px-3">
+                <UserOutlined class="text-brand-dark" />
+                <span class="hidden max-w-[100px] truncate text-sm font-medium text-ink sm:inline">{{ userStore.userInfo.nickname }}</span>
+                <a-tag :color="getRoleColor(userStore.role)" class="ml-1 hidden sm:inline-flex">{{ getRoleLabel(userStore.role) }}</a-tag>
+              </a-button>
+              <template #overlay>
+                <a-menu>
+                  <a-menu-item disabled>我的角色：{{ getRoleLabel(userStore.role) }}</a-menu-item>
+                  <a-menu-divider />
+                  <a-menu-item @click="$router.push('/user')"><UserOutlined class="mr-1" /> 个人中心</a-menu-item>
+                  <a-menu-divider />
+                  <a-menu-item @click="handleLogout"><LogoutOutlined class="mr-1" /> 退出登录</a-menu-item>
+                </a-menu>
+              </template>
+            </a-dropdown>
+          </template>
+          <template v-else>
+            <GradientButton size="small" class="hidden sm:inline-flex" @click="$router.push('/register')">免费开户</GradientButton>
+            <GradientButton size="small" ghost @click="$router.push('/login')">登录</GradientButton>
+          </template>
+        </div>
 
         <!-- 移动端汉堡菜单 -->
         <a-button type="text" class="text-ink lg:hidden" aria-label="打开菜单" @click="drawerOpen = true">
@@ -60,6 +63,7 @@
     <a-drawer v-model:open="drawerOpen" placement="right" title="导航菜单" :width="280">
       <a-menu mode="inline" :selected-keys="selectedKeys" class="border-0">
         <a-menu-item key="home" @click="navToMobile('/')">首页</a-menu-item>
+        <a-menu-item key="templates" @click="navToMobile('/templates')">模板预览</a-menu-item>
         <a-menu-item key="generate" @click="navToMobile('/generate')">生成简历</a-menu-item>
         <a-menu-item key="upload" @click="navToMobile('/upload-optimize')">上传优化</a-menu-item>
         <a-menu-item key="user" @click="navToMobile('/user')">用户中心</a-menu-item>
@@ -89,6 +93,7 @@ const drawerOpen = ref(false)
 const selectedKeys = computed(() => {
   const map = {
     '/': ['home'],
+    '/templates': ['templates'],
     '/generate': ['generate'],
     '/upload-optimize': ['upload'],
     '/user': ['user'],
@@ -98,7 +103,8 @@ const selectedKeys = computed(() => {
 })
 
 function navTo(path) {
-  if (!userStore.isLoggedIn && path !== '/') {
+  const publicPaths = ['/', '/templates']
+  if (!userStore.isLoggedIn && !publicPaths.includes(path)) {
     router.push('/login')
   } else {
     router.push(path)

@@ -43,7 +43,25 @@
 Semi-transparent frosted glass header (`backdrop-blur-xl`, `bg-white/70`, `border-white/60`). Logo left, horizontal `a-menu` center on desktop, `a-drawer` on mobile. Right: search icon + gradient CTA button「免费开户」.
 
 ### Hero（首屏）
-Full-width gradient hero (`--gradient-hero`). Large bold title, subtitle, glass pill stat badges, CTA slot, optional JD input module below.
+Full-width gradient hero (`--gradient-hero`). Large bold title, subtitle, **stat-glass** pill badges (large white numbers `text-4xl`, `bg-white/25 backdrop-blur-xl`), dual CTA slot via **HeroActions** (primary: white bg + gradient text `heroPrimary`; secondary: frosted ghost). Mobile compact: `py-6`, title `text-xl`. Optional JD input below.
+
+### HeroActions（双 CTA）
+Primary「立即开始」/「开始生成简历」：`GradientButton variant="heroPrimary"`。Secondary「上传 PDF 优化」：`btn-ghost-sm` white border glass. No login button on hero (login stays in AppHeader).
+
+### stat-glass（数据背书）
+`.stat-glass` — `rounded-full bg-white/25 backdrop-blur-xl border-white/40 min-w-[120px] px-6 py-4`. Number: `text-4xl font-extrabold text-white drop-shadow-sm`. Label: `text-sm text-white/95`.
+
+### FeatureCard（功能卡片）
+Responsive grid `xs=24 md=12 lg=8 xl=4`. Icon in rounded square, title, description, **「立即体验 →」** link (`text-brand-dark`). Hover: `hover:-translate-y-2 hover:shadow-card-hover`.
+
+### TemplatePreview（精选模板轮播）
+`a-carousel` autoplay, renders real template components with fixed demo data (张三). Link to `/templates` for full gallery.
+
+### TrustOfferWall（信任背书）
+Centered copy with bold offer count. Horizontal logo wall: company abbr text, `opacity-40 grayscale`.
+
+### Templates Gallery（全部模板）
+`/templates` page — grid of all 20 templates with same demo resume data, click → `/generate`.
 
 ### GlassCard（磨砂卡片）
 Semi-transparent white card (`bg-surface/80`, `backdrop-blur-sm`, `border-line/60`, `rounded-card`, `shadow-card`). Optional `glass-glow` neon gradient border wrapper.
@@ -51,8 +69,8 @@ Semi-transparent white card (`bg-surface/80`, `backdrop-blur-sm`, `border-line/6
 ### JD Input Module（JD 输入）
 Wide container with gradient glow border. Label「JD 输入模块」, `a-textarea` + gradient「开始生成」button. Mobile: stack vertically.
 
-### FeatureCard（功能卡片）
-6-column responsive grid (`xs=24 sm=12 md=8 xl=4`). Icon in rounded square, title, 2-line description. Hover: lift + border brand/30.
+### Generate Stream UI（流式生成）
+Step3 shows SSE typewriter in `pre` monospace box (`max-h-48 overflow-y-auto`), blinking cursor while generating. Progress steps advance with `streamText` length.
 
 ### Footer
 Glass footer bar. Brand + links (关于/协议/隐私) + copyright.
@@ -63,14 +81,13 @@ Glass footer bar. Brand + links (关于/协议/隐私) + copyright.
 
 ```
 mobile (default): 单列、Drawer 导航、表格 scroll x
-sm (640px):       功能卡 2 列
-md (768px):       表单 2 列、Steps 横向
-lg (1024px):      水平菜单、Admin Sider 展开
-xl (1280px):      功能卡 6 列
+md (768px):       功能卡 2 列（md=12）、表单 2 列、Steps 横向
+lg (1024px):      功能卡 3 列（lg=8）、水平菜单、Admin Sider 展开
+xl (1280px):      功能卡 6 列（xl=4）
 ```
 
 Ant Design 用法示例：
-- `a-col :xs="24" :sm="12" :md="8" :xl="4"`
+- `a-col :xs="24" :md="12" :lg="8" :xl="4"`
 - `a-layout-sider :breakpoint="'lg'" :collapsed-width="0"`
 - `a-table :scroll="{ x: 'max-content' }"`
 

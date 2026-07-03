@@ -83,17 +83,30 @@ src/
 | GradientButton | `components/GradientButton.vue` | 渐变主按钮 |
 | PageHero | `components/PageHero.vue` | 页面 Hero 区 |
 
-首页专用：`views/home/components/JdInputPanel.vue`、`FeatureGrid.vue`
+首页专用：`views/home/components/` 下：
+
+| 组件 | 用途 |
+| --- | --- |
+| HeroActions | 首屏双 CTA（主按钮 heroPrimary + 次按钮毛玻璃） |
+| FeatureGrid | 6 功能卡片，Hover 上浮 +「立即体验 →」 |
+| TemplatePreview | 精选模板轮播（张三演示数据 + 真实模板组件） |
+| TrustOfferWall | Offer 数量 + 名企 Logo 文字墙 |
+| JdInputPanel | JD 输入模块 |
+
+模板预览页：`views/templates/index.vue`（`/templates`）展示全部 20 套模板。
 
 ## 六、响应式约定
 
 | 断点 | 策略 |
 | --- | --- |
 | 默认 | 单列、Drawer 导航 |
-| sm (640px) | 功能卡 2 列 |
-| md (768px) | 表单 2 列 |
-| lg (1024px) | 水平菜单、Admin Sider |
-| xl (1280px) | 功能卡 6 列 |
+| md (768px) | 功能卡 2 列（`:md="12"`） |
+| lg (1024px) | 功能卡 3 列（`:lg="8"`）、水平菜单 |
+| xl (1280px) | 功能卡 6 列（`:xl="4"`） |
+
+首页允许自然滚动（已移除 `min-h-[calc(100vh-4rem)]` 一屏限制）。顶栏搜索与「免费开户」间距 `ml-6`（24px）。
+
+AI 简历生成支持 SSE 流式输出（`/resume/generate/stream`），生成页 Step3 展示打字机预览。
 
 ## 七、新页面开发 Checklist
 

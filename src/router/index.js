@@ -27,6 +27,12 @@ const routes = [
     meta: { title: '注册', hideLayout: true },
   },
   {
+    path: '/templates',
+    name: 'Templates',
+    component: () => import('@/views/templates/index.vue'),
+    meta: { title: '全部模板预览' },
+  },
+  {
     path: '/generate',
     name: 'Generate',
     component: () => import('@/views/generate/index.vue'),

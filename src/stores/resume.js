@@ -6,6 +6,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import {
   generateResume as generateApi,
+  generateResumeStream as generateStreamApi,
   optimizeProject as optimizeApi,
   matchJd as matchApi,
   scoreResume as scoreApi,
@@ -31,6 +32,8 @@ export const useResumeStore = defineStore('resume', () => {
   const resumeTotal = ref(0)
   // AI生成加载状态
   const generating = ref(false)
+  // 流式生成过程中的实时文本（用于打字机 UI）
+  const streamText = ref('')
   // AI优化加载状态
   const optimizing = ref(false)
   // JD匹配加载状态
@@ -38,21 +41,19 @@ export const useResumeStore = defineStore('resume', () => {
   // 评分加载状态
   const scoring = ref(false)
 
-  // AI生成简历
-  // 行为：调用 AI 接口 → 拿到结构化 JSON → 立即落库为一份新简历并记录 ID
-  // 这样后续在 Editor 中点保存时，永远走 update 路径
-  async function generateResume(formData) {
+  // AI生成简历（流式优先，失败时回退同步接口）
+  async function generateResume(formData, { onChunk } = {}) {
     generating.value = true
+    streamText.value = ''
     try {
-      const res = await generateApi(formData)
-      if (res.success) {
-        currentResume.value = res.data
+      let resumeData = null
 
-        // AI 生成成功后立即创建数据库记录，确保后续保存是 update
+      const persistResume = async (data) => {
+        currentResume.value = data
         try {
           const createRes = await createApi({
-            title: (res.data && res.data.name ? `${res.data.name}的简历` : '未命名简历'),
-            resume_json: res.data,
+            title: data?.name ? `${data.name}的简历` : '未命名简历',
+            resume_json: data,
             template_id: currentTemplateId.value || 1,
             score: 0,
           })
@@ -62,12 +63,29 @@ export const useResumeStore = defineStore('resume', () => {
         } catch (createErr) {
           console.warn('[generateResume] 自动创建简历失败，保存时将无法更新:', createErr)
         }
-
-        message.success('简历生成成功')
-        return res.data
       }
-    } catch (e) {
+
+      try {
+        resumeData = await generateStreamApi(formData, {
+          onChunk: (chunk) => {
+            streamText.value += chunk
+            onChunk?.(chunk)
+          },
+        })
+      } catch (streamErr) {
+        console.warn('[generateResume] 流式生成失败，回退同步接口:', streamErr)
+        const res = await generateApi(formData)
+        if (res.success) resumeData = res.data
+      }
+
+      if (resumeData && Object.keys(resumeData).length) {
+        await persistResume(resumeData)
+        message.success('简历生成成功')
+        return resumeData
+      }
       message.error('生成失败，请重试')
+    } catch (e) {
+      message.error(e.message || '生成失败，请重试')
     } finally {
       generating.value = false
     }
@@ -165,6 +183,7 @@ export const useResumeStore = defineStore('resume', () => {
     resumeList,
     resumeTotal,
     generating,
+    streamText,
     optimizing,
     matching,
     scoring,

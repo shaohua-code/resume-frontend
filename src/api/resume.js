@@ -11,6 +11,129 @@ export function generateResume(data, model = '') {
   return request.post('/resume/generate', payload)
 }
 
+/**
+ * AI生成简历（SSE 流式）
+ * @param {object} data 表单数据
+ * @param {object} handlers 流式回调 { onChunk, onDone, onError }
+ * @param {string} model 可选模型
+ */
+export async function generateResumeStream(data, handlers = {}, model = '') {
+  const { onChunk, onDone, onError } = handlers
+  const payload = model ? { ...data, model } : data
+
+  // 流式请求需绕过 axios 拦截器，直接使用 fetch 读取 ReadableStream
+  const { useUserStore } = await import('@/stores/user')
+  const userStore = useUserStore()
+  const token = await userStore.getValidToken()
+
+  const response = await fetch('/api/resume/generate/stream', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) {
+    let detail = '生成失败，请重试'
+    try {
+      const errJson = await response.json()
+      detail = errJson.detail || detail
+    } catch (e) {
+      /* ignore */
+    }
+    const err = new Error(detail)
+    onError?.(err)
+    throw err
+  }
+
+  return readSSEStream(response, handlers)
+}
+
+/**
+ * 解析 SSE 行事件（与 generateResumeStream 共用格式）
+ */
+async function readSSEStream(response, handlers = {}) {
+  const { onChunk, onDone, onError, onStatus } = handlers
+  const reader = response.body?.getReader()
+  if (!reader) {
+    const err = new Error('浏览器不支持流式响应')
+    onError?.(err)
+    throw err
+  }
+
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let finalData = null
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop() || ''
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed.startsWith('data:')) continue
+      try {
+        const event = JSON.parse(trimmed.slice(5).trim())
+        if (event.status) onStatus?.(event.status)
+        if (event.chunk) onChunk?.(event.chunk)
+        if (event.error) {
+          const err = new Error(event.error)
+          onError?.(err)
+          throw err
+        }
+        if (event.done && event.data) {
+          finalData = event.data
+          onDone?.(event.data)
+        }
+      } catch (parseErr) {
+        if (parseErr.message && !parseErr.message.includes('JSON')) throw parseErr
+      }
+    }
+  }
+
+  return finalData
+}
+
+/**
+ * 上传 PDF 并由 AI 流式优化
+ */
+export async function uploadOptimizeResumeStream(file, targetPosition = '', handlers = {}, model = '') {
+  const { useUserStore } = await import('@/stores/user')
+  const userStore = useUserStore()
+  const token = await userStore.getValidToken()
+
+  const formData = new FormData()
+  formData.append('file', file)
+  if (targetPosition) formData.append('target_position', targetPosition)
+  if (model) formData.append('model', model)
+
+  const response = await fetch('/api/resume/uploadOptimize/stream', {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  })
+
+  if (!response.ok) {
+    let detail = '优化失败，请重试'
+    try {
+      const errJson = await response.json()
+      detail = errJson.detail || detail
+    } catch (e) {
+      /* ignore */
+    }
+    const err = new Error(detail)
+    handlers.onError?.(err)
+    throw err
+  }
+
+  return readSSEStream(response, handlers)
+}
+
 /** AI优化项目描述 */
 export function optimizeProject(projectDescription, targetPosition = '', model = '') {
   return request.post('/resume/optimize', { project_description: projectDescription, target_position: targetPosition, model })

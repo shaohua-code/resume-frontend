@@ -160,6 +160,25 @@ body {
     @apply inline-flex items-center rounded-pill border border-white/50 bg-white/30 px-4 py-1.5 text-xs font-medium text-white backdrop-blur-md;
   }
 
+  /* Hero 数据背书胶囊 - 高对比度玻璃态 */
+  .stat-glass {
+    @apply flex min-w-[120px] flex-col items-center gap-1 rounded-full border border-white/40 bg-white/25 px-6 py-4 backdrop-blur-xl;
+  }
+
+  /* Hero 主 CTA - 白底实色容器，渐变文字由组件内 span 承载 */
+  .btn-hero-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-button border-0 bg-white px-5 py-2.5 text-sm font-semibold shadow-lift transition-all duration-200 ease-smooth hover:brightness-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-hero-primary:hover {
+    @apply shadow-float;
+  }
+
+  /* Hero 次 CTA - 毛玻璃白边 */
+  .btn-hero-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-button border border-white/60 bg-white/15 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-md transition-all duration-200 ease-smooth hover:border-white/80 hover:bg-white/25 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
   .badge-success {
     @apply inline-flex items-center rounded-pill bg-mint px-2.5 py-0.5 text-xs font-medium text-emerald-700;
   }
