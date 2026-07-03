@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { message } from 'ant-design-vue'
 import { getAdminUsers, resetAdminUserPassword, updateAdminUser } from '@/api/admin'
 import { getRoleLabel, getStatusLabel } from '@/constants/roles'
+import AdminUserInfoCell from './AdminUserInfoCell.vue'
 
 const props = defineProps({
   mode: {
@@ -106,10 +107,11 @@ onMounted(loadUsers)
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'profile'">
-            <div>
-              <p class="font-medium text-ink">{{ record.nickname || '未设置昵称' }}</p>
-              <p class="mt-1 text-xs text-muted">{{ record.email }}</p>
-            </div>
+            <AdminUserInfoCell
+              :user-id="record.user_id"
+              :nickname="record.nickname"
+              :email="record.email"
+            />
           </template>
           <template v-if="column.key === 'role'">
             <a-select :value="record.role" class="input-field w-36" @update:value="record.role = $event">

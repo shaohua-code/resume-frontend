@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { getAdminResumeDetail, getAdminResumes } from '@/api/admin'
+import AdminUserInfoCell from './AdminUserInfoCell.vue'
 
 const loading = ref(false)
 const resumes = ref([])
@@ -11,7 +12,7 @@ const query = reactive({ page: 1, size: 10, user_id: '' })
 
 const columns = [
   { title: '标题', dataIndex: 'title', key: 'title' },
-  { title: '用户ID', dataIndex: 'user_id', key: 'user_id' },
+  { title: '用户信息', key: 'user', width: 200 },
   { title: '评分', dataIndex: 'score', key: 'score', width: 90 },
   { title: '更新时间', dataIndex: 'update_time', key: 'update_time', width: 190 },
   { title: '操作', key: 'action', width: 100 },
@@ -63,6 +64,13 @@ onMounted(loadResumes)
         @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'user'">
+            <AdminUserInfoCell
+              :user-id="record.user_id"
+              :nickname="record.user?.nickname"
+              :email="record.user?.email"
+            />
+          </template>
           <template v-if="column.key === 'action'">
             <button class="btn-primary-sm" @click="showResumeDetail(record)">查看</button>
           </template>

@@ -219,3 +219,44 @@ body {
 .input-field .ant-picker-input > input {
   background-color: transparent;
 }
+
+/* Ant Design 组件外层去掉 input-field 边框，内层保留单层 border */
+.ant-select.input-field,
+.ant-picker.input-field,
+.ant-input-affix-wrapper.input-field,
+.ant-input-textarea.input-field {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.input-field .ant-select-selector {
+  @apply rounded-button border border-line bg-white/80 px-3 py-1 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
+}
+
+.input-field .ant-select-focused .ant-select-selector,
+.input-field .ant-select-selector:focus,
+.input-field .ant-select-selector:focus-within {
+  @apply border-brand ring-2 ring-brand/15;
+}
+
+.input-field .ant-picker {
+  @apply rounded-button border border-line bg-white/80 px-3 py-1 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
+}
+
+.input-field .ant-picker-focused {
+  @apply border-brand ring-2 ring-brand/15;
+}
+
+.input-field .ant-input-affix-wrapper {
+  @apply rounded-button border border-line bg-white/80 px-3 py-1 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
+}
+
+.input-field .ant-input-affix-wrapper-focused {
+  @apply border-brand ring-2 ring-brand/15;
+}
+
+.input-field .ant-input {
+  @apply bg-transparent text-sm text-ink placeholder:text-muted;
+}

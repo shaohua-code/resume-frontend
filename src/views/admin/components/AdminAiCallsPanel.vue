@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { getAdminAiCalls } from '@/api/admin'
+import AdminUserInfoCell from './AdminUserInfoCell.vue'
 
 const loading = ref(false)
 const aiCalls = ref([])
@@ -8,7 +9,7 @@ const total = ref(0)
 const query = reactive({ page: 1, size: 10, task_type: '' })
 
 const columns = [
-  { title: '用户ID', dataIndex: 'user_id', key: 'user_id' },
+  { title: '用户信息', key: 'user', width: 200 },
   { title: '任务类型', dataIndex: 'task_type', key: 'task_type', width: 150 },
   { title: '模型', dataIndex: 'model', key: 'model', width: 180 },
   { title: '结果', dataIndex: 'success', key: 'success', width: 100 },
@@ -55,6 +56,13 @@ onMounted(loadAiCalls)
         @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'user'">
+            <AdminUserInfoCell
+              :user-id="record.user_id"
+              :nickname="record.user?.nickname"
+              :email="record.user?.email"
+            />
+          </template>
           <template v-if="column.key === 'success'">
             <span :class="record.success ? 'badge-success' : 'tag-soft'">{{ record.success ? '成功' : '失败' }}</span>
           </template>

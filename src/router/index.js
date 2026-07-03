@@ -63,9 +63,76 @@ const routes = [
   },
   {
     path: '/admin',
-    name: 'AdminDashboard',
-    component: () => import('@/views/admin/index.vue'),
-    meta: { title: '管理后台', requireAuth: true, roles: ['SUPER_ADMIN', 'ADMIN'], hideLayout: true },
+    component: () => import('@/views/admin/AdminLayout.vue'),
+    meta: { requireAuth: true, roles: ['SUPER_ADMIN', 'ADMIN'], hideLayout: true },
+    redirect: '/admin/stats',
+    children: [
+      {
+        path: 'stats',
+        name: 'AdminStats',
+        component: () => import('@/views/admin/components/AdminStatsPanel.vue'),
+        meta: { title: '数据中心', permission: 'admin:stats' },
+      },
+      {
+        path: 'admins',
+        name: 'AdminAdmins',
+        component: () => import('@/views/admin/components/AdminUsersPanel.vue'),
+        props: { mode: 'admins' },
+        meta: { title: '管理员账号', permission: 'admin:manage_admins' },
+      },
+      {
+        path: 'users',
+        name: 'AdminUsers',
+        component: () => import('@/views/admin/components/AdminUsersPanel.vue'),
+        props: { mode: 'users' },
+        meta: { title: '用户账号', permission: 'admin:manage_users' },
+      },
+      {
+        path: 'orders',
+        name: 'AdminOrders',
+        component: () => import('@/views/admin/components/AdminOrdersPanel.vue'),
+        meta: { title: '业务订单', permission: 'admin:view_orders' },
+      },
+      {
+        path: 'ai-calls',
+        name: 'AdminAiCalls',
+        component: () => import('@/views/admin/components/AdminAiCallsPanel.vue'),
+        meta: { title: 'AI调用记录', permission: 'admin:view_ai_calls' },
+      },
+      {
+        path: 'resumes',
+        name: 'AdminResumes',
+        component: () => import('@/views/admin/components/AdminResumesPanel.vue'),
+        meta: { title: '简历资源', permission: 'admin:view_resumes' },
+      },
+      {
+        path: 'announcements',
+        name: 'AdminAnnouncements',
+        component: () => import('@/views/admin/components/AdminCrudPanel.vue'),
+        props: { type: 'announcements' },
+        meta: { title: '公告管理', permission: 'admin:announcement' },
+      },
+      {
+        path: 'models',
+        name: 'AdminModels',
+        component: () => import('@/views/admin/components/AdminCrudPanel.vue'),
+        props: { type: 'models' },
+        meta: { title: 'AI模型管理', permission: 'admin:ai_model' },
+      },
+      {
+        path: 'plans',
+        name: 'AdminPlans',
+        component: () => import('@/views/admin/components/AdminCrudPanel.vue'),
+        props: { type: 'plans' },
+        meta: { title: '会员套餐', permission: 'admin:membership_plan' },
+      },
+      {
+        path: 'configs',
+        name: 'AdminConfigs',
+        component: () => import('@/views/admin/components/AdminConfigsPanel.vue'),
+        meta: { title: '系统配置', permission: 'admin:system_config' },
+      },
+    ],
   },
 ]
 
@@ -76,13 +143,16 @@ const router = createRouter({
 
 // 路由守卫：未登录时跳转到登录页
 router.beforeEach((to, from, next) => {
-  document.title = to.meta.title ? `${to.meta.title} - AI简历助手` : 'AI简历助手'
+  const titleRoute = [...to.matched].reverse().find((r) => r.meta.title)
+  document.title = titleRoute?.meta.title ? `${titleRoute.meta.title} - AI简历助手` : 'AI简历助手'
   const token = localStorage.getItem('token')
-  if (to.meta.requireAuth && !token) {
+  const requireAuth = to.matched.some((r) => r.meta.requireAuth)
+  const rolesMeta = to.matched.find((r) => r.meta.roles)?.meta.roles
+  if (requireAuth && !token) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
-  } else if (to.meta.roles) {
+  } else if (rolesMeta) {
     const userStore = useUserStore()
-    if (!to.meta.roles.includes(userStore.role)) {
+    if (!rolesMeta.includes(userStore.role)) {
       message.error('无权访问该页面')
       next('/')
       return

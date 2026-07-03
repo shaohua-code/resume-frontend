@@ -47,8 +47,8 @@ const greeting = computed(() => {
 
     <div class="relative z-10 flex-1">
       <h2 class="text-2xl font-semibold">👋 {{ greeting }}，{{ nickname }}</h2>
-      <p class="mt-3 text-sm text-white/90">欢迎回来！今天共有 {{ todayNewUsers }} 位用户生成了 AI 简历。</p>
-      <p class="mt-1 text-sm text-white/90">继续保持，让更多用户拿到 Offer 🚀</p>
+      <p class="mt-3 text-sm text-white/95">欢迎回来！今天共有 {{ todayNewUsers }} 位用户生成了 AI 简历。</p>
+      <p class="mt-1 text-sm text-white/95">继续保持，让更多用户拿到 Offer 🚀</p>
       <a-segmented
         :value="activeRange"
         :options="timeRanges"
@@ -66,11 +66,24 @@ const greeting = computed(() => {
 </template>
 
 <style scoped>
-/* 时间筛选器：选中项使用浅青蓝品牌色 */
-.welcome-segmented :deep(.ant-segmented-item-selected) {
-  @apply bg-white/30 text-white;
+/* 时间筛选器：未选中白字，选中白底深字 */
+.welcome-segmented :deep(.ant-segmented) {
+  @apply rounded-full bg-white/15 p-1 backdrop-blur;
 }
+
 .welcome-segmented :deep(.ant-segmented-item) {
-  @apply text-white/80 transition-colors hover:text-white;
+  @apply text-white/90 transition-colors hover:text-white;
+}
+
+.welcome-segmented :deep(.ant-segmented-item-selected) {
+  @apply bg-white font-medium text-brand-dark shadow-sm;
+}
+
+.welcome-segmented :deep(.ant-segmented-item-selected .ant-segmented-item-label) {
+  @apply text-brand-dark;
+}
+
+.welcome-segmented :deep(.ant-segmented-thumb) {
+  @apply rounded-full bg-white shadow-sm;
 }
 </style>

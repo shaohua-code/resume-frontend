@@ -36,7 +36,7 @@ export function getStatusLabel(status = 'ACTIVE') {
 
 export function getVipStatusText(userInfo = {}) {
   if (['SUPER_ADMIN', 'ADMIN'].includes(userInfo.role)) {
-    return '管理员账号默认拥有导出和后台权限'
+    return ''
   }
   if (userInfo.role !== 'VIP') {
     return '当前为普通用户，可升级 VIP 解锁不限次数 AI 和导出能力'

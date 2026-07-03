@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { getAdminOrders, updateAdminOrder } from '@/api/admin'
+import AdminUserInfoCell from './AdminUserInfoCell.vue'
 
 const loading = ref(false)
 const orders = ref([])
@@ -10,7 +11,7 @@ const query = reactive({ page: 1, size: 10, status: '' })
 
 const columns = [
   { title: '订单号', dataIndex: 'order_no', key: 'order_no' },
-  { title: '用户ID', dataIndex: 'user_id', key: 'user_id' },
+  { title: '用户信息', key: 'user', width: 200 },
   { title: '金额', dataIndex: 'amount', key: 'amount', width: 100 },
   { title: '状态', dataIndex: 'status', key: 'status', width: 150 },
   { title: '创建时间', dataIndex: 'create_time', key: 'create_time', width: 190 },
@@ -68,6 +69,13 @@ onMounted(loadOrders)
         @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'user'">
+            <AdminUserInfoCell
+              :user-id="record.user_id"
+              :nickname="record.user?.nickname"
+              :email="record.user?.email"
+            />
+          </template>
           <template v-if="column.key === 'status'">
             <a-select :value="record.status" class="input-field w-32" @update:value="record.status = $event">
               <a-select-option value="PENDING">待支付</a-select-option>
