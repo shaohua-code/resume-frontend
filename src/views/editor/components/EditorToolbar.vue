@@ -5,7 +5,7 @@
   <header class="glass fixed left-0 right-0 top-0 z-[100] h-[70px] shadow-glass">
     <div class="mx-auto flex h-full max-w-[1400px] items-center justify-between gap-2 px-3 sm:gap-4 sm:px-5">
       <!-- 左侧：返回 + 模板 -->
-      <div class="flex shrink-0 items-center gap-1 sm:gap-2">
+      <div class="flex items-center gap-1 shrink-0 sm:gap-2">
         <button class="btn-ghost h-9 px-2 py-1.5 text-xs sm:px-3" @click="router.back()">
           <LeftOutlined /> <span class="hidden sm:inline">返回</span>
         </button>
@@ -15,7 +15,7 @@
       </div>
 
       <!-- 桌面端：间距/字体/皮肤 -->
-      <ul class="mx-auto hidden flex-1 list-none items-center justify-center gap-1 p-0 lg:flex">
+      <ul class="items-center justify-center flex-1 hidden gap-1 p-0 mx-auto list-none lg:flex">
         <li v-for="item in settingItems" :key="item.key" class="inline-block">
           <a-popover v-model:open="item.open.value" trigger="click" placement="bottom">
             <template #content>
@@ -35,18 +35,18 @@
       </ul>
 
       <!-- 桌面端：右侧操作 -->
-      <div class="hidden shrink-0 items-center gap-2 lg:flex">
+      <div class="items-center hidden gap-2 shrink-0 lg:flex">
         <button class="btn-ghost h-9 px-3 py-1.5 text-xs" @click="emit('optimize')"><BulbOutlined /> AI优化</button>
         <button class="btn-ghost h-9 px-3 py-1.5 text-xs" @click="emit('match')"><AimOutlined /> JD匹配</button>
         <button class="btn-ghost h-9 px-3 py-1.5 text-xs" :disabled="scoring" @click="emit('score')">
           <a-spin v-if="scoring" size="small" class="mr-1" />
           <BarChartOutlined v-else class="mr-1" /> 评分
         </button>
-        <GradientButton size="small" class="h-9" :loading="saving" @click="emit('save')">
+        <GradientButton  class="!h-9 " :loading="saving" @click="emit('save')">
           <SaveOutlined /> {{ saving ? '保存中' : '保存' }}
         </GradientButton>
         <a-dropdown :disabled="exporting">
-          <GradientButton size="small" class="h-9" :loading="exporting">
+          <GradientButton  class="!h-9" :loading="exporting">
             <DownloadOutlined /> {{ exporting ? '导出中' : '导出' }}
           </GradientButton>
           <template #overlay>
@@ -59,7 +59,7 @@
       </div>
 
       <!-- 小屏：更多操作下拉 -->
-      <div class="flex shrink-0 items-center gap-2 lg:hidden">
+      <div class="flex items-center gap-2 shrink-0 lg:hidden">
         <GradientButton size="small" class="h-9" :loading="saving" @click="emit('save')">
           <SaveOutlined />
         </GradientButton>

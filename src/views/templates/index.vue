@@ -28,14 +28,14 @@ function goGenerate() {
 </script>
 
 <template>
-  <div class="animate-fade-in pb-16">
+  <div class="pb-16 animate-fade-in">
     <PageHero
       compact
       title="全部简历模板"
       subtitle="20 套全民简历风格模板，使用张三校招演示数据实时预览"
     />
 
-    <section class="page-container -mt-4">
+    <section class="-mt-4 page-container">
       <a-row :gutter="[24, 24]">
         <a-col
           v-for="tpl in TEMPLATE_LIST"
@@ -46,17 +46,17 @@ function goGenerate() {
           :lg="6"
         >
           <GlassCard
-            class="flex cursor-pointer flex-col items-center transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover"
+            class="flex flex-col items-center transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:shadow-card-hover"
             @click="openPreview(tpl.id)"
           >
             <TemplateMiniPreview :template-id="tpl.id" :resume="DEMO_RESUME" :scale="0.22" />
-            <p class="mt-2 text-center text-xs text-muted">{{ tpl.desc }}</p>
+            <p class="mt-2 text-xs text-center text-muted">{{ tpl.desc }}</p>
           </GlassCard>
         </a-col>
       </a-row>
 
-      <div class="mt-10 flex justify-center">
-        <GradientButton @click="goGenerate">使用模板开始生成</GradientButton>
+      <div class="flex justify-center mt-10">
+        <GradientButton class="inline-flex items-center justify-center h-9" @click="goGenerate">使用模板开始生成</GradientButton>
       </div>
     </section>
 
@@ -70,7 +70,7 @@ function goGenerate() {
     >
       <div v-if="previewId" class="flex flex-col items-center py-4">
         <TemplateMiniPreview :template-id="previewId" :resume="DEMO_RESUME" :scale="0.45" />
-        <GradientButton class="mt-6" @click="goGenerate">使用此模板生成</GradientButton>
+        <GradientButton class="!h-9 !min-w-[100px] mt-[10px]" @click="goGenerate">使用此模板生成</GradientButton>
       </div>
     </a-modal>
   </div>

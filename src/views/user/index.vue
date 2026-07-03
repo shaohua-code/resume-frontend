@@ -3,14 +3,14 @@
 -->
 <template>
   <div class="page-container animate-fade-in">
-    <h2 class="section-title mb-6">用户中心</h2>
+    <h2 class="mb-6 section-title">用户中心</h2>
 
-    <a-card class="card-base mb-4" :bordered="false">
+    <a-card class="mb-4 card-base" :bordered="false">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <a-avatar :size="64" class="shrink-0 bg-brand-dark text-lg font-bold text-white">
+        <a-avatar :size="64" class="text-lg font-bold text-white shrink-0 bg-brand-dark">
           {{ userStore.userInfo.nickname?.[0] || 'U' }}
         </a-avatar>
-        <div class="min-w-0 flex-1">
+        <div class="flex-1 min-w-0">
           <a-descriptions :column="{ xs: 1, sm: 2 }" size="small">
             <a-descriptions-item label="昵称">{{ userStore.userInfo.nickname }}</a-descriptions-item>
             <a-descriptions-item label="邮箱">{{ userStore.userInfo.email }}</a-descriptions-item>
@@ -25,7 +25,7 @@
             <a-descriptions-item label="会员" :span="2">{{ vipStatusText }}</a-descriptions-item>
           </a-descriptions>
         </div>
-        <div class="flex shrink-0 flex-wrap items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3 shrink-0">
           <GradientButton v-if="userStore.role === 'USER'" ghost size="small">升级 VIP</GradientButton>
           <GradientButton ghost size="small" class="!border-danger/30 !text-danger hover:!bg-red-50" @click="handleLogout">退出登录</GradientButton>
         </div>
@@ -37,7 +37,7 @@
         <span class="text-base font-semibold text-ink">我的简历</span>
       </template>
       <template #extra>
-        <GradientButton size="small" @click="$router.push('/generate')">
+        <GradientButton size="small" class="!h-9 !min-w-[100px]" @click="$router.push('/generate')">
           <PlusOutlined /> 新建简历
         </GradientButton>
       </template>
@@ -61,17 +61,17 @@
             <div class="flex items-center gap-2">
               <button class="link-text" @click="$router.push(`/editor/${record.id}`)">编辑</button>
               <a-popconfirm title="确定删除？" @confirm="handleDelete(record.id)">
-                <button class="text-sm font-medium text-danger transition-colors hover:text-red-500">删除</button>
+                <button class="text-sm font-medium transition-colors text-danger hover:text-red-500">删除</button>
               </a-popconfirm>
             </div>
           </template>
         </template>
         <template #emptyText>
-          <div class="empty-state py-12">
+          <div class="py-12 empty-state">
             <div class="empty-icon">📝</div>
             <div class="empty-title">还没有简历</div>
             <div class="empty-desc">点击右上角新建简历，开启你的 AI 简历之旅</div>
-            <GradientButton class="mt-4" @click="$router.push('/generate')">
+            <GradientButton class="inline-flex h-10 min-w-[160px] items-center justify-center gap-2" @click="$router.push('/generate')">
               <PlusOutlined /> 新建简历
             </GradientButton>
           </div>

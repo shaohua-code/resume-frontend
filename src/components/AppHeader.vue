@@ -2,10 +2,10 @@
   顶部导航栏 - 磨砂玻璃 + 桌面菜单 + 移动端 Drawer
 -->
 <template>
-  <a-layout-header class="glass fixed left-0 right-0 top-0 z-50 flex h-16 items-center px-0 leading-none">
-    <div class="mx-auto flex h-full w-full max-w-7xl items-center px-4 sm:px-6 lg:px-8">
-      <div class="mr-4 flex cursor-pointer items-center gap-2 transition-opacity hover:opacity-80 lg:mr-8" @click="navTo('/')">
-        <img src="/vite.svg" alt="AI简历助手" class="h-8 w-8" />
+  <a-layout-header class="fixed top-0 left-0 right-0 z-50 flex items-center h-16 px-0 leading-none glass">
+    <div class="flex items-center w-full h-full px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+      <div class="flex items-center gap-2 mr-4 transition-opacity cursor-pointer hover:opacity-80 lg:mr-8" @click="navTo('/')">
+        <img src="/vite.svg" alt="AI简历助手" class="w-8 h-8" />
         <span class="text-base font-bold text-brand-dark sm:text-lg">AI 简历助手</span>
       </div>
 
@@ -13,7 +13,7 @@
       <a-menu
         mode="horizontal"
         :selected-keys="selectedKeys"
-        class="nav-menu hidden flex-1 border-b-0 bg-transparent lg:flex"
+        class="flex-1 hidden bg-transparent border-b-0 nav-menu lg:flex"
       >
         <a-menu-item key="home" @click="navTo('/')">首页</a-menu-item>
         <a-menu-item key="templates" @click="navTo('/templates')">模板预览</a-menu-item>
@@ -22,19 +22,17 @@
         <a-menu-item v-if="userStore.isAdmin" key="admin" @click="navTo('/admin')">管理后台</a-menu-item>
       </a-menu>
 
-      <div class="ml-auto flex items-center gap-2">
-        <a-button type="text" class="ml-6 hidden text-muted hover:text-brand-dark sm:inline-flex" aria-label="搜索">
-          <SearchOutlined class="text-lg" />
-        </a-button>
+      <div class="flex items-center gap-2 ml-auto">
+      
 
-        <div class="ml-6 flex items-center gap-3">
+        <div class="flex items-center gap-3 ml-6">
           <template v-if="userStore.isLoggedIn">
             <a-dropdown>
-              <a-button type="text" class="flex items-center gap-1.5 rounded-button px-2 py-1.5 hover:bg-brand-lighter sm:px-3">
+              <div class="flex items-center gap-1.5 rounded-button px-2 py-1.5 cursor-pointer sm:px-3">
                 <UserOutlined class="text-brand-dark" />
                 <span class="hidden max-w-[100px] truncate text-sm font-medium text-ink sm:inline">{{ userStore.userInfo.nickname }}</span>
-                <a-tag :color="getRoleColor(userStore.role)" class="ml-1 hidden sm:inline-flex">{{ getRoleLabel(userStore.role) }}</a-tag>
-              </a-button>
+                <a-tag :color="getRoleColor(userStore.role)" class="hidden ml-1 sm:inline-flex">{{ getRoleLabel(userStore.role) }}</a-tag>
+              </div>
               <template #overlay>
                 <a-menu>
                   <a-menu-item disabled>我的角色：{{ getRoleLabel(userStore.role) }}</a-menu-item>
@@ -67,7 +65,7 @@
         <a-menu-item key="user" @click="navToMobile('/user')">用户中心</a-menu-item>
         <a-menu-item v-if="userStore.isAdmin" key="admin" @click="navToMobile('/admin')">管理后台</a-menu-item>
       </a-menu>
-      <div v-if="!userStore.isLoggedIn" class="mt-6 flex flex-col gap-3">
+      <div v-if="!userStore.isLoggedIn" class="flex flex-col gap-3 mt-6">
         <GradientButton block @click="navToMobile('/register')">免费开户</GradientButton>
         <GradientButton block ghost @click="navToMobile('/login')">登录</GradientButton>
       </div>
