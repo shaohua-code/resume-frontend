@@ -27,6 +27,13 @@ const routes = [
     meta: { title: '注册', hideLayout: true },
   },
   {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: () => import('@/views/forgot-password/index.vue'),
+    meta: { title: '忘记密码', hideLayout: true },
+  },
+
+  {
     path: '/templates',
     name: 'Templates',
     component: () => import('@/views/templates/index.vue'),

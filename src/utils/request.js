@@ -18,8 +18,8 @@ const request = axios.create({
   timeout: 60000, // 超时60秒（AI生成可能较慢）
 })
 
-// 无需登录即可访问的认证接口，注册/登录页调用时不应触发跳转登录
-const PUBLIC_AUTH_PATHS = ['/auth/sendCode', '/auth/login', '/auth/register', '/auth/loginPassword', '/auth/refresh']
+// 无需登录即可访问的认证接口，注册/登录/重置密码页调用时不应触发跳转登录
+const PUBLIC_AUTH_PATHS = ['/auth/sendCode', '/auth/login', '/auth/register', '/auth/loginPassword', '/auth/refresh', '/auth/resetPassword', '/auth/updatePassword']
 
 function isPublicAuthRequest(url = '') {
   return PUBLIC_AUTH_PATHS.some((path) => url === path || url.endsWith(path))

@@ -98,7 +98,13 @@ onUnmounted(() => countdown.stop())
       </a-tab-pane>
     </a-tabs>
     <template #footer>
-      还没有账号？<router-link to="/register" class="link-text">立即注册</router-link>
+      <div class="flex items-center justify-center gap-4">
+        <router-link to="/forgot-password" class="link-text">忘记密码？</router-link>
+        <span class="text-line">|</span>
+        <span>
+          还没有账号？<router-link to="/register" class="link-text">立即注册</router-link>
+        </span>
+      </div>
     </template>
   </LoginCard>
 </template>

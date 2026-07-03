@@ -4,6 +4,8 @@
  * - register: 邮箱验证码 + 用户名 + 密码注册
  * - loginPassword: 用户名/邮箱 + 密码登录
  * - refreshToken: 刷新 token
+ * - resetPassword: 发送密码重置验证码
+ * - updatePassword: 使用邮箱验证码重置密码
  */
 import request from '@/utils/request'
 
@@ -30,4 +32,14 @@ export function loginPassword(identifier, password) {
 /** 使用 refresh_token 换取新的 access_token */
 export function refreshToken(refresh_token) {
   return request.post('/auth/refresh', { refresh_token })
+}
+
+/** 发送密码重置验证码到邮箱 */
+export function resetPassword(email) {
+  return request.post('/auth/resetPassword', { email })
+}
+
+/** 使用邮箱验证码重置密码 */
+export function updatePassword(email, code, password) {
+  return request.post('/auth/updatePassword', { email, code, password })
 }

@@ -38,7 +38,7 @@ const rules = {
   username: [
     { required: true, message: '请输入用户名' },
     { min: 2, max: 32, message: '用户名长度需在 2-32 位之间' },
-    { pattern: /^[a-zA-Z0-9_\-\u4e00-\u9fa5]+$/, message: '仅支持中英文/数字/下划线/中划线' },
+
   ],
   password: [
     { required: true, message: '请输入密码' },
@@ -111,7 +111,7 @@ onUnmounted(() => countdown.stop())
           </a-input>
         </a-form-item>
         <a-form-item label="用户名" name="username">
-          <a-input v-model:value="form.username" placeholder="2-32 位，中英文/数字/下划线/中划线" size="large" autocomplete="username" allow-clear class="input-field" />
+          <a-input v-model:value="form.username" placeholder="请输入用户名" size="large" autocomplete="username" allow-clear class="input-field" />
         </a-form-item>
         <a-form-item label="密码" name="password">
           <a-input-password v-model:value="form.password" placeholder="6-72 位，建议字母+数字组合" size="large" autocomplete="new-password" class="input-field" />
