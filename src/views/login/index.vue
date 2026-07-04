@@ -27,7 +27,7 @@ async function handlePasswordLogin() {
   pwdLogging.value = true
   try {
     await userStore.loginWithPassword(pwdForm.identifier, pwdForm.password)
-    router.push(route.query.redirect || '/generate')
+    router.push(route.query.redirect || '/')
   } finally {
     pwdLogging.value = false
   }
@@ -51,7 +51,7 @@ async function handleCodeLogin() {
   codeLogging.value = true
   try {
     await userStore.login(codeForm.email, codeForm.code)
-    router.push(route.query.redirect || '/generate')
+    router.push(route.query.redirect || '/')
   } finally {
     codeLogging.value = false
   }
@@ -84,7 +84,7 @@ onUnmounted(() => countdown.stop())
           <a-form-item label="验证码" name="code" :rules="[{ required: true, message: '请输入验证码' }]">
             <a-input v-model:value="codeForm.code" placeholder="请输入验证码" size="large" class="input-field">
               <template #suffix>
-                <button type="button" class="link-text text-xs disabled:text-muted" :disabled="codeCountdown > 0 || sending" @click="handleSendCode">
+                <button type="button" class="text-xs link-text disabled:text-muted" :disabled="codeCountdown > 0 || sending" @click="handleSendCode">
                   {{ codeCountdown > 0 ? `${codeCountdown}s 后重发` : '获取验证码' }}
                 </button>
               </template>
@@ -93,7 +93,7 @@ onUnmounted(() => countdown.stop())
           <a-form-item>
             <GradientButton block html-type="submit" :loading="codeLogging">登录</GradientButton>
           </a-form-item>
-          <p class="-mt-2 text-center text-xs text-muted">首次使用将自动注册账号</p>
+          <p class="-mt-2 text-xs text-center text-muted">首次使用将自动注册账号</p>
         </a-form>
       </a-tab-pane>
     </a-tabs>

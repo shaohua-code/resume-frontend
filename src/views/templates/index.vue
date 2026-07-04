@@ -1,8 +1,8 @@
 <script setup>
 /**
- * 全部模板预览页 - 20 套模板网格 + 弹窗大图预览
+ * 全部模板预览页 - 20 套模板网格 + 弹窗完整简历预览
  */
-import { ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import PageHero from '@/components/PageHero.vue'
 import GlassCard from '@/components/GlassCard.vue'
@@ -13,6 +13,11 @@ import { TEMPLATE_LIST } from '@/constants/templateRegistry'
 
 const router = useRouter()
 const previewId = ref(null)
+const modalPreviewRef = ref(null)
+// 弹窗内预览缩放比，按容器宽度自适应
+const modalPreviewScale = ref(1)
+
+const A4_WIDTH = 794
 
 function openPreview(id) {
   previewId.value = id
@@ -25,6 +30,27 @@ function closePreview() {
 function goGenerate() {
   router.push('/generate')
 }
+
+// 根据弹窗内容区宽度计算预览缩放，避免 A4 溢出
+function updateModalPreviewScale() {
+  if (!modalPreviewRef.value) return
+  const maxWidth = modalPreviewRef.value.clientWidth - 8
+  modalPreviewScale.value = Math.min(1, maxWidth / A4_WIDTH)
+}
+
+watch(previewId, async (id) => {
+  if (!id) return
+  await nextTick()
+  updateModalPreviewScale()
+})
+
+onMounted(() => {
+  window.addEventListener('resize', updateModalPreviewScale)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateModalPreviewScale)
+})
 </script>
 
 <template>
@@ -49,7 +75,12 @@ function goGenerate() {
             class="flex flex-col items-center transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:shadow-card-hover"
             @click="openPreview(tpl.id)"
           >
-            <TemplateMiniPreview :template-id="tpl.id" :resume="DEMO_RESUME" :scale="0.22" />
+            <TemplateMiniPreview
+              :template-id="tpl.id"
+              :resume="DEMO_RESUME"
+              :scale="0.22"
+              preview-mode="page"
+            />
             <p class="mt-2 text-xs text-center text-muted">{{ tpl.desc }}</p>
           </GlassCard>
         </a-col>
@@ -63,13 +94,25 @@ function goGenerate() {
     <a-modal
       :open="previewId !== null"
       :title="TEMPLATE_LIST.find((t) => t.id === previewId)?.name || '模板预览'"
-      width="90%"
+      width="860px"
       :footer="null"
       class="modal-fresh"
       @cancel="closePreview"
     >
-      <div v-if="previewId" class="flex flex-col items-center py-4">
-        <TemplateMiniPreview :template-id="previewId" :resume="DEMO_RESUME" :scale="0.45" />
+      <div v-if="previewId" class="flex flex-col items-center py-2">
+        <!-- 可滚动区域展示完整简历 -->
+        <div
+          ref="modalPreviewRef"
+          class="flex justify-center w-full px-2 py-4 overflow-y-auto rounded-card bg-cream/40"
+        >
+          <TemplateMiniPreview
+            :template-id="previewId"
+            :resume="DEMO_RESUME"
+            :scale="modalPreviewScale"
+            preview-mode="full"
+            :show-label="false"
+          />
+        </div>
         <GradientButton class="!h-9 !min-w-[100px] mt-[10px]" @click="goGenerate">使用此模板生成</GradientButton>
       </div>
     </a-modal>

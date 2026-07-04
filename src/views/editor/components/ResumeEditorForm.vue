@@ -78,6 +78,7 @@ function removeInternship(i) {
       <a-form layout="vertical" size="small">
         <a-row :gutter="12">
           <a-col :span="8"><a-form-item label="姓名"><a-input v-model:value="resume.name" class="input-field" /></a-form-item></a-col>
+          <a-col :span="8"><a-form-item label="意向岗位"><a-input v-model:value="resume.target_position" placeholder="如：前端开发工程师" class="input-field" /></a-form-item></a-col>
           <a-col :span="8"><a-form-item label="学校"><a-input v-model:value="resume.school" class="input-field" /></a-form-item></a-col>
           <a-col :span="8"><a-form-item label="专业"><a-input v-model:value="resume.major" class="input-field" /></a-form-item></a-col>
           <a-col :span="8"><a-form-item label="学历"><a-input v-model:value="resume.education" class="input-field" /></a-form-item></a-col>

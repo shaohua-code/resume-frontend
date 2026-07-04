@@ -45,10 +45,10 @@ function goAllTemplates() {
 
 <template>
   <section class="page-container">
-    <div class="mb-6 flex flex-col items-center justify-between gap-3 sm:mb-8 sm:flex-row">
+    <div class="flex flex-col items-center justify-between gap-3 mb-6 sm:mb-8 sm:flex-row">
       <div class="text-center sm:text-left">
         <h2 class="section-title">精选模板预览</h2>
-        <p class="section-subtitle mt-1">20 套专业模板，张三校招简历实时渲染预览</p>
+        <p class="mt-1 section-subtitle">20 套专业模板，张三校招简历实时渲染预览</p>
       </div>
       <button class="link-text shrink-0" @click="goAllTemplates">
         查看全部模板 →
@@ -63,12 +63,12 @@ function goAllTemplates() {
       class="template-carousel"
     >
       <template #prevArrow>
-        <div class="absolute -left-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/90 text-brand-dark shadow-card sm:-left-4 sm:h-10 sm:w-10">
+        <div class="absolute z-20 flex items-center justify-center w-8 h-8 -translate-y-1/2 rounded-full cursor-pointer -left-2 top-1/2 bg-white/90 text-brand-dark shadow-card sm:-left-4 sm:h-10 sm:w-10">
           <LeftOutlined />
         </div>
       </template>
       <template #nextArrow>
-        <div class="absolute -right-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/90 text-brand-dark shadow-card sm:-right-4 sm:h-10 sm:w-10">
+        <div class="absolute z-20 flex items-center justify-center w-8 h-8 -translate-y-1/2 rounded-full cursor-pointer -right-2 top-1/2 bg-white/90 text-brand-dark shadow-card sm:-right-4 sm:h-10 sm:w-10">
           <RightOutlined />
         </div>
       </template>
@@ -76,7 +76,7 @@ function goAllTemplates() {
       <div
         v-for="tpl in featuredTemplates"
         :key="tpl.id"
-        class="template-slide flex cursor-pointer flex-col items-center px-2 pb-4 pt-2"
+        class="flex flex-col items-center px-2 pt-2 pb-4 cursor-pointer template-slide"
         @click="goGenerate"
       >
         <TemplateMiniPreview
@@ -85,7 +85,7 @@ function goAllTemplates() {
           :scale="0.45"
           :show-label="false"
         />
-        <p class="mt-2 text-sm font-medium text-ink">{{ tpl.name }}</p>
+        <p class="mt-2 text-sm font-medium text-center text-ink">{{ tpl.name }}</p>
       </div>
     </a-carousel>
   </section>
