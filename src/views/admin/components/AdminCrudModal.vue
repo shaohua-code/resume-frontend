@@ -65,6 +65,12 @@ function updateField(key, value) {
         <a-form-item label="任务类型">
           <a-input :value="form.task_type" class="input-field" @update:value="updateField('task_type', $event)" />
         </a-form-item>
+        <a-form-item label="输入单价（元/百万 token）">
+          <a-input-number :value="form.input_price_per_million" :min="0" :step="0.1" class="input-field w-full" @update:value="updateField('input_price_per_million', $event)" />
+        </a-form-item>
+        <a-form-item label="输出单价（元/百万 token）">
+          <a-input-number :value="form.output_price_per_million" :min="0" :step="0.1" class="input-field w-full" @update:value="updateField('output_price_per_million', $event)" />
+        </a-form-item>
         <a-form-item label="VIP专属">
           <a-switch :checked="form.vip_only" @update:checked="updateField('vip_only', $event)" />
         </a-form-item>

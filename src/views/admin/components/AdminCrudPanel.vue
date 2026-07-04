@@ -47,11 +47,21 @@ const crudConfig = {
     title: 'AI模型',
     addText: '新增模型',
     api: aiModelApi,
-    defaultForm: () => ({ name: '', model_key: '', task_type: 'all', vip_only: false, enabled: true }),
+    defaultForm: () => ({
+      name: '',
+      model_key: '',
+      task_type: 'all',
+      input_price_per_million: 0,
+      output_price_per_million: 0,
+      vip_only: false,
+      enabled: true,
+    }),
     columns: [
       { title: '名称', dataIndex: 'name', key: 'name' },
       { title: '模型Key', dataIndex: 'model_key', key: 'model_key' },
       { title: '任务类型', dataIndex: 'task_type', key: 'task_type', width: 140 },
+      { title: '输入单价', dataIndex: 'input_price_per_million', key: 'input_price_per_million', width: 110 },
+      { title: '输出单价', dataIndex: 'output_price_per_million', key: 'output_price_per_million', width: 110 },
       { title: 'VIP专属', dataIndex: 'vip_only', key: 'vip_only', width: 110 },
       { title: '启用', dataIndex: 'enabled', key: 'enabled', width: 100 },
       { title: '操作', key: 'action', width: 150 },
@@ -123,6 +133,12 @@ onMounted(loadItems)
           </template>
           <template v-if="column.key === 'vip_only'">
             <span :class="record.vip_only ? 'badge' : 'tag-soft'">{{ record.vip_only ? 'VIP' : '通用' }}</span>
+          </template>
+          <template v-if="column.key === 'input_price_per_million'">
+            <span class="text-sm text-muted">¥{{ record.input_price_per_million ?? 0 }}/M</span>
+          </template>
+          <template v-if="column.key === 'output_price_per_million'">
+            <span class="text-sm text-muted">¥{{ record.output_price_per_million ?? 0 }}/M</span>
           </template>
           <template v-if="column.key === 'action'">
             <a-space>
