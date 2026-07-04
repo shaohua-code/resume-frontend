@@ -1,4 +1,4 @@
-﻿<!-- 全民简历风格模板 14 -->
+﻿<!-- AI简历风格模板 14 -->
 <script setup>
 import TplVariant from './TplVariant.vue'
 defineProps({ resume: { type: Object, default: () => ({}) } })

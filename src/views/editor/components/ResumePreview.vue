@@ -58,7 +58,11 @@
       >
         <div
           class="page-viewport"
-          :style="{ height: getPageContentHeight(n) + 'px' }"
+          :style="{
+            marginTop: pageTopGap + 'px',
+            height: getPageContentHeight(n) + 'px',
+            maxHeight: effectivePageHeight + 'px',
+          }"
         >
           <div
             class="resume-preview"
@@ -119,11 +123,29 @@ function resolveFontSize(size) {
   return fontSizeMap[size] || fontSizeMap.medium
 }
 
+const ITEM_SELECTOR = '[class*="-item"]'
+const PARA_SELECTOR = 'p, [class*="-text"], [class*="-desc"]'
+const MIN_PAGE_CONTENT = 24
+
+// A4 高度：210×297mm，96dpi 下 297mm ≈ 1123px
+const A4_HEIGHT_MM = 297
+const MM_TO_PX = 96 / 25.4
+const pageHeightPx = ref(Math.round(A4_HEIGHT_MM * MM_TO_PX))
+
+// 页眉/页脚安全边距：缩小每页可用内容高度，避免分页截断文字
+const pageTopGap = computed(() => props.spacing?.pageTopGap ?? DEFAULT_SPACING.pageTopGap)
+const pageBottomGap = computed(() => props.spacing?.pageBottomGap ?? DEFAULT_SPACING.pageBottomGap)
+const effectivePageHeight = computed(() =>
+  Math.max(MIN_PAGE_CONTENT, pageHeightPx.value - pageTopGap.value - pageBottomGap.value),
+)
+
 // 计算预览样式（CSS 变量会继承到 ResumeTemplate）
 const previewStyle = computed(() => ({
   '--section-gap': (props.spacing?.sectionGap ?? DEFAULT_SPACING.sectionGap) + 'px',
   '--line-height': props.spacing?.lineHeight ?? DEFAULT_SPACING.lineHeight,
   '--preview-padding': (props.spacing?.padding ?? DEFAULT_SPACING.padding) + 'px',
+  '--page-top-gap': pageTopGap.value + 'px',
+  '--page-bottom-gap': pageBottomGap.value + 'px',
   '--skin-color': skinColors[props.skin] || skinColors.blue,
   '--font-size': resolveFontSize(props.fontSize),
   '--font-family': props.fontFamily,
@@ -138,6 +160,8 @@ const previewRenderKey = computed(() => [
   props.spacing?.sectionGap,
   props.spacing?.lineHeight,
   props.spacing?.padding,
+  props.spacing?.pageTopGap,
+  props.spacing?.pageBottomGap,
 ].join('-'))
 
 // 点击预览区域，根据 data-resume-module 跳转编辑 Tab
@@ -207,12 +231,13 @@ function getPdfPageElements() {
     const start = breaks[n - 1] ?? 0
     const end = n < count ? breaks[n] : totalHeight.value
     const viewportH = Math.max(0, end - start)
+    const topGap = pageTopGap.value
 
     const pageWrapper = document.createElement('div')
     pageWrapper.style.cssText = `width:794px;height:${pageH}px;overflow:hidden;background:#fff;position:relative;box-sizing:border-box;`
 
     const viewport = document.createElement('div')
-    viewport.style.cssText = `width:794px;height:${viewportH}px;overflow:hidden;`
+    viewport.style.cssText = `width:794px;height:${viewportH}px;overflow:hidden;margin-top:${topGap}px;max-height:${effectivePageHeight.value}px;`
 
     const clone = el.cloneNode(true)
     clone.style.visibility = 'visible'
@@ -239,11 +264,6 @@ function getWordHtml() {
   return clone.outerHTML
 }
 
-const ITEM_SELECTOR = '[class*="-item"]'
-const PARA_SELECTOR = 'p, [class*="-text"], [class*="-desc"]'
-const MIN_FRAGMENT_PX = 48
-const MIN_PAGE_CONTENT = 24
-
 function measureEl(el, contentRect) {
   const r = el.getBoundingClientRect()
   const top = r.top - contentRect.top
@@ -265,19 +285,58 @@ function collectLineRects(el, contentRect) {
   return lines
 }
 
+/** 合并相邻重复行矩形 */
+function mergeLineRects(lines) {
+  if (!lines.length) return lines
+  const merged = [lines[0]]
+  for (let i = 1; i < lines.length; i++) {
+    const prev = merged[merged.length - 1]
+    const cur = lines[i]
+    if (Math.abs(cur.top - prev.top) < 2) {
+      prev.bottom = Math.max(prev.bottom, cur.bottom)
+    } else {
+      merged.push({ ...cur })
+    }
+  }
+  return merged.map((l) => ({ ...l, height: l.bottom - l.top }))
+}
+
+/** 跨页时在行边界或块顶寻找安全断点，禁止半行截断 */
+function findSafeBreakBefore(crossing, pos, target, contentRect) {
+  if (!crossing) return null
+  const lineSource = crossing.el?.querySelector?.('.rt-desc, [class*="-desc"], [class*="-text"]') || crossing.el
+  const lines = mergeLineRects(collectLineRects(lineSource, contentRect))
+
+  if (lines.length) {
+    const fitting = lines.filter((l) => l.bottom <= target + 0.5 && l.bottom > pos)
+    if (fitting.length) return fitting[fitting.length - 1].bottom
+    const nextLine = lines.find((l) => l.top >= pos && l.top < target)
+    if (nextLine && nextLine.top > pos) return nextLine.top
+  }
+
+  if (crossing.type === 'line' && crossing.top > pos) return crossing.top
+  if (crossing.top > pos) return crossing.top
+  return null
+}
+
+/** 将元素内文本按行注册为分页候选段 */
+function pushLineSegments(el, contentRect, segments) {
+  mergeLineRects(collectLineRects(el, contentRect)).forEach((line) => {
+    segments.push({ ...line, el, height: line.bottom - line.top, type: 'line' })
+  })
+}
+
 /** 收集分页候选段（header / title / item / 行） */
 function collectPageSegments(content, contentRect) {
   const segments = []
-  const pageHeight = pageHeightPx.value
+  const pageHeight = effectivePageHeight.value
 
   function pushBlock(el, type) {
     if (!el) return
     const box = measureEl(el, contentRect)
     if (box.height <= 0) return
     if (box.height > pageHeight && (type === 'paragraph' || type === 'text')) {
-      collectLineRects(el, contentRect).forEach((line) => {
-        segments.push({ ...line, height: line.bottom - line.top, type: 'line' })
-      })
+      pushLineSegments(el, contentRect, segments)
     } else {
       segments.push({ ...box, type })
     }
@@ -289,11 +348,16 @@ function collectPageSegments(content, contentRect) {
     const title = section.querySelector('[class*="-title"], h2, h3')
     const items = [...section.querySelectorAll(ITEM_SELECTOR)]
     const paragraphs = [...section.querySelectorAll(PARA_SELECTOR)].filter(
-      (p) => !p.closest(ITEM_SELECTOR)
+      (p) => !p.closest(ITEM_SELECTOR),
     )
 
     if (title) pushBlock(title, 'title')
-    items.forEach((item) => pushBlock(item, 'item'))
+    items.forEach((item) => {
+      pushBlock(item, 'item')
+      // 项目/实习描述按行参与分页，避免整块 rt-item 跨页时被拦腰截断
+      const desc = item.querySelector('.rt-desc, [class*="-desc"], [class*="-text"]')
+      if (desc) pushLineSegments(desc, contentRect, segments)
+    })
     paragraphs.forEach((p) => pushBlock(p, 'paragraph'))
 
     if (!title && items.length === 0 && paragraphs.length === 0) {
@@ -354,10 +418,10 @@ function calcSmartPageBreaks() {
   if (!content) return [0]
 
   const contentRect = content.getBoundingClientRect()
-  const pageHeight = pageHeightPx.value
+  const chunkHeight = effectivePageHeight.value
   totalHeight.value = contentRect.height
 
-  if (totalHeight.value <= pageHeight) return [0]
+  if (totalHeight.value <= chunkHeight) return [0]
 
   const segments = collectPageSegments(content, contentRect)
   const boundaries = collectBreakBoundaries(segments)
@@ -365,29 +429,26 @@ function calcSmartPageBreaks() {
   let pos = 0
 
   while (pos + MIN_PAGE_CONTENT < totalHeight.value) {
-    let target = Math.min(pos + pageHeight, totalHeight.value)
+    let target = Math.min(pos + chunkHeight, totalHeight.value)
     if (target >= totalHeight.value) break
 
     let nextBreak = target
 
     const crossing = segments.find(
-      (s) => s.bottom > pos && s.top < target && s.bottom > target + 1
+      (s) => s.bottom > pos && s.top < target && s.bottom > target + 1,
     )
 
     if (crossing) {
-      const fragmentOnPage = target - crossing.top
-      if (crossing.type === 'line') {
-        // 行级：尽量在行顶切分，避免半行
-        nextBreak = crossing.top > pos ? crossing.top : target
-      } else if (crossing.height > pageHeight) {
-        // 超高块：在最近行边界切
+      const safeBreak = findSafeBreakBefore(crossing, pos, target, contentRect)
+      if (safeBreak !== null && safeBreak > pos) {
+        nextBreak = safeBreak
+      } else if (crossing.height > chunkHeight) {
         const lineBefore = boundaries.filter((b) => b > pos && b <= target).pop()
         nextBreak = lineBefore && lineBefore > pos ? lineBefore : target
-      } else if (fragmentOnPage < MIN_FRAGMENT_PX && crossing.top > pos) {
+      } else if (crossing.top > pos) {
         nextBreak = crossing.top
       }
     } else {
-      // 落在空白区：向前 snap 到最近内容边界，避免整页空白
       const snap = boundaries.filter((b) => b > pos && b <= target).pop()
       if (snap && target - snap > 80 && snap > pos) {
         nextBreak = snap
@@ -395,7 +456,7 @@ function calcSmartPageBreaks() {
     }
 
     if (nextBreak <= pos) {
-      nextBreak = Math.min(pos + pageHeight, totalHeight.value)
+      nextBreak = Math.min(pos + chunkHeight, totalHeight.value)
     }
     if (nextBreak >= totalHeight.value) break
 
@@ -405,11 +466,6 @@ function calcSmartPageBreaks() {
 
   return filterGhostPages(starts, totalHeight.value, segments)
 }
-
-// A4 高度：210×297mm，96dpi 下 297mm ≈ 1123px
-const A4_HEIGHT_MM = 297
-const MM_TO_PX = 96 / 25.4
-const pageHeightPx = ref(Math.round(A4_HEIGHT_MM * MM_TO_PX))
 
 const panelRef = ref(null)
 const contentRef = ref(null)
@@ -488,6 +544,8 @@ watch(
     props.spacing?.sectionGap,
     props.spacing?.lineHeight,
     props.spacing?.padding,
+    props.spacing?.pageTopGap,
+    props.spacing?.pageBottomGap,
     props.resume,
     props.visibleModules,
   ],
@@ -547,9 +605,9 @@ defineExpose({
   @apply pointer-events-none absolute left-[-9999px] top-0 w-[210mm] opacity-0;
 }
 
-/* 每一页：固定 A4 高度（inline style 同步），内容不足时底部留白 */
+/* 每一页：固定 A4 高度，页眉/页脚留白由 page-viewport marginTop + 提前断点实现 */
 .preview-page {
-  @apply relative w-[210mm] flex-shrink-0 cursor-pointer overflow-hidden rounded-sm bg-white shadow-card transition-shadow duration-300;
+  @apply relative box-border w-[210mm] flex-shrink-0 cursor-pointer overflow-hidden rounded-sm bg-white shadow-card transition-shadow duration-300;
 }
 
 .preview-page.active {
@@ -560,7 +618,6 @@ defineExpose({
   @apply w-[210mm] overflow-hidden;
 }
 
-/* 页码 */
 .page-number {
   @apply absolute bottom-2 right-3 z-[3] whitespace-nowrap rounded-pill bg-brand-lighter px-3 py-1 text-xs font-semibold text-brand shadow-sm;
 }

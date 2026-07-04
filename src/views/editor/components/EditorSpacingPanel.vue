@@ -58,7 +58,7 @@ function resetKey(key) {
       </div>
     </div>
 
-    <div class="mb-3">
+    <div class="mb-4">
       <h5 class="mb-2 text-sm font-medium text-ink">
         页面边距：<b class="font-bold text-brand-dark">{{ spacing.padding }}</b>
       </h5>
@@ -74,6 +74,44 @@ function resetKey(key) {
           @change="emit('change')"
         />
         <button class="btn-ghost h-7 px-2 py-1 text-xs" @click="resetKey('padding')">重置</button>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <h5 class="mb-2 text-sm font-medium text-ink">
+        页眉安全边距：<b class="font-bold text-brand-dark">{{ spacing.pageTopGap }}</b>
+      </h5>
+      <div class="flex items-center gap-3">
+        <a-slider
+          v-model:value="spacing.pageTopGap"
+          :min="SPACING_RANGES.pageTopGap.min"
+          :max="SPACING_RANGES.pageTopGap.max"
+          :step="SPACING_RANGES.pageTopGap.step"
+          class="flex-1"
+          :track-style="{ backgroundColor: '#7DD3E8' }"
+          :handle-style="{ borderColor: '#7DD3E8' }"
+          @change="emit('change')"
+        />
+        <button class="btn-ghost h-7 px-2 py-1 text-xs" @click="resetKey('pageTopGap')">重置</button>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <h5 class="mb-2 text-sm font-medium text-ink">
+        页脚安全边距：<b class="font-bold text-brand-dark">{{ spacing.pageBottomGap }}</b>
+      </h5>
+      <div class="flex items-center gap-3">
+        <a-slider
+          v-model:value="spacing.pageBottomGap"
+          :min="SPACING_RANGES.pageBottomGap.min"
+          :max="SPACING_RANGES.pageBottomGap.max"
+          :step="SPACING_RANGES.pageBottomGap.step"
+          class="flex-1"
+          :track-style="{ backgroundColor: '#7DD3E8' }"
+          :handle-style="{ borderColor: '#7DD3E8' }"
+          @change="emit('change')"
+        />
+        <button class="btn-ghost h-7 px-2 py-1 text-xs" @click="resetKey('pageBottomGap')">重置</button>
       </div>
     </div>
 

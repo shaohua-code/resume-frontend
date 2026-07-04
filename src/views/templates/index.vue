@@ -32,7 +32,7 @@ function goGenerate() {
     <PageHero
       compact
       title="全部简历模板"
-      subtitle="20 套全民简历风格模板，使用张三校招演示数据实时预览"
+      subtitle="20 款校招专用简历模板，搭载示范样例，即时预览效果"
     />
 
     <section class="-mt-4 page-container">

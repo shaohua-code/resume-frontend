@@ -1,5 +1,5 @@
 <!--
-  全民简历风格标准模块（20 套模板共用 DOM 结构，样式由 variant 区分）
+  AI简历风格标准模块（20 套模板共用 DOM 结构，样式由 variant 区分）
 -->
 <script setup>
 import { computed } from 'vue'
@@ -28,7 +28,7 @@ function showModule(key) {
 
 <template>
   <div class="rt-body">
-    <!-- 顶栏：对照全民简历 1004 -->
+    <!-- 顶栏：对照AI简历 1004 -->
     <header data-resume-module="basic" class="rt-header">
       <div class="rt-banner">
         <h1 class="rt-name">{{ f.name }}</h1>

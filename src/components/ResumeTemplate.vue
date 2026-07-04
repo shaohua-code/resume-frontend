@@ -1,6 +1,6 @@
 <!--
   简历模板路由组件
-  根据 templateId 动态渲染 20 套全民简历风格模板
+  根据 templateId 动态渲染 20 套AI简历风格模板
 -->
 <script setup>
 import { computed } from 'vue'

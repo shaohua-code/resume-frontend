@@ -1,5 +1,5 @@
 /**
- * 20 套全民简历风格模板注册表
+ * 20 套AI简历风格模板注册表
  */
 import Tpl01Universal from '@/components/resume-templates/Tpl01Universal.vue'
 import Tpl02Business from '@/components/resume-templates/Tpl02Business.vue'
@@ -25,7 +25,7 @@ import Tpl20Executive from '@/components/resume-templates/Tpl20Executive.vue'
 export const MAX_TEMPLATE_ID = 20
 
 export const TEMPLATE_LIST = [
-  { id: 1, name: '全职业通用', desc: '对照全民简历1004，顶栏+基本信息', color: 'linear-gradient(135deg,#333,#666)' },
+  { id: 1, name: '全职业通用', desc: '对照AI简历1004，顶栏+基本信息', color: 'linear-gradient(135deg,#333,#666)' },
   { id: 2, name: '简约商务', desc: '左色条+单列正式', color: 'linear-gradient(135deg,#1e40af,#3b82f6)' },
   { id: 3, name: '应届校招', desc: '蓝色标题线+居中', color: 'linear-gradient(135deg,#1677ff,#69b1ff)' },
   { id: 4, name: '左右分栏', desc: '头部分栏，PDF友好', color: 'linear-gradient(135deg,#334155,#64748b)' },

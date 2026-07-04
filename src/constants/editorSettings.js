@@ -8,12 +8,18 @@ export const DEFAULT_SPACING = {
   sectionGap: 5,
   lineHeight: 1.6,
   padding: 10,
+  // 每页顶部留白，避免分页后内容贴顶
+  pageTopGap: 16,
+  // 每页底部留白，避免分页时文字被截断
+  pageBottomGap: 24,
 }
 
 export const SPACING_RANGES = {
   sectionGap: { min: 5, max: 50, step: 1 },
   lineHeight: { min: 1.3, max: 2.2, step: 0.05 },
   padding: { min: 10, max: 50, step: 1 },
+  pageTopGap: { min: 0, max: 80, step: 2 },
+  pageBottomGap: { min: 0, max: 80, step: 2 },
 }
 
 export const DEFAULT_FONT_SIZE = 13

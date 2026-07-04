@@ -1,5 +1,5 @@
 /**
- * 简历字段映射（不改后端接口，对齐全民简历模块）
+ * 简历字段映射（不改后端接口，对齐AI简历模块）
  */
 export function useResumeFields(resume) {
   const r = resume || {}
@@ -23,7 +23,7 @@ export function useResumeFields(resume) {
   }
 }
 
-/** 技能进度条宽度（模拟全民简历进度） */
+/** 技能进度条宽度（模拟AI简历进度） */
 export function skillProgress(index) {
   const levels = [95, 85, 75, 65, 55, 45]
   return levels[index % levels.length]
