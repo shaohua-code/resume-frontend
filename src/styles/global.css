@@ -223,7 +223,6 @@ body {
 /* Ant Design 组件外层去掉 input-field 边框，内层保留单层 border */
 .ant-select.input-field,
 .ant-picker.input-field,
-.ant-input-affix-wrapper.input-field,
 .ant-input-textarea.input-field {
   border: 0;
   padding: 0;
@@ -249,10 +248,30 @@ body {
   @apply border-brand ring-2 ring-brand/15;
 }
 
+/* affix-wrapper 与 input-field 同元素时须直接设边框（验证码等 suffix 输入框） */
+.ant-input-affix-wrapper.input-field,
 .input-field .ant-input-affix-wrapper {
   @apply rounded-button border border-line bg-white/80 px-3 py-1 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
 }
 
+/* large 尺寸：邮箱与验证码等保持同一高度 */
+.ant-input-affix-wrapper-lg.input-field {
+  @apply flex h-10 flex-nowrap items-center px-4 py-0;
+}
+
+.ant-input-affix-wrapper-lg.input-field .ant-input,
+.ant-input-affix-wrapper-lg.input-field input.ant-input {
+  @apply h-full leading-normal;
+}
+
+.ant-input-affix-wrapper-lg.input-field .ant-input-prefix,
+.ant-input-affix-wrapper-lg.input-field .ant-input-suffix {
+  @apply flex shrink-0 items-center;
+}
+
+.ant-input-affix-wrapper.input-field:hover,
+.ant-input-affix-wrapper.input-field-focused,
+.input-field .ant-input-affix-wrapper:hover,
 .input-field .ant-input-affix-wrapper-focused {
   @apply border-brand ring-2 ring-brand/15;
 }

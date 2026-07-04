@@ -81,8 +81,12 @@ const greeting = computed(() => {
 
 .welcome-segmented :deep(.ant-segmented-item-selected .ant-segmented-item-label) {
   @apply text-brand-dark;
+
 }
 
+.welcome-segmented :deep(.ant-segmented-item-label) {
+  color: #000;
+}
 .welcome-segmented :deep(.ant-segmented-thumb) {
   @apply rounded-full bg-white shadow-sm;
 }
