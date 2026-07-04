@@ -33,8 +33,8 @@ function showModule(key) {
       <div class="rt-banner">
         <h1 class="rt-name">{{ f.name }}</h1>
         <p v-if="f.targetPosition" class="rt-slogan">{{ f.targetPosition }}</p>
-        <p v-else class="rt-slogan">细心从每一个细节开始</p>
-        <p class="rt-sub-en">Personal resume</p>
+       
+       
       </div>
       <div class="rt-basic-grid">
         <div v-if="f.name" class="rt-basic-row"><span class="rt-label">姓名</span><span>{{ f.name }}</span></div>
