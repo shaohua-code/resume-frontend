@@ -8,27 +8,45 @@ import { clampTemplateId } from '@/constants/templateRegistry'
 /** 全局 content 兜底（resolveFontColorDisplay 用） */
 const FALLBACK_CONTENT_COLOR = '#000000'
 /** 单套模板字体色预设 */
+/** 单套模板字体色预设（优化版） */
 export const TEMPLATE_FONT_COLOR_PRESETS = {
-  1: { label: '#0c418c', basicValue: '#000000', name: '#000000', content: '#000000' },
-  2: { label: '#fe0000', basicValue: '#fe0000', name: '#fe0000', content: '#fe0000' },
-  3: { label: '#6b7280', basicValue: '#000000', name: '#111827', content: '#374151' },
-  4: { label: '#ffffff', basicValue: '#000000', name: '#ffffff', content: '#ffffff' },
-  5: { label: '#ffffff', basicValue: '#000000', name: '#ffffff', content: '#ffffff' },
-  6: { label: '#6b7280', basicValue: '#000000', name: '#000000', content: '#000000' },
-  7: { label: '#374151', basicValue: '#000000', name: '#000000', content: '#1f2937' },
-  8: { label: '#6b7280', basicValue: '#000000', name: '#111827', content: '#374151' },
-  9: { label: '#6b7280', basicValue: '#000000', name: '#000000', content: '#374151' },
+  // 1. 全职业通用：蓝顶栏 + 经典深灰文字，层次分明
+  1: { label: '#0c418c', basicValue: '#1f2937', name: '#111827', content: '#374151' },
+
+  // 2. 简约商务（左红条）：降低红色的刺眼感，正文采用高级深灰
+  2: { label: '#dc2626', basicValue: '#1f2937', name: '#991b1b', content: '#374151' },
+
+  // 3. 应届校招（蓝色标题线+居中）：使用经典的互联网大厂深蓝/墨黑搭配
+  3: { label: '#1d4ed8', basicValue: '#1f2937', name: '#1e3a8a', content: '#374151' },
+
+  // 4. 左右分栏：若左侧有深色背景，姓名/基本信息用白色或浅灰，右侧正文保持深灰
+  4: { label: '#1f2937', basicValue: '#ffffff', name: '#ffffff', content: '#000000' },
+
+  // 5. 顶部色带（全宽蓝Header）：Header内文字（姓名）用纯白，下方正文用深灰
+  5: { label: '#2563eb', basicValue: '#374151', name: '#ffffff', content: '#374151' },
+
+  // 6. 表格信息：强调严谨性，使用标准的石墨黑与深灰
+  6: { label: '#4b5563', basicValue: '#1f2937', name: '#111827', content: '#374151' },
+
+  // 7. 经典黑白（打印优先）：极简高对比度，适合HR直接打印
+  7: { label: '#000000', basicValue: '#000000', name: '#000000', content: '#111827' },
+
+  // 8. 互联网扁平：充满活力的极客蓝，搭配清晰度极高的暗灰
+  8: { label: '#0284c7', basicValue: '#1f2937', name: '#0c4a6e', content: '#334155' },
+
+  // 9 - 20. 其他通用/极简模板演变（引入合理的冷暖色调过渡，拒绝纯白纯红文本）
+  9: { label: '#4f46e5', basicValue: '#1f2937', name: '#312e81', content: '#374151' },
   10: { label: '#64748b', basicValue: '#1e293b', name: '#0f172a', content: '#334155' },
-  11: { label: '#78716c', basicValue: '#000000', name: '#1c1917', content: '#44403c' },
-  12: { label: '#6b7280', basicValue: '#000000', name: '#111827', content: '#1f2937' },
-  13: { label: '#92400e', basicValue: '#000000', name: '#78350f', content: '#374151' },
-  14: { label: '#ffffff', basicValue: '#000000', name: '#e2e8f0', content: '#e2e8f0' },
-  15: { label: '#6b7280', basicValue: '#000000', name: '#111827', content: '#374151' },
-  16: { label: '#6b7280', basicValue: '#000000', name: '#000000', content: '#374151' },
-  17: { label: '#6b7280', basicValue: '#000000', name: '#000000', content: '#374151' },
-  18: { label: '#374151', basicValue: '#000000', name: '#000000', content: '#1f2937' },
-  19: { label: '#6b7280', basicValue: '#000000', name: '#000000', content: '#374151' },
-  20: { label: '#6b7280', basicValue: '#000000', name: '#000000', content: '#374151' },
+  11: { label: '#78716c', basicValue: '#292524', name: '#1c1917', content: '#44403c' },
+  12: { label: '#0d9488', basicValue: '#1f2937', name: '#111827', content: '#1f2937' },
+  13: { label: '#b45309', basicValue: '#1f2937', name: '#78350f', content: '#374151' },
+  14: { label: '#0891b2', basicValue: '#1f2937', name: '#0f766e', content: '#374151' },
+  15: { label: '#2563eb', basicValue: '#1f2937', name: '#111827', content: '#374151' },
+  16: { label: '#16a34a', basicValue: '#1f2937', name: '#14532d', content: '#374151' },
+  17: { label: '#57534e', basicValue: '#1f2937', name: '#1c1917', content: '#374151' },
+  18: { label: '#374151', basicValue: '#1f2937', name: '#111827', content: '#1f2937' },
+  19: { label: '#db2777', basicValue: '#1f2937', name: '#831843', content: '#374151' },
+  20: { label: '#7c3aed', basicValue: '#1f2937', name: '#4c1d95', content: '#374151' },
 }
 
 /** 获取指定模板的字体色默认值（供颜色选择器展示） */
