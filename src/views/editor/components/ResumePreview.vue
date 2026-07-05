@@ -94,7 +94,6 @@ import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
 import { skinThemeToCssVars, DEFAULT_SKIN_THEME } from '@/constants/skin'
 import {
   DEFAULT_SPACING,
-  DEFAULT_CONTENT_COLOR,
   fontColorsToCssVars,
 } from '@/constants/editorSettings'
 import ResumeTemplate from '@/components/ResumeTemplate.vue'
@@ -108,7 +107,7 @@ const props = defineProps({
   labelColor: { type: String, default: null },
   basicContentColor: { type: String, default: null },
   nameColor: { type: String, default: null },
-  contentColor: { type: String, default: DEFAULT_CONTENT_COLOR },
+  contentColor: { type: String, default: null },
   skinTheme: { type: Object, default: () => ({ ...DEFAULT_SKIN_THEME }) },
   visibleModules: { type: Array, default: () => [] },
 })
@@ -161,6 +160,7 @@ const previewStyle = computed(() => ({
     basicContentColor: props.basicContentColor,
     nameColor: props.nameColor,
     contentColor: props.contentColor,
+    templateId: props.templateId,
   }),
 }))
 

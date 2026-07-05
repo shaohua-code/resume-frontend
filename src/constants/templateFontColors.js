@@ -4,17 +4,13 @@
  * - 用户未自定义（null）时由 CSS fallback 与本表 picker 展示值共同决定
  */
 import { clampTemplateId } from '@/constants/templateRegistry'
-import {
-  DEFAULT_LABEL_COLOR,
-  DEFAULT_BASIC_CONTENT_COLOR,
-  DEFAULT_NAME_COLOR,
-  DEFAULT_CONTENT_COLOR,
-} from '@/constants/editorSettings'
 
+/** 全局 content 兜底（resolveFontColorDisplay 用） */
+const FALLBACK_CONTENT_COLOR = '#000000'
 /** 单套模板字体色预设 */
 export const TEMPLATE_FONT_COLOR_PRESETS = {
-  1: { label: '#1677ff', basicValue: '#000000', name: '#000000', content: '#000000' },
-  2: { label: '#ffffff', basicValue: '#000000', name: '#ffffff', content: '#ffffff' },
+  1: { label: '#0c418c', basicValue: '#000000', name: '#000000', content: '#000000' },
+  2: { label: '#fe0000', basicValue: '#fe0000', name: '#fe0000', content: '#fe0000' },
   3: { label: '#6b7280', basicValue: '#000000', name: '#111827', content: '#374151' },
   4: { label: '#ffffff', basicValue: '#000000', name: '#ffffff', content: '#ffffff' },
   5: { label: '#ffffff', basicValue: '#000000', name: '#ffffff', content: '#ffffff' },
@@ -48,17 +44,19 @@ export function getTemplateFontColorDefaults(templateId) {
 }
 
 /**
- * 切换模板时重置字体色为 null（走 CSS 模板 fallback）
- * contentColor 重置为该模板 content 默认
+ * 切换模板 / 重置字体色：四项全部置 null，运行时由 templateFontColors 预设注入 CSS 变量
  */
 export function applyTemplateFontColorDefaults(fontColorRefs, templateId) {
-  const defaults = getTemplateFontColorDefaults(templateId)
   fontColorRefs.labelColor.value = null
   fontColorRefs.basicContentColor.value = null
   fontColorRefs.nameColor.value = null
-  fontColorRefs.contentColor.value = defaults.contentColor
+  fontColorRefs.contentColor.value = null
 }
 
+/** 字体面板「重置」：恢复当前模板默认四项颜色 */
+export function resetTemplateFontColors(fontColorRefs, templateId) {
+  applyTemplateFontColorDefaults(fontColorRefs, templateId)
+}
 /** 颜色选择器展示：用户值为 null 时用模板默认，否则用全局兜底 */
 export function resolveFontColorDisplay(key, value, templateId) {
   if (value) return value
@@ -69,5 +67,5 @@ export function resolveFontColorDisplay(key, value, templateId) {
     nameColor: defaults.nameColor,
     contentColor: defaults.contentColor,
   }
-  return map[key] || DEFAULT_CONTENT_COLOR
+  return map[key] || FALLBACK_CONTENT_COLOR
 }

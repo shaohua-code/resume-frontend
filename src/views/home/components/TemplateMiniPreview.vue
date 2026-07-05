@@ -5,7 +5,7 @@
  */
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import ResumeTemplate from '@/components/ResumeTemplate.vue'
-import { DEFAULT_MODULES } from '@/constants/editorSettings'
+import { DEFAULT_MODULES, fontColorsToCssVars } from '@/constants/editorSettings'
 import { getTemplateName } from '@/constants/templateRegistry'
 
 const props = defineProps({
@@ -74,6 +74,11 @@ const wrapperClass = computed(() => {
   return 'overflow-hidden'
 })
 
+// 按 templateId 注入模板默认字体色 CSS 变量（与编辑器预览一致）
+const templateFontStyle = computed(() =>
+  fontColorsToCssVars({ templateId: props.templateId }),
+)
+
 watch(
   () => [props.resume, props.templateId, props.previewMode, props.scale],
   () => {
@@ -103,8 +108,11 @@ onUnmounted(() => {
       :style="wrapperStyle"
     >
       <div class="origin-top-left bg-white pointer-events-none" :style="innerStyle">
-        <div ref="contentRef" class="w-[794px] px-8 py-8 text-sm leading-relaxed text-ink">
-         
+        <div
+          ref="contentRef"
+          class="w-[794px] px-8 py-8 text-sm leading-relaxed text-ink"
+          :style="templateFontStyle"
+        >
           <ResumeTemplate
             :resume="resume"
             :template-id="templateId"

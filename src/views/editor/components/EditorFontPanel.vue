@@ -4,7 +4,7 @@
 <script setup>
 import { computed } from 'vue'
 import { FONT_OPTIONS, FONT_SIZE_OPTIONS } from '@/constants/editorSettings'
-import { resolveFontColorDisplay } from '@/constants/templateFontColors'
+import { resolveFontColorDisplay, resetTemplateFontColors } from '@/constants/templateFontColors'
 
 const props = defineProps({
   templateId: { type: Number, default: 1 },
@@ -15,7 +15,7 @@ const fontSize = defineModel('fontSize', { type: Number, required: true })
 const labelColor = defineModel('labelColor', { type: String, default: null })
 const basicContentColor = defineModel('basicContentColor', { type: String, default: null })
 const nameColor = defineModel('nameColor', { type: String, default: null })
-const contentColor = defineModel('contentColor', { type: String, required: true })
+const contentColor = defineModel('contentColor', { type: String, default: null })
 
 const emit = defineEmits(['change'])
 
@@ -62,6 +62,15 @@ function onColorChange(key, event) {
   emit('change')
 }
 
+// 重置为当前模板默认字体色
+function resetFontColors() {
+  resetTemplateFontColors(
+    { labelColor, basicContentColor, nameColor, contentColor },
+    props.templateId,
+  )
+  emit('change')
+}
+
 // 模板切换时刷新 picker 展示
 const panelKey = computed(() => props.templateId)
 </script>
@@ -93,7 +102,12 @@ const panelKey = computed(() => props.templateId)
       </a-select>
     </div>
 
-    <h5 class="mb-3 text-sm font-semibold text-ink">字体颜色</h5>
+    <div class="mb-3 flex items-center justify-between">
+      <h5 class="m-0 text-sm font-semibold text-ink">字体颜色</h5>
+      <button type="button" class="btn-ghost h-7 px-2 py-1 text-xs" @click="resetFontColors">
+        重置
+      </button>
+    </div>
     <div class="space-y-3">
       <div
         v-for="field in FONT_COLOR_FIELDS"

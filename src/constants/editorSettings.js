@@ -3,6 +3,7 @@
  * 与全民简历参考站 slider 范围对齐
  */
 import { DEFAULT_SKIN_THEME, normalizeSkinTheme } from '@/constants/skin'
+import { getTemplateFontColorDefaults } from '@/constants/templateFontColors'
 
 export const DEFAULT_SPACING = {
   sectionGap: 5,
@@ -59,26 +60,26 @@ export const DEFAULT_EDITOR_SETTINGS = {
   labelColor: null,
   basicContentColor: null,
   nameColor: null,
-  contentColor: DEFAULT_CONTENT_COLOR,
+  contentColor: null,
   skinTheme: { ...DEFAULT_SKIN_THEME },
   modules: DEFAULT_MODULES.map((m) => ({ ...m })),
 }
 
-/** 将字体颜色设置转为预览 CSS 变量；labelColor/nameColor/basicContentColor 为 null 时不注入，由 templateVariants 智能 fallback */
-export function fontColorsToCssVars({ labelColor, basicContentColor, nameColor, contentColor } = {}) {
-  const vars = {
-    '--font-content-color': contentColor || DEFAULT_CONTENT_COLOR,
+/** 将字体颜色转为预览 CSS 变量；null 时合并 templateFontColors.js 当前模板预设 */
+export function fontColorsToCssVars({
+  labelColor,
+  basicContentColor,
+  nameColor,
+  contentColor,
+  templateId = 1,
+} = {}) {
+  const defaults = getTemplateFontColorDefaults(templateId)
+  return {
+    '--font-label-color': labelColor || defaults.labelColor,
+    '--font-basic-content-color': basicContentColor || defaults.basicContentColor,
+    '--font-name-color': nameColor || defaults.nameColor,
+    '--font-content-color': contentColor || defaults.contentColor,
   }
-  if (labelColor) {
-    vars['--font-label-color'] = labelColor
-  }
-  if (basicContentColor) {
-    vars['--font-basic-content-color'] = basicContentColor
-  }
-  if (nameColor) {
-    vars['--font-name-color'] = nameColor
-  }
-  return vars
 }
 
 /** 从 resume_json 中提取并剥离 _editorSettings */
@@ -93,7 +94,7 @@ export function extractEditorSettings(resume) {
     labelColor: raw.labelColor ?? null,
     basicContentColor: raw.basicContentColor ?? null,
     nameColor: raw.nameColor ?? null,
-    contentColor: raw.contentColor || DEFAULT_CONTENT_COLOR,
+    contentColor: raw.contentColor ?? null,
     skinTheme: normalizeSkinTheme(raw.skinTheme ?? raw.skin),
     modules: DEFAULT_MODULES.map((mod) => ({
       ...mod,
@@ -109,11 +110,10 @@ export function applyEditorSettingsToResume(resume, editorSettings) {
     spacing: { ...editorSettings.spacing },
     fontSize: editorSettings.fontSize,
     fontFamily: editorSettings.fontFamily,
-    contentColor: editorSettings.contentColor || DEFAULT_CONTENT_COLOR,
     skinTheme: normalizeSkinTheme(editorSettings.skinTheme),
     modules: (editorSettings.modules || DEFAULT_MODULES).map((m) => ({ ...m })),
   }
-  // 仅保存用户自定义的标签色/基本信息内容色/姓名色，null 表示使用模板智能默认
+  // 仅保存用户自定义字体色，null 表示使用 templateFontColors.js 模板默认
   if (editorSettings.labelColor) {
     resume._editorSettings.labelColor = editorSettings.labelColor
   }
@@ -122,5 +122,8 @@ export function applyEditorSettingsToResume(resume, editorSettings) {
   }
   if (editorSettings.nameColor) {
     resume._editorSettings.nameColor = editorSettings.nameColor
+  }
+  if (editorSettings.contentColor) {
+    resume._editorSettings.contentColor = editorSettings.contentColor
   }
 }

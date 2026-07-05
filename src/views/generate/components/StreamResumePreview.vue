@@ -5,7 +5,7 @@
  */
 import { computed } from 'vue'
 import ResumeTemplate from '@/components/ResumeTemplate.vue'
-import { DEFAULT_MODULES } from '@/constants/editorSettings'
+import { DEFAULT_MODULES, fontColorsToCssVars } from '@/constants/editorSettings'
 import { parsePartialResumeJson, hasStreamResumeContent } from '../utils/streamResumeParser'
 
 const props = defineProps({
@@ -38,6 +38,9 @@ const innerStyle = computed(() => ({
   transform: `scale(${props.scale})`,
   transformOrigin: 'top left',
 }))
+
+// 模板 3 默认字体色 CSS 变量（与编辑器/ preset 一致）
+const templateFontStyle = computed(() => fontColorsToCssVars({ templateId: 3 }))
 </script>
 
 <template>
@@ -52,7 +55,10 @@ const innerStyle = computed(() => ({
       :style="wrapperStyle"
     >
       <div class="pointer-events-none origin-top-left bg-white" :style="innerStyle">
-        <div class="w-[794px] px-8 py-8 text-sm leading-relaxed text-ink">
+        <div
+          class="w-[794px] px-8 py-8 text-sm leading-relaxed text-ink"
+          :style="templateFontStyle"
+        >
           <ResumeTemplate
             :resume="resume"
             :template-id="3"

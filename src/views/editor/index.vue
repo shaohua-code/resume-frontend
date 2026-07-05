@@ -193,7 +193,6 @@ import {
   DEFAULT_SPACING,
   DEFAULT_FONT_SIZE,
   DEFAULT_FONT_FAMILY,
-  DEFAULT_CONTENT_COLOR,
   DEFAULT_MODULES,
   extractEditorSettings,
   applyEditorSettingsToResume,
@@ -228,7 +227,7 @@ const fontFamily = ref(DEFAULT_FONT_FAMILY)
 const labelColor = ref(null)
 const basicContentColor = ref(null)
 const nameColor = ref(null)
-const contentColor = ref(DEFAULT_CONTENT_COLOR)
+const contentColor = ref(null)
 const skinTheme = ref({ ...DEFAULT_SKIN_THEME })
 const modules = ref(DEFAULT_MODULES.map((m) => ({ ...m })))
 
