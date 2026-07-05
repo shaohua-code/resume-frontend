@@ -51,6 +51,8 @@ function addSkill() {
   addingSkill.value = false
 }
 function removeSkill(i) {
+  // 防止索引越界或重复删除
+  if (!resume.value.skills || i < 0 || i >= resume.value.skills.length) return
   resume.value.skills.splice(i, 1)
 }
 
@@ -92,7 +94,13 @@ function removeInternship(i) {
     <!-- 技能标签 -->
     <template v-else-if="activeModule === 'skills'">
       <div class="flex flex-wrap gap-2">
-        <a-tag v-for="(skill, i) in (resume.skills || [])" :key="i" closable color="#7DD3E8" @close="removeSkill(i)">
+        <a-tag
+          v-for="(skill, i) in (resume.skills || [])"
+          :key="skill + '-' + i"
+          closable
+          color="#7DD3E8"
+          @close.stop="removeSkill(i)"
+        >
           {{ skill }}
         </a-tag>
         <a-input
