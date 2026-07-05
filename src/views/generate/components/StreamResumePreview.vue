@@ -6,6 +6,7 @@
 import { computed } from 'vue'
 import ResumeTemplate from '@/components/ResumeTemplate.vue'
 import { DEFAULT_MODULES, fontColorsToCssVars } from '@/constants/editorSettings'
+import { skinThemeToCssVars, EMPTY_SKIN_OVERRIDES } from '@/constants/skin'
 import { parsePartialResumeJson, hasStreamResumeContent } from '../utils/streamResumeParser'
 
 const props = defineProps({
@@ -39,8 +40,11 @@ const innerStyle = computed(() => ({
   transformOrigin: 'top left',
 }))
 
-// 模板 3 默认字体色 CSS 变量（与编辑器/ preset 一致）
-const templateFontStyle = computed(() => fontColorsToCssVars({ templateId: 3 }))
+// 模板 3 默认字体色 + 皮肤 CSS 变量
+const templatePreviewStyle = computed(() => ({
+  ...fontColorsToCssVars({ templateId: 3 }),
+  ...skinThemeToCssVars(EMPTY_SKIN_OVERRIDES, 3),
+}))
 </script>
 
 <template>
@@ -57,7 +61,7 @@ const templateFontStyle = computed(() => fontColorsToCssVars({ templateId: 3 }))
       <div class="pointer-events-none origin-top-left bg-white" :style="innerStyle">
         <div
           class="w-[794px] px-8 py-8 text-sm leading-relaxed text-ink"
-          :style="templateFontStyle"
+          :style="templatePreviewStyle"
         >
           <ResumeTemplate
             :resume="resume"

@@ -14,11 +14,14 @@ const props = defineProps({
 const f = computed(() => useResumeFields(props.resume))
 const avatarUrl = computed(() => props.resume?.avatar || '')
 
-const infoLine = computed(() => {
+// 顶栏岗位行：单独展示，颜色跟随姓名（rt-name-sub）
+const positionLine = computed(() => f.value.targetPosition || '')
+
+// 顶栏其他信息：年龄/城市/经验等，不走姓名色
+const metaLine = computed(() => {
   const items = []
   if (props.resume?.age) items.push(`${props.resume.age}岁`)
   if (props.resume?.city) items.push(props.resume.city)
-  if (f.value.targetPosition) items.push(f.value.targetPosition)
   if (props.resume?.work_years) items.push(`${props.resume.work_years}年经验`)
   return items.length ? items.join(' | ') : ''
 })
@@ -48,7 +51,8 @@ function showModule(key) {
     <header data-resume-module="basic" class="rt-top-band flex items-start justify-between gap-6 px-8 py-7">
       <div class="min-w-0 flex-1">
         <h1 class="rt-name mb-3 text-3xl font-bold tracking-widest">{{ f.name }}</h1>
-        <p v-if="infoLine" class="rt-slogan mb-4 text-sm">{{ infoLine }}</p>
+        <p v-if="positionLine" class="rt-slogan rt-name-sub mb-2 text-sm">{{ positionLine }}</p>
+        <p v-if="metaLine" class="rt-slogan mb-4 text-sm">{{ metaLine }}</p>
         <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
           <div v-if="f.phone" class="flex items-center gap-1.5">
             <span class="flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-xs">📞</span>

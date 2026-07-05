@@ -14,9 +14,14 @@ const props = defineProps({
 const f = computed(() => useResumeFields(props.resume))
 const avatarUrl = computed(() => props.resume?.avatar || '')
 
-const jobLine = computed(() => {
+// 顶栏岗位行：单独展示，颜色跟随姓名（rt-name-sub）
+const positionLine = computed(() =>
+  f.value.targetPosition ? `求职意向：${f.value.targetPosition}` : '',
+)
+
+// 顶栏其他求职信息：城市/薪资等，不走姓名色
+const jobMetaLine = computed(() => {
   const items = []
-  if (f.value.targetPosition) items.push(`求职意向：${f.value.targetPosition}`)
   if (props.resume?.city) items.push(props.resume.city)
   if (props.resume?.salary) items.push(props.resume.salary)
   if (props.resume?.entry_time) items.push(props.resume.entry_time)
@@ -64,12 +69,13 @@ const sectionIcons = {
 </script>
 
 <template>
-  <div class="resume-template rt-custom-04 w-full bg-[#eef2f6]">
+  <div class="resume-template rt-custom-04 w-full bg-white">
     <header data-resume-module="basic" class="rt-top-band px-8 py-7">
       <div class="mb-5 flex items-start justify-between gap-6">
         <div class="min-w-0 flex-1">
           <h1 class="rt-name mb-3 text-3xl font-bold tracking-widest">{{ f.name }}</h1>
-          <p v-if="jobLine" class="rt-slogan text-sm">{{ jobLine }}</p>
+          <p v-if="positionLine" class="rt-slogan rt-name-sub text-sm">{{ positionLine }}</p>
+          <p v-if="jobMetaLine" class="rt-slogan mt-1 text-sm">{{ jobMetaLine }}</p>
         </div>
         <div v-if="avatarUrl" class="shrink-0">
           <img

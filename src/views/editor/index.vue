@@ -197,9 +197,10 @@ import {
   extractEditorSettings,
   applyEditorSettingsToResume,
 } from '@/constants/editorSettings'
-import { DEFAULT_SKIN_THEME } from '@/constants/skin'
+import { EMPTY_SKIN_OVERRIDES } from '@/constants/skin'
 import { TEMPLATE_LIST, getTemplateName, clampTemplateId } from '@/constants/templateRegistry'
 import { applyTemplateFontColorDefaults } from '@/constants/templateFontColors'
+import { applyTemplateSkinDefaults } from '@/constants/templateSkinColors'
 import EditorToolbar from './components/EditorToolbar.vue'
 import EditorEditPanel from './components/EditorEditPanel.vue'
 import ResumePreview from './components/ResumePreview.vue'
@@ -228,7 +229,7 @@ const labelColor = ref(null)
 const basicContentColor = ref(null)
 const nameColor = ref(null)
 const contentColor = ref(null)
-const skinTheme = ref({ ...DEFAULT_SKIN_THEME })
+const skinTheme = ref({ ...EMPTY_SKIN_OVERRIDES })
 const modules = ref(DEFAULT_MODULES.map((m) => ({ ...m })))
 
 // 预览页数（从 ResumePreview expose 读取）
@@ -269,6 +270,8 @@ function selectTemplate(id) {
     { labelColor, basicContentColor, nameColor, contentColor },
     templateId.value,
   )
+  // 切换模板时重置皮肤为该套模板默认
+  applyTemplateSkinDefaults(skinTheme, templateId.value)
   showTemplateDrawer.value = false
   message.success(`已切换到「${getTemplateName(templateId.value)}」`)
 }

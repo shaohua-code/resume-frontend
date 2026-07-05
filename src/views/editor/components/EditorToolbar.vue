@@ -31,7 +31,13 @@
                 v-model:content-color="contentColor"
                 @change="onSettingsChange"
               />
-              <EditorSkinPanel v-else v-model:skin-theme="skinTheme" @change="onSettingsChange" @select="onSkinSelect" />
+              <EditorSkinPanel
+                v-else
+                v-model:skin-theme="skinTheme"
+                :template-id="templateId"
+                @change="onSettingsChange"
+                @select="onSkinSelect"
+              />
             </template>
             <div
               class="inline-flex select-none items-center gap-1.5 rounded-button px-3 py-2 text-sm font-medium text-ink-secondary transition-all duration-200 hover:bg-brand-lighter hover:text-brand-dark"
@@ -107,7 +113,13 @@
         v-model:content-color="contentColor"
         @change="onSettingsChange"
       />
-      <EditorSkinPanel v-else-if="mobilePanel === 'skin'" v-model:skin-theme="skinTheme" @change="onSettingsChange" @select="onSkinSelect" />
+      <EditorSkinPanel
+        v-else-if="mobilePanel === 'skin'"
+        v-model:skin-theme="skinTheme"
+        :template-id="templateId"
+        @change="onSettingsChange"
+        @select="onSkinSelect"
+      />
     </a-modal>
   </header>
 </template>

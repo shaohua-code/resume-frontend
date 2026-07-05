@@ -50,7 +50,7 @@ function isBasicRowWide(index) {
     <header data-resume-module="basic" class="rt-header">
       <div class="rt-banner">
         <h1 class="rt-name">{{ f.name }}</h1>
-        <p v-if="f.targetPosition" class="rt-slogan">{{ f.targetPosition }}</p>
+        <p v-if="f.targetPosition" class="rt-slogan rt-name-sub">{{ f.targetPosition }}</p>
        
        
       </div>

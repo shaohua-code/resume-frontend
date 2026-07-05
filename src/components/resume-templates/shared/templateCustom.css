@@ -1,7 +1,13 @@
 /* 独立定制模板（ID 2 / 4 / 10）布局扩展；字体色由 templateFontColors.js + ResumePreview CSS 变量注入 */
 
-/* 02 / 04 深色顶栏 slogan 仍走 content 色变量 */
-.rt-custom-02 .rt-top-band .rt-slogan,
-.rt-custom-04 .rt-top-band .rt-slogan {
+/* 02 / 04 深色顶栏：姓名下方岗位行强制跟随姓名文本颜色 */
+.rt-custom-02 .rt-top-band .rt-name-sub,
+.rt-custom-04 .rt-top-band .rt-name-sub {
+  color: var(--font-name-color, #ffffff) !important;
+}
+
+/* 顶栏内其他 slogan（城市/经验等）仍走文本内容色 */
+.rt-custom-02 .rt-top-band .rt-slogan:not(.rt-name-sub),
+.rt-custom-04 .rt-top-band .rt-slogan:not(.rt-name-sub) {
   color: var(--font-content-color, #ffffff) !important;
 }

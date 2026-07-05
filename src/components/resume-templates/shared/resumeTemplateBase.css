@@ -69,7 +69,7 @@
 
 /* 文本内容色：段落、列表、条目正文等（不含基本信息值 .rt-value、顶栏大姓名 .rt-name 与模块大标题 .rt-title） */
 .resume-template .rt-body,
-.resume-template .rt-slogan,
+.resume-template .rt-slogan:not(.rt-name-sub),
 .resume-template .rt-sub-en,
 .resume-template .rt-sub,
 .resume-template .rt-text,
@@ -86,6 +86,11 @@
 /* 基本信息行内容值独立色 */
 .resume-template .rt-value {
   color: var(--font-basic-content-color, #000000) !important;
+}
+
+/* 顶栏姓名下方岗位/副标题：跟随姓名文本颜色（不含基本信息区岗位 .rt-value） */
+.resume-template .rt-name-sub {
+  color: var(--font-name-color, #000000) !important;
 }
 
 .resume-template h1,

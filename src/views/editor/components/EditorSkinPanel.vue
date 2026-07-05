@@ -3,19 +3,24 @@
   模块标题色仅作用于六大模块标题，其余颜色可自由调整背景/边框等
 -->
 <script setup>
+import { computed } from 'vue'
 import { CheckOutlined } from '@ant-design/icons-vue'
 import {
   SKIN_COLORS,
   SKIN_COLOR_FIELDS,
   SKIN_PRESET_THEMES,
-  BASE_SKIN_THEME,
 } from '@/constants/skin'
+import { resetTemplateSkinColors, resolveSkinFieldDisplay } from '@/constants/templateSkinColors'
+
+const props = defineProps({
+  templateId: { type: Number, default: 1 },
+})
 
 const skinTheme = defineModel('skinTheme', { type: Object, required: true })
 
 const emit = defineEmits(['change', 'select'])
 
-// 选择推荐预设皮肤
+// 选择推荐预设皮肤（8 套全局彩色，覆盖模板默认）
 function pickPreset(val) {
   skinTheme.value = { ...SKIN_PRESET_THEMES[val] }
   emit('change')
@@ -32,15 +37,23 @@ function onColorChange(key, event) {
   emit('change')
 }
 
-// 重置为默认蓝色主题
+// 重置为当前模板默认皮肤（templateSkinColors.js）
 function resetTheme() {
-  skinTheme.value = { ...SKIN_PRESET_THEMES.blue }
+  resetTemplateSkinColors(skinTheme, props.templateId)
   emit('change')
 }
+
+// 颜色选择器展示值（null 时用当前模板 preset）
+function getFieldColor(key) {
+  return resolveSkinFieldDisplay(key, skinTheme.value[key], props.templateId)
+}
+
+// 模板切换时刷新 picker
+const panelKey = computed(() => props.templateId)
 </script>
 
 <template>
-  <div class="w-[280px] max-h-[70vh] overflow-y-auto py-1">
+  <div :key="panelKey" class="w-[280px] max-h-[70vh] overflow-y-auto py-1">
     <h5 class="mb-3 text-sm font-semibold text-ink">推荐皮肤</h5>
     <div class="mb-4 flex flex-wrap gap-2.5">
       <span
@@ -77,7 +90,7 @@ function resetTheme() {
           <input
             type="color"
             class="h-7 w-10 cursor-pointer rounded border border-line/60 bg-white p-0.5"
-            :value="skinTheme[field.key] || BASE_SKIN_THEME[field.key]"
+            :value="getFieldColor(field.key)"
             @input="onColorChange(field.key, $event)"
           />
         </div>

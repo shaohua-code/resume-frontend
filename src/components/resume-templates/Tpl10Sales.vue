@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   模板 10 - 销售市场（全民简历风格四）
   白色 header + 图标章节 + 皮肤可定制模块标题
 -->
@@ -64,7 +64,7 @@ const sectionIcons = {
 </script>
 
 <template>
-  <div class="resume-template rt-custom-10 w-full bg-[#f5f7fa]">
+  <div class="resume-template rt-custom-10 w-full bg-white">
     <header data-resume-module="basic" class="rt-banner border-b border-slate-200 bg-white px-8 py-6">
       <div class="flex items-start justify-between gap-8">
         <div class="min-w-0 flex-1">

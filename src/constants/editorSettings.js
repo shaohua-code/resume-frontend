@@ -2,7 +2,7 @@
  * 编辑器默认设置（间距 / 字体 / 皮肤）
  * 与全民简历参考站 slider 范围对齐
  */
-import { DEFAULT_SKIN_THEME, normalizeSkinTheme } from '@/constants/skin'
+import { EMPTY_SKIN_OVERRIDES, SKIN_THEME_KEYS, normalizeSkinTheme } from '@/constants/skin'
 import { getTemplateFontColorDefaults } from '@/constants/templateFontColors'
 
 export const DEFAULT_SPACING = {
@@ -61,7 +61,7 @@ export const DEFAULT_EDITOR_SETTINGS = {
   basicContentColor: null,
   nameColor: null,
   contentColor: null,
-  skinTheme: { ...DEFAULT_SKIN_THEME },
+  skinTheme: { ...EMPTY_SKIN_OVERRIDES },
   modules: DEFAULT_MODULES.map((m) => ({ ...m })),
 }
 
@@ -110,9 +110,16 @@ export function applyEditorSettingsToResume(resume, editorSettings) {
     spacing: { ...editorSettings.spacing },
     fontSize: editorSettings.fontSize,
     fontFamily: editorSettings.fontFamily,
-    skinTheme: normalizeSkinTheme(editorSettings.skinTheme),
     modules: (editorSettings.modules || DEFAULT_MODULES).map((m) => ({ ...m })),
   }
+  // 皮肤：仅保存 preset + 用户非 null 覆盖项
+  const skin = normalizeSkinTheme(editorSettings.skinTheme)
+  resume._editorSettings.skinTheme = { preset: skin.preset || 'template' }
+  SKIN_THEME_KEYS.forEach((key) => {
+    if (skin[key] != null) {
+      resume._editorSettings.skinTheme[key] = skin[key]
+    }
+  })
   // 仅保存用户自定义字体色，null 表示使用 templateFontColors.js 模板默认
   if (editorSettings.labelColor) {
     resume._editorSettings.labelColor = editorSettings.labelColor

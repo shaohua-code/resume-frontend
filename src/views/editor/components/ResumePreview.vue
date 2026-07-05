@@ -91,7 +91,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
-import { skinThemeToCssVars, DEFAULT_SKIN_THEME } from '@/constants/skin'
+import { skinThemeToCssVars, EMPTY_SKIN_OVERRIDES } from '@/constants/skin'
 import {
   DEFAULT_SPACING,
   fontColorsToCssVars,
@@ -108,14 +108,14 @@ const props = defineProps({
   basicContentColor: { type: String, default: null },
   nameColor: { type: String, default: null },
   contentColor: { type: String, default: null },
-  skinTheme: { type: Object, default: () => ({ ...DEFAULT_SKIN_THEME }) },
+  skinTheme: { type: Object, default: () => ({ ...EMPTY_SKIN_OVERRIDES }) },
   visibleModules: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['section-click'])
 
 // 皮肤 CSS 变量（仅 .rt-title 使用 titleColor，其余控制背景/边框）
-const skinCssVars = computed(() => skinThemeToCssVars(props.skinTheme))
+const skinCssVars = computed(() => skinThemeToCssVars(props.skinTheme, props.templateId))
 
 const fontSizeMap = {
   small: '12px',

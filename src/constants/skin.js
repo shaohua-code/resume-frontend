@@ -1,8 +1,15 @@
 /**
  * 皮肤主题配置（单点维护）
  * - 模块标题色 titleColor：仅作用于六大模块大标题 .rt-title
- * - 其余字段：背景色 / 边框色等
+ * - 模板默认色见 templateSkinColors.js；此处保留 8 套推荐全局 preset
  */
+import {
+  EMPTY_SKIN_OVERRIDES,
+  SKIN_THEME_KEYS,
+  getTemplateSkinDefaults,
+} from '@/constants/templateSkinColors'
+
+export { EMPTY_SKIN_OVERRIDES, SKIN_THEME_KEYS }
 
 export const SKIN_COLORS = [
   { value: 'blue', color: '#1677ff' },
@@ -168,29 +175,56 @@ export const SKIN_PRESET_THEMES = {
 }
 
 export const DEFAULT_SKIN = 'blue'
-export const DEFAULT_SKIN_THEME = { ...SKIN_PRESET_THEMES.blue }
+export const DEFAULT_SKIN_THEME = { ...EMPTY_SKIN_OVERRIDES }
+
+/** 合并用户皮肤覆盖与模板/推荐 preset 默认（注入 CSS 变量用） */
+export function mergeSkinThemeWithTemplate(skinTheme, templateId = 1) {
+  const templateDefaults = getTemplateSkinDefaults(templateId)
+  const raw = skinTheme && typeof skinTheme === 'object' ? skinTheme : { ...EMPTY_SKIN_OVERRIDES }
+  const presetKey = raw.preset
+  const recommendedBase =
+    presetKey && presetKey !== 'template' && presetKey !== 'custom' && SKIN_PRESET_THEMES[presetKey]
+      ? SKIN_PRESET_THEMES[presetKey]
+      : null
+
+  const merged = { preset: raw.preset || 'template' }
+  SKIN_THEME_KEYS.forEach((key) => {
+    if (raw[key] != null) {
+      merged[key] = raw[key]
+    } else if (recommendedBase && recommendedBase[key] != null) {
+      merged[key] = recommendedBase[key]
+    } else {
+      merged[key] = templateDefaults[key]
+    }
+  })
+  return merged
+}
 
 /**
  * 兼容旧数据 skin: 'blue' 字符串 → 完整 theme 对象
+ * 新数据 preset: 'template' + null 字段表示走 templateSkinColors 模板默认
  */
 export function normalizeSkinTheme(skin) {
-  if (!skin) return { ...DEFAULT_SKIN_THEME }
+  if (!skin) return { ...EMPTY_SKIN_OVERRIDES }
   if (typeof skin === 'string') {
-    return { ...(SKIN_PRESET_THEMES[skin] || DEFAULT_SKIN_THEME) }
+    return { ...(SKIN_PRESET_THEMES[skin] || SKIN_PRESET_THEMES.blue) }
   }
   if (typeof skin === 'object') {
+    if (skin.preset === 'template') {
+      return { ...EMPTY_SKIN_OVERRIDES, ...skin, preset: 'template' }
+    }
     const presetKey = skin.preset && skin.preset !== 'custom' ? skin.preset : null
-    const base = presetKey && SKIN_PRESET_THEMES[presetKey]
-      ? { ...SKIN_PRESET_THEMES[presetKey] }
-      : { ...DEFAULT_SKIN_THEME }
-    return { ...base, ...skin, preset: skin.preset || presetKey || 'custom' }
+    if (presetKey && SKIN_PRESET_THEMES[presetKey]) {
+      return { ...SKIN_PRESET_THEMES[presetKey], ...skin, preset: presetKey }
+    }
+    return { ...EMPTY_SKIN_OVERRIDES, ...skin, preset: skin.preset || 'custom' }
   }
-  return { ...DEFAULT_SKIN_THEME }
+  return { ...EMPTY_SKIN_OVERRIDES }
 }
 
-/** 将 skinTheme 转为 ResumePreview CSS 变量 */
-export function skinThemeToCssVars(theme) {
-  const t = normalizeSkinTheme(theme)
+/** 将 skinTheme 转为预览 CSS 变量；null 字段合并 templateSkinColors 当前模板预设 */
+export function skinThemeToCssVars(theme, templateId = 1) {
+  const t = mergeSkinThemeWithTemplate(theme, templateId)
   return {
     '--skin-title-color': t.titleColor,
     '--skin-divider-color': t.dividerColor,
