@@ -16,15 +16,20 @@
 /* 04 左右分栏视觉：头部分栏，正文稳定单列 */
 .rt-v04 .rt-header { display: grid; grid-template-columns: 1fr 1.2fr; gap: 22px; align-items: stretch; }
 .rt-v04 .rt-banner { display: flex; flex-direction: column; justify-content: center; text-align: left; padding: 18px; border: none; border-radius: 10px; background: var(--skin-header-bg, #1f2937); }
-.rt-v04 .rt-name, .rt-v04 .rt-slogan, .rt-v04 .rt-sub-en { color: #fff; }
+.rt-v04 .rt-name { color: var(--font-name-color, #ffffff) !important; }
+.rt-v04 .rt-slogan, .rt-v04 .rt-sub-en { color: var(--font-content-color, #ffffff) !important; }
+.rt-v04 .rt-label { color: var(--font-label-color, #ffffff) !important; }
+.rt-v04 .rt-value { color: var(--font-basic-content-color, #000000) !important; }
 .rt-v04 .rt-basic-grid { grid-template-columns: 1fr; gap: 7px; }
 
 /* 05 顶部色带：强视觉头部 */
 .rt-v05 .rt-header { padding: 22px; border-radius: 14px; color: #fff; background: var(--skin-header-bg, #1677ff); }
 .rt-v05 .rt-banner { border: none; margin-bottom: 14px; }
-.rt-v05 .rt-name, .rt-v05 .rt-slogan, .rt-v05 .rt-sub-en { color: #fff; }
+.rt-v05 .rt-name { color: var(--font-name-color, #ffffff) !important; }
+.rt-v05 .rt-slogan, .rt-v05 .rt-sub-en { color: var(--font-content-color, #ffffff) !important; }
 .rt-v05 .rt-basic-row { background: rgba(255, 255, 255, 0.16) !important; border-color: rgba(255, 255, 255, 0.24) !important; }
-.rt-v05 .rt-label, .rt-v05 .rt-basic-row span { color: rgba(255, 255, 255, 0.96); }
+.rt-v05 .rt-label { color: var(--font-label-color, #ffffff) !important; }
+.rt-v05 .rt-value { color: var(--font-basic-content-color, #000000) !important; }
 
 /* 06 表格信息：适合传统 Word 简历 */
 .rt-v06 .rt-basic-grid { display: block; border: 1px solid var(--skin-basic-row-border, #d1d5db); border-radius: 8px; overflow: hidden; }
@@ -66,10 +71,13 @@
 
 /* 14 程序员：深色标签 + 等宽点缀 */
 .rt-v14 .rt-banner { text-align: left; padding: 18px; border: 0; border-radius: 12px; background: var(--skin-header-bg, #0f172a); }
-.rt-v14 .rt-name, .rt-v14 .rt-slogan, .rt-v14 .rt-sub-en { color: #e2e8f0; font-family: Consolas, 'Microsoft YaHei', monospace; }
+.rt-v14 .rt-name { color: var(--font-name-color, #e2e8f0) !important; font-family: Consolas, 'Microsoft YaHei', monospace; }
+.rt-v14 .rt-slogan, .rt-v14 .rt-sub-en { color: var(--font-content-color, #e2e8f0) !important; font-family: Consolas, 'Microsoft YaHei', monospace; }
+.rt-v14 .rt-label { color: var(--font-label-color, #ffffff) !important; }
+.rt-v14 .rt-value { color: var(--font-basic-content-color, #000000) !important; }
 .rt-v14 .rt-title { font-family: Consolas, 'Microsoft YaHei', monospace; }
 .rt-v14 .rt-title span::before { content: '$ '; color: var(--skin-title-color, #1677ff); }
-.rt-v14 .rt-skill { font-family: Consolas, monospace; color: #4ade80; }
+.rt-v14 .rt-skill { font-family: Consolas, monospace; color: var(--font-content-color, #4ade80) !important; }
 
 /* 15 中英文双语：双语标题 */
 .rt-v15 .rt-title span::after { content: ' / RESUME'; margin-left: 8px; font-size: 0.66em; color: #9ca3af; font-weight: 500; }

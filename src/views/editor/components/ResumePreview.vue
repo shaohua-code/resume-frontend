@@ -92,7 +92,11 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
 import { skinThemeToCssVars, DEFAULT_SKIN_THEME } from '@/constants/skin'
-import { DEFAULT_SPACING } from '@/constants/editorSettings'
+import {
+  DEFAULT_SPACING,
+  DEFAULT_CONTENT_COLOR,
+  fontColorsToCssVars,
+} from '@/constants/editorSettings'
 import ResumeTemplate from '@/components/ResumeTemplate.vue'
 
 const props = defineProps({
@@ -101,6 +105,10 @@ const props = defineProps({
   spacing: { type: Object, default: () => ({ ...DEFAULT_SPACING }) },
   fontSize: { type: [String, Number], default: 'medium' },
   fontFamily: { type: String, default: "'Microsoft YaHei', sans-serif" },
+  labelColor: { type: String, default: null },
+  basicContentColor: { type: String, default: null },
+  nameColor: { type: String, default: null },
+  contentColor: { type: String, default: DEFAULT_CONTENT_COLOR },
   skinTheme: { type: Object, default: () => ({ ...DEFAULT_SKIN_THEME }) },
   visibleModules: { type: Array, default: () => [] },
 })
@@ -148,6 +156,12 @@ const previewStyle = computed(() => ({
   '--font-size': resolveFontSize(props.fontSize),
   '--font-family': props.fontFamily,
   ...skinCssVars.value,
+  ...fontColorsToCssVars({
+    labelColor: props.labelColor,
+    basicContentColor: props.basicContentColor,
+    nameColor: props.nameColor,
+    contentColor: props.contentColor,
+  }),
 }))
 
 // 设置变更时强制刷新分页窗口
@@ -155,6 +169,10 @@ const previewRenderKey = computed(() => [
   props.templateId,
   props.fontSize,
   props.fontFamily,
+  props.labelColor,
+  props.basicContentColor,
+  props.nameColor,
+  props.contentColor,
   JSON.stringify(props.skinTheme),
   props.spacing?.sectionGap,
   props.spacing?.lineHeight,

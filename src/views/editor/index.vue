@@ -8,6 +8,10 @@
       v-model:spacing="spacing"
       v-model:font-size="fontSize"
       v-model:font-family="fontFamily"
+      v-model:label-color="labelColor"
+      v-model:basic-content-color="basicContentColor"
+      v-model:name-color="nameColor"
+      v-model:content-color="contentColor"
       v-model:skin-theme="skinTheme"
       :current-template-name="currentTemplateName"
       :page-count="pageCount"
@@ -32,6 +36,10 @@
           :spacing="spacing"
           :font-size="fontSize"
           :font-family="fontFamily"
+          :label-color="labelColor"
+          :basic-content-color="basicContentColor"
+          :name-color="nameColor"
+          :content-color="contentColor"
           :skin-theme="skinTheme"
           :visible-modules="modules"
           @section-click="handleSectionClick"
@@ -184,6 +192,7 @@ import {
   DEFAULT_SPACING,
   DEFAULT_FONT_SIZE,
   DEFAULT_FONT_FAMILY,
+  DEFAULT_CONTENT_COLOR,
   DEFAULT_MODULES,
   extractEditorSettings,
   applyEditorSettingsToResume,
@@ -214,6 +223,10 @@ const highlightModule = ref('')
 const spacing = reactive({ ...DEFAULT_SPACING })
 const fontSize = ref(DEFAULT_FONT_SIZE)
 const fontFamily = ref(DEFAULT_FONT_FAMILY)
+const labelColor = ref(null)
+const basicContentColor = ref(null)
+const nameColor = ref(null)
+const contentColor = ref(DEFAULT_CONTENT_COLOR)
 const skinTheme = ref({ ...DEFAULT_SKIN_THEME })
 const modules = ref(DEFAULT_MODULES.map((m) => ({ ...m })))
 
@@ -226,6 +239,10 @@ function loadEditorSettings(source) {
   Object.assign(spacing, settings.spacing)
   fontSize.value = settings.fontSize
   fontFamily.value = settings.fontFamily
+  labelColor.value = settings.labelColor
+  basicContentColor.value = settings.basicContentColor
+  nameColor.value = settings.nameColor
+  contentColor.value = settings.contentColor
   skinTheme.value = { ...settings.skinTheme }
   modules.value = settings.modules.map((m) => ({ ...m }))
 }
@@ -344,6 +361,10 @@ async function saveResumeData({ silent = false } = {}) {
     spacing,
     fontSize: fontSize.value,
     fontFamily: fontFamily.value,
+    labelColor: labelColor.value,
+    basicContentColor: basicContentColor.value,
+    nameColor: nameColor.value,
+    contentColor: contentColor.value,
     skinTheme: skinTheme.value,
     modules: modules.value,
   })

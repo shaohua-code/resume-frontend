@@ -62,7 +62,7 @@ function isBasicRowWide(index) {
           :class="{ 'rt-basic-wide': isBasicRowWide(index) }"
         >
           <span class="rt-label">{{ item.label }}</span>
-          <span>{{ item.value }}</span>
+          <span class="rt-value">{{ item.value }}</span>
         </div>
       </div>
     </header>
@@ -142,16 +142,16 @@ function isBasicRowWide(index) {
 </template>
 
 <style scoped>
-.rt-body { word-break: break-word; color: #1f2937; }
+.rt-body { word-break: break-word; }
 .rt-header { margin-bottom: 22px; }
 .rt-banner { text-align: center; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 2px solid; }
 .rt-name { font-size: 28px; font-weight: 800; margin: 0 0 6px; letter-spacing: 4px; }
-.rt-slogan { margin: 0; font-size: 13px; color: #4b5563; font-weight: 600; letter-spacing: 1px; }
-.rt-sub-en { margin: 4px 0 0; font-size: 11px; color: #9ca3af; letter-spacing: 2px; text-transform: uppercase; }
+.rt-slogan { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 1px; }
+.rt-sub-en { margin: 4px 0 0; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
 .rt-basic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; font-size: 13px; }
 .rt-basic-row { display: flex; gap: 8px; align-items: center; min-width: 0; padding: 6px 10px; border-radius: 6px; border-width: 1px; border-style: solid; }
 .rt-basic-wide { grid-column: 1 / -1; }
-.rt-label { color: #6b7280; flex-shrink: 0; min-width: 34px; font-weight: 700; }
+.rt-label { flex-shrink: 0; min-width: 34px; font-weight: 700; }
 .rt-section { margin-bottom: 22px; }
 .rt-title { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 800; margin: 0 0 12px; padding: 0; background: transparent; border: none; }
 .rt-title::before { content: ''; width: 4px; height: 16px; border-radius: 4px; }
@@ -159,17 +159,17 @@ function isBasicRowWide(index) {
 .rt-title span { flex-shrink: 0; }
 .rt-item { margin-bottom: 14px; padding: 12px 14px; border-radius: 8px; border-width: 1px; border-style: solid; }
 .rt-item-header { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 4px; font-size: 14px; }
-.rt-item-header strong { color: #111827; font-weight: 800; }
-.rt-item-header span { color: #6b7280; font-size: 12px; white-space: nowrap; }
-.rt-sub { margin: 0 0 6px; font-size: 12px; color: #4b5563; font-weight: 600; }
-.rt-text, .rt-desc { margin: 0; font-size: 13px; color: #374151; line-height: 1.78; text-indent: 2em; }
+.rt-item-header strong { font-weight: 800; }
+.rt-item-header span { font-size: 12px; white-space: nowrap; }
+.rt-sub { margin: 0 0 6px; font-size: 12px; font-weight: 600; }
+.rt-text, .rt-desc { margin: 0; font-size: 13px; line-height: 1.78; text-indent: 2em; }
 .rt-desc { text-indent: 0; }
 .rt-skills { display: flex; flex-wrap: wrap; gap: 8px; }
-.rt-skill { padding: 5px 12px; border-radius: 999px; font-size: 12px; color: #1f3a5f; font-weight: 600; border-width: 1px; border-style: solid; }
+.rt-skill { padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; border-width: 1px; border-style: solid; }
 .rt-list { margin: 0; padding-left: 20px; }
-.rt-list li { margin-bottom: 5px; font-size: 13px; color: #374151; line-height: 1.7; }
+.rt-list li { margin-bottom: 5px; font-size: 13px; line-height: 1.7; }
 .rt-skill-bar-item { margin-bottom: 12px; padding: 10px 12px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; }
-.rt-skill-bar-head { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: #374151; font-weight: 700; }
+.rt-skill-bar-head { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; font-weight: 700; }
 .rt-skill-bar-track { height: 8px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
 .rt-skill-bar-fill { height: 100%; background: linear-gradient(90deg, #1677ff, #69b1ff); border-radius: 4px; }
 </style>

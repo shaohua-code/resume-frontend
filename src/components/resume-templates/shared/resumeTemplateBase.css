@@ -62,15 +62,42 @@
   border-color: var(--skin-divider-color, #e5e7eb) !important;
 }
 
+/* 基本信息标签色（浅色顶栏默认 #6b7280，深色顶栏由 templateVariants 覆盖 fallback） */
+.resume-template .rt-label {
+  color: var(--font-label-color, #6b7280) !important;
+}
+
+/* 文本内容色：段落、列表、条目正文等（不含基本信息值 .rt-value、顶栏大姓名 .rt-name 与模块大标题 .rt-title） */
+.resume-template .rt-body,
+.resume-template .rt-slogan,
+.resume-template .rt-sub-en,
+.resume-template .rt-sub,
+.resume-template .rt-text,
+.resume-template .rt-desc,
+.resume-template .rt-list li,
+.resume-template .rt-item-header strong,
+.resume-template .rt-item-header span,
+.resume-template .rt-skill,
+.resume-template .rt-skill-bar-head,
+.resume-template .rt-skill-bar-head span {
+  color: var(--font-content-color, #000000) !important;
+}
+
+/* 基本信息行内容值独立色 */
+.resume-template .rt-value {
+  color: var(--font-basic-content-color, #000000) !important;
+}
+
 .resume-template h1,
 .resume-template .rt-name {
   font-size: 2em !important;
   line-height: var(--line-height, 1.8) !important;
 }
 
-/* 姓名等顶栏标题不受皮肤标题色影响 */
+/* 顶栏大姓名独立色（浅色顶栏默认 #000000，深色顶栏由 templateVariants 覆盖 fallback） */
+.resume-template .rt-name,
 .resume-template [class*='-header'] h1 {
-  color: inherit !important;
+  color: var(--font-name-color, #000000) !important;
 }
 
 .resume-template p,

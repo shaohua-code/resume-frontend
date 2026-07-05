@@ -20,7 +20,16 @@
           <a-popover v-model:open="item.open.value" trigger="click" placement="bottom">
             <template #content>
               <EditorSpacingPanel v-if="item.key === 'spacing'" :spacing="spacing" :page-count="pageCount" @change="onSettingsChange" />
-              <EditorFontPanel v-else-if="item.key === 'font'" v-model:font-family="fontFamily" v-model:font-size="fontSize" @change="onSettingsChange" />
+              <EditorFontPanel
+                v-else-if="item.key === 'font'"
+                v-model:font-family="fontFamily"
+                v-model:font-size="fontSize"
+                v-model:label-color="labelColor"
+                v-model:basic-content-color="basicContentColor"
+                v-model:name-color="nameColor"
+                v-model:content-color="contentColor"
+                @change="onSettingsChange"
+              />
               <EditorSkinPanel v-else v-model:skin-theme="skinTheme" @change="onSettingsChange" @select="onSkinSelect" />
             </template>
             <div
@@ -86,7 +95,16 @@
     <!-- 小屏设置弹窗 -->
     <a-modal v-model:open="mobilePanelOpen" :title="mobilePanelTitle" :footer="null" class="modal-fresh">
       <EditorSpacingPanel v-if="mobilePanel === 'spacing'" :spacing="spacing" :page-count="pageCount" @change="onSettingsChange" />
-      <EditorFontPanel v-else-if="mobilePanel === 'font'" v-model:font-family="fontFamily" v-model:font-size="fontSize" @change="onSettingsChange" />
+      <EditorFontPanel
+        v-else-if="mobilePanel === 'font'"
+        v-model:font-family="fontFamily"
+        v-model:font-size="fontSize"
+        v-model:label-color="labelColor"
+        v-model:basic-content-color="basicContentColor"
+        v-model:name-color="nameColor"
+        v-model:content-color="contentColor"
+        @change="onSettingsChange"
+      />
       <EditorSkinPanel v-else-if="mobilePanel === 'skin'" v-model:skin-theme="skinTheme" @change="onSettingsChange" @select="onSkinSelect" />
     </a-modal>
   </header>
@@ -108,6 +126,10 @@ import EditorSkinPanel from './EditorSkinPanel.vue'
 const spacing = defineModel('spacing', { type: Object, required: true })
 const fontSize = defineModel('fontSize', { type: Number, required: true })
 const fontFamily = defineModel('fontFamily', { type: String, required: true })
+const labelColor = defineModel('labelColor', { type: String, default: null })
+const basicContentColor = defineModel('basicContentColor', { type: String, default: null })
+const nameColor = defineModel('nameColor', { type: String, default: null })
+const contentColor = defineModel('contentColor', { type: String, required: true })
 const skinTheme = defineModel('skinTheme', { type: Object, required: true })
 
 defineProps({
