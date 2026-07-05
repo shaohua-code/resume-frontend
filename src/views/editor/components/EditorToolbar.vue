@@ -22,6 +22,7 @@
               <EditorSpacingPanel v-if="item.key === 'spacing'" :spacing="spacing" :page-count="pageCount" @change="onSettingsChange" />
               <EditorFontPanel
                 v-else-if="item.key === 'font'"
+                :template-id="templateId"
                 v-model:font-family="fontFamily"
                 v-model:font-size="fontSize"
                 v-model:label-color="labelColor"
@@ -97,6 +98,7 @@
       <EditorSpacingPanel v-if="mobilePanel === 'spacing'" :spacing="spacing" :page-count="pageCount" @change="onSettingsChange" />
       <EditorFontPanel
         v-else-if="mobilePanel === 'font'"
+        :template-id="templateId"
         v-model:font-family="fontFamily"
         v-model:font-size="fontSize"
         v-model:label-color="labelColor"
@@ -133,6 +135,7 @@ const contentColor = defineModel('contentColor', { type: String, required: true 
 const skinTheme = defineModel('skinTheme', { type: Object, required: true })
 
 defineProps({
+  templateId: { type: Number, default: 1 },
   currentTemplateName: { type: String, default: '极简校招版' },
   pageCount: { type: Number, default: 1 },
   saving: { type: Boolean, default: false },

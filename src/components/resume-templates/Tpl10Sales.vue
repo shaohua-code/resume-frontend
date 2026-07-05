@@ -64,23 +64,23 @@ const sectionIcons = {
 </script>
 
 <template>
-  <div class="resume-template w-full bg-[#f5f7fa] text-slate-800">
+  <div class="resume-template rt-custom-10 w-full bg-[#f5f7fa]">
     <header data-resume-module="basic" class="rt-banner border-b border-slate-200 bg-white px-8 py-6">
       <div class="flex items-start justify-between gap-8">
         <div class="min-w-0 flex-1">
-          <h1 class="rt-name mb-4 text-3xl font-bold tracking-widest text-slate-900">{{ f.name }}</h1>
+          <h1 class="rt-name mb-4 text-3xl font-bold tracking-widest">{{ f.name }}</h1>
           <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
             <div v-for="(item, idx) in jobInfo" :key="idx" class="flex items-center gap-2">
-              <span class="text-slate-500">{{ item.label }}：</span>
-              <span class="text-slate-800">{{ item.value }}</span>
+              <span class="rt-label">{{ item.label }}：</span>
+              <span class="rt-value">{{ item.value }}</span>
             </div>
           </div>
         </div>
         <div class="flex shrink-0 items-start gap-4">
           <div v-if="basicInfo.length" class="grid grid-cols-1 gap-y-1.5 text-right text-sm">
             <div v-for="(item, idx) in basicInfo" :key="idx" class="flex items-center justify-end gap-2">
-              <span class="text-slate-700">{{ item.value }}</span>
-              <span class="text-xs text-slate-400">{{ item.icon }}</span>
+              <span class="rt-value">{{ item.value }}</span>
+              <span class="text-xs opacity-60">{{ item.icon }}</span>
             </div>
           </div>
           <img
@@ -106,8 +106,8 @@ const sectionIcons = {
             <strong>{{ f.school }}</strong>
             <span class="whitespace-nowrap">2015-09 ~ 2018-07</span>
           </div>
-          <p v-if="f.major" class="rt-text text-sm text-slate-700">{{ f.major }}</p>
-          <p v-if="f.education" class="text-sm text-slate-700">{{ f.education }}</p>
+          <p v-if="f.major" class="rt-text text-sm">{{ f.major }}</p>
+          <p v-if="f.education" class="rt-text text-sm">{{ f.education }}</p>
         </div>
       </section>
 
@@ -125,7 +125,7 @@ const sectionIcons = {
               <span class="whitespace-nowrap">{{ intern.start_date }} ~ {{ intern.end_date }}</span>
             </div>
             <p v-if="intern.position" class="rt-sub">{{ intern.position }}</p>
-            <ul class="list-disc space-y-0.5 pl-5 text-sm leading-relaxed text-slate-700">
+            <ul class="rt-list list-disc space-y-0.5 pl-5 text-sm leading-relaxed">
               <li v-for="(line, idx) in formatDesc(intern.description)" :key="idx">{{ line }}</li>
             </ul>
           </div>
@@ -148,7 +148,7 @@ const sectionIcons = {
             <p v-if="proj.role || proj.tech_stack" class="rt-sub">
               {{ proj.role }}<template v-if="proj.tech_stack"> | {{ proj.tech_stack }}</template>
             </p>
-            <ul class="list-disc space-y-0.5 pl-5 text-sm leading-relaxed text-slate-700">
+            <ul class="rt-list list-disc space-y-0.5 pl-5 text-sm leading-relaxed">
               <li v-for="(line, idx) in formatDesc(proj.description)" :key="idx">{{ line }}</li>
             </ul>
           </div>
@@ -162,14 +162,14 @@ const sectionIcons = {
           </div>
           <h2 class="rt-title mb-0"><span>技能特长</span></h2>
         </div>
-        <ul class="mb-3 list-disc space-y-1 pl-5 text-sm leading-relaxed text-slate-700">
+        <ul class="rt-list mb-3 list-disc space-y-1 pl-5 text-sm leading-relaxed">
           <li v-for="skill in f.skills" :key="skill">{{ skill }}</li>
         </ul>
         <div class="grid grid-cols-2 gap-4">
           <div v-for="(skill, idx) in f.skills.slice(0, 2)" :key="skill" class="text-sm">
             <div class="mb-1 flex justify-between">
-              <span class="font-medium text-slate-800">{{ skill }}</span>
-              <span class="text-slate-500">{{ skillLevel(idx) }}</span>
+              <span class="font-medium">{{ skill }}</span>
+              <span class="rt-sub">{{ skillLevel(idx) }}</span>
             </div>
             <div class="h-2 overflow-hidden rounded-full bg-slate-200">
               <div class="rt-skill-bar-fill h-full rounded-full" :style="{ width: skillProgress(idx) + '%' }" />
@@ -185,7 +185,7 @@ const sectionIcons = {
           </div>
           <h2 class="rt-title mb-0"><span>荣誉证书</span></h2>
         </div>
-        <ul class="list-disc space-y-1 pl-5 text-sm leading-relaxed text-slate-700">
+        <ul class="rt-list list-disc space-y-1 pl-5 text-sm leading-relaxed">
           <li v-for="item in f.honorList" :key="item">{{ item }}</li>
         </ul>
       </section>
@@ -197,10 +197,11 @@ const sectionIcons = {
           </div>
           <h2 class="rt-title mb-0"><span>自我评价</span></h2>
         </div>
-        <p class="rt-text text-sm leading-relaxed text-slate-700">{{ f.summary }}</p>
+        <p class="rt-text text-sm leading-relaxed">{{ f.summary }}</p>
       </section>
     </main>
   </div>
 </template>
 
 <style src="./shared/resumeTemplateBase.css"></style>
+<style src="./shared/templateCustom.css"></style>

@@ -1,0 +1,18 @@
+/* ========== 独立定制模板字体色 fallback（ID 2 / 4 / 10） ========== */
+
+/* 02 简约商务：深色顶栏 */
+.rt-custom-02 .rt-label { color: var(--font-label-color, #ffffff) !important; }
+.rt-custom-02 .rt-name { color: var(--font-name-color, #ffffff) !important; }
+.rt-custom-02 .rt-value { color: var(--font-basic-content-color, #ffffff) !important; }
+.rt-custom-02 .rt-top-band .rt-slogan { color: var(--font-content-color, #ffffff) !important; }
+
+/* 04 左右分栏：深色顶栏 */
+.rt-custom-04 .rt-label { color: var(--font-label-color, #ffffff) !important; }
+.rt-custom-04 .rt-name { color: var(--font-name-color, #ffffff) !important; }
+.rt-custom-04 .rt-value { color: var(--font-basic-content-color, #000000) !important; }
+.rt-custom-04 .rt-top-band .rt-slogan { color: var(--font-content-color, #ffffff) !important; }
+
+/* 10 销售市场：浅色顶栏 */
+.rt-custom-10 .rt-label { color: var(--font-label-color, #64748b) !important; }
+.rt-custom-10 .rt-name { color: var(--font-name-color, #0f172a) !important; }
+.rt-custom-10 .rt-value { color: var(--font-basic-content-color, #1e293b) !important; }

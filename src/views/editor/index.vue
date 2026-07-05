@@ -13,6 +13,7 @@
       v-model:name-color="nameColor"
       v-model:content-color="contentColor"
       v-model:skin-theme="skinTheme"
+      :template-id="templateId"
       :current-template-name="currentTemplateName"
       :page-count="pageCount"
       :saving="saving"
@@ -199,6 +200,7 @@ import {
 } from '@/constants/editorSettings'
 import { DEFAULT_SKIN_THEME } from '@/constants/skin'
 import { TEMPLATE_LIST, getTemplateName, clampTemplateId } from '@/constants/templateRegistry'
+import { applyTemplateFontColorDefaults } from '@/constants/templateFontColors'
 import EditorToolbar from './components/EditorToolbar.vue'
 import EditorEditPanel from './components/EditorEditPanel.vue'
 import ResumePreview from './components/ResumePreview.vue'
@@ -263,6 +265,11 @@ const currentTemplateName = computed(() => getTemplateName(templateId.value))
 function selectTemplate(id) {
   templateId.value = clampTemplateId(id)
   resumeStore.currentTemplateId = templateId.value
+  // 切换模板时重置字体色为该套模板默认（走 CSS fallback + content 预设）
+  applyTemplateFontColorDefaults(
+    { labelColor, basicContentColor, nameColor, contentColor },
+    templateId.value,
+  )
   showTemplateDrawer.value = false
   message.success(`已切换到「${getTemplateName(templateId.value)}」`)
 }

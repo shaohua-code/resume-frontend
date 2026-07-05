@@ -2,14 +2,13 @@
   字体设置面板：字体族 + 文字大小 + 标题/基本信息/姓名/内容颜色
 -->
 <script setup>
-import {
-  FONT_OPTIONS,
-  FONT_SIZE_OPTIONS,
-  DEFAULT_LABEL_COLOR,
-  DEFAULT_BASIC_CONTENT_COLOR,
-  DEFAULT_NAME_COLOR,
-  DEFAULT_CONTENT_COLOR,
-} from '@/constants/editorSettings'
+import { computed } from 'vue'
+import { FONT_OPTIONS, FONT_SIZE_OPTIONS } from '@/constants/editorSettings'
+import { resolveFontColorDisplay } from '@/constants/templateFontColors'
+
+const props = defineProps({
+  templateId: { type: Number, default: 1 },
+})
 
 const fontFamily = defineModel('fontFamily', { type: String, required: true })
 const fontSize = defineModel('fontSize', { type: Number, required: true })
@@ -25,26 +24,22 @@ const FONT_COLOR_FIELDS = [
   {
     key: 'labelColor',
     label: '标题字体颜色',
-    hint: '作用于基本信息标签（姓名、电话、邮箱等）；深色顶栏模板默认白色',
-    default: DEFAULT_LABEL_COLOR,
+    hint: '作用于基本信息标签（姓名、电话、邮箱等）；各模板默认色不同',
   },
   {
     key: 'basicContentColor',
     label: '基本信息内容颜色',
-    hint: '作用于基本信息行内容值（电话、邮箱、岗位、教育等）；默认黑色',
-    default: DEFAULT_BASIC_CONTENT_COLOR,
+    hint: '作用于基本信息行内容值（电话、邮箱、岗位、教育等）',
   },
   {
     key: 'nameColor',
     label: '姓名文本颜色',
     hint: '仅作用于顶栏大姓名（如「张三」）；深色顶栏默认白色，浅色顶栏默认黑色',
-    default: DEFAULT_NAME_COLOR,
   },
   {
     key: 'contentColor',
     label: '文本内容颜色',
     hint: '作用于段落、列表、条目正文等（不含基本信息值、顶栏大姓名与模块大标题）',
-    default: DEFAULT_CONTENT_COLOR,
   },
 ]
 
@@ -56,9 +51,9 @@ const COLOR_MODELS = {
   contentColor,
 }
 
-// 获取颜色选择器当前展示值
-function getColorValue(key, fieldDefault) {
-  return COLOR_MODELS[key].value || fieldDefault
+// 获取颜色选择器当前展示值（null 时用当前模板默认色）
+function getColorValue(key) {
+  return resolveFontColorDisplay(key, COLOR_MODELS[key].value, props.templateId)
 }
 
 // 颜色选择变更
@@ -66,10 +61,13 @@ function onColorChange(key, event) {
   COLOR_MODELS[key].value = event.target.value
   emit('change')
 }
+
+// 模板切换时刷新 picker 展示
+const panelKey = computed(() => props.templateId)
 </script>
 
 <template>
-  <div class="w-[280px] max-h-[70vh] overflow-y-auto py-2">
+  <div :key="panelKey" class="w-[280px] max-h-[70vh] overflow-y-auto py-2">
     <div class="mb-4 flex items-center">
       <label class="w-[72px] flex-shrink-0 text-sm font-medium text-ink">字体：</label>
       <a-select
@@ -107,7 +105,7 @@ function onColorChange(key, event) {
           <input
             type="color"
             class="h-7 w-10 cursor-pointer rounded border border-line/60 bg-white p-0.5"
-            :value="getColorValue(field.key, field.default)"
+            :value="getColorValue(field.key)"
             @input="onColorChange(field.key, $event)"
           />
         </div>
