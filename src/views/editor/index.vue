@@ -8,7 +8,7 @@
       v-model:spacing="spacing"
       v-model:font-size="fontSize"
       v-model:font-family="fontFamily"
-      v-model:skin="skin"
+      v-model:skin-theme="skinTheme"
       :current-template-name="currentTemplateName"
       :page-count="pageCount"
       :saving="saving"
@@ -32,7 +32,7 @@
           :spacing="spacing"
           :font-size="fontSize"
           :font-family="fontFamily"
-          :skin="skin"
+          :skin-theme="skinTheme"
           :visible-modules="modules"
           @section-click="handleSectionClick"
         />
@@ -188,6 +188,7 @@ import {
   extractEditorSettings,
   applyEditorSettingsToResume,
 } from '@/constants/editorSettings'
+import { DEFAULT_SKIN_THEME } from '@/constants/skin'
 import { TEMPLATE_LIST, getTemplateName, clampTemplateId } from '@/constants/templateRegistry'
 import EditorToolbar from './components/EditorToolbar.vue'
 import EditorEditPanel from './components/EditorEditPanel.vue'
@@ -213,7 +214,7 @@ const highlightModule = ref('')
 const spacing = reactive({ ...DEFAULT_SPACING })
 const fontSize = ref(DEFAULT_FONT_SIZE)
 const fontFamily = ref(DEFAULT_FONT_FAMILY)
-const skin = ref(extractEditorSettings({}).skin)
+const skinTheme = ref({ ...DEFAULT_SKIN_THEME })
 const modules = ref(DEFAULT_MODULES.map((m) => ({ ...m })))
 
 // 预览页数（从 ResumePreview expose 读取）
@@ -225,7 +226,7 @@ function loadEditorSettings(source) {
   Object.assign(spacing, settings.spacing)
   fontSize.value = settings.fontSize
   fontFamily.value = settings.fontFamily
-  skin.value = settings.skin
+  skinTheme.value = { ...settings.skinTheme }
   modules.value = settings.modules.map((m) => ({ ...m }))
 }
 
@@ -343,7 +344,7 @@ async function saveResumeData({ silent = false } = {}) {
     spacing,
     fontSize: fontSize.value,
     fontFamily: fontFamily.value,
-    skin: skin.value,
+    skinTheme: skinTheme.value,
     modules: modules.value,
   })
   return await resumeStore.saveResume(

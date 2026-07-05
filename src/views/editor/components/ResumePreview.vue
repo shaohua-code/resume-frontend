@@ -91,7 +91,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
-import { SKIN_COLOR_MAP, DEFAULT_SKIN } from '@/constants/skin'
+import { skinThemeToCssVars, DEFAULT_SKIN_THEME } from '@/constants/skin'
 import { DEFAULT_SPACING } from '@/constants/editorSettings'
 import ResumeTemplate from '@/components/ResumeTemplate.vue'
 
@@ -101,16 +101,15 @@ const props = defineProps({
   spacing: { type: Object, default: () => ({ ...DEFAULT_SPACING }) },
   fontSize: { type: [String, Number], default: 'medium' },
   fontFamily: { type: String, default: "'Microsoft YaHei', sans-serif" },
-  skin: { type: String, default: DEFAULT_SKIN },
+  skinTheme: { type: Object, default: () => ({ ...DEFAULT_SKIN_THEME }) },
   visibleModules: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['section-click'])
 
-// 皮肤颜色映射（从共享常量导入，避免双源真相）
-const skinColors = SKIN_COLOR_MAP
+// 皮肤 CSS 变量（仅 .rt-title 使用 titleColor，其余控制背景/边框）
+const skinCssVars = computed(() => skinThemeToCssVars(props.skinTheme))
 
-// 字号映射（兼容 String 枚举和 Number 直接值）
 const fontSizeMap = {
   small: '12px',
   medium: '13px',
@@ -146,9 +145,9 @@ const previewStyle = computed(() => ({
   '--preview-padding': (props.spacing?.padding ?? DEFAULT_SPACING.padding) + 'px',
   '--page-top-gap': pageTopGap.value + 'px',
   '--page-bottom-gap': pageBottomGap.value + 'px',
-  '--skin-color': skinColors[props.skin] || skinColors.blue,
   '--font-size': resolveFontSize(props.fontSize),
   '--font-family': props.fontFamily,
+  ...skinCssVars.value,
 }))
 
 // 设置变更时强制刷新分页窗口
@@ -156,7 +155,7 @@ const previewRenderKey = computed(() => [
   props.templateId,
   props.fontSize,
   props.fontFamily,
-  props.skin,
+  JSON.stringify(props.skinTheme),
   props.spacing?.sectionGap,
   props.spacing?.lineHeight,
   props.spacing?.padding,
@@ -540,7 +539,7 @@ watch(
     props.templateId,
     props.fontSize,
     props.fontFamily,
-    props.skin,
+    JSON.stringify(props.skinTheme),
     props.spacing?.sectionGap,
     props.spacing?.lineHeight,
     props.spacing?.padding,
@@ -639,15 +638,6 @@ defineExpose({
 /* 模块间距通过 section margin 控制 */
 .resume-preview :deep(section) {
   margin-bottom: var(--section-gap, 12px);
-}
-
-/* 皮肤色：影响模板中的标题/强调色 */
-.resume-preview :deep(h1),
-.resume-preview :deep(h2),
-.resume-preview :deep(h3),
-.resume-preview :deep(.rt-title),
-.resume-preview :deep([class*='-title']) {
-  color: var(--skin-color, #1677ff);
 }
 
 /* 仅 item 级避免截断，section 整体允许跨页 */

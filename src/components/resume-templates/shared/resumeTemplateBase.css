@@ -14,11 +14,52 @@
   margin-bottom: var(--section-gap, 20px) !important;
 }
 
-.resume-template [class*='-title'],
+/* 模块标题色：仅 .rt-title，不影响姓名/正文 */
 .resume-template .rt-title {
-  color: var(--skin-color, #333) !important;
+  color: var(--skin-title-color, #111827) !important;
   font-size: 1.15em !important;
   line-height: var(--line-height, 1.8) !important;
+}
+
+.resume-template .rt-title::before {
+  background: var(--skin-title-color, #111827) !important;
+}
+
+.resume-template .rt-title::after {
+  background: var(--skin-divider-color, #e5e7eb) !important;
+}
+
+/* 顶栏/条目/基本信息/技能标签：背景与边框可自定义 */
+.resume-template .rt-banner {
+  background: var(--skin-header-bg, transparent) !important;
+  border-bottom-color: var(--skin-header-border, #1f2937) !important;
+}
+
+.resume-template .rt-top-band {
+  background: var(--skin-top-band-bg, #1677ff) !important;
+}
+
+.resume-template .rt-item {
+  background: var(--skin-item-bg, #fff) !important;
+  border-color: var(--skin-item-border, #edf0f5) !important;
+}
+
+.resume-template .rt-basic-row {
+  background: var(--skin-basic-row-bg, #f8fafc) !important;
+  border-color: var(--skin-basic-row-border, #e5e7eb) !important;
+}
+
+.resume-template .rt-skill {
+  background: var(--skin-skill-bg, #eef4ff) !important;
+  border-color: var(--skin-skill-border, #cfe0ff) !important;
+}
+
+.resume-template .rt-timeline-dot {
+  background: var(--skin-top-band-bg, #1677ff) !important;
+}
+
+.resume-template .rt-timeline-line {
+  border-color: var(--skin-divider-color, #e5e7eb) !important;
 }
 
 .resume-template h1,
@@ -27,6 +68,7 @@
   line-height: var(--line-height, 1.8) !important;
 }
 
+/* 姓名等顶栏标题不受皮肤标题色影响 */
 .resume-template [class*='-header'] h1 {
   color: inherit !important;
 }
@@ -47,4 +89,8 @@
 
 .resume-template [class*='-skill'] {
   font-size: 0.92em !important;
+}
+
+.resume-template .rt-skill-bar-fill {
+  background: linear-gradient(90deg, var(--skin-title-color, #1677ff), var(--skin-skill-border, #69b1ff)) !important;
 }

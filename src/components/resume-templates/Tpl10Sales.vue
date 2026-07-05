@@ -1,7 +1,6 @@
 ﻿<!--
   模板 10 - 销售市场（全民简历风格四）
-  白色 header + 深灰图标 + 黑色下划线章节标题
-  无头像时不显示头像占位区域
+  白色 header + 图标章节 + 皮肤可定制模块标题
 -->
 <script setup>
 import { computed } from 'vue'
@@ -9,15 +8,12 @@ import { useResumeFields, skillProgress, skillLevel } from './shared/useResumeFi
 
 const props = defineProps({
   resume: { type: Object, default: () => ({}) },
-  visibleModules: { type: Array, default: () => [] }
+  visibleModules: { type: Array, default: () => [] },
 })
 
 const f = computed(() => useResumeFields(props.resume))
-
-// 头像地址
 const avatarUrl = computed(() => props.resume?.avatar || '')
 
-// 左侧求职信息
 const jobInfo = computed(() => {
   const list = []
   if (f.value.targetPosition) list.push({ label: '求职意向', value: f.value.targetPosition })
@@ -27,7 +23,6 @@ const jobInfo = computed(() => {
   return list
 })
 
-// 右侧基本信息
 const basicInfo = computed(() => {
   const list = []
   if (props.resume?.age) list.push({ label: '年龄', value: `${props.resume.age}岁`, icon: '🎂' })
@@ -39,16 +34,14 @@ const basicInfo = computed(() => {
   return list
 })
 
-// 工作经历描述按换行拆分为 bullet points
 function formatDesc(desc) {
   if (!desc) return []
   return String(desc)
     .split(/\n|(?:\d+[\.、])|(?<=[。；;])/)
-    .map(s => s.trim())
+    .map((s) => s.trim())
     .filter(Boolean)
 }
 
-// 根据编辑器开关控制模块显隐
 const moduleVisibleMap = computed(() => {
   return props.visibleModules.reduce((map, item) => {
     map[item.key] = item.visible !== false
@@ -60,25 +53,22 @@ function showModule(key) {
   return moduleVisibleMap.value[key] !== false
 }
 
-// 章节图标映射
 const sectionIcons = {
   education: '🎓',
   internships: '💼',
   projects: '🏫',
   skills: '⚙️',
   awards: '🏅',
-  summary: '👤'
+  summary: '👤',
 }
 </script>
 
 <template>
-  <div class="w-full bg-[#f5f7fa] text-slate-800">
-    <!-- 顶部白色 header -->
-    <header class="bg-white px-8 py-6 border-b border-slate-200">
+  <div class="resume-template w-full bg-[#f5f7fa] text-slate-800">
+    <header data-resume-module="basic" class="rt-banner border-b border-slate-200 bg-white px-8 py-6">
       <div class="flex items-start justify-between gap-8">
-        <!-- 左侧：姓名 + 求职信息 -->
-        <div class="flex-1 min-w-0">
-          <h1 class="text-3xl font-bold tracking-widest text-slate-900 mb-4">{{ f.name }}</h1>
+        <div class="min-w-0 flex-1">
+          <h1 class="rt-name mb-4 text-3xl font-bold tracking-widest text-slate-900">{{ f.name }}</h1>
           <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
             <div v-for="(item, idx) in jobInfo" :key="idx" class="flex items-center gap-2">
               <span class="text-slate-500">{{ item.label }}：</span>
@@ -86,143 +76,131 @@ const sectionIcons = {
             </div>
           </div>
         </div>
-        <!-- 右侧：基本信息 + 头像（有头像才显示） -->
-        <div class="flex items-start gap-4 shrink-0">
-          <div v-if="basicInfo.length" class="grid grid-cols-1 gap-y-1.5 text-sm text-right">
+        <div class="flex shrink-0 items-start gap-4">
+          <div v-if="basicInfo.length" class="grid grid-cols-1 gap-y-1.5 text-right text-sm">
             <div v-for="(item, idx) in basicInfo" :key="idx" class="flex items-center justify-end gap-2">
               <span class="text-slate-700">{{ item.value }}</span>
-              <span class="text-slate-400 text-xs">{{ item.icon }}</span>
+              <span class="text-xs text-slate-400">{{ item.icon }}</span>
             </div>
           </div>
           <img
             v-if="avatarUrl"
             :src="avatarUrl"
             alt="avatar"
-            class="w-20 h-28 object-cover border-2 border-slate-200 bg-white shadow-sm"
+            class="h-28 w-20 border-2 border-slate-200 bg-white object-cover shadow-sm"
           />
         </div>
       </div>
     </header>
 
-    <!-- 主体内容 -->
     <main class="px-8 py-6">
-      <!-- 教育背景 -->
-      <section v-if="f.school" class="mb-5">
-        <div class="flex items-center gap-3 mb-3 pb-2 border-b border-slate-900">
-          <div class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-white text-sm font-bold">
+      <section v-if="f.school" data-resume-module="basic" class="rt-section mb-5">
+        <div class="mb-3 flex items-center gap-3 border-b border-slate-900 pb-2">
+          <div class="rt-timeline-dot flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold text-white">
             {{ sectionIcons.education }}
           </div>
-          <h2 class="text-base font-bold text-slate-900">教育背景</h2>
+          <h2 class="rt-title mb-0"><span>教育背景</span></h2>
         </div>
-        <div class="mb-2">
-          <div class="flex justify-between items-baseline text-sm mb-1">
-            <strong class="text-slate-900">{{ f.school }}</strong>
-            <span class="text-slate-600 whitespace-nowrap">2015-09 ~ 2018-07</span>
+        <div class="rt-item mb-2">
+          <div class="rt-item-header">
+            <strong>{{ f.school }}</strong>
+            <span class="whitespace-nowrap">2015-09 ~ 2018-07</span>
           </div>
-          <p v-if="f.major" class="text-sm text-slate-700">{{ f.major }}</p>
+          <p v-if="f.major" class="rt-text text-sm text-slate-700">{{ f.major }}</p>
           <p v-if="f.education" class="text-sm text-slate-700">{{ f.education }}</p>
         </div>
       </section>
 
-      <!-- 工作经历 -->
-      <section v-if="showModule('internships') && f.internships.length" class="mb-5">
-        <div class="flex items-center gap-3 mb-3 pb-2 border-b border-slate-900">
-          <div class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-white text-sm font-bold">
+      <section v-if="showModule('internships') && f.internships.length" data-resume-module="internships" class="rt-section mb-5">
+        <div class="mb-3 flex items-center gap-3 border-b border-slate-900 pb-2">
+          <div class="rt-timeline-dot flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold text-white">
             {{ sectionIcons.internships }}
           </div>
-          <h2 class="text-base font-bold text-slate-900">工作经历</h2>
+          <h2 class="rt-title mb-0"><span>工作经历</span></h2>
         </div>
         <div class="space-y-3">
-          <div v-for="intern in f.internships" :key="intern.company + intern.start_date">
-            <div class="flex justify-between items-baseline text-sm mb-1">
-              <strong class="text-slate-900">{{ intern.company }}</strong>
-              <span class="text-slate-600 whitespace-nowrap">{{ intern.start_date }} ~ {{ intern.end_date }}</span>
+          <div v-for="intern in f.internships" :key="intern.company + intern.start_date" class="rt-item">
+            <div class="rt-item-header">
+              <strong>{{ intern.company }}</strong>
+              <span class="whitespace-nowrap">{{ intern.start_date }} ~ {{ intern.end_date }}</span>
             </div>
-            <p v-if="intern.position" class="text-sm text-slate-700 mb-1.5">{{ intern.position }}</p>
-            <ul class="list-disc pl-5 text-sm text-slate-700 leading-relaxed space-y-0.5">
+            <p v-if="intern.position" class="rt-sub">{{ intern.position }}</p>
+            <ul class="list-disc space-y-0.5 pl-5 text-sm leading-relaxed text-slate-700">
               <li v-for="(line, idx) in formatDesc(intern.description)" :key="idx">{{ line }}</li>
             </ul>
           </div>
         </div>
       </section>
 
-      <!-- 项目经历 -->
-      <section v-if="showModule('projects') && f.projects.length" class="mb-5">
-        <div class="flex items-center gap-3 mb-3 pb-2 border-b border-slate-900">
-          <div class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-white text-sm font-bold">
+      <section v-if="showModule('projects') && f.projects.length" data-resume-module="projects" class="rt-section mb-5">
+        <div class="mb-3 flex items-center gap-3 border-b border-slate-900 pb-2">
+          <div class="rt-timeline-dot flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold text-white">
             {{ sectionIcons.projects }}
           </div>
-          <h2 class="text-base font-bold text-slate-900">项目经历</h2>
+          <h2 class="rt-title mb-0"><span>项目经历</span></h2>
         </div>
         <div class="space-y-3">
-          <div v-for="proj in f.projects" :key="proj.name">
-            <div class="flex justify-between items-baseline text-sm mb-1">
-              <strong class="text-slate-900">{{ proj.name }}</strong>
-              <span class="text-slate-600 whitespace-nowrap">{{ proj.start_date }} ~ {{ proj.end_date }}</span>
+          <div v-for="proj in f.projects" :key="proj.name" class="rt-item">
+            <div class="rt-item-header">
+              <strong>{{ proj.name }}</strong>
+              <span class="whitespace-nowrap">{{ proj.start_date }} ~ {{ proj.end_date }}</span>
             </div>
-            <p v-if="proj.role || proj.tech_stack" class="text-sm text-slate-700 mb-1.5">
+            <p v-if="proj.role || proj.tech_stack" class="rt-sub">
               {{ proj.role }}<template v-if="proj.tech_stack"> | {{ proj.tech_stack }}</template>
             </p>
-            <ul class="list-disc pl-5 text-sm text-slate-700 leading-relaxed space-y-0.5">
+            <ul class="list-disc space-y-0.5 pl-5 text-sm leading-relaxed text-slate-700">
               <li v-for="(line, idx) in formatDesc(proj.description)" :key="idx">{{ line }}</li>
             </ul>
           </div>
         </div>
       </section>
 
-      <!-- 技能特长 -->
-      <section v-if="showModule('skills') && f.skills.length" class="mb-5">
-        <div class="flex items-center gap-3 mb-3 pb-2 border-b border-slate-900">
-          <div class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-white text-sm font-bold">
+      <section v-if="showModule('skills') && f.skills.length" data-resume-module="skills" class="rt-section mb-5">
+        <div class="mb-3 flex items-center gap-3 border-b border-slate-900 pb-2">
+          <div class="rt-timeline-dot flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold text-white">
             {{ sectionIcons.skills }}
           </div>
-          <h2 class="text-base font-bold text-slate-900">技能特长</h2>
+          <h2 class="rt-title mb-0"><span>技能特长</span></h2>
         </div>
-        <div>
-          <ul class="list-disc pl-5 text-sm text-slate-700 leading-relaxed space-y-1 mb-3">
-            <li v-for="skill in f.skills" :key="skill">{{ skill }}</li>
-          </ul>
-          <div class="grid grid-cols-2 gap-4">
-            <div v-for="(skill, idx) in f.skills.slice(0, 2)" :key="skill" class="text-sm">
-              <div class="flex justify-between mb-1">
-                <span class="font-medium text-slate-800">{{ skill }}</span>
-                <span class="text-slate-500">{{ skillLevel(idx) }}</span>
-              </div>
-              <div class="h-2 bg-slate-200 rounded-full overflow-hidden">
-                <div class="h-full bg-slate-700 rounded-full" :style="{ width: skillProgress(idx) + '%' }" />
-              </div>
+        <ul class="mb-3 list-disc space-y-1 pl-5 text-sm leading-relaxed text-slate-700">
+          <li v-for="skill in f.skills" :key="skill">{{ skill }}</li>
+        </ul>
+        <div class="grid grid-cols-2 gap-4">
+          <div v-for="(skill, idx) in f.skills.slice(0, 2)" :key="skill" class="text-sm">
+            <div class="mb-1 flex justify-between">
+              <span class="font-medium text-slate-800">{{ skill }}</span>
+              <span class="text-slate-500">{{ skillLevel(idx) }}</span>
+            </div>
+            <div class="h-2 overflow-hidden rounded-full bg-slate-200">
+              <div class="rt-skill-bar-fill h-full rounded-full" :style="{ width: skillProgress(idx) + '%' }" />
             </div>
           </div>
         </div>
       </section>
 
-      <!-- 荣誉证书 -->
-      <section v-if="showModule('awards') && f.honorList.length" class="mb-5">
-        <div class="flex items-center gap-3 mb-3 pb-2 border-b border-slate-900">
-          <div class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-white text-sm font-bold">
+      <section v-if="showModule('awards') && f.honorList.length" data-resume-module="awards" class="rt-section mb-5">
+        <div class="mb-3 flex items-center gap-3 border-b border-slate-900 pb-2">
+          <div class="rt-timeline-dot flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold text-white">
             {{ sectionIcons.awards }}
           </div>
-          <h2 class="text-base font-bold text-slate-900">荣誉证书</h2>
+          <h2 class="rt-title mb-0"><span>荣誉证书</span></h2>
         </div>
-        <div>
-          <ul class="list-disc pl-5 text-sm text-slate-700 leading-relaxed space-y-1">
-            <li v-for="item in f.honorList" :key="item">{{ item }}</li>
-          </ul>
-        </div>
+        <ul class="list-disc space-y-1 pl-5 text-sm leading-relaxed text-slate-700">
+          <li v-for="item in f.honorList" :key="item">{{ item }}</li>
+        </ul>
       </section>
 
-      <!-- 自我评价 -->
-      <section v-if="f.summary" class="mb-5">
-        <div class="flex items-center gap-3 mb-3 pb-2 border-b border-slate-900">
-          <div class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-white text-sm font-bold">
+      <section v-if="f.summary" data-resume-module="basic" class="rt-section mb-5">
+        <div class="mb-3 flex items-center gap-3 border-b border-slate-900 pb-2">
+          <div class="rt-timeline-dot flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold text-white">
             {{ sectionIcons.summary }}
           </div>
-          <h2 class="text-base font-bold text-slate-900">自我评价</h2>
+          <h2 class="rt-title mb-0"><span>自我评价</span></h2>
         </div>
-        <div>
-          <p class="text-sm text-slate-700 leading-relaxed">{{ f.summary }}</p>
-        </div>
+        <p class="rt-text text-sm leading-relaxed text-slate-700">{{ f.summary }}</p>
       </section>
     </main>
   </div>
 </template>
+
+<style src="./shared/resumeTemplateBase.css"></style>

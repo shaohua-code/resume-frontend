@@ -24,6 +24,24 @@ const moduleVisibleMap = computed(() => {
 function showModule(key) {
   return moduleVisibleMap.value[key] !== false
 }
+
+// 基本信息项：有值才展示，顺序固定
+const basicInfoItems = computed(() => {
+  const fields = f.value
+  return [
+    { key: 'name', label: '姓名', value: fields.name },
+    { key: 'targetPosition', label: '岗位', value: fields.targetPosition },
+    { key: 'phone', label: '电话', value: fields.phone },
+    { key: 'email', label: '邮箱', value: fields.email },
+    { key: 'eduLine', label: '教育', value: fields.eduLine },
+  ].filter((item) => item.value)
+})
+
+// 总数为奇数时，最后一项独占整行
+function isBasicRowWide(index) {
+  const total = basicInfoItems.value.length
+  return total % 2 === 1 && index === total - 1
+}
 </script>
 
 <template>
@@ -37,17 +55,22 @@ function showModule(key) {
        
       </div>
       <div class="rt-basic-grid">
-        <div v-if="f.name" class="rt-basic-row"><span class="rt-label">姓名</span><span>{{ f.name }}</span></div>
-        <div v-if="f.targetPosition" class="rt-basic-row"><span class="rt-label">岗位</span><span>{{ f.targetPosition }}</span></div>
-        <div v-if="f.phone" class="rt-basic-row"><span class="rt-label">电话</span><span>{{ f.phone }}</span></div>
-        <div v-if="f.email" class="rt-basic-row"><span class="rt-label">邮箱</span><span>{{ f.email }}</span></div>
-        <div v-if="f.eduLine" class="rt-basic-row rt-basic-wide"><span class="rt-label">教育</span><span>{{ f.eduLine }}</span></div>
+        <div
+          v-for="(item, index) in basicInfoItems"
+          :key="item.key"
+          class="rt-basic-row"
+          :class="{ 'rt-basic-wide': isBasicRowWide(index) }"
+        >
+          <span class="rt-label">{{ item.label }}</span>
+          <span>{{ item.value }}</span>
+        </div>
       </div>
     </header>
 
     <!-- 教育背景 -->
     <section v-if="f.school" data-resume-module="basic" class="rt-section">
-      <h2 class="rt-title"><span>教育背景</span></h2>
+  
+ <h2 class="rt-title"><span>教育背景</span></h2>
       <div class="rt-item">
         <div class="rt-item-header">
           <strong>{{ f.school }}</strong>
@@ -121,20 +144,20 @@ function showModule(key) {
 <style scoped>
 .rt-body { word-break: break-word; color: #1f2937; }
 .rt-header { margin-bottom: 22px; }
-.rt-banner { text-align: center; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 2px solid #1f2937; }
-.rt-name { font-size: 28px; font-weight: 800; margin: 0 0 6px; color: #111827; letter-spacing: 4px; }
+.rt-banner { text-align: center; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 2px solid; }
+.rt-name { font-size: 28px; font-weight: 800; margin: 0 0 6px; letter-spacing: 4px; }
 .rt-slogan { margin: 0; font-size: 13px; color: #4b5563; font-weight: 600; letter-spacing: 1px; }
 .rt-sub-en { margin: 4px 0 0; font-size: 11px; color: #9ca3af; letter-spacing: 2px; text-transform: uppercase; }
 .rt-basic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; font-size: 13px; }
-.rt-basic-row { display: flex; gap: 8px; align-items: center; min-width: 0; padding: 6px 10px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px; }
+.rt-basic-row { display: flex; gap: 8px; align-items: center; min-width: 0; padding: 6px 10px; border-radius: 6px; border-width: 1px; border-style: solid; }
 .rt-basic-wide { grid-column: 1 / -1; }
 .rt-label { color: #6b7280; flex-shrink: 0; min-width: 34px; font-weight: 700; }
 .rt-section { margin-bottom: 22px; }
-.rt-title { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 800; margin: 0 0 12px; padding: 0; color: #111827; background: transparent; border: none; }
-.rt-title::before { content: ''; width: 4px; height: 16px; background: currentColor; border-radius: 4px; }
-.rt-title::after { content: ''; flex: 1; height: 1px; background: #e5e7eb; }
+.rt-title { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 800; margin: 0 0 12px; padding: 0; background: transparent; border: none; }
+.rt-title::before { content: ''; width: 4px; height: 16px; border-radius: 4px; }
+.rt-title::after { content: ''; flex: 1; height: 1px; }
 .rt-title span { flex-shrink: 0; }
-.rt-item { margin-bottom: 14px; padding: 12px 14px; background: #fff; border: 1px solid #edf0f5; border-radius: 8px; }
+.rt-item { margin-bottom: 14px; padding: 12px 14px; border-radius: 8px; border-width: 1px; border-style: solid; }
 .rt-item-header { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 4px; font-size: 14px; }
 .rt-item-header strong { color: #111827; font-weight: 800; }
 .rt-item-header span { color: #6b7280; font-size: 12px; white-space: nowrap; }
@@ -142,7 +165,7 @@ function showModule(key) {
 .rt-text, .rt-desc { margin: 0; font-size: 13px; color: #374151; line-height: 1.78; text-indent: 2em; }
 .rt-desc { text-indent: 0; }
 .rt-skills { display: flex; flex-wrap: wrap; gap: 8px; }
-.rt-skill { padding: 5px 12px; background: #eef4ff; border: 1px solid #cfe0ff; border-radius: 999px; font-size: 12px; color: #1f3a5f; font-weight: 600; }
+.rt-skill { padding: 5px 12px; border-radius: 999px; font-size: 12px; color: #1f3a5f; font-weight: 600; border-width: 1px; border-style: solid; }
 .rt-list { margin: 0; padding-left: 20px; }
 .rt-list li { margin-bottom: 5px; font-size: 13px; color: #374151; line-height: 1.7; }
 .rt-skill-bar-item { margin-bottom: 12px; padding: 10px 12px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; }

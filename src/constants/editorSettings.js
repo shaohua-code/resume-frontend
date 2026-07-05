@@ -2,15 +2,13 @@
  * 编辑器默认设置（间距 / 字体 / 皮肤）
  * 与全民简历参考站 slider 范围对齐
  */
-import { DEFAULT_SKIN } from '@/constants/skin'
+import { DEFAULT_SKIN_THEME, normalizeSkinTheme } from '@/constants/skin'
 
 export const DEFAULT_SPACING = {
   sectionGap: 5,
   lineHeight: 1.6,
   padding: 10,
-  // 每页顶部留白，避免分页后内容贴顶
   pageTopGap: 16,
-  // 每页底部留白，避免分页时文字被截断
   pageBottomGap: 24,
 }
 
@@ -50,20 +48,25 @@ export const DEFAULT_EDITOR_SETTINGS = {
   spacing: { ...DEFAULT_SPACING },
   fontSize: DEFAULT_FONT_SIZE,
   fontFamily: DEFAULT_FONT_FAMILY,
-  skin: DEFAULT_SKIN,
+  skinTheme: { ...DEFAULT_SKIN_THEME },
   modules: DEFAULT_MODULES.map((m) => ({ ...m })),
 }
 
 /** 从 resume_json 中提取并剥离 _editorSettings */
 export function extractEditorSettings(resume) {
-  const settings = resume._editorSettings
+  const raw = resume._editorSettings
     ? { ...DEFAULT_EDITOR_SETTINGS, ...resume._editorSettings, spacing: { ...DEFAULT_SPACING, ...resume._editorSettings?.spacing } }
     : { ...DEFAULT_EDITOR_SETTINGS, spacing: { ...DEFAULT_SPACING } }
-  const savedModules = settings.modules || []
-  settings.modules = DEFAULT_MODULES.map((mod) => ({
-    ...mod,
-    ...(savedModules.find((item) => item.key === mod.key) || {}),
-  }))
+  const savedModules = raw.modules || []
+  const settings = {
+    ...raw,
+    spacing: { ...DEFAULT_SPACING, ...raw.spacing },
+    skinTheme: normalizeSkinTheme(raw.skinTheme ?? raw.skin),
+    modules: DEFAULT_MODULES.map((mod) => ({
+      ...mod,
+      ...(savedModules.find((item) => item.key === mod.key) || {}),
+    })),
+  }
   return settings
 }
 
@@ -73,7 +76,7 @@ export function applyEditorSettingsToResume(resume, editorSettings) {
     spacing: { ...editorSettings.spacing },
     fontSize: editorSettings.fontSize,
     fontFamily: editorSettings.fontFamily,
-    skin: editorSettings.skin,
+    skinTheme: normalizeSkinTheme(editorSettings.skinTheme),
     modules: (editorSettings.modules || DEFAULT_MODULES).map((m) => ({ ...m })),
   }
 }
