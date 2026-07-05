@@ -20,10 +20,10 @@ export const TEMPLATE_FONT_COLOR_PRESETS = {
   3: { label: '#1d4ed8', basicValue: '#1f2937', name: '#1e3a8a', content: '#374151' },
 
   // 4. 左右分栏：若左侧有深色背景，姓名/基本信息用白色或浅灰，右侧正文保持深灰
-  4: { label: '#1f2937', basicValue: '#ffffff', name: '#ffffff', content: '#000000' },
+  4: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#000000' },
 
   // 5. 顶部色带（全宽蓝Header）：Header内文字（姓名）用纯白，下方正文用深灰
-  5: { label: '#2563eb', basicValue: '#374151', name: '#ffffff', content: '#374151' },
+  5: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#374151' },
 
   // 6. 表格信息：强调严谨性，使用标准的石墨黑与深灰
   6: { label: '#4b5563', basicValue: '#1f2937', name: '#111827', content: '#374151' },
