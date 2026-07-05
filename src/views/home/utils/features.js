@@ -10,18 +10,18 @@ export const HOME_FEATURES = [
     iconBg: 'bg-brand-lighter/60',
   },
   {
+    icon: '⚡',
+    title: '智能识别',
+    path: '/generate?mode=lazy',
+    desc: '自由文本键值对填写，AI 智能解析生成专业简历',
+    iconBg: 'bg-accent-lighter/60',
+  },
+  {
     icon: '📄',
     title: '上传优化',
     path: '/generate?mode=upload',
     desc: '上传现有 PDF 简历，AI 自动提取并整体优化重写',
     iconBg: 'bg-mint/60',
-  },
-  {
-    icon: '✏️',
-    title: '在线编辑',
-    path: '/generate',
-    desc: '20 套专业模板，实时预览，间距字体皮肤自由调整',
-    iconBg: 'bg-accent-lighter/60',
   },
   {
     icon: '🎯',

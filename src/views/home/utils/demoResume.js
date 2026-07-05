@@ -86,4 +86,4 @@ export const DEMO_RESUME = {
 }
 
 /** 首页轮播展示的模板 ID（从库中精选） */
-export const FEATURED_TEMPLATE_IDS = [1, 3, 8, 14, 16, 20]
+export const FEATURED_TEMPLATE_IDS = [2, 4, 8, 10, 16, 1]

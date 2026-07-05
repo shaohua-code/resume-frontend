@@ -97,7 +97,7 @@ src/
 
 首页模块顺序：Hero → 使用流程 → 核心功能 → 精选模板预览 → 信任背书。
 
-## 六、生成页双模式
+## 六、生成页三模式
 
 `/generate` 统一入口，顶部 `a-segmented` 切换：
 
@@ -105,6 +105,7 @@ src/
 | --- | --- | --- | --- |
 | 上传 PDF | `?mode=upload` | `UploadPanel.vue` | PDF 校验、流式优化、已上传简历可直接引用优化 |
 | 表单填写 | `?mode=form` | `FormPanel.vue` | 步骤式表单，项目经历选填 |
+| 智能识别 | `?mode=lazy` | `LazyPanel.vue` | 自由文本键值对填写，AI 智能解析生成 |
 
 旧路由 `/upload-optimize` 自动 redirect 至 `/generate?mode=upload`。
 

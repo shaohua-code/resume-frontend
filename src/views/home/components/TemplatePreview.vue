@@ -48,7 +48,7 @@ function goAllTemplates() {
     <div class="flex flex-col items-center justify-between gap-3 mb-6 sm:mb-8 sm:flex-row">
       <div class="text-center sm:text-left">
         <h2 class="section-title">精选模板预览</h2>
-        <p class="mt-1 section-subtitle">20 套专业模板，张三校招简历实时渲染预览</p>
+        <p class="mt-1 section-subtitle">20 款专用简历模板，搭载示范样例，即时预览效果</p>
       </div>
       <button class="link-text shrink-0" @click="goAllTemplates">
         查看全部模板 →

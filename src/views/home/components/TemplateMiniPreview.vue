@@ -98,12 +98,13 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col items-center">
     <div
-      class="relative rounded-card border border-line/60 bg-white shadow-card"
+      class="relative bg-white border rounded-card border-line/60 shadow-card"
       :class="wrapperClass"
       :style="wrapperStyle"
     >
-      <div class="pointer-events-none origin-top-left bg-white" :style="innerStyle">
+      <div class="origin-top-left bg-white pointer-events-none" :style="innerStyle">
         <div ref="contentRef" class="w-[794px] px-8 py-8 text-sm leading-relaxed text-ink">
+         
           <ResumeTemplate
             :resume="resume"
             :template-id="templateId"

@@ -58,7 +58,7 @@ onUnmounted(() => {
     <PageHero
       compact
       title="全部简历模板"
-      subtitle="20 款校招专用简历模板，搭载示范样例，即时预览效果"
+      subtitle="20 款专用简历模板，搭载示范样例，即时预览效果"
     />
 
     <section class="-mt-4 page-container">
