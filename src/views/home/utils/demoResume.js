@@ -83,8 +83,21 @@ export const DEMO_RESUME = {
     '计算机二级（Web 方向）',
     '阿里云 ACA 云计算助理工程师',
   ],
-  // 多一个头像连接
-  avatar: 'https://img.freepik.com/free-photo/young-handsome-man-with-beard-wearing-brown-sweater_273609-16147.jpg',
+}
+// 给我放个中国美女
+/** 演示头像 URL（仅部分模板展示） */
+export const DEMO_AVATAR = 
+'https://img.freepik.com/free-photo/smiling-woman-with-crossed-arms-looking-camera-posing-studio_176420-21703.jpg'
+/** 支持展示头像的模板 ID */
+export const DEMO_AVATAR_TEMPLATE_IDS = [2, 4, 8, 10, 12, 14]
+
+/** 按模板 ID 返回演示数据，仅指定模板带 avatar 字段 */
+export function getDemoResume(templateId) {
+  const resume = { ...DEMO_RESUME }
+  if (DEMO_AVATAR_TEMPLATE_IDS.includes(templateId)) {
+    resume.avatar = DEMO_AVATAR
+  }
+  return resume
 }
 
 /** 首页轮播展示的模板 ID（从库中精选） */

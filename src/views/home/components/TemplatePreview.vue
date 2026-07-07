@@ -6,7 +6,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
 import TemplateMiniPreview from './TemplateMiniPreview.vue'
-import { DEMO_RESUME, FEATURED_TEMPLATE_IDS } from '../utils/demoResume'
+import { getDemoResume, FEATURED_TEMPLATE_IDS } from '../utils/demoResume'
 import { TEMPLATE_LIST } from '@/constants/templateRegistry'
 
 const router = useRouter()
@@ -81,7 +81,7 @@ function goAllTemplates() {
       >
         <TemplateMiniPreview
           :template-id="tpl.id"
-          :resume="DEMO_RESUME"
+          :resume="getDemoResume(tpl.id)"
           :scale="0.45"
           :show-label="false"
         />

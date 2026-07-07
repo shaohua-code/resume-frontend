@@ -8,7 +8,7 @@ import PageHero from '@/components/PageHero.vue'
 import GlassCard from '@/components/GlassCard.vue'
 import GradientButton from '@/components/GradientButton.vue'
 import TemplateMiniPreview from '@/views/home/components/TemplateMiniPreview.vue'
-import { DEMO_RESUME } from '@/views/home/utils/demoResume'
+import { getDemoResume } from '@/views/home/utils/demoResume'
 import { TEMPLATE_LIST } from '@/constants/templateRegistry'
 
 const router = useRouter()
@@ -77,7 +77,7 @@ onUnmounted(() => {
           >
             <TemplateMiniPreview
               :template-id="tpl.id"
-              :resume="DEMO_RESUME"
+              :resume="getDemoResume(tpl.id)"
               :scale="0.22"
               preview-mode="page"
             />
@@ -107,7 +107,7 @@ onUnmounted(() => {
         >
           <TemplateMiniPreview
             :template-id="previewId"
-            :resume="DEMO_RESUME"
+            :resume="getDemoResume(previewId)"
             :scale="modalPreviewScale"
             preview-mode="full"
             :show-label="false"
