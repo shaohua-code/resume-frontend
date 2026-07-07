@@ -35,6 +35,20 @@
   border-bottom-color: var(--skin-header-border, #1f2937) !important;
 }
 
+/* 标准模板顶栏头像：有上传才展示 */
+.resume-template .rt-avatar {
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.resume-template .rt-banner-avatar {
+  width: 88px;
+  height: 88px;
+  display: block;
+  margin: 0 auto 12px;
+  border: 3px solid var(--skin-header-border, #e5e7eb);
+}
+
 .resume-template .rt-top-band {
   background: var(--skin-top-band-bg, #1677ff) !important;
 }

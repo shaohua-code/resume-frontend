@@ -106,6 +106,12 @@ const routes = [
         meta: { title: '简历资源', permission: 'admin:view_resumes' },
       },
       {
+        path: 'feedbacks',
+        name: 'AdminFeedbacks',
+        component: () => import('@/views/admin/components/AdminFeedbackPanel.vue'),
+        meta: { title: '用户反馈', permission: 'admin:view_feedback' },
+      },
+      {
         path: 'announcements',
         name: 'AdminAnnouncements',
         component: () => import('@/views/admin/components/AdminCrudPanel.vue'),

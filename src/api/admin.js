@@ -49,6 +49,14 @@ export function getAdminResumeDetail(id) {
   return request.get(`/admin/resumes/${id}`)
 }
 
+export function getAdminFeedbacks(params = {}) {
+  return request.get('/admin/feedbacks', { params })
+}
+
+export function getAdminFeedbackDetail(id) {
+  return request.get(`/admin/feedbacks/${id}`)
+}
+
 export function getAdminConfigs() {
   return request.get('/admin/configs')
 }

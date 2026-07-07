@@ -1,6 +1,8 @@
 /**
  * 简历字段映射（不改后端接口，对齐AI简历模块）
  */
+import { resolveUploadUrl } from '@/api/upload'
+
 export function useResumeFields(resume) {
   const r = resume || {}
   return {
@@ -17,8 +19,8 @@ export function useResumeFields(resume) {
     internships: r.internships || [],
     awards: r.awards || [],
     certificates: r.certificates || [],
-    // 扩展字段：用于 08/12 等需要更丰富排版的模板，缺失时自动隐藏对应区块
-    avatar: r.avatar || '',
+    // 扩展字段：头像 URL 需补全为可访问地址
+    avatar: resolveUploadUrl(r.avatar || ''),
     gender: r.gender || '',
     age: r.age || '',
     city: r.city || '',

@@ -12,7 +12,7 @@ const props = defineProps({
 })
 
 const f = computed(() => useResumeFields(props.resume))
-const avatarUrl = computed(() => props.resume?.avatar || '')
+const avatarUrl = computed(() => f.value.avatar)
 
 const jobInfo = computed(() => {
   const list = []

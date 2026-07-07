@@ -99,20 +99,16 @@ const timelineModules = computed(() => [
       class="flex flex-col items-center gap-3 px-6 py-8 text-center text-white"
       :style="{ background: 'var(--skin-header-bg, #5b9bd5)' }"
     >
-      <!-- 圆形头像 -->
-      <div class="h-20 w-20 overflow-hidden rounded-full border-4 border-white/30 bg-white/20">
+      <!-- 圆形头像：有上传才展示 -->
+      <div
+        v-if="f.avatar"
+        class="h-20 w-20 overflow-hidden rounded-full border-4 border-white/30"
+      >
         <img
-          v-if="f.avatar"
           :src="f.avatar"
           alt="头像"
           class="h-full w-full object-cover"
         >
-        <div
-          v-else
-          class="flex h-full w-full items-center justify-center text-2xl font-bold text-white"
-        >
-          {{ f.name.charAt(0) }}
-        </div>
       </div>
 
       <!-- 姓名 -->

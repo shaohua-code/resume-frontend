@@ -49,6 +49,12 @@ function isBasicRowWide(index) {
     <!-- 顶栏：对照AI简历 1004 -->
     <header data-resume-module="basic" class="rt-header">
       <div class="rt-banner">
+        <img
+          v-if="f.avatar"
+          :src="f.avatar"
+          alt="头像"
+          class="rt-avatar rt-banner-avatar"
+        >
         <h1 class="rt-name">{{ f.name }}</h1>
         <p v-if="f.targetPosition" class="rt-slogan rt-name-sub">{{ f.targetPosition }}</p>
        

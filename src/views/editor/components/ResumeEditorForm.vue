@@ -4,6 +4,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
+import AvatarUpload from '@/components/AvatarUpload.vue'
 
 const resume = defineModel({ type: Object, required: true })
 const modules = defineModel('modules', { type: Array, required: true })
@@ -79,6 +80,11 @@ function removeInternship(i) {
     <template v-if="activeModule === 'basic'">
       <a-form layout="vertical" size="small">
         <a-row :gutter="12">
+          <a-col :span="24">
+            <a-form-item label="头像">
+              <AvatarUpload v-model="resume.avatar" />
+            </a-form-item>
+          </a-col>
           <a-col :span="8"><a-form-item label="姓名"><a-input v-model:value="resume.name" class="input-field" /></a-form-item></a-col>
           <a-col :span="8"><a-form-item label="意向岗位"><a-input v-model:value="resume.target_position" placeholder="如：前端开发工程师" class="input-field" /></a-form-item></a-col>
           <a-col :span="8"><a-form-item label="学校"><a-input v-model:value="resume.school" class="input-field" /></a-form-item></a-col>

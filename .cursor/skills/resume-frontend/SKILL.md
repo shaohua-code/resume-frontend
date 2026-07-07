@@ -23,17 +23,15 @@ AI 简历助手校园版前端。Vue 3.5 + Vite 5 + Tailwind 3 + Ant Design Vue 
 ```
 src/
 ├── main.js                 # Pinia + Router + Antd + global.css
-├── App.vue                 # AppHeader + router-view（hideLayout 控制）
-├── api/                    # auth.js | resume.js | admin.js
+├── App.vue                 # AppHeader + router-view + FeedbackFloatingButton
+├── api/                    # auth | resume | admin | upload | feedback
 ├── utils/request.js        # Axios + Token 刷新 + 401 处理
-├── utils/loginRedirect.js  # 登录回跳 redirect 工具
 ├── router/index.js         # 路由 + requireAuth 守卫
-├── stores/user.js          # 认证、RBAC、Token
-├── stores/resume.js        # 简历 CRUD、AI 生成流
+├── stores/                 # user.js | resume.js
 ├── constants/              # theme | templateRegistry | editorSettings | skin | roles
-├── components/             # 全局 UI + ResumeTemplate.vue
+├── components/             # AvatarUpload | FeedbackFloatingButton | ResumeTemplate
 ├── components/resume-templates/  # 20 套模板 + shared/
-├── composables/useTheme.js
+├── composables/            # useTheme.js | useDraggable.js
 ├── styles/global.css       # Tailwind + @layer components
 └── views/                  # home | generate | editor | templates | user | admin | auth
 ```
@@ -103,6 +101,18 @@ editor/index.vue
 - 基本信息含 **target_position（意向岗位）**，对应模板顶部标语与「岗位」行
 - 进入：`/editor/:id` → fetchDetail；从 generate 带 store 数据
 - 保存：`resume_json: JSON.stringify(resume)` + `template_id`
+- **avatar**：`resume_json.avatar` 为上传 URL（相对路径 `/uploads/files/...`），编辑器 `AvatarUpload` 组件；无头像时模板不展示头像区域
+
+## 用户反馈
+
+- 全局浮窗：`App.vue` → `FeedbackFloatingButton`（可拖拽，非 admin/认证页显示）
+- 富文本弹窗：`FeedbackModal.vue`（Quill + 图片走统一上传）
+- 管理端：`/admin/feedbacks`，permission `admin:view_feedback`（**仅 SUPER_ADMIN**），Markdown 预览
+
+## 统一上传
+
+- `api/upload.js`：`uploadFile()` → `POST /api/upload/file`；`resolveUploadUrl()` 拼接访问地址
+- 用于：头像、反馈富文本图片；开发环境 Vite 代理 `/uploads`
 
 ## 样式单源
 

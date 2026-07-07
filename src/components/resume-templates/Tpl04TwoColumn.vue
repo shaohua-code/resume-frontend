@@ -12,7 +12,7 @@ const props = defineProps({
 })
 
 const f = computed(() => useResumeFields(props.resume))
-const avatarUrl = computed(() => props.resume?.avatar || '')
+const avatarUrl = computed(() => f.value.avatar)
 
 // 顶栏岗位行：单独展示，颜色跟随姓名（rt-name-sub）
 const positionLine = computed(() =>

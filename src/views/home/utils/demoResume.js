@@ -83,6 +83,8 @@ export const DEMO_RESUME = {
     '计算机二级（Web 方向）',
     '阿里云 ACA 云计算助理工程师',
   ],
+  // 多一个头像连接
+  avatar: 'https://img.freepik.com/free-photo/young-handsome-man-with-beard-wearing-brown-sweater_273609-16147.jpg',
 }
 
 /** 首页轮播展示的模板 ID（从库中精选） */

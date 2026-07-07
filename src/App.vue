@@ -14,20 +14,32 @@
       >
         <router-view />
       </main>
- 
+
+      <!-- 用户端可拖拽反馈入口 -->
+      <FeedbackFloatingButton v-if="showFeedback" />
     </div>
   </a-config-provider>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
 import { antdToken } from '@/constants/theme'
 import { useTheme } from '@/composables/useTheme'
 import AppHeader from '@/components/AppHeader.vue'
+import FeedbackFloatingButton from '@/components/FeedbackFloatingButton.vue'
 
-
+const route = useRoute()
 const { applyCssVariables } = useTheme()
+
+// 隐藏反馈按钮的路径：管理端与认证页
+const HIDDEN_FEEDBACK_PATHS = ['/login', '/register', '/forgot-password']
+const showFeedback = computed(() => {
+  const path = route.path
+  if (path.startsWith('/admin')) return false
+  return !HIDDEN_FEEDBACK_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
+})
 
 // 挂载时将 theme.js 变量注入 :root
 onMounted(() => {

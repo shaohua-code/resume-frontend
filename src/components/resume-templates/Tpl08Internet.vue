@@ -55,22 +55,20 @@ const hobbies = computed(() => f.value.skills.slice(0, 6))
       class="flex w-[32%] flex-col gap-5 px-5 py-6 text-white"
       :style="{ background: 'var(--skin-header-bg, #475569)' }"
     >
-      <!-- 头像 -->
-      <div class="flex flex-col items-center gap-3">
-        <div class="h-24 w-24 overflow-hidden rounded-lg border-2 border-white/30 bg-white/10">
+      <!-- 头像：有上传才展示 -->
+      <div v-if="f.avatar" class="flex flex-col items-center gap-3">
+        <div class="h-24 w-24 overflow-hidden rounded-lg border-2 border-white/30">
           <img
-            v-if="f.avatar"
             :src="f.avatar"
             alt="头像"
             class="h-full w-full object-cover"
           >
-          <div
-            v-else
-            class="flex h-full w-full items-center justify-center text-3xl font-bold text-white/90"
-          >
-            {{ f.name.charAt(0) }}
-          </div>
         </div>
+        <h1 class="text-xl font-bold tracking-wider text-white" :style="{ color: '#ffffff' }">
+          {{ f.name }}
+        </h1>
+      </div>
+      <div v-else class="flex flex-col items-center gap-3">
         <h1 class="text-xl font-bold tracking-wider text-white" :style="{ color: '#ffffff' }">
           {{ f.name }}
         </h1>

@@ -3,7 +3,7 @@
  */
 import {
   LayoutDashboard, ShieldCheck, Users, ShoppingCart, Bot, FileText,
-  Megaphone, Cpu, Crown, Settings,
+  Megaphone, Cpu, Crown, Settings, MessageSquare,
 } from 'lucide-vue-next'
 
 export const ADMIN_MENU_ITEMS = [
@@ -13,6 +13,7 @@ export const ADMIN_MENU_ITEMS = [
   { key: 'orders', path: '/admin/orders', label: '业务订单', desc: '会员订单状态', group: '业务管理', permission: 'admin:view_orders', icon: ShoppingCart },
   { key: 'aiCalls', path: '/admin/ai-calls', label: 'AI调用记录', desc: '模型调用审计', group: '业务管理', permission: 'admin:view_ai_calls', icon: Bot },
   { key: 'resumes', path: '/admin/resumes', label: '简历资源', desc: '只读查看简历', group: '业务管理', permission: 'admin:view_resumes', icon: FileText },
+  { key: 'feedbacks', path: '/admin/feedbacks', label: '用户反馈', desc: '用户意见与建议', group: '业务管理', permission: 'admin:view_feedback', icon: MessageSquare },
   { key: 'announcements', path: '/admin/announcements', label: '公告管理', desc: '运营通知内容', group: '业务管理', permission: 'admin:announcement', icon: Megaphone },
   { key: 'models', path: '/admin/models', label: 'AI模型管理', desc: '模型与VIP限制', group: 'AI模型管理', permission: 'admin:ai_model', icon: Cpu },
   { key: 'plans', path: '/admin/plans', label: '会员套餐', desc: 'VIP套餐配置', group: '系统管理', permission: 'admin:membership_plan', icon: Crown },
