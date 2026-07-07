@@ -14,7 +14,7 @@ export const TEMPLATE_FONT_COLOR_PRESETS = {
   1: { label: '#0c418c', basicValue: '#1f2937', name: '#111827', content: '#374151' },
 
   // 2. 简约商务（左红条）：降低红色的刺眼感，正文采用高级深灰
-  2: { label: '#dc2626', basicValue: '#1f2937', name: '#991b1b', content: '#374151' },
+  2: { label: '#FFFFFF', basicValue: '#ffffff', name: '#FFFFFF', content: '#374151' },
 
   // 3. 应届校招（蓝色标题线+居中）：使用经典的互联网大厂深蓝/墨黑搭配
   3: { label: '#1d4ed8', basicValue: '#1f2937', name: '#1e3a8a', content: '#374151' },
@@ -31,21 +31,21 @@ export const TEMPLATE_FONT_COLOR_PRESETS = {
   // 7. 经典黑白（打印优先）：极简高对比度，适合HR直接打印
   7: { label: '#000000', basicValue: '#000000', name: '#000000', content: '#111827' },
 
-  // 8. 互联网扁平：充满活力的极客蓝，搭配清晰度极高的暗灰
-  8: { label: '#0284c7', basicValue: '#1f2937', name: '#0c4a6e', content: '#334155' },
+  // 8. 互联网扁平：左侧深色边栏用白字，右侧正文用深灰
+  8: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#334155' },
 
   // 9 - 20. 其他通用/极简模板演变（引入合理的冷暖色调过渡，拒绝纯白纯红文本）
   9: { label: '#4f46e5', basicValue: '#1f2937', name: '#312e81', content: '#374151' },
-  10: { label: '#64748b', basicValue: '#1e293b', name: '#0f172a', content: '#334155' },
+  10: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#334155' },
   11: { label: '#78716c', basicValue: '#292524', name: '#1c1917', content: '#44403c' },
-  12: { label: '#0d9488', basicValue: '#1f2937', name: '#111827', content: '#1f2937' },
+  12: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#1f2937' },
   13: { label: '#b45309', basicValue: '#1f2937', name: '#78350f', content: '#374151' },
-  14: { label: '#0891b2', basicValue: '#1f2937', name: '#0f766e', content: '#374151' },
+  14: { label: '#1677ff', basicValue: '#1f2937', name: '#ffffff', content: '#374151' },
   15: { label: '#2563eb', basicValue: '#1f2937', name: '#111827', content: '#374151' },
-  16: { label: '#16a34a', basicValue: '#1f2937', name: '#14532d', content: '#374151' },
+  16: { label: '#1677ff', basicValue: '#1f2937', name: '#14532d', content: '#374151' },
   17: { label: '#57534e', basicValue: '#1f2937', name: '#1c1917', content: '#374151' },
   18: { label: '#374151', basicValue: '#1f2937', name: '#111827', content: '#1f2937' },
-  19: { label: '#db2777', basicValue: '#1f2937', name: '#831843', content: '#374151' },
+  19: { label: '#000000', basicValue: '#1f2937', name: '#000000', content: '#374151' },
   20: { label: '#7c3aed', basicValue: '#1f2937', name: '#4c1d95', content: '#374151' },
 }
 

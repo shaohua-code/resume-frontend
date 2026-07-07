@@ -130,19 +130,19 @@ export const TEMPLATE_SKIN_PRESETS = {
     topBandBg: '#111827',
   },
 
-  // 8. 互联网扁平：紫色圆角卡片
+  // 8. 互联网扁平：左侧 slate 蓝灰边栏 + 右侧蓝色标题条
   8: {
-    titleColor: '#7c3aed',
-    dividerColor: '#ede9fe',
-    headerBg: 'transparent',
-    headerBorder: '#7c3aed',
+    titleColor: '#3b82f6',
+    dividerColor: '#e2e8f0',
+    headerBg: '#5b6b7c',
+    headerBorder: '#5b6b7c',
     itemBg: '#ffffff',
-    itemBorder: '#ede9fe',
-    basicRowBg: '#f5f3ff',
-    basicRowBorder: '#ddd6fe',
-    skillBg: '#ede9fe',
-    skillBorder: '#c4b5fd',
-    topBandBg: '#7c3aed',
+    itemBorder: '#e2e8f0',
+    basicRowBg: '#f1f5f9',
+    basicRowBorder: '#cbd5e1',
+    skillBg: '#eff6ff',
+    skillBorder: '#bfdbfe',
+    topBandBg: '#3b82f6',
   },
 
   // 9. 行政文职：正式列表灰系
@@ -154,38 +154,40 @@ export const TEMPLATE_SKIN_PRESETS = {
 
   // 10. 销售市场：红色强调 + 浅红技能
   10: {
-    titleColor: '#f5222d',
-    dividerColor: '#fecaca',
-    headerBg: 'transparent',
-    headerBorder: '#f5222d',
+    titleColor: '#7c3aed',
+    dividerColor: '#7c3aed',
+    headerBg: '#7c3aed',
+    headerBorder: '#7c3aed',
     itemBg: '#ffffff',
-    itemBorder: '#fecaca',
-    basicRowBg: '#fef2f2',
-    basicRowBorder: '#fca5a5',
-    skillBg: '#fee2e2',
-    skillBorder: '#ffccc7',
-    topBandBg: '#f5f7fa',
+    itemBorder: '#7c3aed',
+    basicRowBg: '#7c3aed',
+    basicRowBorder: '#7c3aed',
+    skillBg: '#7c3aed',
+    skillBorder: '#7c3aed',
+    topBandBg: '#7c3aed',
   },
 
   // 11. 教育培训：衬线暖棕
   11: {
-    titleColor: '#78350f',
-    dividerColor: '#fde68a',
+    titleColor: '#81a1c1',
+    dividerColor: '#81a1c1',
     headerBg: 'transparent',
-    headerBorder: '#78350f',
+    headerBorder: '#81a1c1',
     itemBg: '#ffffff',
-    itemBorder: '#fde68a',
-    basicRowBg: '#fffbeb',
-    basicRowBorder: '#fcd34d',
-    skillBg: '#fef3c7',
-    skillBorder: '#fbbf24',
-    topBandBg: '#78350f',
+    itemBorder: '#81a1c1',
+    basicRowBg: '#81a1c5',
+    basicRowBorder: '#81a1c1',
+    skillBg: '#81a1c1',
+    skillBorder: '#81a1c1',
+    topBandBg: '#81a1c1',
   },
 
-  // 12. 金融会计：严谨黑灰双线
+  // 12. 金融会计：顶部蓝色头部 + 时间轴内容区
   12: {
     ...GRAY_SKIN,
-    headerBorder: '#111827',
+    titleColor: '#5b9bd5',
+    headerBg: '#5b9bd5',
+    headerBorder: '#5b9bd5',
     itemBorder: '#d1d5db',
   },
 
@@ -276,7 +278,7 @@ export const TEMPLATE_SKIN_PRESETS = {
 
   // 20. Executive：高端留白灰
   20: {
-    titleColor: '#374151',
+    titleColor: '#7c3aed',
     dividerColor: '#d1d5db',
     headerBg: 'transparent',
     headerBorder: '#9ca3af',

@@ -78,11 +78,11 @@
             />
           </div>
         </div>
-        <span class="page-number">
+        <!-- <span class="page-number">
           <span class="page-number-text">第 {{ n }} 页</span>
           <span class="page-number-divider">/</span>
           <span class="page-number-total">共 {{ pageCount }} 页</span>
-        </span>
+        </span> -->
       </div>
     </div>
   </div>
