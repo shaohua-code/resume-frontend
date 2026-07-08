@@ -4,6 +4,7 @@ import { message } from 'ant-design-vue'
 import { getAdminUsers, resetAdminUserPassword, updateAdminUser } from '@/api/admin'
 import { getRoleLabel, getStatusLabel } from '@/constants/roles'
 import AdminUserInfoCell from './AdminUserInfoCell.vue'
+import { formatDateTime } from '@/utils/date'
 
 const props = defineProps({
   mode: {
@@ -127,6 +128,9 @@ onMounted(loadUsers)
           </template>
           <template v-if="column.key === 'vip_expire_time'">
             <a-date-picker :value="record.vip_expire_time" show-time value-format="YYYY-MM-DDTHH:mm:ssZ" class="input-field w-48" @update:value="record.vip_expire_time = $event" />
+          </template>
+          <template v-if="column.key === 'create_time'">
+            {{ formatDateTime(record.create_time) }}
           </template>
           <template v-if="column.key === 'action'">
             <a-space>

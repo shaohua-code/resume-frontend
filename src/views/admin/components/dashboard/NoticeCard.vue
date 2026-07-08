@@ -6,6 +6,7 @@
 import { computed } from 'vue'
 import { Megaphone } from 'lucide-vue-next'
 import EmptyState from './EmptyState.vue'
+import { formatDateTime } from '@/utils/date'
 
 const props = defineProps({
   announcements: {
@@ -13,12 +14,6 @@ const props = defineProps({
     default: () => [],
   },
 })
-
-// 格式化为本地时间字符串
-function formatTime(value) {
-  if (!value) return '-'
-  return new Date(value).toLocaleString('zh-CN', { hour12: false })
-}
 
 const hasData = computed(() => props.announcements.length > 0)
 </script>
@@ -40,7 +35,7 @@ const hasData = computed(() => props.announcements.length > 0)
         </span>
         <div class="min-w-0 flex-1">
           <p class="truncate text-sm font-medium text-ink">{{ item.title }}</p>
-          <p class="mt-0.5 text-xs text-muted">{{ formatTime(item.create_time) }}</p>
+          <p class="mt-0.5 text-xs text-muted">{{ formatDateTime(item.create_time) }}</p>
         </div>
         <span :class="item.enabled ? 'badge-success' : 'tag-soft'">
           {{ item.enabled ? '已发布' : '已下线' }}

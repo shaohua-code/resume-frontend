@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { getAdminResumeDetail, getAdminResumes } from '@/api/admin'
 import AdminUserInfoCell from './AdminUserInfoCell.vue'
+import { formatDateTime } from '@/utils/date'
 
 const loading = ref(false)
 const resumes = ref([])
@@ -73,6 +74,9 @@ onMounted(loadResumes)
           </template>
           <template v-if="column.key === 'action'">
             <button class="btn-primary-sm" @click="showResumeDetail(record)">查看</button>
+          </template>
+          <template v-if="column.key === 'update_time'">
+            {{ formatDateTime(record.update_time) }}
           </template>
         </template>
       </a-table>

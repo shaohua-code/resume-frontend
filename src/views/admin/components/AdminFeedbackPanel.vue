@@ -4,6 +4,7 @@ import MarkdownIt from 'markdown-it'
 import { getAdminFeedbacks, getAdminFeedbackDetail } from '@/api/admin'
 import { resolveUploadUrl } from '@/api/upload'
 import AdminUserInfoCell from './AdminUserInfoCell.vue'
+import { formatDateTime } from '@/utils/date'
 
 const md = new MarkdownIt({ html: false, linkify: true, breaks: true })
 
@@ -96,6 +97,9 @@ onMounted(loadFeedbacks)
           <template v-if="column.key === 'action'">
             <button class="link-text" @click="openDetail(record)">查看</button>
           </template>
+          <template v-if="column.key === 'create_time'">
+            {{ formatDateTime(record.create_time) }}
+          </template>
         </template>
       </a-table>
     </a-card>
@@ -111,7 +115,7 @@ onMounted(loadFeedbacks)
         <div v-if="detail" class="space-y-4">
           <div class="flex flex-wrap gap-4 text-sm text-muted">
             <span>ID：{{ detail.id }}</span>
-            <span>提交时间：{{ detail.create_time }}</span>
+            <span>提交时间：{{ formatDateTime(detail.create_time) }}</span>
           </div>
           <div
             class="prose prose-sm max-w-none rounded-card border border-line bg-surface p-4 text-ink feedback-md-preview"

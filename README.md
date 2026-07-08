@@ -12,8 +12,15 @@ Glassmorphism 浅色科技风前端，面向校园招聘与年轻求职者，提
 | Vite | 5.4.8 | 构建工具 |
 | TailwindCSS | 3.4.19 | 原子化样式 |
 | Ant Design Vue | 4.2.6 | UI 组件库 |
-| Axios | 1.7.7 | HTTP 请求 |
+| Axios | 1.7.7 | HTTP 请求（普通接口） |
+| fetch + ReadableStream | - | SSE 流式接口（AI 生成 / 分模块优化 / PDF 优化） |
+| @vueup/vue-quill | 1.2.0 | 富文本编辑器（用户反馈） |
+| html2canvas + jsPDF | - | A4 分页 PDF 导出（动态 import） |
+| markdown-it | 14.1.0 | Markdown 渲染（管理端反馈预览） |
 | ECharts | 6.1.0 | 管理后台图表 |
+| file-saver | 2.0.5 | 文件下载 |
+
+> 注意：PDF 导出依赖 `html2canvas` 与 `jspdf`，需在 `package.json` 中补充安装（当前仍残留 `html2pdf.js`，建议替换）。
 
 ## 二、目录规范
 
@@ -43,10 +50,19 @@ views/
 ```
 src/
 ├── components/          # 全局 UI 组件
-├── composables/         # useTheme 等
+├── composables/         # 业务组合式函数
+│   ├── useResumeOptimizer.js  # 简历分模块 AI 优化（summary/skills/project/internship）
+│   ├── useResumeExportPdf.js  # A4 分页 PDF 导出（html2canvas + jsPDF）
+│   ├── useDraggable.js        # 可拖拽元素（反馈悬浮按钮等）
+│   └── useTheme.js            # 主题切换
 ├── constants/theme.js   # 唯一配色源
 ├── styles/global.css    # 公共类 + CSS 变量
-└── api/                 # 接口封装
+└── api/                 # 按业务域拆分的接口封装
+    ├── auth.js          # 认证（登录/验证码/密码重置）
+    ├── resume.js        # AI 生成/优化/匹配/评分、简历 CRUD、PDF 优化
+    ├── admin.js         # 管理后台
+    ├── upload.js        # 通用文件上传
+    └── feedback.js      # 用户反馈
 ```
 
 ## 三、主题配置（改一处全局生效）
@@ -122,9 +138,63 @@ Hero 数据背书（stat-glass）：紧凑胶囊 `min-w-[88px] px-4 py-2.5`，�
 
 首页允许自然滚动（已移除 `min-h-[calc(100vh-4rem)]` 一屏限制）。顶栏搜索与「免费开户」间距 `ml-6`（24px）。
 
-AI 简历生成支持 SSE 流式输出（`/resume/generate/stream`），生成页 Step3 展示打字机预览。
+AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成页 Step3 展示打字机预览。
 
-## 八、新页面开发 Checklist
+## 八、接口请求约定
+
+所有业务接口统一以 `/api` 为前缀，与后端 `resume-backend-node` 路由一一对应。
+
+| 类型 | 实现 | 说明 |
+| --- | --- | --- |
+| 普通请求 | `src/utils/request.js`（Axios，`baseURL = /api`） | 自动携带 JWT、401 自动刷新 token |
+| SSE 流式 | 原生 `fetch` + `readSSEStream`（`src/api/resume.js`） | AI 生成、分模块优化、PDF 优化等流式场景 |
+
+### 接口前缀映射
+
+| 前缀 | 前端文件 | 后端路由 | 职责 |
+| --- | --- | --- | --- |
+| `/api/auth` | `api/auth.js` | `routers/auth.js` | 登录、验证码、密码重置 |
+| `/api/ai` | `api/resume.js` | `routers/ai.js` | AI 生成、分模块优化、JD 匹配、评分 |
+| `/api/pdf` | `api/resume.js` | `routers/pdf.js` | PDF 上传、解析、优化 |
+| `/api/resume` | `api/resume.js` | `routers/resume.js` | 简历 CRUD、导出记录 |
+| `/api/admin` | `api/admin.js` | `routers/admin.js` | 管理后台 |
+| `/api/upload` | `api/upload.js` | `routers/upload.js` | 通用文件上传 |
+| `/api/feedback` | `api/feedback.js` | `routers/feedback.js` | 用户反馈 |
+
+## 九、简历编辑器 AI 优化
+
+编辑器（`views/editor/`）支持对简历四个模块进行 AI 流式优化，基于「意向岗位 + 完整简历内容」生成更专业的描述。
+
+| 模块 | 类型 | 入口 |
+| --- | --- | --- |
+| 个人评价 | `summary` | `ResumeEditorForm.vue` 个人评价下方按钮 |
+| 技能特长 | `skills` | `ResumeEditorForm.vue` 技能标签区下方按钮 |
+| 项目经历 | `project` | `ResumeEditorForm.vue` 每个项目卡片底部按钮 |
+| 实习经历 | `internship` | `ResumeEditorForm.vue` 每个实习卡片底部按钮 |
+
+- **调用方式**：`useResumeOptimizer({ resume })` 返回 `{ optimize, isOptimizing, streamingText, streamingSkillsText }`
+- **接口**：`POST /api/ai/optimize/:type/stream`，`type ∈ summary|skills|project|internship`
+- **流式回填**：文本类字段实时回填到对应输入框；技能类先在临时输入框展示打印机效果，完成后解析为数组
+- **前置校验**：若 `resume.target_position` 为空会提示「请先填写意向岗位」
+
+## 十、PDF 导出
+
+使用 `useResumeExportPdf` 组合式函数封装 A4 分页导出能力，在 `views/editor/index.vue` 中调用。
+
+- **参数**：`{ getPages, fileName, beforeExport, onStart, onEnd }`
+- **流程**：创建离屏 A4 容器 → 克隆目标 DOM → `html2canvas` 截图 → `jsPDF` 分页组装 → 下载
+- **依赖**：`html2canvas` + `jspdf`（动态 import，按需加载）
+
+## 十一、用户反馈
+
+| 端 | 组件 | 说明 |
+| --- | --- | --- |
+| 用户端 | `components/FeedbackFloatingButton.vue` | 右下角可拖拽悬浮按钮 |
+| 用户端 | `components/FeedbackModal.vue` | Quill 富文本弹窗，支持图片上传 |
+| 管理端 | `views/admin/components/AdminFeedbackPanel.vue` | 仅 SUPER_ADMIN 可见，Markdown 预览 |
+| 接口 | `api/feedback.js` | `POST /api/feedback` |
+
+## 十二、新页面开发 Checklist
 
 1. 在 `views/{page}/` 创建 `index.vue`
 2. 页面私有组件放 `components/`，工具放 `utils/`
@@ -133,7 +203,7 @@ AI 简历生成支持 SSE 流式输出（`/resume/generate/stream`），生成�
 5. 375px 宽度下验证布局
 6. 参考 [`STYLE_PROMPT.md`](STYLE_PROMPT.md) 获取 AI 风格提示词
 
-## 九、开发与构建
+## 十三、开发与构建
 
 ```bash
 npm install
@@ -142,13 +212,14 @@ npm run build    # 生产构建
 npm run preview  # 预览构建
 ```
 
-## 十、注意事项
+## 十四、注意事项
 
-1. **简历模板**（`components/resume-templates/`）20 套不在 UI 改造范围，避免影响 PDF 导出
-2. **编辑器组件**位于 `views/editor/components/`
-3. 环境变量：`.env.development` / `.env.production`，勿提交敏感信息
+1. **简历模板**（`components/resume-templates/`）已全量使用 TailwindCSS，避免原生 CSS 与 `!important`
+2. **编辑器组件**位于 `views/editor/components/`，AI 优化按钮已集成在 `ResumeEditorForm.vue`
+3. 环境变量：`.env.development` / `.env.production`，勿提交敏感信息；生产环境通过 `VITE_API_URL` 指定后端地址
 4. VIP 权限由后端控制
+5. PDF 导出依赖 `html2canvas` + `jspdf`，如 `package.json` 未安装需补装
 
-## 十一、风格提示词
+## 十五、风格提示词
 
 新增页面或模块时，请复制 [`STYLE_PROMPT.md`](STYLE_PROMPT.md) 中的 Prompt 模板，确保视觉一致。

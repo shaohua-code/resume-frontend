@@ -1,14 +1,54 @@
 /**
  * 简历相关API
- * AI生成简历、优化项目、JD匹配、评分、保存、列表、详情、删除、导出
+ * AI生成简历、优化项目、JD匹配、评分、保存、列表、详情、删除、导出、PDF优化
  */
 import request from '@/utils/request'
+
+/**
+ * 分模块 AI 流式优化
+ * @param {'summary'|'skills'|'project'|'internship'} type 优化类型
+ * @param {object} payload 请求体 { resume, index? }
+ * @param {object} handlers 流式回调 { onChunk, onDone, onError, onStatus }
+ * @param {string} model 可选模型
+ */
+export async function optimizeResumePartStream(type, payload, handlers = {}, model = '') {
+  const { useUserStore } = await import('@/stores/user')
+  const userStore = useUserStore()
+  const token = await userStore.getValidToken()
+
+  const body = { ...payload }
+  if (model) body.model = model
+
+  const response = await fetch(`/api/ai/optimize/${type}/stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    let detail = '优化失败，请重试'
+    try {
+      const errJson = await response.json()
+      detail = errJson.detail || detail
+    } catch (e) {
+      /* ignore */
+    }
+    const err = new Error(detail)
+    handlers.onError?.(err)
+    throw err
+  }
+
+  return readSSEStream(response, handlers)
+}
 
 /** AI生成简历 */
 export function generateResume(data, model = '') {
   // 支持按业务传入模型，不传时由后端默认配置兜底
   const payload = model ? { ...data, model } : data
-  return request.post('/resume/generate', payload)
+  return request.post('/ai/generate', payload)
 }
 
 /**
@@ -26,7 +66,7 @@ export async function generateResumeStream(data, handlers = {}, model = '') {
   const userStore = useUserStore()
   const token = await userStore.getValidToken()
 
-  const response = await fetch('/api/resume/generate/stream', {
+  const response = await fetch('/api/ai/generate/stream', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -112,7 +152,7 @@ export async function uploadOptimizeResumeStream(file, targetPosition = '', hand
   if (targetPosition) formData.append('target_position', targetPosition)
   if (model) formData.append('model', model)
 
-  const response = await fetch('/api/resume/uploadOptimize/stream', {
+  const response = await fetch('/api/pdf/uploadOptimize/stream', {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
@@ -136,17 +176,17 @@ export async function uploadOptimizeResumeStream(file, targetPosition = '', hand
 
 /** AI优化项目描述 */
 export function optimizeProject(projectDescription, targetPosition = '', model = '') {
-  return request.post('/resume/optimize', { project_description: projectDescription, target_position: targetPosition, model })
+  return request.post('/ai/optimize', { project_description: projectDescription, target_position: targetPosition, model })
 }
 
 /** JD岗位匹配分析 */
 export function matchJd(resumeId, jdText, model = '') {
-  return request.post('/resume/match', { resume_id: resumeId, jd_text: jdText, model })
+  return request.post('/ai/match', { resume_id: resumeId, jd_text: jdText, model })
 }
 
 /** AI简历评分 */
 export function scoreResume(resumeId, model = '') {
-  return request.post('/resume/score', { model }, { params: { resume_id: resumeId } })
+  return request.post('/ai/score', { model }, { params: { resume_id: resumeId } })
 }
 
 /** 创建简历（仅做 insert，由 AI 生成 / 上传优化 / 首次保存触发） */
@@ -183,6 +223,16 @@ export function deleteResume(resumeId) {
   return request.delete('/resume/delete', { params: { resume_id: resumeId } })
 }
 
+/** 批量删除简历 */
+export function batchDeleteResume(ids) {
+  return request.post('/resume/batch-delete', { ids })
+}
+
+/** 获取当前用户简历数量与上限 */
+export function getResumeCount() {
+  return request.get('/resume/count')
+}
+
 /** 记录导出操作 */
 export function exportResume(resumeId) {
   return request.post('/resume/export', null, { params: { resume_id: resumeId } })
@@ -199,7 +249,7 @@ export function uploadOptimizeResume(file, targetPosition = '', onProgress, mode
   formData.append('file', file)
   if (targetPosition) formData.append('target_position', targetPosition)
   if (model) formData.append('model', model)
-  return request.post('/resume/uploadOptimize', formData, {
+  return request.post('/pdf/uploadOptimize', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
     timeout: 120000, // PDF解析+AI优化可能较慢，放宽到120秒
     onUploadProgress: (e) => {
@@ -212,12 +262,12 @@ export function uploadOptimizeResume(file, targetPosition = '', onProgress, mode
 
 /** 获取当前用户已上传的 PDF 元信息（仅保留一份） */
 export function getUploadedResume() {
-  return request.get('/resume/uploadedFile')
+  return request.get('/pdf/uploadedFile')
 }
 
 /** 删除当前用户已上传的 PDF */
 export function deleteUploadedResume() {
-  return request.delete('/resume/uploadedFile')
+  return request.delete('/pdf/uploadedFile')
 }
 
 /**
@@ -228,7 +278,7 @@ export async function uploadOptimizeExistingStream(targetPosition = '', handlers
   const userStore = useUserStore()
   const token = await userStore.getValidToken()
 
-  const response = await fetch('/api/resume/uploadOptimize/existing/stream', {
+  const response = await fetch('/api/pdf/uploadOptimize/existing/stream', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -258,7 +308,7 @@ export async function uploadOptimizeExistingStream(targetPosition = '', handlers
 
 /** 使用已上传的 PDF 进行 AI 同步优化 */
 export function uploadOptimizeExisting(targetPosition = '', model = '') {
-  return request.post('/resume/uploadOptimize/existing', {
+  return request.post('/pdf/uploadOptimize/existing', {
     target_position: targetPosition,
     ...(model ? { model } : {}),
   })

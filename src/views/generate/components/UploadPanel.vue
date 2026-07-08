@@ -129,6 +129,22 @@
         </GradientButton>
       </div>
     </a-card>
+
+    <!-- 超过 5 份简历时的二次确认弹窗 -->
+    <a-modal
+      v-model:open="overLimitVisible"
+      title="简历数量超限提醒"
+      ok-text="继续生成（替换最后一份）"
+      cancel-text="取消"
+      @ok="confirmOverLimit"
+    >
+      <div class="py-2 text-sm leading-relaxed text-ink-secondary">
+        每人最多生成 <span class="font-semibold text-danger">5</span> 份简历，继续生成将
+        <span class="font-semibold text-danger">替换最后一份简历</span>，简历将无法找回。
+        <br /><br />
+        是否继续操作？
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -175,6 +191,13 @@ const deleting = ref(false)
 const targetCardRef = ref(null)
 const targetInputRef = ref(null)
 
+// 超过 5 份简历时的二次确认弹窗状态
+const overLimitVisible = ref(false)
+// 暂存优化结果，等待超限确认后落库
+const pendingResult = ref(null)
+// 标记是否已确认超限，避免重复弹窗
+const overLimitConfirmed = ref(false)
+
 // 未填优化方向时，滚动并聚焦到输入框
 async function focusTargetPosition() {
   message.warning('请先填写优化方向')
@@ -215,6 +238,23 @@ const streamHandlers = {
 }
 
 async function handleOptimizeSuccess(resultData) {
+  // 超限检查：未确认过时，先检查简历数量
+  if (!overLimitConfirmed.value) {
+    await resumeStore.fetchResumeCount()
+    if (resumeStore.resumeTotal >= resumeStore.resumeMaxCount) {
+      // 暂存结果，弹窗等待用户确认
+      pendingResult.value = resultData
+      overLimitVisible.value = true
+      return
+    }
+  }
+
+  await persistOptimizeResult(resultData)
+  overLimitConfirmed.value = false
+}
+
+// 将优化结果落库并展示
+async function persistOptimizeResult(resultData) {
   optimizeResult.value = resultData
   resumeStore.currentResume = resultData.resume
   try {
@@ -232,6 +272,16 @@ async function handleOptimizeSuccess(resultData) {
   }
   message.success('AI 优化完成')
   await fetchExisting()
+}
+
+// 确认超限后继续落库
+async function confirmOverLimit() {
+  overLimitVisible.value = false
+  overLimitConfirmed.value = true
+  if (pendingResult.value) {
+    await persistOptimizeResult(pendingResult.value)
+    pendingResult.value = null
+  }
 }
 
 async function handleSubmit() {

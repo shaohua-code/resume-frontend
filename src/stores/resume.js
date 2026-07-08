@@ -15,6 +15,8 @@ import {
   getResumeList as getListApi,
   getResumeDetail as getDetailApi,
   deleteResume as deleteApi,
+  batchDeleteResume as batchDeleteApi,
+  getResumeCount as getCountApi,
 } from '@/api/resume'
 import { message } from 'ant-design-vue'
 import { clampTemplateId } from '@/constants/templateRegistry'
@@ -30,6 +32,8 @@ export const useResumeStore = defineStore('resume', () => {
   const resumeList = ref([])
   // 简历总数
   const resumeTotal = ref(0)
+  // 简历数量上限（每人最多 5 份）
+  const resumeMaxCount = ref(5)
   // AI生成加载状态
   const generating = ref(false)
   // 流式生成过程中的实时文本（用于打字机 UI）
@@ -161,8 +165,10 @@ export const useResumeStore = defineStore('resume', () => {
   // 获取简历详情
   async function fetchResumeDetail(resumeId) {
     const res = await getDetailApi(resumeId)
-    currentResume.value = JSON.parse(res.resume_json || '{}')
-    currentTemplateId.value = clampTemplateId(res.template_id)
+    // 后端 detail 接口通过 success() 包装，实际数据在 res.data 中
+    const detailData = res.data || res
+    currentResume.value = JSON.parse(detailData.resume_json || '{}')
+    currentTemplateId.value = clampTemplateId(detailData.template_id)
     currentResumeId.value = resumeId
     return res
   }
@@ -176,12 +182,32 @@ export const useResumeStore = defineStore('resume', () => {
     }
   }
 
+  // 批量删除简历
+  async function batchRemoveResume(ids) {
+    const res = await batchDeleteApi(ids)
+    if (res.success) {
+      message.success(res.data?.message || '批量删除成功')
+      await fetchResumeList()
+    }
+    return res
+  }
+
+  // 获取当前用户简历数量与上限
+  async function fetchResumeCount() {
+    const res = await getCountApi()
+    if (res.success) {
+      resumeMaxCount.value = res.data.max
+    }
+    return res
+  }
+
   return {
     currentResume,
     currentResumeId,
     currentTemplateId,
     resumeList,
     resumeTotal,
+    resumeMaxCount,
     generating,
     streamText,
     optimizing,
@@ -193,7 +219,9 @@ export const useResumeStore = defineStore('resume', () => {
     scoreResume,
     saveResume,
     fetchResumeList,
+    fetchResumeCount,
     fetchResumeDetail,
     removeResume,
+    batchRemoveResume,
   }
 })

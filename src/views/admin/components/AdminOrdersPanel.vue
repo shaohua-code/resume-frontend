@@ -3,6 +3,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { getAdminOrders, updateAdminOrder } from '@/api/admin'
 import AdminUserInfoCell from './AdminUserInfoCell.vue'
+import { formatDateTime } from '@/utils/date'
 
 const loading = ref(false)
 const orders = ref([])
@@ -86,6 +87,9 @@ onMounted(loadOrders)
           </template>
           <template v-if="column.key === 'action'">
             <button class="btn-primary-sm" @click="saveOrder(record)">保存</button>
+          </template>
+          <template v-if="column.key === 'create_time'">
+            {{ formatDateTime(record.create_time) }}
           </template>
         </template>
       </a-table>

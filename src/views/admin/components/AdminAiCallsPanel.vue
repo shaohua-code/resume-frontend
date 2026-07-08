@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { getAdminAiCalls } from '@/api/admin'
 import AdminUserInfoCell from './AdminUserInfoCell.vue'
+import { formatDateTime } from '@/utils/date'
 
 const loading = ref(false)
 const aiCalls = ref([])
@@ -111,6 +112,9 @@ onMounted(loadAiCalls)
           </template>
           <template v-if="column.key === 'success'">
             <span :class="record.success ? 'badge-success' : 'tag-soft'">{{ record.success ? '成功' : '失败' }}</span>
+          </template>
+          <template v-if="column.key === 'create_time'">
+            {{ formatDateTime(record.create_time) }}
           </template>
         </template>
       </a-table>

@@ -79,7 +79,7 @@ function removeAvatar() {
         <DeleteOutlined />
         删除头像
       </button>
-      <p class="text-xs text-muted">支持 JPG/PNG/WebP，不上传则模板不显示头像</p>
+      <p class="text-xs text-muted">支持 JPG/PNG/WebP，不上传则模板不显示头像，建议上传寸照</p>
     </div>
   </div>
 </template>

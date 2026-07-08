@@ -141,6 +141,22 @@
         </a-card>
       </div>
     </div>
+
+    <!-- 超过 5 份简历时的二次确认弹窗 -->
+    <a-modal
+      v-model:open="overLimitVisible"
+      title="简历数量超限提醒"
+      ok-text="继续生成（替换最后一份）"
+      cancel-text="取消"
+      @ok="confirmOverLimit"
+    >
+      <div class="py-2 text-sm leading-relaxed text-ink-secondary">
+        每人最多生成 <span class="font-semibold text-danger">5</span> 份简历，继续生成将
+        <span class="font-semibold text-danger">替换最后一份简历</span>，简历将无法找回。
+        <br /><br />
+        是否继续操作？
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -188,6 +204,11 @@ const EXAMPLE_TEMPLATE = `姓名：张三
 const currentStep = ref(0)
 const rawText = ref('')
 const targetPosition = ref('')
+
+// 超过 5 份简历时的二次确认弹窗状态
+const overLimitVisible = ref(false)
+// 标记是否已确认超限，避免重复弹窗
+const overLimitConfirmed = ref(false)
 
 // 读取首页 JD 输入模块暂存的求职方向
 onMounted(() => {
@@ -247,6 +268,15 @@ async function handleGenerate() {
     return
   }
 
+  // 超限检查：未确认过时，先检查简历数量
+  if (!overLimitConfirmed.value) {
+    await resumeStore.fetchResumeCount()
+    if (resumeStore.resumeTotal >= resumeStore.resumeMaxCount) {
+      overLimitVisible.value = true
+      return
+    }
+  }
+
   currentStep.value = 1
   const result = await resumeStore.generateResume({
     input_mode: 'lazy',
@@ -255,9 +285,18 @@ async function handleGenerate() {
   })
   if (result) {
     currentStep.value = 2
+    overLimitConfirmed.value = false
   } else {
     currentStep.value = 0
+    overLimitConfirmed.value = false
   }
+}
+
+// 确认超限后继续生成
+async function confirmOverLimit() {
+  overLimitVisible.value = false
+  overLimitConfirmed.value = true
+  await handleGenerate()
 }
 
 function goToEditor() {

@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { aiModelApi, announcementApi, membershipPlanApi } from '@/api/admin'
 import AdminCrudModal from './AdminCrudModal.vue'
+import { formatDateTime } from '@/utils/date'
 
 const props = defineProps({
   type: {
@@ -139,6 +140,9 @@ onMounted(loadItems)
           </template>
           <template v-if="column.key === 'output_price_per_million'">
             <span class="text-sm text-muted">¥{{ record.output_price_per_million ?? 0 }}/M</span>
+          </template>
+          <template v-if="column.key === 'update_time'">
+            {{ formatDateTime(record.update_time) }}
           </template>
           <template v-if="column.key === 'action'">
             <a-space>

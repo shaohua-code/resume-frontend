@@ -37,15 +37,27 @@
         <span class="text-base font-semibold text-ink">我的简历</span>
       </template>
       <template #extra>
-        <GradientButton size="small" class="!h-9 !min-w-[100px]" @click="$router.push('/generate')">
-          <PlusOutlined /> 新建简历
-        </GradientButton>
+        <div class="flex items-center gap-2">
+          <a-popconfirm
+            v-if="selectedRowKeys.length"
+            title="确定批量删除选中的简历？"
+            @confirm="handleBatchDelete"
+          >
+            <button class="inline-flex h-9 items-center gap-1 rounded-button border border-danger/30 px-3 text-sm font-medium text-danger transition-colors hover:bg-red-50">
+              <DeleteOutlined /> 批量删除 ({{ selectedRowKeys.length }})
+            </button>
+          </a-popconfirm>
+          <GradientButton size="small" class="!h-9 !min-w-[100px]" @click="handleCreate">
+            <PlusOutlined /> 新建简历
+          </GradientButton>
+        </div>
       </template>
       <a-table
         :data-source="resumeStore.resumeList"
         :columns="columns"
         :pagination="{ pageSize: 10, total: resumeStore.resumeTotal }"
         :scroll="{ x: 'max-content' }"
+        :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
         row-key="id"
         :loading="loading"
         @change="handleTableChange"
@@ -53,6 +65,9 @@
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'score'">
             <a-progress :percent="record.score" size="small" :stroke-color="getScoreColor(record.score)" />
+          </template>
+          <template v-if="column.key === 'update_time'">
+            {{ formatDateTime(record.update_time) }}
           </template>
           <template v-if="column.key === 'template_id'">
             <span class="tag-soft">{{ getTemplateName(record.template_id) }}</span>
@@ -78,25 +93,51 @@
         </template>
       </a-table>
     </a-card>
+
+    <!-- 超过 5 份简历时的二次确认弹窗 -->
+    <a-modal
+      v-model:open="overLimitVisible"
+      title="简历数量超限提醒"
+      ok-text="继续生成（替换最后一份）"
+      cancel-text="取消"
+      @ok="confirmOverLimit"
+    >
+      <div class="py-2 text-sm leading-relaxed text-ink-secondary">
+        每人最多生成 <span class="font-semibold text-danger">5</span> 份简历，继续生成将
+        <span class="font-semibold text-danger">替换最后一份简历</span>，简历将无法找回。
+        <br /><br />
+        是否继续操作？
+      </div>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
 import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { PlusOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useResumeStore } from '@/stores/resume'
 import { getRoleLabel, getStatusLabel, getVipStatusText } from '@/constants/roles'
 import { getTemplateName } from '@/constants/templateNames'
 import THEME from '@/constants/theme'
 import GradientButton from '@/components/GradientButton.vue'
+import { formatDateTime } from '@/utils/date'
 
 const router = useRouter()
 const userStore = useUserStore()
 const resumeStore = useResumeStore()
 const loading = ref(false)
 const vipStatusText = computed(() => getVipStatusText(userStore.userInfo))
+
+// 表格行选择
+const selectedRowKeys = ref([])
+function onSelectChange(keys) {
+  selectedRowKeys.value = keys
+}
+
+// 超过 5 份简历时的二次确认弹窗状态
+const overLimitVisible = ref(false)
 
 const columns = [
   { title: '简历标题', dataIndex: 'title', key: 'title' },
@@ -116,6 +157,7 @@ function getScoreColor(score) {
 onMounted(async () => {
   loading.value = true
   await resumeStore.fetchResumeList()
+  await resumeStore.fetchResumeCount()
   loading.value = false
 })
 
@@ -127,6 +169,29 @@ async function handleTableChange(pagination) {
 
 async function handleDelete(id) {
   await resumeStore.removeResume(id)
+}
+
+// 批量删除
+async function handleBatchDelete() {
+  await resumeStore.batchRemoveResume(selectedRowKeys.value)
+  selectedRowKeys.value = []
+}
+
+// 新建简历：检查数量是否超限
+async function handleCreate() {
+  // 先刷新数量，确保准确
+  await resumeStore.fetchResumeCount()
+  if (resumeStore.resumeTotal >= resumeStore.resumeMaxCount) {
+    overLimitVisible.value = true
+    return
+  }
+  router.push('/generate')
+}
+
+// 确认超限后继续生成
+function confirmOverLimit() {
+  overLimitVisible.value = false
+  router.push('/generate')
 }
 
 function handleLogout() {
