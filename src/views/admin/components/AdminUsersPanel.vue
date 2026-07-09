@@ -22,7 +22,6 @@ const columns = [
   { title: '用户信息', key: 'profile' },
   { title: '角色', dataIndex: 'role', key: 'role', width: 170 },
   { title: '状态', dataIndex: 'status', key: 'status', width: 130 },
-  { title: 'VIP到期', dataIndex: 'vip_expire_time', key: 'vip_expire_time', width: 220 },
   { title: '创建时间', dataIndex: 'create_time', key: 'create_time', width: 190 },
   { title: '操作', key: 'action', width: 220 },
 ]
@@ -31,7 +30,7 @@ const roleOptions = computed(() => {
   if (props.mode === 'admins') {
     return ['SUPER_ADMIN', 'ADMIN']
   }
-  return ['USER', 'VIP']
+  return ['USER']
 })
 
 const visibleUsers = computed(() => {
@@ -53,7 +52,6 @@ async function saveUser(record) {
   await updateAdminUser(record.user_id, {
     role: record.role,
     status: record.status,
-    vip_expire_time: record.vip_expire_time,
     nickname: record.nickname,
   })
   message.success('用户信息已保存')
@@ -125,9 +123,6 @@ onMounted(loadUsers)
               <a-select-option value="ACTIVE">正常</a-select-option>
               <a-select-option value="BANNED">封禁</a-select-option>
             </a-select>
-          </template>
-          <template v-if="column.key === 'vip_expire_time'">
-            <a-date-picker :value="record.vip_expire_time" show-time value-format="YYYY-MM-DDTHH:mm:ssZ" class="input-field w-48" @update:value="record.vip_expire_time = $event" />
           </template>
           <template v-if="column.key === 'create_time'">
             {{ formatDateTime(record.create_time) }}

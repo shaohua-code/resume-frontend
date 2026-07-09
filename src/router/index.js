@@ -88,10 +88,10 @@ const routes = [
         meta: { title: '用户账号', permission: 'admin:manage_users' },
       },
       {
-        path: 'orders',
-        name: 'AdminOrders',
-        component: () => import('@/views/admin/components/AdminOrdersPanel.vue'),
-        meta: { title: '业务订单', permission: 'admin:view_orders' },
+        path: 'wallets',
+        name: 'AdminWallets',
+        component: () => import('@/views/admin/components/AdminWalletPanel.vue'),
+        meta: { title: '用户额度', permission: 'admin:wallet' },
       },
       {
         path: 'ai-calls',
@@ -124,13 +124,6 @@ const routes = [
         component: () => import('@/views/admin/components/AdminCrudPanel.vue'),
         props: { type: 'models' },
         meta: { title: 'AI模型管理', permission: 'admin:ai_model' },
-      },
-      {
-        path: 'plans',
-        name: 'AdminPlans',
-        component: () => import('@/views/admin/components/AdminCrudPanel.vue'),
-        props: { type: 'plans' },
-        meta: { title: '会员套餐', permission: 'admin:membership_plan' },
       },
       {
         path: 'configs',

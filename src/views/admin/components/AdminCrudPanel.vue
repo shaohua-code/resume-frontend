@@ -1,14 +1,14 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { message } from 'ant-design-vue'
-import { aiModelApi, announcementApi, membershipPlanApi } from '@/api/admin'
+import { aiModelApi, announcementApi } from '@/api/admin'
 import AdminCrudModal from './AdminCrudModal.vue'
 import { formatDateTime } from '@/utils/date'
 
 const props = defineProps({
   type: {
     type: String,
-    default: 'plans',
+    default: 'announcements',
   },
 })
 
@@ -19,19 +19,6 @@ const modalId = ref(null)
 const modalForm = ref({})
 
 const crudConfig = {
-  plans: {
-    title: '会员套餐',
-    addText: '新增套餐',
-    api: membershipPlanApi,
-    defaultForm: () => ({ name: '', price: 0, duration_days: 30, description: '', enabled: true }),
-    columns: [
-      { title: '名称', dataIndex: 'name', key: 'name' },
-      { title: '价格', dataIndex: 'price', key: 'price', width: 100 },
-      { title: '天数', dataIndex: 'duration_days', key: 'duration_days', width: 100 },
-      { title: '启用', dataIndex: 'enabled', key: 'enabled', width: 100 },
-      { title: '操作', key: 'action', width: 150 },
-    ],
-  },
   announcements: {
     title: '公告',
     addText: '新增公告',
@@ -54,7 +41,6 @@ const crudConfig = {
       task_type: 'all',
       input_price_per_million: 0,
       output_price_per_million: 0,
-      vip_only: false,
       enabled: true,
     }),
     columns: [
@@ -63,14 +49,13 @@ const crudConfig = {
       { title: '任务类型', dataIndex: 'task_type', key: 'task_type', width: 140 },
       { title: '输入单价', dataIndex: 'input_price_per_million', key: 'input_price_per_million', width: 110 },
       { title: '输出单价', dataIndex: 'output_price_per_million', key: 'output_price_per_million', width: 110 },
-      { title: 'VIP专属', dataIndex: 'vip_only', key: 'vip_only', width: 110 },
       { title: '启用', dataIndex: 'enabled', key: 'enabled', width: 100 },
       { title: '操作', key: 'action', width: 150 },
     ],
   },
 }
 
-const currentConfig = computed(() => crudConfig[props.type] || crudConfig.plans)
+const currentConfig = computed(() => crudConfig[props.type] || crudConfig.announcements)
 const modalTitle = computed(() => `${modalId.value ? '编辑' : '新增'}${currentConfig.value.title}`)
 
 async function loadItems() {
@@ -131,9 +116,6 @@ onMounted(loadItems)
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'enabled'">
             <span :class="record.enabled ? 'badge-success' : 'tag-soft'">{{ record.enabled ? '启用' : '停用' }}</span>
-          </template>
-          <template v-if="column.key === 'vip_only'">
-            <span :class="record.vip_only ? 'badge' : 'tag-soft'">{{ record.vip_only ? 'VIP' : '通用' }}</span>
           </template>
           <template v-if="column.key === 'input_price_per_million'">
             <span class="text-sm text-muted">¥{{ record.input_price_per_million ?? 0 }}/M</span>

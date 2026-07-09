@@ -54,7 +54,7 @@
             <a-menu>
               <a-menu-item key="pdf" @click="handleExportPDF">导出 PDF（浏览器打印）</a-menu-item>
               <a-menu-item key="word" @click="handleExportWord">导出 Word（可编辑）</a-menu-item>
-              <a-menu-item key="markdown" @click="handleExportMarkdown">导出 Markdown（VIP）</a-menu-item>
+              <a-menu-item key="markdown" @click="handleExportMarkdown">导出 Markdown</a-menu-item>
             </a-menu>
           </template>
         </a-dropdown>
@@ -400,11 +400,7 @@ async function handleSave() {
 }
 
 async function ensureCanExport() {
-  if (!userStore.isVip) {
-    message.warning('普通用户暂不支持导出，请升级 VIP 后使用')
-    return false
-  }
-  // 导出前通知后端记录导出行为，同时让后端再次校验 VIP / 管理员权限
+  // 导出前保存简历并记录导出行为（全员免费）
   const saved = await saveResumeData({ silent: true })
   if (saved?.id) {
     await exportResumeApi(saved.id)

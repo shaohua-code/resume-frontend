@@ -1,6 +1,6 @@
 <script setup>
 /**
- * 用户增长趋势图
+ * 余额变动趋势图：AI 消费 vs 额度发放
  */
 import { computed } from 'vue'
 import BaseChart from '@/components/charts/BaseChart.vue'
@@ -11,7 +11,11 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
-  userTrend: {
+  consumeTrend: {
+    type: Array,
+    default: () => [],
+  },
+  grantTrend: {
     type: Array,
     default: () => [],
   },
@@ -25,7 +29,7 @@ const axisLabels = computed(() => props.months.map((item) => `${Number(item.spli
 
 const option = computed(() => ({
   tooltip: { trigger: 'axis' },
-  legend: { data: ['新增用户'], right: 0, top: 0, icon: 'roundRect' },
+  legend: { data: ['AI 消费', '额度发放'], right: 0, top: 0, icon: 'roundRect' },
   grid: { left: 8, right: 12, bottom: 8, top: 36, containLabel: true },
   xAxis: {
     type: 'category',
@@ -41,22 +45,20 @@ const option = computed(() => ({
   },
   series: [
     {
-      name: '新增用户',
+      name: 'AI 消费',
       type: 'line',
       smooth: true,
       showSymbol: false,
-      data: props.userTrend,
-      itemStyle: { color: CHART_COLORS.primary },
-      areaStyle: {
-        color: {
-          type: 'linear',
-          x: 0, y: 0, x2: 0, y2: 1,
-          colorStops: [
-            { offset: 0, color: 'rgba(125,211,232,0.28)' },
-            { offset: 1, color: 'rgba(125,211,232,0.02)' },
-          ],
-        },
-      },
+      data: props.consumeTrend,
+      itemStyle: { color: CHART_COLORS.danger },
+    },
+    {
+      name: '额度发放',
+      type: 'line',
+      smooth: true,
+      showSymbol: false,
+      data: props.grantTrend,
+      itemStyle: { color: CHART_COLORS.success },
     },
   ],
 }))
@@ -65,8 +67,8 @@ const option = computed(() => ({
 <template>
   <div class="card-base">
     <div class="mb-2 flex items-center justify-between">
-      <h3 class="text-base font-semibold text-ink">用户增长趋势</h3>
+      <h3 class="text-base font-semibold text-ink">余额变动趋势</h3>
     </div>
-    <BaseChart :option="option" :loading="loading" height="300px" />
+    <BaseChart :option="option" :loading="loading" height="280px" />
   </div>
 </template>

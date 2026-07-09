@@ -6,7 +6,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { MenuOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
-import { getRoleLabel, getVipStatusText } from '@/constants/roles'
+import { getRoleLabel } from '@/constants/roles'
 import { Search, Bell, Moon, User, LogOut } from 'lucide-vue-next'
 import AdminSidebar from './components/AdminSidebar.vue'
 import { ADMIN_MENU_ITEMS, getMenuByPath } from './utils/menu'
@@ -24,7 +24,6 @@ const menuItems = computed(() =>
 const currentMenu = computed(() => getMenuByPath(route.path, menuItems.value))
 
 const roleLabel = computed(() => getRoleLabel(userStore.role))
-const vipStatusText = computed(() => getVipStatusText(userStore.userInfo))
 const userInitial = computed(() => userStore.userInfo.nickname?.slice(0, 1) || '管')
 
 // 子路由权限守卫：无权限时跳转到第一个可访问菜单
@@ -103,7 +102,6 @@ function handleLogout() {
               </div>
               <div class="hidden text-sm text-left sm:block">
                 <p class="font-semibold leading-tight text-ink">{{ roleLabel }}</p>
-                <p v-if="vipStatusText" class="text-xs leading-tight text-muted">{{ vipStatusText }}</p>
               </div>
             </div>
             <template #overlay>

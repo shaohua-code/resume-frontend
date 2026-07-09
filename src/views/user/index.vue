@@ -1,5 +1,5 @@
 <!--
-  用户中心页 - 个人信息 + 简历列表
+  用户中心页 - 个人信息 + Tab（我的简历 / 用量明细）
 -->
 <template>
   <div class="page-container animate-fade-in">
@@ -22,79 +22,87 @@
                 {{ getStatusLabel(userStore.userInfo.status) }}
               </span>
             </a-descriptions-item>
-            <a-descriptions-item label="会员" :span="2">{{ vipStatusText }}</a-descriptions-item>
+            <a-descriptions-item label="账户余额" :span="2">
+              <span class="text-lg font-bold text-brand-dark">{{ balanceText }}</span>
+            </a-descriptions-item>
           </a-descriptions>
         </div>
         <div class="flex flex-wrap items-center gap-3 shrink-0">
-          <GradientButton v-if="userStore.role === 'USER'" ghost size="small">升级 VIP</GradientButton>
           <GradientButton ghost size="small" class="!border-danger/30 !text-danger hover:!bg-red-50" @click="handleLogout">退出登录</GradientButton>
         </div>
       </div>
     </a-card>
 
-    <a-card class="card-base" :bordered="false">
-      <template #title>
-        <span class="text-base font-semibold text-ink">我的简历</span>
-      </template>
-      <template #extra>
-        <div class="flex items-center gap-2">
-          <a-popconfirm
-            v-if="selectedRowKeys.length"
-            title="确定批量删除选中的简历？"
-            @confirm="handleBatchDelete"
-          >
-            <button class="inline-flex h-9 items-center gap-1 rounded-button border border-danger/30 px-3 text-sm font-medium text-danger transition-colors hover:bg-red-50">
-              <DeleteOutlined /> 批量删除 ({{ selectedRowKeys.length }})
-            </button>
-          </a-popconfirm>
-          <GradientButton size="small" class="!h-9 !min-w-[100px]" @click="handleCreate">
-            <PlusOutlined /> 新建简历
-          </GradientButton>
-        </div>
-      </template>
-      <a-table
-        :data-source="resumeStore.resumeList"
-        :columns="columns"
-        :pagination="{ pageSize: 10, total: resumeStore.resumeTotal }"
-        :scroll="{ x: 'max-content' }"
-        :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
-        row-key="id"
-        :loading="loading"
-        @change="handleTableChange"
-      >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'score'">
-            <a-progress :percent="record.score" size="small" :stroke-color="getScoreColor(record.score)" />
+    <a-tabs v-model:activeKey="activeTab" class="user-center-tabs">
+      <a-tab-pane key="resumes" tab="我的简历">
+        <a-card class="card-base" :bordered="false">
+          <template #title>
+            <span class="text-base font-semibold text-ink">我的简历</span>
           </template>
-          <template v-if="column.key === 'update_time'">
-            {{ formatDateTime(record.update_time) }}
-          </template>
-          <template v-if="column.key === 'template_id'">
-            <span class="tag-soft">{{ getTemplateName(record.template_id) }}</span>
-          </template>
-          <template v-if="column.key === 'action'">
+          <template #extra>
             <div class="flex items-center gap-2">
-              <button class="link-text" @click="$router.push(`/editor/${record.id}`)">编辑</button>
-              <a-popconfirm title="确定删除？" @confirm="handleDelete(record.id)">
-                <button class="text-sm font-medium transition-colors text-danger hover:text-red-500">删除</button>
+              <a-popconfirm
+                v-if="selectedRowKeys.length"
+                title="确定批量删除选中的简历？"
+                @confirm="handleBatchDelete"
+              >
+                <button class="inline-flex h-9 items-center gap-1 rounded-button border border-danger/30 px-3 text-sm font-medium text-danger transition-colors hover:bg-red-50">
+                  <DeleteOutlined /> 批量删除 ({{ selectedRowKeys.length }})
+                </button>
               </a-popconfirm>
+              <GradientButton size="small" class="!h-9 !min-w-[100px]" @click="handleCreate">
+                <PlusOutlined /> 新建简历
+              </GradientButton>
             </div>
           </template>
-        </template>
-        <template #emptyText>
-          <div class="py-12 empty-state">
-            <div class="empty-icon">📝</div>
-            <div class="empty-title">还没有简历</div>
-            <div class="empty-desc">点击右上角新建简历，开启你的 AI 简历之旅</div>
-            <GradientButton class="inline-flex h-10 min-w-[160px] items-center justify-center gap-2" @click="$router.push('/generate')">
-              <PlusOutlined /> 新建简历
-            </GradientButton>
-          </div>
-        </template>
-      </a-table>
-    </a-card>
+          <a-table
+            :data-source="resumeStore.resumeList"
+            :columns="columns"
+            :pagination="{ pageSize: 10, total: resumeStore.resumeTotal }"
+            :scroll="{ x: 'max-content' }"
+            :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
+            row-key="id"
+            :loading="loading"
+            @change="handleTableChange"
+          >
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'score'">
+                <a-progress :percent="record.score" size="small" :stroke-color="getScoreColor(record.score)" />
+              </template>
+              <template v-if="column.key === 'update_time'">
+                {{ formatDateTime(record.update_time) }}
+              </template>
+              <template v-if="column.key === 'template_id'">
+                <span class="tag-soft">{{ getTemplateName(record.template_id) }}</span>
+              </template>
+              <template v-if="column.key === 'action'">
+                <div class="flex items-center gap-2">
+                  <button class="link-text" @click="$router.push(`/editor/${record.id}`)">编辑</button>
+                  <a-popconfirm title="确定删除？" @confirm="handleDelete(record.id)">
+                    <button class="text-sm font-medium transition-colors text-danger hover:text-red-500">删除</button>
+                  </a-popconfirm>
+                </div>
+              </template>
+            </template>
+            <template #emptyText>
+              <div class="py-12 empty-state">
+                <div class="empty-icon">📝</div>
+                <div class="empty-title">还没有简历</div>
+                <div class="empty-desc">点击右上角新建简历，开启你的 AI 简历之旅</div>
+                <GradientButton class="inline-flex h-10 min-w-[160px] items-center justify-center gap-2" @click="$router.push('/generate')">
+                  <PlusOutlined /> 新建简历
+                </GradientButton>
+              </div>
+            </template>
+          </a-table>
+        </a-card>
+      </a-tab-pane>
 
-    <!-- 超过 5 份简历时的二次确认弹窗 -->
+      <a-tab-pane key="usage" tab="用量明细">
+        <UsagePanel />
+      </a-tab-pane>
+    </a-tabs>
+
     <a-modal
       v-model:open="overLimitVisible"
       title="简历数量超限提醒"
@@ -117,26 +125,28 @@ import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
+import { useWalletStore } from '@/stores/wallet'
 import { useResumeStore } from '@/stores/resume'
-import { getRoleLabel, getStatusLabel, getVipStatusText } from '@/constants/roles'
+import { getRoleLabel, getStatusLabel, formatBalanceText } from '@/constants/roles'
 import { getTemplateName } from '@/constants/templateNames'
 import THEME from '@/constants/theme'
 import GradientButton from '@/components/GradientButton.vue'
+import UsagePanel from './components/UsagePanel.vue'
 import { formatDateTime } from '@/utils/date'
 
 const router = useRouter()
 const userStore = useUserStore()
+const walletStore = useWalletStore()
 const resumeStore = useResumeStore()
 const loading = ref(false)
-const vipStatusText = computed(() => getVipStatusText(userStore.userInfo))
+const activeTab = ref('resumes')
+const balanceText = computed(() => formatBalanceText(walletStore.balance))
 
-// 表格行选择
 const selectedRowKeys = ref([])
 function onSelectChange(keys) {
   selectedRowKeys.value = keys
 }
 
-// 超过 5 份简历时的二次确认弹窗状态
 const overLimitVisible = ref(false)
 
 const columns = [
@@ -147,7 +157,6 @@ const columns = [
   { title: '操作', key: 'action', width: 140 },
 ]
 
-// 根据分数返回主题色
 function getScoreColor(score) {
   if (score >= 80) return THEME.chart.success
   if (score >= 60) return THEME.chart.warning
@@ -156,8 +165,11 @@ function getScoreColor(score) {
 
 onMounted(async () => {
   loading.value = true
-  await resumeStore.fetchResumeList()
-  await resumeStore.fetchResumeCount()
+  await Promise.all([
+    resumeStore.fetchResumeList(),
+    resumeStore.fetchResumeCount(),
+    walletStore.fetchBalance(),
+  ])
   loading.value = false
 })
 
@@ -171,15 +183,12 @@ async function handleDelete(id) {
   await resumeStore.removeResume(id)
 }
 
-// 批量删除
 async function handleBatchDelete() {
   await resumeStore.batchRemoveResume(selectedRowKeys.value)
   selectedRowKeys.value = []
 }
 
-// 新建简历：检查数量是否超限
 async function handleCreate() {
-  // 先刷新数量，确保准确
   await resumeStore.fetchResumeCount()
   if (resumeStore.resumeTotal >= resumeStore.resumeMaxCount) {
     overLimitVisible.value = true
@@ -188,7 +197,6 @@ async function handleCreate() {
   router.push('/generate')
 }
 
-// 确认超限后继续生成
 function confirmOverLimit() {
   overLimitVisible.value = false
   router.push('/generate')

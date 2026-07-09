@@ -27,6 +27,7 @@
 
         <div class="flex items-center gap-3 ml-6">
           <template v-if="userStore.isLoggedIn">
+            <span class="hidden text-sm font-semibold text-brand-dark sm:inline">{{ balanceText }}</span>
             <a-dropdown>
               <div class="flex items-center gap-1.5 rounded-button px-2 py-1.5 cursor-pointer sm:px-3">
                 <UserOutlined class="text-brand-dark" />
@@ -35,6 +36,7 @@
               </div>
               <template #overlay>
                 <a-menu>
+                  <a-menu-item disabled>账户余额：{{ balanceText }}</a-menu-item>
                   <a-menu-item disabled>我的角色：{{ getRoleLabel(userStore.role) }}</a-menu-item>
                   <a-menu-divider />
                   <a-menu-item @click="$router.push('/user')"><UserOutlined class="mr-1" /> 个人中心</a-menu-item>
@@ -74,17 +76,38 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { UserOutlined, LogoutOutlined, MenuOutlined, SearchOutlined } from '@ant-design/icons-vue'
+import { UserOutlined, LogoutOutlined, MenuOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
-import { getRoleColor, getRoleLabel } from '@/constants/roles'
+import { useWalletStore } from '@/stores/wallet'
+import { getRoleColor, getRoleLabel, formatBalanceText } from '@/constants/roles'
 import GradientButton from '@/components/GradientButton.vue'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const walletStore = useWalletStore()
 const drawerOpen = ref(false)
+
+const balanceText = computed(() => formatBalanceText(walletStore.balance))
+
+// 登录后拉取余额，路由变化时刷新
+async function refreshBalance() {
+  if (!userStore.isLoggedIn) return
+  try {
+    await walletStore.fetchBalance()
+  } catch {
+    // 忽略未登录或网络错误
+  }
+}
+
+watch(() => userStore.isLoggedIn, (loggedIn) => {
+  if (loggedIn) refreshBalance()
+  else walletStore.reset()
+}, { immediate: true })
+
+onMounted(refreshBalance)
 
 const selectedKeys = computed(() => {
   const map = {

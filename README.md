@@ -15,12 +15,9 @@ Glassmorphism 浅色科技风前端，面向校园招聘与年轻求职者，提
 | Axios | 1.7.7 | HTTP 请求（普通接口） |
 | fetch + ReadableStream | - | SSE 流式接口（AI 生成 / 分模块优化 / PDF 优化） |
 | @vueup/vue-quill | 1.2.0 | 富文本编辑器（用户反馈） |
-| html2canvas + jsPDF | - | A4 分页 PDF 导出（动态 import） |
 | markdown-it | 14.1.0 | Markdown 渲染（管理端反馈预览） |
 | ECharts | 6.1.0 | 管理后台图表 |
-| file-saver | 2.0.5 | 文件下载 |
-
-> 注意：PDF 导出依赖 `html2canvas` 与 `jspdf`，需在 `package.json` 中补充安装（当前仍残留 `html2pdf.js`，建议替换）。
+| file-saver | 2.0.5 | Word/Markdown 文件下载 |
 
 ## 二、目录规范
 
@@ -51,15 +48,16 @@ views/
 src/
 ├── components/          # 全局 UI 组件
 ├── composables/         # 业务组合式函数
-│   ├── useResumeOptimizer.js  # 简历分模块 AI 优化（summary/skills/project/internship）
-│   ├── useResumeExportPdf.js  # A4 分页 PDF 导出（html2canvas + jsPDF）
+│   ├── useResumeExportPrint.js  # 浏览器打印 API 导出 PDF
+│   ├── useResumeOptimizer.js    # 简历分模块 AI 优化
 │   ├── useDraggable.js        # 可拖拽元素（反馈悬浮按钮等）
 │   └── useTheme.js            # 主题切换
 ├── constants/theme.js   # 唯一配色源
 ├── styles/global.css    # 公共类 + CSS 变量
 └── api/                 # 按业务域拆分的接口封装
-    ├── auth.js          # 认证（登录/验证码/密码重置）
-    ├── resume.js        # AI 生成/优化/匹配/评分、简历 CRUD、PDF 优化
+    ├── auth.js          # 认证
+    ├── resume.js        # AI / 简历 CRUD
+    ├── wallet.js        # 余额与流水
     ├── admin.js         # 管理后台
     ├── upload.js        # 通用文件上传
     └── feedback.js      # 用户反馈
@@ -156,7 +154,7 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 | `/api/auth` | `api/auth.js` | `routers/auth.js` | 登录、验证码、密码重置 |
 | `/api/ai` | `api/resume.js` | `routers/ai.js` | AI 生成、分模块优化、JD 匹配、评分 |
 | `/api/pdf` | `api/resume.js` | `routers/pdf.js` | PDF 上传、解析、优化 |
-| `/api/resume` | `api/resume.js` | `routers/resume.js` | 简历 CRUD、导出记录 |
+| `/api/wallet` | `api/wallet.js` | `routers/wallet.js` | 余额、流水 |
 | `/api/admin` | `api/admin.js` | `routers/admin.js` | 管理后台 |
 | `/api/upload` | `api/upload.js` | `routers/upload.js` | 通用文件上传 |
 | `/api/feedback` | `api/feedback.js` | `routers/feedback.js` | 用户反馈 |
@@ -179,13 +177,24 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 
 ## 十、PDF 导出
 
-使用 `useResumeExportPdf` 组合式函数封装 A4 分页导出能力，在 `views/editor/index.vue` 中调用。
+使用 `useResumeExportPrint` 组合式函数，基于浏览器打印 API：
 
-- **参数**：`{ getPages, fileName, beforeExport, onStart, onEnd }`
-- **流程**：创建离屏 A4 容器 → 克隆目标 DOM → `html2canvas` 截图 → `jsPDF` 分页组装 → 下载
-- **依赖**：`html2canvas` + `jspdf`（动态 import，按需加载）
+- 创建隐藏 iframe，注入打印样式
+- 用户需在打印对话框选择「另存为 PDF」
+- 导出前自动保存简历并记录 `export_record`（无 VIP 限制）
 
-## 十一、用户反馈
+## 十一、Token 计费（钱包）
+
+| 模块 | 路径 | 说明 |
+| --- | --- | --- |
+| API | `api/wallet.js` | `GET /wallet/balance`、`GET /wallet/ledger` |
+| Store | `stores/wallet.js` | 余额、流水状态 |
+| 用户中心 | `views/user/components/UsagePanel.vue` | 用量明细 Tab |
+| 顶栏 | `AppHeader.vue` | 显示当前余额 |
+
+AI 调用成功后 `resume` store 自动刷新余额。
+
+## 十二、用户反馈
 
 | 端 | 组件 | 说明 |
 | --- | --- | --- |
@@ -194,7 +203,7 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 | 管理端 | `views/admin/components/AdminFeedbackPanel.vue` | 仅 SUPER_ADMIN 可见，Markdown 预览 |
 | 接口 | `api/feedback.js` | `POST /api/feedback` |
 
-## 十二、新页面开发 Checklist
+## 十三、新页面开发 Checklist
 
 1. 在 `views/{page}/` 创建 `index.vue`
 2. 页面私有组件放 `components/`，工具放 `utils/`
@@ -203,7 +212,7 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 5. 375px 宽度下验证布局
 6. 参考 [`STYLE_PROMPT.md`](STYLE_PROMPT.md) 获取 AI 风格提示词
 
-## 十三、开发与构建
+## 十四、开发与构建
 
 ```bash
 npm install
@@ -212,14 +221,14 @@ npm run build    # 生产构建
 npm run preview  # 预览构建
 ```
 
-## 十四、注意事项
+## 十五、注意事项
 
-1. **简历模板**（`components/resume-templates/`）已全量使用 TailwindCSS，避免原生 CSS 与 `!important`
-2. **编辑器组件**位于 `views/editor/components/`，AI 优化按钮已集成在 `ResumeEditorForm.vue`
-3. 环境变量：`.env.development` / `.env.production`，勿提交敏感信息；生产环境通过 `VITE_API_URL` 指定后端地址
-4. VIP 权限由后端控制
-5. PDF 导出依赖 `html2canvas` + `jspdf`，如 `package.json` 未安装需补装
+1. **简历模板**（`components/resume-templates/`）使用独立 CSS（`rt-*`），保证 PDF/打印友好
+2. **编辑器组件**位于 `views/editor/components/`
+3. 环境变量：`.env.development` / `.env.production`；生产通过 `VITE_API_URL` 指定后端
+4. **计费**：AI 按账户余额扣费，余额不足时接口返回 402；导出对登录用户免费
+5. 全功能说明见项目根目录 [`AI简历助手-项目全功能说明.md`](../AI简历助手-项目全功能说明.md)
 
-## 十五、风格提示词
+## 十六、风格提示词
 
 新增页面或模块时，请复制 [`STYLE_PROMPT.md`](STYLE_PROMPT.md) 中的 Prompt 模板，确保视觉一致。

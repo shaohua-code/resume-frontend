@@ -1,14 +1,13 @@
 <script setup>
 /**
- * 数据统计卡片（6 张）
- * 左侧彩色图标，右侧 CountUp 数字，底部增长趋势（绿涨红跌），hover 整体上浮。
+ * 数据统计卡片
  */
 import { computed } from 'vue'
 import {
   Users,
-  Crown,
+  Wallet,
+  TrendingDown,
   UserPlus,
-  ShoppingCart,
   Bot,
   Activity,
   ArrowUp,
@@ -23,19 +22,12 @@ const props = defineProps({
   },
 })
 
-// 系统整体状态：任一服务异常即视为异常
 const systemHealthy = computed(() => {
   const status = props.data.system_status || {}
   const values = Object.values(status)
   if (!values.length) return true
   return values.every((value) => value === 'ok')
 })
-
-// 计算占比百分比
-function calcPercent(value = 0, total = 0) {
-  if (!total) return 0
-  return Math.min(Math.round((Number(value || 0) / Number(total)) * 100), 100)
-}
 
 const cards = computed(() => [
   {
@@ -47,11 +39,20 @@ const cards = computed(() => [
     trendLabel: '较昨日',
   },
   {
-    label: 'VIP付费用户',
-    value: props.data.vip_count || 0,
-    icon: Crown,
+    label: '账户总余额',
+    value: Number(props.data.total_balance || 0),
+    icon: Wallet,
     iconBg: 'bg-mint text-emerald-700',
-    note: `占比 ${calcPercent(props.data.vip_count, props.data.user_count)}%`,
+    prefix: '¥',
+    note: '全平台余额',
+  },
+  {
+    label: '累计消费',
+    value: Number(props.data.total_consumed || 0),
+    icon: TrendingDown,
+    iconBg: 'bg-cream text-warning',
+    prefix: '¥',
+    note: 'AI 调用扣费',
   },
   {
     label: '今日新增用户',
@@ -60,13 +61,6 @@ const cards = computed(() => [
     iconBg: 'bg-mint text-emerald-700',
     trend: props.data.user_growth ?? null,
     trendLabel: '较昨日',
-  },
-  {
-    label: '订单总数',
-    value: props.data.order_count || 0,
-    icon: ShoppingCart,
-    iconBg: 'bg-cream text-warning',
-    note: `待支付 ${props.data.pending_count || 0}`,
   },
   {
     label: 'AI调用次数',
@@ -95,7 +89,12 @@ const cards = computed(() => [
       <div class="min-w-0">
         <p class="text-sm text-muted">{{ item.label }}</p>
         <p class="mt-2 text-2xl font-bold text-ink">
-          <CountUp v-if="item.text === undefined" :value="item.value" />
+          <CountUp
+            v-if="item.text === undefined"
+            :value="item.value"
+            :prefix="item.prefix || ''"
+            :decimals="item.prefix ? 2 : 0"
+          />
           <span v-else>{{ item.text }}</span>
         </p>
         <p class="mt-2 flex items-center gap-1 text-xs">

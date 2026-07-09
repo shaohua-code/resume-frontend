@@ -20,6 +20,16 @@ import {
 } from '@/api/resume'
 import { message } from 'ant-design-vue'
 import { clampTemplateId } from '@/constants/templateRegistry'
+import { useWalletStore } from '@/stores/wallet'
+
+// AI 调用成功后刷新账户余额
+async function refreshWalletBalance() {
+  try {
+    await useWalletStore().fetchBalance()
+  } catch {
+    // 忽略余额刷新失败
+  }
+}
 
 export const useResumeStore = defineStore('resume', () => {
   // 当前简历数据（AI生成后的完整内容）
@@ -89,6 +99,7 @@ export const useResumeStore = defineStore('resume', () => {
           resumeData.target_position = formData.target_position
         }
         await persistResume(resumeData)
+        await refreshWalletBalance()
         message.success('简历生成成功')
         return resumeData
       }
@@ -106,11 +117,12 @@ export const useResumeStore = defineStore('resume', () => {
     try {
       const res = await optimizeApi(description, targetPosition)
       if (res.success) {
+        await refreshWalletBalance()
         message.success('优化完成')
         return res.data
       }
     } catch (e) {
-      message.error('优化失败，请重试')
+      message.error(e.message || '优化失败，请重试')
     } finally {
       optimizing.value = false
     }
@@ -121,9 +133,12 @@ export const useResumeStore = defineStore('resume', () => {
     matching.value = true
     try {
       const res = await matchApi(resumeId, jdText)
+      if (res?.success) {
+        await refreshWalletBalance()
+      }
       return res
     } catch (e) {
-      message.error('匹配分析失败')
+      message.error(e.message || '匹配分析失败')
     } finally {
       matching.value = false
     }
@@ -134,9 +149,12 @@ export const useResumeStore = defineStore('resume', () => {
     scoring.value = true
     try {
       const res = await scoreApi(resumeId)
+      if (res?.success) {
+        await refreshWalletBalance()
+      }
       return res
     } catch (e) {
-      message.error('评分失败')
+      message.error(e.message || '评分失败')
     } finally {
       scoring.value = false
     }

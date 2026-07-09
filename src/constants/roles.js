@@ -6,14 +6,12 @@
 export const ROLE_LABEL_MAP = {
   SUPER_ADMIN: '超级管理员',
   ADMIN: '管理员',
-  VIP: 'VIP用户',
   USER: '普通用户',
 }
 
 export const ROLE_COLOR_MAP = {
   SUPER_ADMIN: 'purple',
   ADMIN: 'blue',
-  VIP: 'gold',
   USER: 'default',
 }
 
@@ -34,20 +32,7 @@ export function getStatusLabel(status = 'ACTIVE') {
   return STATUS_LABEL_MAP[status] || status
 }
 
-export function getVipStatusText(userInfo = {}) {
-  if (['SUPER_ADMIN', 'ADMIN'].includes(userInfo.role)) {
-    return ''
-  }
-  if (userInfo.role !== 'VIP') {
-    return '当前为普通用户，可升级 VIP 解锁不限次数 AI 和导出能力'
-  }
-  if (!userInfo.vipExpireTime) {
-    return 'VIP 有效期：长期有效'
-  }
-  const expireTime = new Date(userInfo.vipExpireTime).getTime()
-  if (Number.isNaN(expireTime)) {
-    return 'VIP 有效期：未知'
-  }
-  const remainDays = Math.ceil((expireTime - Date.now()) / (24 * 60 * 60 * 1000))
-  return remainDays > 0 ? `VIP 剩余 ${remainDays} 天` : 'VIP 已到期，请续费'
+/** 格式化余额展示文案 */
+export function formatBalanceText(balance = 0) {
+  return `¥${Number(balance || 0).toFixed(2)}`
 }

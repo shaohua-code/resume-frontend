@@ -1,7 +1,6 @@
 <script setup>
 /**
  * 数据中心大盘
- * 负责拉取 dashboard 聚合数据，并按现代 SaaS 风格分发给各可视化子组件。
  */
 import { onMounted, ref } from 'vue'
 import { useUserStore } from '@/stores/user'
@@ -10,9 +9,9 @@ import WelcomeBanner from './dashboard/WelcomeBanner.vue'
 import StatisticCards from './dashboard/StatisticCards.vue'
 import UserChart from './dashboard/UserChart.vue'
 import AIChart from './dashboard/AIChart.vue'
-import OrderChart from './dashboard/OrderChart.vue'
-import VipChart from './dashboard/VipChart.vue'
-import OrderOverview from './dashboard/OrderOverview.vue'
+import ConsumeChart from './dashboard/ConsumeChart.vue'
+import BalanceChart from './dashboard/BalanceChart.vue'
+import WalletOverview from './dashboard/WalletOverview.vue'
 import ServiceStatus from './dashboard/ServiceStatus.vue'
 import NoticeCard from './dashboard/NoticeCard.vue'
 import SkeletonCard from './dashboard/SkeletonCard.vue'
@@ -42,7 +41,6 @@ onMounted(loadDashboard)
       :today-new-users="dashboard.today_new_users || 0"
     />
 
-    <!-- 统计卡：加载时显示骨架屏 -->
     <div v-if="loading" class="grid grid-cols-2 gap-4 lg:grid-cols-3 2xl:grid-cols-6">
       <SkeletonCard v-for="i in 6" :key="i" />
     </div>
@@ -53,19 +51,18 @@ onMounted(loadDashboard)
         <UserChart
           :months="dashboard.months || []"
           :user-trend="dashboard.user_trend || []"
-          :vip-trend="dashboard.vip_trend || []"
           :loading="loading"
         />
       </div>
-      <VipChart
-        :vip-count="dashboard.vip_count || 0"
-        :user-count="dashboard.user_count || 0"
+      <BalanceChart
+        :total-balance="dashboard.total_balance || 0"
+        :total-consumed="dashboard.total_consumed || 0"
         :loading="loading"
       />
     </div>
 
     <div class="grid grid-cols-1 gap-5 xl:grid-cols-3">
-      <OrderOverview :data="dashboard" />
+      <WalletOverview :data="dashboard" />
       <div class="xl:col-span-2">
         <AIChart
           :months="dashboard.months || []"
@@ -75,9 +72,10 @@ onMounted(loadDashboard)
       </div>
     </div>
 
-    <OrderChart
+    <ConsumeChart
       :months="dashboard.months || []"
-      :order-trend="dashboard.order_trend || []"
+      :consume-trend="dashboard.consume_trend || []"
+      :grant-trend="dashboard.grant_trend || []"
       :loading="loading"
     />
 
