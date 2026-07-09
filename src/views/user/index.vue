@@ -22,8 +22,8 @@
                 {{ getStatusLabel(userStore.userInfo.status) }}
               </span>
             </a-descriptions-item>
-            <a-descriptions-item label="账户余额" :span="2">
-              <span class="text-lg font-bold text-brand-dark">{{ balanceText }}</span>
+            <a-descriptions-item label="账户余额" :span="2" >
+              <span class="text-danger">{{ balanceText }}</span>
             </a-descriptions-item>
           </a-descriptions>
         </div>
@@ -35,7 +35,8 @@
 
     <a-tabs v-model:activeKey="activeTab" class="user-center-tabs">
       <a-tab-pane key="resumes" tab="我的简历">
-        <a-card class="card-base" :bordered="false">
+        <!-- 使用 v-if 确保切换时重新创建组件，获取最新数据 -->
+        <a-card v-if="activeTab === 'resumes'" class="card-base" :bordered="false">
           <template #title>
             <span class="text-base font-semibold text-ink">我的简历</span>
           </template>
@@ -99,7 +100,7 @@
       </a-tab-pane>
 
       <a-tab-pane key="usage" tab="用量明细">
-        <UsagePanel />
+        <UsagePanel  v-if="activeTab === 'usage'"/>
       </a-tab-pane>
     </a-tabs>
 

@@ -6,7 +6,7 @@
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <a-card class="card-base" :bordered="false">
         <p class="text-sm text-muted">账户余额</p>
-        <p class="mt-2 text-3xl font-bold text-brand-dark">¥{{ balanceText }}</p>
+        <p class="mt-2 text-3xl font-bold text-danger">¥{{ balanceText }}</p>
         <p class="mt-2 text-xs text-muted">AI 功能按次扣费，余额不足时请先联系管理员充值</p>
       </a-card>
       <a-card class="card-base" :bordered="false">
