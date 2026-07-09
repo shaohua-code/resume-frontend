@@ -1,42 +1,59 @@
 /**
- * 简历字段映射（不改后端接口，对齐AI简历模块）
+ * 简历字段映射（模板展示用）
  */
 import { resolveUploadUrl } from '@/api/upload'
+import {
+  normalizeEducations,
+  normalizeCustomFields,
+  buildBasicInfoDisplayItems,
+} from '@/constants/resumeFieldSchema'
 
 export function useResumeFields(resume) {
   const r = resume || {}
-  return {
+  const educations = normalizeEducations(r)
+  const customFields = normalizeCustomFields(r)
+
+  const fields = {
     name: r.name || '姓名',
     phone: r.phone || '',
     email: r.email || '',
     targetPosition: r.target_position || '',
-    school: r.school || '',
-    major: r.major || '',
-    education: r.education || '',
+    school: r.school || educations[0]?.school || '',
+    major: r.major || educations[0]?.major || '',
+    education: r.education || educations[0]?.degree || '',
     summary: r.summary || '',
     skills: r.skills || [],
     projects: r.projects || [],
     internships: r.internships || [],
     awards: r.awards || [],
     certificates: r.certificates || [],
-    // 扩展字段：头像 URL 需补全为可访问地址
     avatar: resolveUploadUrl(r.avatar || ''),
     gender: r.gender || '',
     age: r.age || '',
     city: r.city || '',
     origin: r.origin || r.city || '',
     workYears: r.work_years || r.workYears || '',
+    maritalStatus: r.marital_status || r.maritalStatus || '',
+    height: r.height || '',
+    weight: r.weight || '',
+    ethnicity: r.ethnicity || '',
+    nativePlace: r.native_place || r.nativePlace || r.origin || '',
+    politicalStatus: r.political_status || r.politicalStatus || '',
     targetCity: r.target_city || r.targetCity || '',
-    expectedSalary: r.expected_salary || r.expectedSalary || '',
+    expectedSalary: r.expected_salary || r.expectedSalary || r.salary || '',
     entryTime: r.entry_time || r.entryTime || '',
     qrCode: r.qr_code || r.qrCode || '',
-    eduLine: [r.school, r.major, r.education].filter(Boolean).join(' · '),
+    educations,
+    customFields,
     contactLine: [r.phone, r.email].filter(Boolean).join('  |  '),
     honorList: [...(r.awards || []), ...(r.certificates || [])],
   }
+
+  fields.basicInfoItems = buildBasicInfoDisplayItems(fields)
+  return fields
 }
 
-/** 技能进度条宽度（模拟AI简历进度） */
+/** 技能进度条宽度 */
 export function skillProgress(index) {
   const levels = [95, 85, 75, 65, 55, 45]
   return levels[index % levels.length]

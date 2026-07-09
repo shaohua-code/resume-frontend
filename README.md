@@ -118,7 +118,7 @@ src/
 | 模式 | URL 参数 | 组件 | 说明 |
 | --- | --- | --- | --- |
 | 上传 PDF | `?mode=upload` | `UploadPanel.vue` | PDF 校验、流式优化、已上传简历可直接引用优化 |
-| 表单填写 | `?mode=form` | `FormPanel.vue` | 步骤式表单，项目经历选填 |
+| 表单填写 | `?mode=form` | `FormPanel.vue` | **5 步向导**：基本信息（含扩展字段与自定义键值对）→ 教育背景（可多条）→ 项目/实习 → AI 生成 → 预览编辑；仅姓名与求职方向必填 |
 | 智能识别 | `?mode=lazy` | `LazyPanel.vue` | 自由文本键值对填写，AI 智能解析生成 |
 
 旧路由 `/upload-optimize` 自动 redirect 至 `/generate?mode=upload`。
@@ -136,7 +136,20 @@ Hero 数据背书（stat-glass）：紧凑胶囊 `min-w-[88px] px-4 py-2.5`，�
 
 首页允许自然滚动（已移除 `min-h-[calc(100vh-4rem)]` 一屏限制）。顶栏搜索与「免费开户」间距 `ml-6`（24px）。
 
-AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成页 Step3 展示打字机预览。
+AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成页 Step3（AI 生成）展示打字机预览。
+
+### `resume_json` 字段约定
+
+| 模块 | 字段（snake_case） | 说明 |
+| --- | --- | --- |
+| 基本信息 | `name`, `target_position`, `phone`, `email`, `summary`, `avatar` | 姓名、求职方向为常用必填 |
+| 扩展基本信息 | `work_years`, `marital_status`, `height`, `weight`, `ethnicity`, `native_place`, `political_status`, `expected_salary` | 均可选 |
+| 自定义字段 | `custom_fields: [{ label, value }]` | 放在基本信息内展示 |
+| 教育背景 | `educations: [{ school, major, degree, start_date, end_date }]` | 独立模块，可 0~N 条 |
+| 兼容 | `school`, `major`, `education` | 与 `educations[0]` 双向同步 |
+| 其他 | `skills`, `projects`, `internships`, `awards`, `certificates`, `_editorSettings` | 与改造前一致 |
+
+归一化工具：`src/constants/resumeFieldSchema.js`；模板读取：`useResumeFields.js`。
 
 ## 八、接口请求约定
 

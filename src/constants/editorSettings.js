@@ -47,6 +47,7 @@ export const FONT_SIZE_OPTIONS = [10, 11, 12, 13, 14, 15, 16, 18, 20]
 
 export const DEFAULT_MODULES = [
   { key: 'basic', title: '基本信息', visible: true },
+  { key: 'educations', title: '教育背景', visible: true },
   { key: 'skills', title: '技能特长', visible: true },
   { key: 'projects', title: '项目经验', visible: true },
   { key: 'internships', title: '实习经历', visible: true },

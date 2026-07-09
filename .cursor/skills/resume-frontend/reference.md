@@ -65,6 +65,16 @@ SUPER_ADMIN, ADMIN, USER（`constants/roles.js`，已移除 VIP 文案）
 - PDF：`useResumeExportPrint`（浏览器打印）
 - 无 VIP 校验，`ensureCanExport` 仅保存+记录导出
 
+## resume_json 字段
+
+基本信息扩展：`work_years`, `marital_status`, `height`, `weight`, `ethnicity`, `native_place`, `political_status`, `expected_salary`, `custom_fields[]`
+
+教育背景：`educations[]`（`school`, `major`, `degree`, `start_date`, `end_date`），编辑器模块 key 为 `educations`
+
+兼容扁平：`school`, `major`, `education` ↔ `educations[0]`
+
+工具：`constants/resumeFieldSchema.js`、`useResumeFields.js`；共享表单：`ResumeBasicFieldsSection.vue`、`ResumeEducationListSection.vue`
+
 ## Vite
 
 - 端口 5173，proxy `/api` → localhost:8000

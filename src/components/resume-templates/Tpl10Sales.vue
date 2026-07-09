@@ -5,6 +5,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useResumeFields, skillProgress, skillLevel } from './shared/useResumeFields.js'
+import { formatEducationDateRange } from '@/constants/resumeFieldSchema'
 
 const props = defineProps({
   resume: { type: Object, default: () => ({}) },
@@ -17,22 +18,13 @@ const avatarUrl = computed(() => f.value.avatar)
 const jobInfo = computed(() => {
   const list = []
   if (f.value.targetPosition) list.push({ label: '求职意向', value: f.value.targetPosition })
-  if (props.resume?.city) list.push({ label: '意向城市', value: props.resume.city })
-  if (props.resume?.salary) list.push({ label: '期望薪资', value: props.resume.salary })
-  if (props.resume?.entry_time) list.push({ label: '入职时间', value: props.resume.entry_time })
+  if (f.value.targetCity) list.push({ label: '意向城市', value: f.value.targetCity })
+  if (f.value.expectedSalary) list.push({ label: '期望薪资', value: f.value.expectedSalary })
+  if (f.value.entryTime) list.push({ label: '入职时间', value: f.value.entryTime })
   return list
 })
 
-const basicInfo = computed(() => {
-  const list = []
-  if (props.resume?.age) list.push({ label: '年龄', value: `${props.resume.age}岁`, icon: '🎂' })
-  if (props.resume?.gender) list.push({ label: '性别', value: props.resume.gender, icon: '♂️' })
-  if (props.resume?.city) list.push({ label: '城市', value: props.resume.city, icon: '📍' })
-  if (props.resume?.work_years) list.push({ label: '工作年限', value: props.resume.work_years, icon: '💼' })
-  if (f.value.phone) list.push({ label: '电话', value: f.value.phone, icon: '📞' })
-  if (f.value.email) list.push({ label: '邮箱', value: f.value.email, icon: '✉️' })
-  return list
-})
+const basicInfo = computed(() => f.value.basicInfoItems || [])
 
 const moduleVisibleMap = computed(() => {
   return props.visibleModules.reduce((map, item) => {
@@ -71,8 +63,8 @@ const sectionIcons = {
         <div class="flex shrink-0 items-start gap-4">
           <div v-if="basicInfo.length" class="grid grid-cols-1 gap-y-1.5 text-right text-sm">
             <div v-for="(item, idx) in basicInfo" :key="idx" class="flex items-center justify-end gap-2">
+              <span class="rt-label text-xs opacity-60">{{ item.label }}</span>
               <span class="rt-value">{{ item.value }}</span>
-              <span class="text-xs opacity-60">{{ item.icon }}</span>
             </div>
           </div>
           <img
@@ -86,20 +78,19 @@ const sectionIcons = {
     </header>
 
     <main class="px-8 py-6">
-      <section v-if="f.school" data-resume-module="basic" class="rt-section mb-5">
+      <section v-if="showModule('educations') && f.educations.length" data-resume-module="educations" class="rt-section mb-5">
         <div class="mb-3 flex items-center gap-3 border-b border-slate-900 pb-2">
           <div class="rt-timeline-dot flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold text-white">
             {{ sectionIcons.education }}
           </div>
           <h2 class="rt-title mb-0"><span>教育背景</span></h2>
         </div>
-        <div class="rt-item mb-2">
+        <div v-for="(edu, idx) in f.educations" :key="idx" class="rt-item mb-2">
           <div class="rt-item-header">
-            <strong>{{ f.school }}</strong>
-            <span class="whitespace-nowrap">2015-09 ~ 2018-07</span>
+            <strong>{{ edu.school }}</strong>
+            <span class="whitespace-nowrap">{{ formatEducationDateRange(edu) }}</span>
           </div>
-          <p v-if="f.major" class="rt-text text-sm">{{ f.major }}</p>
-          <p v-if="f.education" class="rt-text text-sm">{{ f.education }}</p>
+          <p v-if="edu.major || edu.degree" class="rt-text text-sm">{{ [edu.degree, edu.major].filter(Boolean).join(' · ') }}</p>
         </div>
       </section>
 

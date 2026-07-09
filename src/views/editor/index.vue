@@ -201,6 +201,7 @@ import { EMPTY_SKIN_OVERRIDES } from '@/constants/skin'
 import { TEMPLATE_LIST, getTemplateName, clampTemplateId } from '@/constants/templateRegistry'
 import { applyTemplateFontColorDefaults } from '@/constants/templateFontColors'
 import { applyTemplateSkinDefaults } from '@/constants/templateSkinColors'
+import { normalizeResumeFields, syncFlatEducationFields, validateRequiredBasicFields } from '@/constants/resumeFieldSchema'
 import EditorToolbar from './components/EditorToolbar.vue'
 import EditorEditPanel from './components/EditorEditPanel.vue'
 import ResumePreview from './components/ResumePreview.vue'
@@ -366,6 +367,21 @@ async function saveResumeData({ silent = false } = {}) {
     if (!silent) message.error(msg)
     throw new Error(msg)
   }
+  // 保存前校验姓名与意向岗位
+  const formValid = await editPanelRef.value?.validateBasic?.()
+  if (formValid === false) {
+    activeModule.value = 'basic'
+    if (!silent) message.warning('请完善基本信息：姓名与意向岗位为必填项')
+    throw new Error('基本信息校验未通过')
+  }
+  const basicCheck = validateRequiredBasicFields(resume)
+  if (!basicCheck.ok) {
+    activeModule.value = 'basic'
+    if (!silent) message.warning(basicCheck.message)
+    throw new Error(basicCheck.message)
+  }
+  resume.name = basicCheck.name
+  resume.target_position = basicCheck.target_position
   // 保存前写入编辑器设置到 resume_json
   applyEditorSettingsToResume(resume, {
     spacing,
@@ -378,6 +394,8 @@ async function saveResumeData({ silent = false } = {}) {
     skinTheme: skinTheme.value,
     modules: modules.value,
   })
+  // 保存前同步 educations 首条到扁平字段，兼容旧逻辑
+  syncFlatEducationFields(resume)
   return await resumeStore.saveResume(
     {
       id: currentResumeId.value,
@@ -495,11 +513,11 @@ onMounted(async () => {
   const id = route.params.id
   if (id) {
     await resumeStore.fetchResumeDetail(Number(id))
-    Object.assign(resume, resumeStore.currentResume)
+    Object.assign(resume, normalizeResumeFields(resumeStore.currentResume))
     templateId.value = clampTemplateId(resumeStore.currentTemplateId)
     loadEditorSettings(resume)
   } else if (Object.keys(resumeStore.currentResume).length) {
-    Object.assign(resume, resumeStore.currentResume)
+    Object.assign(resume, normalizeResumeFields(resumeStore.currentResume))
     loadEditorSettings(resume)
   }
   if (resumeStore.currentResumeId) {

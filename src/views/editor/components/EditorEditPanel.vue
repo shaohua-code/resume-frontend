@@ -45,7 +45,12 @@ watch(
 
 const editContentRef = ref(null)
 
-defineExpose({ scrollToModule, modules })
+defineExpose({
+  scrollToModule,
+  modules,
+  /** 校验基本信息必填项 */
+  validateBasic: () => formRef.value?.validateBasic?.(),
+})
 </script>
 
 <template>

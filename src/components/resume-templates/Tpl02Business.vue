@@ -1,10 +1,11 @@
-﻿<!--
+<!--
   模板 02 - 商务经典（全民简历风格）
   顶部色带 + 白色主体 + 皮肤可定制模块标题
 -->
 <script setup>
 import { computed } from 'vue'
 import { useResumeFields, skillProgress, skillLevel } from './shared/useResumeFields.js'
+import { formatEducationDateRange } from '@/constants/resumeFieldSchema'
 
 const props = defineProps({
   resume: { type: Object, default: () => ({}) },
@@ -21,8 +22,9 @@ const positionLine = computed(() => f.value.targetPosition || '')
 const metaLine = computed(() => {
   const items = []
   if (props.resume?.age) items.push(`${props.resume.age}岁`)
-  if (props.resume?.city) items.push(props.resume.city)
-  if (props.resume?.work_years) items.push(`${props.resume.work_years}年经验`)
+  if (f.value.workYears) items.push(`${f.value.workYears}年经验`)
+  if (f.value.nativePlace) items.push(f.value.nativePlace)
+  if (f.value.maritalStatus) items.push(f.value.maritalStatus)
   return items.length ? items.join(' | ') : ''
 })
 
@@ -36,6 +38,11 @@ const moduleVisibleMap = computed(() => {
 function showModule(key) {
   return moduleVisibleMap.value[key] !== false
 }
+
+// 顶栏已单独展示电话/邮箱，此处过滤避免重复
+const extendedBasicItems = computed(() =>
+  f.value.basicInfoItems.filter((item) => !['phone', 'email'].includes(item.key)),
+)
 </script>
 
 <template>
@@ -55,6 +62,12 @@ function showModule(key) {
             <span class="rt-value">{{ f.email }}</span>
           </div>
         </div>
+        <div v-if="extendedBasicItems.length" class="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+          <div v-for="item in extendedBasicItems" :key="item.key" class="flex gap-1">
+            <span class="rt-label shrink-0">{{ item.label }}：</span>
+            <span class="rt-value">{{ item.value }}</span>
+          </div>
+        </div>
       </div>
       <div v-if="avatarUrl" class="shrink-0">
         <img
@@ -66,14 +79,14 @@ function showModule(key) {
     </header>
 
     <main class="px-8 py-6">
-      <section v-if="f.school" data-resume-module="basic" class="rt-section mb-5">
+      <section v-if="showModule('educations') && f.educations.length" data-resume-module="educations" class="rt-section mb-5">
         <h2 class="rt-title"><span>教育背景</span></h2>
-        <div class="rt-item mb-2">
+        <div v-for="(edu, idx) in f.educations" :key="idx" class="rt-item mb-2">
           <div class="rt-item-header">
-            <strong>{{ f.school }}</strong>
-            <span v-if="f.education">{{ f.education }}</span>
+            <strong>{{ edu.school }}</strong>
+            <span v-if="formatEducationDateRange(edu)">{{ formatEducationDateRange(edu) }}</span>
           </div>
-          <p v-if="f.major" class="rt-text">{{ f.major }}</p>
+          <p v-if="edu.degree || edu.major" class="rt-text">{{ [edu.degree, edu.major].filter(Boolean).join(' · ') }}</p>
         </div>
       </section>
 

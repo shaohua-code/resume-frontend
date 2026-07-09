@@ -1,10 +1,11 @@
-﻿<!--
+<!--
   模板 04 - 左右时间轴（全民简历风格三）
   顶栏色带 + 左侧时间轴 + 皮肤可定制模块标题
 -->
 <script setup>
 import { computed } from 'vue'
 import { useResumeFields, skillProgress, skillLevel } from './shared/useResumeFields.js'
+import { formatEducationDateRange } from '@/constants/resumeFieldSchema'
 
 const props = defineProps({
   resume: { type: Object, default: () => ({}) },
@@ -22,22 +23,13 @@ const positionLine = computed(() =>
 // 顶栏其他求职信息：城市/薪资等，不走姓名色
 const jobMetaLine = computed(() => {
   const items = []
-  if (props.resume?.city) items.push(props.resume.city)
-  if (props.resume?.salary) items.push(props.resume.salary)
-  if (props.resume?.entry_time) items.push(props.resume.entry_time)
+  if (f.value.targetCity) items.push(f.value.targetCity)
+  if (f.value.expectedSalary) items.push(f.value.expectedSalary)
+  if (f.value.entryTime) items.push(f.value.entryTime)
   return items.length ? items.join(' | ') : ''
 })
 
-const basicGrid = computed(() => {
-  const list = []
-  if (props.resume?.age) list.push({ label: '年龄', value: `${props.resume.age}岁` })
-  if (props.resume?.gender) list.push({ label: '性别', value: props.resume.gender })
-  if (props.resume?.hometown) list.push({ label: '籍贯', value: props.resume.hometown })
-  if (props.resume?.work_years) list.push({ label: '工作年限', value: props.resume.work_years })
-  if (f.value.phone) list.push({ label: '电话', value: f.value.phone })
-  if (f.value.email) list.push({ label: '邮箱', value: f.value.email })
-  return list
-})
+const basicGrid = computed(() => f.value.basicInfoItems || [])
 
 const moduleVisibleMap = computed(() => {
   return props.visibleModules.reduce((map, item) => {
@@ -84,19 +76,18 @@ const sectionIcons = {
     </header>
 
     <main class="px-8 py-6">
-      <section v-if="f.school" data-resume-module="basic" class="rt-timeline-line relative mb-5 border-l-2 pl-10">
+      <section v-if="showModule('educations') && f.educations.length" data-resume-module="educations" class="rt-timeline-line relative mb-5 border-l-2 pl-10">
         <div
           class="rt-timeline-dot absolute left-0 top-0 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full text-sm font-bold text-white">
           {{ sectionIcons.education }}
         </div>
         <h2 class="rt-title"><span>教育背景</span></h2>
-        <div class="rt-item mb-2">
+        <div v-for="(edu, idx) in f.educations" :key="idx" class="rt-item mb-2">
           <div class="rt-item-header">
-            <strong>{{ f.school }}</strong>
-            <span class="whitespace-nowrap">2012-09 ~ 2016-07</span>
+            <strong>{{ edu.school }}</strong>
+            <span class="whitespace-nowrap">{{ formatEducationDateRange(edu) }}</span>
           </div>
-          <p v-if="f.major" class="rt-text text-sm">{{ f.major }}</p>
-          <p v-if="f.education" class="rt-text text-sm">{{ f.education }}</p>
+          <p v-if="edu.major || edu.degree" class="rt-text text-sm">{{ [edu.degree, edu.major].filter(Boolean).join(' · ') }}</p>
         </div>
       </section>
 

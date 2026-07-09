@@ -6,9 +6,29 @@ export const DEMO_RESUME = {
   target_position: '前端开发工程师',
   phone: '13800138000',
   email: 'zhangwei@example.com',
+  work_years: '应届',
+  marital_status: '未婚',
+  height: '175cm',
+  weight: '65kg',
+  ethnicity: '汉族',
+  native_place: '江苏南京',
+  political_status: '共青团员',
+  expected_salary: '12K-18K',
+  custom_fields: [
+    { label: '驾驶证', value: 'C1' },
+  ],
+  educations: [
+    {
+      school: '某某大学',
+      major: '软件工程',
+      degree: '本科',
+      start_date: '2022.09',
+      end_date: '2026.06',
+    },
+  ],
   school: '某某大学',
   major: '软件工程',
-  education: '本科 · 2022.09 - 2026.06',
+  education: '本科',
   summary:
     '热爱前端工程化与用户体验设计，熟悉 Vue3 / React 技术栈与组件化开发模式。具备从需求分析、页面搭建到性能优化的完整项目经验，注重代码规范、可维护性与交付效率。善于与产品、设计协作，能在快节奏迭代中保持高质量输出，期望加入重视技术氛围的团队持续成长。',
   skills: [

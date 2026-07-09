@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   AI简历风格模板 12（金融会计）
   布局：顶部蓝色头部 + 下方时间轴内容区
   参考图二：圆形头像、姓名、双行基本信息；教育/实习/技能/荣誉/评价以左侧图标时间轴展示
@@ -7,6 +7,7 @@
 import { computed } from 'vue'
 import { GraduationCap, Briefcase, Wrench, Award, User } from 'lucide-vue-next'
 import { useResumeFields, skillProgress, skillLevel } from './shared/useResumeFields.js'
+import { formatEducationDateRange } from '@/constants/resumeFieldSchema'
 
 const props = defineProps({
   resume: { type: Object, default: () => ({}) },
@@ -32,10 +33,14 @@ const headerLine1 = computed(() =>
   [f.value.targetPosition, f.value.targetCity, f.value.expectedSalary, f.value.entryTime].filter(Boolean).join('  |  '),
 )
 
-// 顶部第二行：年龄、性别、城市、工作年限、电话、邮箱
-const headerLine2 = computed(() =>
-  [f.value.age ? `${f.value.age}岁` : '', f.value.gender, f.value.city, f.value.workYears ? `${f.value.workYears}年经验` : '', f.value.phone, f.value.email].filter(Boolean).join('  |  '),
-)
+// 顶部第二行：扩展基本信息（电话、邮箱、工作年限等）
+const headerLine2 = computed(() => {
+  const parts = []
+  if (f.value.age) parts.push(`${f.value.age}岁`)
+  if (f.value.gender) parts.push(f.value.gender)
+  f.value.basicInfoItems.forEach((item) => parts.push(item.value))
+  return parts.filter(Boolean).join('  |  ')
+})
 
 // 时间轴模块配置：图标 + 标题 + 数据
 const timelineModules = computed(() => [
@@ -43,7 +48,7 @@ const timelineModules = computed(() => [
     key: 'education',
     title: '教育背景',
     icon: GraduationCap,
-    show: !!f.value.school,
+    show: showModule('educations') && f.value.educations.length,
     data: 'education',
   },
   {
@@ -127,7 +132,7 @@ const timelineModules = computed(() => [
         v-for="mod in timelineModules"
         :key="mod.key"
         v-show="mod.show"
-        :data-resume-module="mod.key === 'education' || mod.key === 'summary' ? 'basic' : mod.key"
+        :data-resume-module="mod.key === 'education' ? 'educations' : mod.key === 'summary' ? 'basic' : mod.key"
         class="relative flex gap-4 pb-5"
       >
         <!-- 左侧时间轴：图标 + 竖线 -->
@@ -156,11 +161,13 @@ const timelineModules = computed(() => [
 
           <!-- 教育背景 -->
           <template v-if="mod.key === 'education'">
-            <div class="flex items-start justify-between gap-4 text-sm">
-              <div class="font-bold text-slate-800">{{ f.school }}</div>
-              <div class="text-nowrap text-slate-500">{{ f.education }}</div>
+            <div v-for="(edu, idx) in f.educations" :key="idx" class="mb-3">
+              <div class="flex items-start justify-between gap-4 text-sm">
+                <div class="font-bold text-slate-800">{{ edu.school }}</div>
+                <div v-if="formatEducationDateRange(edu)" class="text-nowrap text-slate-500">{{ formatEducationDateRange(edu) }}</div>
+              </div>
+              <div v-if="edu.degree || edu.major" class="mt-0.5 text-sm text-slate-600">{{ [edu.degree, edu.major].filter(Boolean).join(' · ') }}</div>
             </div>
-            <div class="mt-0.5 text-sm text-slate-600">{{ f.major }}</div>
           </template>
 
           <!-- 实习经历 -->

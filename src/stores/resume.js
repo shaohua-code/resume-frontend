@@ -98,6 +98,10 @@ export const useResumeStore = defineStore('resume', () => {
           console.warn('[generateResume] AI 未返回 target_position，已从输入回填:', formData.target_position)
           resumeData.target_position = formData.target_position
         }
+        // 兜底：确保姓名不丢失
+        if (!resumeData.name && formData?.name) {
+          resumeData.name = formData.name
+        }
         await persistResume(resumeData)
         await refreshWalletBalance()
         message.success('简历生成成功')

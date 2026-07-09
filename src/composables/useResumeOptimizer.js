@@ -6,6 +6,7 @@
 import { reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { optimizeResumePartStream } from '@/api/resume'
+import { validateRequiredBasicFields } from '@/constants/resumeFieldSchema'
 
 /**
  * 提取 AI 返回的技能数组
@@ -89,11 +90,12 @@ export function useResumeOptimizer({ resume }) {
    * @param {number} [index] 项目或实习索引
    */
   async function optimize(type, index) {
-    const targetPosition = resume.value?.target_position || ''
-    if (!targetPosition.trim()) {
-      message.warning('请先填写意向岗位')
+    const basicCheck = validateRequiredBasicFields(resume.value || {})
+    if (!basicCheck.ok) {
+      message.warning(basicCheck.message)
       return
     }
+    const targetPosition = basicCheck.target_position
 
     const key = getKey(type, index)
     if (optimizingMap.get(key)) return

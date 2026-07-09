@@ -1,11 +1,13 @@
 /**
  * 流式 SSE 文本增量解析为简历对象
- * 容错处理不完整 JSON，避免 UI 展示原始字段名
  */
+import { normalizeResumeFields, normalizeEducationItem, normalizeCustomField } from '@/constants/resumeFieldSchema'
 
 const STRING_FIELDS = [
   'name', 'school', 'major', 'education', 'phone', 'email',
   'summary', 'target_position', 'targetPosition',
+  'work_years', 'marital_status', 'height', 'weight',
+  'ethnicity', 'native_place', 'political_status', 'expected_salary',
 ]
 
 function unescapeJsonString(str) {
@@ -27,7 +29,7 @@ function extractStringArray(slice, field) {
 
 function normalizeResume(data) {
   const source = data?.resume && typeof data.resume === 'object' ? data.resume : (data || {})
-  return {
+  const base = {
     name: source.name || '',
     target_position: source.target_position || source.targetPosition || '',
     school: source.school || '',
@@ -36,12 +38,29 @@ function normalizeResume(data) {
     phone: source.phone || '',
     email: source.email || '',
     summary: source.summary || '',
+    work_years: source.work_years || source.workYears || '',
+    marital_status: source.marital_status || source.maritalStatus || '',
+    height: source.height || '',
+    weight: source.weight || '',
+    ethnicity: source.ethnicity || '',
+    native_place: source.native_place || source.nativePlace || '',
+    political_status: source.political_status || source.politicalStatus || '',
+    expected_salary: source.expected_salary || source.expectedSalary || '',
     skills: Array.isArray(source.skills) ? source.skills.filter(Boolean) : [],
     projects: Array.isArray(source.projects) ? source.projects : [],
     internships: Array.isArray(source.internships) ? source.internships : [],
     awards: Array.isArray(source.awards) ? source.awards.filter(Boolean) : [],
     certificates: Array.isArray(source.certificates) ? source.certificates.filter(Boolean) : [],
+    educations: Array.isArray(source.educations)
+      ? source.educations.map(normalizeEducationItem)
+      : [],
+    custom_fields: Array.isArray(source.custom_fields)
+      ? source.custom_fields.map(normalizeCustomField)
+      : Array.isArray(source.customFields)
+        ? source.customFields.map(normalizeCustomField)
+        : [],
   }
+  return normalizeResumeFields(base)
 }
 
 /**
@@ -55,7 +74,6 @@ export function parsePartialResumeJson(text) {
 
   const slice = text.slice(start)
 
-  // 优先尝试完整 JSON 解析
   const end = slice.lastIndexOf('}')
   if (end > 0) {
     try {
@@ -65,7 +83,6 @@ export function parsePartialResumeJson(text) {
     }
   }
 
-  // 增量提取已输出的字符串字段
   const partial = {}
   for (const field of STRING_FIELDS) {
     const val = extractStringField(slice, field)
@@ -90,6 +107,7 @@ export function hasStreamResumeContent(resume) {
     resume?.name ||
     resume?.summary ||
     resume?.school ||
+    resume?.educations?.length ||
     resume?.skills?.length ||
     resume?.projects?.length
   )

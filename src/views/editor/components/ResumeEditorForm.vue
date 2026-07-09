@@ -4,9 +4,11 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { PlusOutlined, ThunderboltOutlined } from '@ant-design/icons-vue'
-import AvatarUpload from '@/components/AvatarUpload.vue'
 import GradientButton from '@/components/GradientButton.vue'
 import { useResumeOptimizer } from '@/composables/useResumeOptimizer'
+import ResumeBasicFieldsSection from '@/views/generate/components/ResumeBasicFieldsSection.vue'
+import ResumeEducationListSection from '@/views/generate/components/ResumeEducationListSection.vue'
+import { normalizeEducations, syncFlatEducationFields } from '@/constants/resumeFieldSchema'
 
 const resume = defineModel({ type: Object, required: true })
 const modules = defineModel('modules', { type: Array, required: true })
@@ -16,6 +18,7 @@ const props = defineProps({
 })
 
 const contentRef = ref(null)
+const basicFieldsRef = ref(null)
 
 // 简历分模块 AI 优化能力
 const { streamingSkillsText, isOptimizing, optimize } = useResumeOptimizer({ resume })
@@ -51,7 +54,11 @@ function focusModule(key) {
   }
 }
 
-defineExpose({ focusModule })
+defineExpose({
+  focusModule,
+  /** 校验基本信息必填项 */
+  validateBasic: () => basicFieldsRef.value?.validate(),
+})
 
 const awardsText = computed({
   get: () => (resume.value.awards || []).join('\n'),
@@ -101,43 +108,41 @@ function addInternship() {
   resume.value.internships.push({ company: '', position: '', description: '', start_date: '', end_date: '' })
 }
 function removeInternship(i) {
-  // 防止索引越界或重复删除
   if (!resume.value.internships || i < 0 || i >= resume.value.internships.length) return
   resume.value.internships.splice(i, 1)
 }
+
+// 教育背景列表：确保数组存在并同步扁平字段
+const educationsModel = computed({
+  get: () => {
+    if (!Array.isArray(resume.value.educations)) {
+      resume.value.educations = normalizeEducations(resume.value)
+    }
+    return resume.value.educations
+  },
+  set: (list) => {
+    resume.value.educations = list
+    syncFlatEducationFields(resume.value)
+  },
+})
 </script>
 
 <template>
   <div ref="contentRef" class="min-h-[120px]">
-    <!-- 基本信息 -->
+    <!-- 基本信息（含扩展字段与自定义键值对） -->
     <template v-if="activeModule === 'basic'">
-      <a-form layout="vertical" size="small">
-        <a-row :gutter="12">
-          <a-col :span="24"> 
-            <a-form-item label="头像">
-              <AvatarUpload v-model="resume.avatar" />
-            </a-form-item>
-          </a-col>
-          <a-col :span="8"><a-form-item label="姓名"><a-input v-model:value="resume.name" class="input-field" /></a-form-item></a-col>
-          <a-col :span="8"><a-form-item label="意向岗位"><a-input v-model:value="resume.target_position" placeholder="如：会计，运营，前端开发工程师" class="input-field" /></a-form-item></a-col>
-          <a-col :span="8"><a-form-item label="学校"><a-input v-model:value="resume.school" class="input-field" /></a-form-item></a-col>
-          <a-col :span="8"><a-form-item label="专业"><a-input v-model:value="resume.major" class="input-field" /></a-form-item></a-col>
-          <a-col :span="8"><a-form-item label="学历"><a-input v-model:value="resume.education" class="input-field" /></a-form-item></a-col>
-          <a-col :span="8"><a-form-item label="手机"><a-input v-model:value="resume.phone" class="input-field" /></a-form-item></a-col>
-          <a-col :span="8"><a-form-item label="邮箱"><a-input v-model:value="resume.email" class="input-field" /></a-form-item></a-col>
-          <a-col :span="24">
-            <a-form-item label="个人评价">
-              <a-textarea v-model:value="resume.summary" :rows="3" class="input-field" />
-            </a-form-item>
-            <!-- 个人评价 AI 优化按钮 -->
-            <div class="mb-4 flex justify-end">
-              <GradientButton  :loading="isOptimizing('summary')" @click="optimize('summary')">
-                <ThunderboltOutlined /> 优化个人评价
-              </GradientButton>
-            </div>
-          </a-col>
-        </a-row>
-      </a-form>
+      <ResumeBasicFieldsSection
+        ref="basicFieldsRef"
+        v-model="resume"
+        :show-optimize="true"
+        :is-optimizing="isOptimizing"
+        :on-optimize="optimize"
+      />
+    </template>
+
+    <!-- 教育背景 -->
+    <template v-else-if="activeModule === 'educations'">
+      <ResumeEducationListSection v-model="educationsModel" />
     </template>
 
     <!-- 技能标签 -->

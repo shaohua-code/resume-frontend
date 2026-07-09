@@ -17,7 +17,7 @@
       <div v-show="currentStep === 0">
         <a-alert
           message="智能识别"
-          description="支持任意格式填写，如「姓名：张三，学校：清华大学」。信息越完整，AI 生成质量越高。带 * 号的字段为必填项。"
+          description="请填写姓名与求职方向；简历内容支持任意格式，如「学校：清华大学」。信息越完整，AI 生成质量越高。"
           type="info"
           show-icon
           closable
@@ -29,23 +29,32 @@
               <EditOutlined /> 简历信息（自由文本）
             </span>
           </template>
-          <a-form layout="vertical">
-            <a-form-item label="求职方向" required>
+          <a-form ref="formRef" layout="vertical" :model="lazyForm" :rules="lazyFormRules">
+            <a-form-item label="姓名" name="name" required>
               <a-input
-                v-model:value="targetPosition"
+                v-model:value="lazyForm.name"
+                placeholder="请输入姓名"
+                size="large"
+                allow-clear
+                class="input-field"
+              />
+            </a-form-item>
+            <a-form-item label="求职方向" name="target_position" required>
+              <a-input
+                v-model:value="lazyForm.target_position"
                 placeholder="如：会计，运营，前端开发工程师 / 产品经理 / 数据分析"
                 size="large"
                 allow-clear
                 class="input-field"
               />
             </a-form-item>
-            <a-form-item label="简历内容" required>
+            <a-form-item label="简历内容" name="raw_text" required>
               <a-textarea
-                v-model:value="rawText"
+                v-model:value="lazyForm.raw_text"
                 :rows="16"
                 :maxlength="5000"
                 show-count
-                placeholder="请自由填写你的简历信息，例如：&#10;姓名：张三&#10;学校：清华大学&#10;专业：计算机科学与技术&#10;求职方向：前端开发工程师&#10;&#10;项目经历：&#10;1. 电商后台管理系统..."
+                placeholder="请自由填写你的简历信息，例如：&#10;学校：清华大学&#10;专业：计算机科学与技术&#10;&#10;项目经历：&#10;1. 电商后台管理系统..."
                 class="input-field lazy-textarea"
               />
             </a-form-item>
@@ -161,7 +170,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
@@ -173,18 +182,29 @@ import {
 import { useResumeStore } from '@/stores/resume'
 import GradientButton from '@/components/GradientButton.vue'
 import StreamResumePreview from './StreamResumePreview.vue'
+import { REQUIRED_BASIC_FORM_RULES } from '@/constants/resumeFieldSchema'
 
 const router = useRouter()
 const resumeStore = useResumeStore()
 
 // 智能识别示例模板（键值对格式）
 const EXAMPLE_TEMPLATE = `姓名：张三
-学校：清华大学
-专业：计算机科学与技术
-学历：本科
 求职方向：前端开发工程师
+工作年限：应届
+婚姻状况：未婚
+身高：175cm
+体重：65kg
+民族：汉族
+籍贯：江苏南京
+政治面貌：共青团员
+期望薪资：12K-18K
+驾驶证：C1
 手机：13800138000
 邮箱：zhang@example.com
+
+教育背景：
+1. 清华大学 | 计算机科学与技术 | 本科 | 2018.09 - 2022.06
+2. 某某大学 | 软件工程 | 硕士 | 2022.09 - 2025.06
 
 技能：Vue3, JavaScript, TypeScript, Node.js
 
@@ -202,8 +222,31 @@ const EXAMPLE_TEMPLATE = `姓名：张三
 证书：CET-6 550 分`
 
 const currentStep = ref(0)
-const rawText = ref('')
-const targetPosition = ref('')
+const formRef = ref(null)
+
+// 智能识别表单：姓名、求职方向、自由文本
+const lazyForm = reactive({
+  name: '',
+  target_position: '',
+  raw_text: '',
+})
+
+// 表单校验规则
+const lazyFormRules = {
+  ...REQUIRED_BASIC_FORM_RULES,
+  raw_text: [
+    { required: true, whitespace: true, message: '请填写简历内容', trigger: ['blur', 'change'] },
+    {
+      validator: (_, value) => {
+        if (!value || String(value).trim().length < 20) {
+          return Promise.reject('内容过短，请补充更多信息（至少 20 字）')
+        }
+        return Promise.resolve()
+      },
+      trigger: ['blur', 'change'],
+    },
+  ],
+}
 
 // 超过 5 份简历时的二次确认弹窗状态
 const overLimitVisible = ref(false)
@@ -214,7 +257,7 @@ const overLimitConfirmed = ref(false)
 onMounted(() => {
   const pendingJd = sessionStorage.getItem('pending_jd')
   if (pendingJd) {
-    targetPosition.value = pendingJd
+    lazyForm.target_position = pendingJd
     sessionStorage.removeItem('pending_jd')
   }
 })
@@ -244,29 +287,27 @@ function progressClass(idx) {
 
 // 一键填入示例模板
 function fillExample() {
-  rawText.value = EXAMPLE_TEMPLATE
-  if (!targetPosition.value) {
-    targetPosition.value = '前端开发工程师'
+  lazyForm.raw_text = EXAMPLE_TEMPLATE
+  if (!lazyForm.name) {
+    lazyForm.name = '张三'
+  }
+  if (!lazyForm.target_position) {
+    lazyForm.target_position = '前端开发工程师'
   }
   message.success('已填入示例，可直接生成或修改后生成')
 }
 
 // 校验输入并触发 AI 生成
 async function handleGenerate() {
-  const position = targetPosition.value.trim()
-  if (!position) {
-    message.warning('请填写求职方向')
+  try {
+    await formRef.value?.validate()
+  } catch {
     return
   }
-  const text = rawText.value.trim()
-  if (!text) {
-    message.warning('请填写简历内容')
-    return
-  }
-  if (text.length < 20) {
-    message.warning('内容过短，请补充更多信息（至少 20 字）')
-    return
-  }
+
+  const name = lazyForm.name.trim()
+  const position = lazyForm.target_position.trim()
+  const text = lazyForm.raw_text.trim()
 
   // 超限检查：未确认过时，先检查简历数量
   if (!overLimitConfirmed.value) {
@@ -278,10 +319,13 @@ async function handleGenerate() {
   }
 
   currentStep.value = 1
+  // 若自由文本未包含姓名，自动补一行便于 AI 识别
+  const rawText = /姓名\s*[:：]/.test(text) ? text : `姓名：${name}\n${text}`
   const result = await resumeStore.generateResume({
     input_mode: 'lazy',
-    raw_text: text,
+    raw_text: rawText,
     target_position: position,
+    name,
   })
   if (result) {
     currentStep.value = 2

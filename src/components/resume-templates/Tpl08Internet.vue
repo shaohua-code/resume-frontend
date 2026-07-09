@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   AI简历风格模板 8（互联网扁平）
   布局：左侧深色边栏 + 右侧主内容区
   参考图一：头像、基本信息、技能进度条、二维码在左栏；求职意向、教育、工作、荣誉、评价、兴趣在右栏
@@ -6,6 +6,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useResumeFields, skillProgress, skillLevel } from './shared/useResumeFields.js'
+import { formatEducationDateRange } from '@/constants/resumeFieldSchema'
 
 const props = defineProps({
   resume: { type: Object, default: () => ({}) },
@@ -28,7 +29,7 @@ function showModule(key) {
 
 // 左侧边栏至少有一项基本信息才渲染列表
 const hasSidebarBasic = computed(() =>
-  f.value.age || f.value.gender || f.value.origin || f.value.workYears || f.value.phone || f.value.email,
+  f.value.basicInfoItems.length > 0 || f.value.age || f.value.gender,
 )
 
 // 右侧求职意向区是否有数据
@@ -75,22 +76,9 @@ const hobbies = computed(() => f.value.skills.slice(0, 6))
           <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-xs">性</span>
           <span>{{ f.gender }}</span>
         </div>
-        <div v-if="f.origin" class="flex items-center gap-2">
-          <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-xs">籍</span>
-          <span>{{ f.origin }}</span>
-        </div>
-        <div v-if="f.workYears" class="flex items-center gap-2">
-          <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-xs">历</span>
-          <span>{{ f.workYears }}年经验</span>
-        </div>
-        <div v-if="f.phone" class="flex items-center gap-2">
-          <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-xs">电</span>
-          <span>{{ f.phone }}</span>
-        </div>
-        <div v-if="f.email" class="flex items-center gap-2 break-all">
-          <span
-            class="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/15 text-xs">邮</span>
-          <span>{{ f.email }}</span>
+        <div v-for="item in f.basicInfoItems" :key="item.key" class="flex items-center gap-2 break-all">
+          <span class="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/15 text-xs">{{ item.label.slice(0, 1) }}</span>
+          <span>{{ item.value }}</span>
         </div>
       </section>
 
@@ -147,18 +135,20 @@ const hobbies = computed(() => f.value.skills.slice(0, 6))
       </section>
 
       <!-- 教育背景 -->
-      <section v-if="f.school" data-resume-module="basic" class="mb-5">
+      <section v-if="showModule('educations') && f.educations.length" data-resume-module="educations" class="mb-5">
         <div class="mb-3 flex items-center gap-2">
           <span class="flex h-6 w-6 items-center justify-center rounded bg-slate-100 text-sm font-bold"
             :style="{ color: 'var(--skin-title-color, #3b82f6)' }">教</span>
           <h2 class="text-base font-bold" :style="{ color: 'var(--skin-title-color, #1e293b)' }">教育背景</h2>
           <div class="ml-auto h-px flex-1 bg-slate-100" />
         </div>
-        <div class="flex items-start justify-between gap-4 text-sm">
-          <div class="font-bold text-slate-800">{{ f.school }}</div>
-          <div class="text-slate-500">{{ f.education }}</div>
+        <div v-for="(edu, idx) in f.educations" :key="idx" class="mb-3">
+          <div class="flex items-start justify-between gap-4 text-sm">
+            <div class="font-bold text-slate-800">{{ edu.school }}</div>
+            <div v-if="formatEducationDateRange(edu)" class="text-slate-500">{{ formatEducationDateRange(edu) }}</div>
+          </div>
+          <div v-if="edu.degree || edu.major" class="mt-1 text-sm text-slate-600">{{ [edu.degree, edu.major].filter(Boolean).join(' · ') }}</div>
         </div>
-        <div class="mt-1 text-sm text-slate-600">{{ f.major }}</div>
       </section>
 
       <!-- 工作经历 -->

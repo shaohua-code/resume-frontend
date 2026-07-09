@@ -4,6 +4,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useResumeFields, skillProgress, skillLevel } from './useResumeFields.js'
+import { formatEducationDateRange } from '@/constants/resumeFieldSchema'
 
 const props = defineProps({
   resume: { type: Object, default: () => ({}) },
@@ -20,24 +21,12 @@ const moduleVisibleMap = computed(() => {
   }, {})
 })
 
-// 根据编辑器顶部开关控制预览模块显隐，未配置时默认显示
 function showModule(key) {
   return moduleVisibleMap.value[key] !== false
 }
 
-// 基本信息项：有值才展示，顺序固定
-const basicInfoItems = computed(() => {
-  const fields = f.value
-  return [
-    { key: 'name', label: '姓名', value: fields.name },
-    { key: 'targetPosition', label: '岗位', value: fields.targetPosition },
-    { key: 'phone', label: '电话', value: fields.phone },
-    { key: 'email', label: '邮箱', value: fields.email },
-    { key: 'eduLine', label: '教育', value: fields.eduLine },
-  ].filter((item) => item.value)
-})
+const basicInfoItems = computed(() => f.value.basicInfoItems || [])
 
-// 总数为奇数时，最后一项独占整行
 function isBasicRowWide(index) {
   const total = basicInfoItems.value.length
   return total % 2 === 1 && index === total - 1
@@ -46,7 +35,6 @@ function isBasicRowWide(index) {
 
 <template>
   <div class="rt-body">
-    <!-- 顶栏：对照AI简历 1004 -->
     <header data-resume-module="basic" class="rt-header">
       <div class="rt-banner">
         <img
@@ -57,10 +45,8 @@ function isBasicRowWide(index) {
         >
         <h1 class="rt-name">{{ f.name }}</h1>
         <p v-if="f.targetPosition" class="rt-slogan rt-name-sub">{{ f.targetPosition }}</p>
-       
-       
       </div>
-      <div class="rt-basic-grid">
+      <div v-if="basicInfoItems.length" class="rt-basic-grid">
         <div
           v-for="(item, index) in basicInfoItems"
           :key="item.key"
@@ -73,20 +59,30 @@ function isBasicRowWide(index) {
       </div>
     </header>
 
-    <!-- 教育背景 -->
-    <section v-if="f.school" data-resume-module="basic" class="rt-section">
-  
- <h2 class="rt-title"><span>教育背景</span></h2>
-      <div class="rt-item">
+    <!-- 教育背景（支持多条） -->
+    <section
+      v-if="showModule('educations') && f.educations.length"
+      data-resume-module="educations"
+      class="rt-section"
+    >
+      <h2 class="rt-title"><span>教育背景</span></h2>
+      <div
+        v-for="(edu, idx) in f.educations"
+        :key="idx + (edu.school || '')"
+        class="rt-item"
+      >
         <div class="rt-item-header">
-          <strong>{{ f.school }}</strong>
-          <span v-if="f.education">{{ f.education }}</span>
+          <strong>{{ edu.school || '学校' }}</strong>
+          <span v-if="formatEducationDateRange(edu)" class="rt-edu-dates">{{ formatEducationDateRange(edu) }}</span>
         </div>
-        <p v-if="f.major" class="rt-text">{{ f.major }}</p>
+        <p v-if="edu.degree || edu.major" class="rt-sub">
+          <template v-if="edu.degree">{{ edu.degree }}</template>
+          <template v-if="edu.degree && edu.major"> · </template>
+          <template v-if="edu.major">{{ edu.major }}</template>
+        </p>
       </div>
     </section>
 
-    <!-- 工作经历 / 实习 -->
     <section v-if="showModule('internships') && f.internships.length" data-resume-module="internships" class="rt-section">
       <h2 class="rt-title"><span>工作经历</span></h2>
       <div v-for="intern in f.internships" :key="intern.company + intern.start_date" class="rt-item">
@@ -99,7 +95,6 @@ function isBasicRowWide(index) {
       </div>
     </section>
 
-    <!-- 项目经历 -->
     <section v-if="showModule('projects') && f.projects.length" data-resume-module="projects" class="rt-section">
       <h2 class="rt-title"><span>项目经历</span></h2>
       <div v-for="proj in f.projects" :key="proj.name" class="rt-item">
@@ -112,7 +107,6 @@ function isBasicRowWide(index) {
       </div>
     </section>
 
-    <!-- 技能特长 -->
     <section v-if="showModule('skills') && f.skills.length" data-resume-module="skills" class="rt-section">
       <h2 class="rt-title"><span>技能特长</span></h2>
       <template v-if="showProgress">
@@ -131,7 +125,6 @@ function isBasicRowWide(index) {
       </template>
     </section>
 
-    <!-- 荣誉证书 -->
     <section v-if="showModule('awards') && f.honorList.length" data-resume-module="awards" class="rt-section">
       <h2 class="rt-title"><span>荣誉证书</span></h2>
       <ul class="rt-list">
@@ -139,7 +132,6 @@ function isBasicRowWide(index) {
       </ul>
     </section>
 
-    <!-- 自我评价 -->
     <section v-if="f.summary" data-resume-module="basic" class="rt-section">
       <h2 class="rt-title"><span>自我评价</span></h2>
       <p class="rt-text rt-preserve-text">{{ f.summary }}</p>
@@ -153,7 +145,6 @@ function isBasicRowWide(index) {
 .rt-banner { text-align: center; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 2px solid; }
 .rt-name { font-size: 28px; font-weight: 800; margin: 0 0 6px; letter-spacing: 4px; }
 .rt-slogan { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 1px; }
-.rt-sub-en { margin: 4px 0 0; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
 .rt-basic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; font-size: 13px; }
 .rt-basic-row { display: flex; gap: 8px; align-items: center; min-width: 0; padding: 6px 10px; border-radius: 6px; border-width: 1px; border-style: solid; }
 .rt-basic-wide { grid-column: 1 / -1; }
