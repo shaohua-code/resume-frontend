@@ -26,6 +26,7 @@
         :loading="walletStore.loading"
         :pagination="{ current: page, pageSize: size, total: walletStore.ledgerTotal }"
         row-key="id"
+          :scroll="{ x: 'max-content' }"
         size="small"
         @change="handleTableChange"
       >
