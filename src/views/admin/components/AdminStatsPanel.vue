@@ -2,7 +2,7 @@
 /**
  * 数据中心大盘
  */
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { getAdminDashboard } from '@/api/admin'
 import WelcomeBanner from './dashboard/WelcomeBanner.vue'
@@ -19,18 +19,29 @@ import SkeletonCard from './dashboard/SkeletonCard.vue'
 const userStore = useUserStore()
 const loading = ref(false)
 const dashboard = ref({})
+// 时间范围筛选条件（与 WelcomeBanner 双向绑定）
 const activeRange = ref('年度')
 
-async function loadDashboard() {
+/**
+ * 加载大盘数据（支持时间范围筛选）
+ * @param {string} range - 时间范围（今日/昨日/7日/30日/年度）
+ */
+async function loadDashboard(range) {
   loading.value = true
   try {
-    dashboard.value = (await getAdminDashboard()).data || {}
+    // 将时间范围参数传递给后端 API
+    dashboard.value = (await getAdminDashboard(range)).data || {}
   } finally {
     loading.value = false
   }
 }
 
-onMounted(loadDashboard)
+// 监听时间范围变化，自动重新加载数据
+watch(activeRange, (newRange) => {
+  loadDashboard(newRange)
+})
+
+onMounted(() => loadDashboard(activeRange.value))
 </script>
 
 <template>

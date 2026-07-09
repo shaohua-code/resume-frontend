@@ -68,26 +68,25 @@ const sectionIcons = {
           <h1 class="rt-name mb-3 text-3xl font-bold tracking-widest">{{ f.name }}</h1>
           <p v-if="positionLine" class="rt-slogan rt-name-sub text-sm">{{ positionLine }}</p>
           <p v-if="jobMetaLine" class="rt-slogan mt-1 text-sm">{{ jobMetaLine }}</p>
+          <div v-if="basicGrid.length" class="grid grid-cols-2 gap-x-8 gap-y-2 mt-4 text-sm">
+            <div v-for="(item, idx) in basicGrid" :key="idx" class="flex items-center gap-2">
+              <span class="rt-label">{{ item.label }}：</span>
+              <span class="rt-value">{{ item.value }}</span>
+            </div>
+          </div>
         </div>
         <div v-if="avatarUrl" class="shrink-0">
-          <img
-            :src="avatarUrl"
-            alt="avatar"
-            class="h-32 w-24 border-4 border-white/90 bg-white object-cover shadow-md"
-          />
+          <img :src="avatarUrl" alt="avatar"
+            class="h-32 w-24 border-4 border-white/90 bg-white object-cover shadow-md" />
         </div>
       </div>
-      <div v-if="basicGrid.length" class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-        <div v-for="(item, idx) in basicGrid" :key="idx" class="flex items-center gap-2">
-          <span class="rt-label">{{ item.label }}：</span>
-          <span class="rt-value">{{ item.value }}</span>
-        </div>
-      </div>
+
     </header>
 
     <main class="px-8 py-6">
       <section v-if="f.school" data-resume-module="basic" class="rt-timeline-line relative mb-5 border-l-2 pl-10">
-        <div class="rt-timeline-dot absolute left-0 top-0 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full text-sm font-bold text-white">
+        <div
+          class="rt-timeline-dot absolute left-0 top-0 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full text-sm font-bold text-white">
           {{ sectionIcons.education }}
         </div>
         <h2 class="rt-title"><span>教育背景</span></h2>
@@ -101,8 +100,10 @@ const sectionIcons = {
         </div>
       </section>
 
-      <section v-if="showModule('internships') && f.internships.length" data-resume-module="internships" class="rt-timeline-line relative mb-5 border-l-2 pl-10">
-        <div class="rt-timeline-dot absolute left-0 top-0 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full text-sm font-bold text-white">
+      <section v-if="showModule('internships') && f.internships.length" data-resume-module="internships"
+        class="rt-timeline-line relative mb-5 border-l-2 pl-10">
+        <div
+          class="rt-timeline-dot absolute left-0 top-0 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full text-sm font-bold text-white">
           {{ sectionIcons.internships }}
         </div>
         <h2 class="rt-title"><span>工作经历</span></h2>
@@ -118,8 +119,10 @@ const sectionIcons = {
         </div>
       </section>
 
-      <section v-if="showModule('projects') && f.projects.length" data-resume-module="projects" class="rt-timeline-line relative mb-5 border-l-2 pl-10">
-        <div class="rt-timeline-dot absolute left-0 top-0 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full text-sm font-bold text-white">
+      <section v-if="showModule('projects') && f.projects.length" data-resume-module="projects"
+        class="rt-timeline-line relative mb-5 border-l-2 pl-10">
+        <div
+          class="rt-timeline-dot absolute left-0 top-0 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full text-sm font-bold text-white">
           {{ sectionIcons.projects }}
         </div>
         <h2 class="rt-title"><span>项目经历</span></h2>
@@ -137,8 +140,10 @@ const sectionIcons = {
         </div>
       </section>
 
-      <section v-if="showModule('skills') && f.skills.length" data-resume-module="skills" class="rt-timeline-line relative mb-5 border-l-2 pl-10">
-        <div class="rt-timeline-dot absolute left-0 top-0 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full text-sm font-bold text-white">
+      <section v-if="showModule('skills') && f.skills.length" data-resume-module="skills"
+        class="rt-timeline-line relative mb-5 border-l-2 pl-10">
+        <div
+          class="rt-timeline-dot absolute left-0 top-0 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full text-sm font-bold text-white">
           {{ sectionIcons.skills }}
         </div>
         <h2 class="rt-title"><span>技能特长</span></h2>
@@ -158,8 +163,10 @@ const sectionIcons = {
         </div>
       </section>
 
-      <section v-if="showModule('awards') && f.honorList.length" data-resume-module="awards" class="rt-timeline-line relative mb-5 border-l-2 pl-10">
-        <div class="rt-timeline-dot absolute left-0 top-0 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full text-sm font-bold text-white">
+      <section v-if="showModule('awards') && f.honorList.length" data-resume-module="awards"
+        class="rt-timeline-line relative mb-5 border-l-2 pl-10">
+        <div
+          class="rt-timeline-dot absolute left-0 top-0 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full text-sm font-bold text-white">
           {{ sectionIcons.awards }}
         </div>
         <h2 class="rt-title"><span>荣誉证书</span></h2>
@@ -169,7 +176,8 @@ const sectionIcons = {
       </section>
 
       <section v-if="f.summary" data-resume-module="basic" class="rt-timeline-line relative mb-5 border-l-2 pl-10">
-        <div class="rt-timeline-dot absolute left-0 top-0 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full text-sm font-bold text-white">
+        <div
+          class="rt-timeline-dot absolute left-0 top-0 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full text-sm font-bold text-white">
           {{ sectionIcons.summary }}
         </div>
         <h2 class="rt-title"><span>自我评价</span></h2>

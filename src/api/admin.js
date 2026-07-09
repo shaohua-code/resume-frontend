@@ -7,8 +7,14 @@ export function getAdminStats() {
   return request.get('/admin/stats')
 }
 
-export function getAdminDashboard() {
-  return request.get('/admin/dashboard')
+/**
+ * 获取管理后台数据中心大盘数据
+ * @param {string} timeRange - 时间范围（今日/昨日/7日/30日/年度）
+ * @returns {Promise} 大盘统计数据
+ */
+export function getAdminDashboard(timeRange) {
+  const params = timeRange ? { range: timeRange } : {}
+  return request.get('/admin/dashboard', { params })
 }
 
 export function getAdminUsers(params = {}) {
