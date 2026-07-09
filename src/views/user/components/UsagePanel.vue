@@ -79,6 +79,7 @@ const LEDGER_TYPE_MAP = {
   REGISTER_GIFT: '注册赠送',
   ADMIN_GRANT: '管理员充值',
   ADMIN_DEDUCT: '管理员扣减',
+  ADMIN_TRANSFER_OUT: '额度划拨',
   AI_CONSUME: 'AI 消费',
   REFUND: '退款',
 }
