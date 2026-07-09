@@ -4,6 +4,9 @@
  */
 import request from '@/utils/request'
 
+// 流式请求的 API 基础地址，与 request.js 保持一致
+const API_BASE = import.meta.env.VITE_API_URL || ''
+
 /**
  * 分模块 AI 流式优化
  * @param {'summary'|'skills'|'project'|'internship'} type 优化类型
@@ -19,7 +22,7 @@ export async function optimizeResumePartStream(type, payload, handlers = {}, mod
   const body = { ...payload }
   if (model) body.model = model
 
-  const response = await fetch(`/api/ai/optimize/${type}/stream`, {
+  const response = await fetch(`${API_BASE}/api/ai/optimize/${type}/stream`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -66,7 +69,7 @@ export async function generateResumeStream(data, handlers = {}, model = '') {
   const userStore = useUserStore()
   const token = await userStore.getValidToken()
 
-  const response = await fetch('/api/ai/generate/stream', {
+  const response = await fetch(`${API_BASE}/api/ai/generate/stream`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -152,7 +155,7 @@ export async function uploadOptimizeResumeStream(file, targetPosition = '', hand
   if (targetPosition) formData.append('target_position', targetPosition)
   if (model) formData.append('model', model)
 
-  const response = await fetch('/api/pdf/uploadOptimize/stream', {
+  const response = await fetch(`${API_BASE}/api/pdf/uploadOptimize/stream`, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
@@ -278,7 +281,7 @@ export async function uploadOptimizeExistingStream(targetPosition = '', handlers
   const userStore = useUserStore()
   const token = await userStore.getValidToken()
 
-  const response = await fetch('/api/pdf/uploadOptimize/existing/stream', {
+  const response = await fetch(`${API_BASE}/api/pdf/uploadOptimize/existing/stream`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
