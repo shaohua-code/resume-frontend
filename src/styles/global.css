@@ -220,6 +220,36 @@ body {
   background-color: transparent;
 }
 
+/* 输入框、下拉框、日期选择器统一高度（40px，与 .input-field 文本框视觉一致） */
+input.ant-input.input-field:not(textarea),
+.ant-select.input-field .ant-select-selector,
+.ant-picker.input-field {
+  @apply box-border min-h-10 rounded-button border border-line bg-white/80 px-4 text-sm leading-normal text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
+}
+
+input.ant-input.input-field:not(textarea) {
+  @apply h-10 py-0;
+}
+
+.ant-select.input-field .ant-select-selector {
+  @apply flex h-10 items-center py-0;
+  min-height: 2.5rem !important;
+  height: 2.5rem !important;
+}
+
+/* 覆盖 Ant Design small 尺寸，避免下拉框矮于同表单输入框 */
+.ant-select-sm.input-field .ant-select-selector,
+.ant-form-small .ant-select.input-field .ant-select-selector {
+  min-height: 2.5rem !important;
+  height: 2.5rem !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.ant-picker.input-field {
+  @apply flex items-center py-0;
+}
+
 /* Ant Design 组件外层去掉 input-field 边框，内层保留单层 border */
 .ant-select.input-field,
 .ant-picker.input-field,
@@ -231,27 +261,29 @@ body {
 }
 
 .input-field .ant-select-selector {
-  @apply rounded-button border border-line bg-white/80 px-3 py-1 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
+  @apply rounded-button border border-line bg-white/80 px-4 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
 }
 
 .input-field .ant-select-focused .ant-select-selector,
 .input-field .ant-select-selector:focus,
-.input-field .ant-select-selector:focus-within {
+.input-field .ant-select-selector:focus-within,
+.ant-select.input-field.ant-select-focused .ant-select-selector {
   @apply border-brand ring-2 ring-brand/15;
 }
 
 .input-field .ant-picker {
-  @apply rounded-button border border-line bg-white/80 px-3 py-1 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
+  @apply flex h-10 items-center rounded-button border border-line bg-white/80 px-4 py-0 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
 }
 
-.input-field .ant-picker-focused {
+.input-field .ant-picker-focused,
+.ant-picker.input-field.ant-picker-focused {
   @apply border-brand ring-2 ring-brand/15;
 }
 
 /* affix-wrapper 与 input-field 同元素时须直接设边框（验证码等 suffix 输入框） */
 .ant-input-affix-wrapper.input-field,
 .input-field .ant-input-affix-wrapper {
-  @apply rounded-button border border-line bg-white/80 px-3 py-1 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
+  @apply flex min-h-10 items-center rounded-button border border-line bg-white/80 px-4 py-0 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
 }
 
 /* large 尺寸：邮箱与验证码等保持同一高度 */

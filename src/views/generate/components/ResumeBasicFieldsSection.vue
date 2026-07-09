@@ -101,7 +101,7 @@ function removeCustomField(index) {
             v-model:value="resume[field.key]"
             allow-clear
             :placeholder="`请选择${field.label}`"
-            class="w-full"
+            class="input-field w-full"
           >
             <a-select-option
               v-for="opt in field.options"

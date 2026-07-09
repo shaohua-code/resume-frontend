@@ -81,7 +81,7 @@ const panelKey = computed(() => props.templateId)
       <label class="w-[72px] flex-shrink-0 text-sm font-medium text-ink">字体：</label>
       <a-select
         v-model:value="fontFamily"
-        class="w-[180px]"
+        class="input-field w-[180px]"
         @change="emit('change')"
       >
         <a-select-option v-for="f in FONT_OPTIONS" :key="f.value" :value="f.value">
@@ -93,7 +93,7 @@ const panelKey = computed(() => props.templateId)
       <label class="w-[72px] flex-shrink-0 text-sm font-medium text-ink">文字大小：</label>
       <a-select
         v-model:value="fontSize"
-        class="w-[180px]"
+        class="input-field w-[180px]"
         @change="emit('change')"
       >
         <a-select-option v-for="s in FONT_SIZE_OPTIONS" :key="s" :value="s">

@@ -52,7 +52,7 @@ function removeEducation(index) {
           </a-col>
           <a-col :xs="24" :sm="12">
             <a-form-item label="学历">
-              <a-select v-model:value="edu.degree" allow-clear placeholder="请选择学历" class="w-full">
+              <a-select v-model:value="edu.degree" allow-clear placeholder="请选择学历" class="input-field w-full">
                 <a-select-option v-for="opt in DEGREE_OPTIONS" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </a-select-option>
