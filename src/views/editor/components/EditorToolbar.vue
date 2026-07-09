@@ -67,7 +67,7 @@
           </GradientButton>
           <template #overlay>
             <a-menu>
-              <a-menu-item key="pdf" @click="emit('export-pdf')">导出 PDF（高清打印）</a-menu-item>
+              <a-menu-item key="pdf" @click="emit('export-pdf')">导出 PDF（浏览器打印）</a-menu-item>
               <a-menu-item key="word" @click="emit('export-word')">导出 Word（可编辑）</a-menu-item>
             </a-menu>
           </template>
@@ -91,7 +91,7 @@
               <a-menu-item @click="emit('match')">JD 匹配</a-menu-item>
               <a-menu-item :disabled="scoring" @click="emit('score')">AI 评分</a-menu-item>
               <a-menu-divider />
-              <a-menu-item @click="emit('export-pdf')">导出 PDF</a-menu-item>
+              <a-menu-item @click="emit('export-pdf')">导出 PDF（浏览器打印）</a-menu-item>
               <a-menu-item @click="emit('export-word')">导出 Word</a-menu-item>
             </a-menu>
           </template>

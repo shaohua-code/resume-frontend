@@ -52,7 +52,7 @@
           </button>
           <template #overlay>
             <a-menu>
-              <a-menu-item key="pdf" @click="handleExportPDF">导出 PDF（高清打印）</a-menu-item>
+              <a-menu-item key="pdf" @click="handleExportPDF">导出 PDF（浏览器打印）</a-menu-item>
               <a-menu-item key="word" @click="handleExportWord">导出 Word（可编辑）</a-menu-item>
               <a-menu-item key="markdown" @click="handleExportMarkdown">导出 Markdown（VIP）</a-menu-item>
             </a-menu>
@@ -182,7 +182,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { DownloadOutlined, CheckOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
@@ -204,6 +204,7 @@ import { applyTemplateSkinDefaults } from '@/constants/templateSkinColors'
 import EditorToolbar from './components/EditorToolbar.vue'
 import EditorEditPanel from './components/EditorEditPanel.vue'
 import ResumePreview from './components/ResumePreview.vue'
+import { useResumeExportPrint } from '@/composables/useResumeExportPrint'
 
 const route = useRoute()
 const resumeStore = useResumeStore()
@@ -412,70 +413,13 @@ async function ensureCanExport() {
   return false
 }
 
-async function handleExportPDF() {
-  exporting.value = true
-  try {
-    const canExport = await ensureCanExport()
-    if (!canExport) return
-    const pages = previewRef.value?.getPdfPageElements?.()
-    if (!pages?.length) {
-      message.error('未找到简历内容')
-      return
-    }
-
-    let wrapper = document.getElementById('resume-export-wrapper')
-    if (!wrapper) {
-      wrapper = document.createElement('div')
-      wrapper.id = 'resume-export-wrapper'
-      document.body.appendChild(wrapper)
-    }
-
-    wrapper.innerHTML = ''
-    wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;pointer-events:none;background:#fff;overflow:visible'
-
-    const html2canvas = (await import('html2canvas')).default
-    const { jsPDF } = await import('jspdf')
-
-    const PAGE_W = 794
-    const PAGE_H = 1123
-    const EXPORT_SCALE = Math.max(2.5, Math.min(window.devicePixelRatio || 1, 2) * 1.5)
-    const IMAGE_QUALITY = 0.92
-    const pdf = new jsPDF({ unit: 'px', format: [PAGE_W, PAGE_H], orientation: 'portrait', compress: true, precision: 12 })
-
-    // 按预览分页逐页截图，保证 PDF 页数与屏幕一致
-    for (let i = 0; i < pages.length; i++) {
-      wrapper.appendChild(pages[i])
-      await nextTick()
-
-      const canvas = await html2canvas(pages[i], {
-        // 使用高清截图配合高质量 JPEG，兼顾文字清晰度和导出体积
-        scale: EXPORT_SCALE,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        width: PAGE_W,
-        height: PAGE_H,
-        windowWidth: PAGE_W,
-        windowHeight: PAGE_H,
-      })
-
-      const imgData = canvas.toDataURL('image/jpeg', IMAGE_QUALITY)
-      if (i > 0) pdf.addPage([PAGE_W, PAGE_H], 'portrait')
-      pdf.addImage(imgData, 'JPEG', 0, 0, PAGE_W, PAGE_H, undefined, 'MEDIUM')
-      wrapper.removeChild(pages[i])
-    }
-
-    pdf.save(`${resume.name || '简历'}_AI简历助手.pdf`)
-    message.success('PDF导出成功')
-  } catch (e) {
-    console.error('[导出PDF失败]', e)
-    message.error('PDF导出失败')
-  } finally {
-    exporting.value = false
-    const wrapper = document.getElementById('resume-export-wrapper')
-    if (wrapper) wrapper.innerHTML = ''
-  }
-}
+// 浏览器打印 API 导出 PDF（矢量文字，用户需在打印窗口选择「另存为 PDF」）
+const { handleExportPDF } = useResumeExportPrint({
+  getPrintContent: () => previewRef.value?.getPrintContent?.(),
+  beforeExport: ensureCanExport,
+  onStart: () => { exporting.value = true },
+  onEnd: () => { exporting.value = false },
+})
 
 // 导出 Word（.doc），Word/WPS 可打开并编辑文字
 async function handleExportWord() {
@@ -550,11 +494,6 @@ async function handleExportMarkdown() {
     exporting.value = false
   }
 }
-
-onBeforeUnmount(() => {
-  const wrapper = document.getElementById('resume-export-wrapper')
-  if (wrapper) wrapper.remove()
-})
 
 onMounted(async () => {
   const id = route.params.id

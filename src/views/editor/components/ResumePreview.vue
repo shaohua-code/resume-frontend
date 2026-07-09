@@ -2,7 +2,7 @@
   简历预览面板组件
   负责右侧 A4 多页预览、分页计算、页面导航
   核心设计：
-  1. 使用 html2pdf + css page-break 导出为真实多页 PDF
+  1. 使用浏览器打印 API + CSS page-break 导出矢量 PDF
   2. 屏幕预览：每页 overflow 窗口 + 负 marginTop 切片，与 PDF 分页对齐
   3. 分页线尽量落在 section/item/title 之间的空白处，避免文字被截断
   4. 大模块跨页时，优先保持标题完整，项目条目在合适位置拆分
@@ -220,55 +220,81 @@ function getPageContentHeight(n) {
   return Math.max(0, end - start)
 }
 
-// 导出 PDF 时克隆完整文档节点
-function getPdfElement() {
-  const el = contentRef.value
-  if (!el) return null
-  const clone = el.cloneNode(true)
-  clone.style.visibility = 'visible'
-  clone.style.opacity = '1'
-  clone.style.position = 'relative'
-  clone.style.left = '0'
-  clone.style.top = '0'
-  clone.style.width = '210mm'
-  clone.style.background = '#fff'
-  return clone
-}
+// 按屏幕可见预览页克隆 DOM，保证打印分页与页面预览完全一致
+function buildPrintPageElements() {
+  const stage = stageRef.value
+  const pageH = pageHeightPx.value
+  const pages = []
 
-// 按预览分页生成逐页 DOM，供 PDF 导出与屏幕预览对齐
-function getPdfPageElements() {
+  // 优先克隆屏幕上已渲染的 preview-page（与用户所见一致）
+  const visiblePages = stage?.querySelectorAll('.preview-page')
+  if (visiblePages?.length) {
+    visiblePages.forEach((pageEl) => {
+      const viewport = pageEl.querySelector('.page-viewport')
+      if (!viewport) return
+
+      const pageWrapper = document.createElement('div')
+      pageWrapper.className = 'print-page'
+      pageWrapper.style.cssText = `width:794px;height:${pageH}px;overflow:hidden;background:#fff;box-sizing:border-box;position:relative;`
+
+      const viewportClone = viewport.cloneNode(true)
+      // 重置克隆节点样式，确保打印时可见且不被截断
+      viewportClone.querySelectorAll('.resume-preview').forEach((el) => {
+        el.style.visibility = 'visible'
+        el.style.opacity = '1'
+        el.style.cursor = 'default'
+      })
+
+      pageWrapper.appendChild(viewportClone)
+      pages.push(pageWrapper)
+    })
+    return pages
+  }
+
+  // 兜底：测量层切片（preview-page 未就绪时）
   const el = contentRef.value
   if (!el) return []
   const breaks = pageBreaks.value
   const count = pageCount.value
-  const pageH = pageHeightPx.value
-  const pages = []
 
   for (let n = 1; n <= count; n++) {
     const start = breaks[n - 1] ?? 0
     const end = n < count ? breaks[n] : totalHeight.value
     const viewportH = Math.max(0, end - start)
-    const topGap = pageTopGap.value
 
     const pageWrapper = document.createElement('div')
-    pageWrapper.style.cssText = `width:794px;height:${pageH}px;overflow:hidden;background:#fff;position:relative;box-sizing:border-box;`
+    pageWrapper.className = 'print-page'
+    pageWrapper.style.cssText = `width:794px;height:${pageH}px;overflow:hidden;background:#fff;box-sizing:border-box;position:relative;`
 
     const viewport = document.createElement('div')
-    viewport.style.cssText = `width:794px;height:${viewportH}px;overflow:hidden;margin-top:${topGap}px;max-height:${effectivePageHeight.value}px;`
+    viewport.className = 'page-viewport print-page-viewport'
+    viewport.style.cssText = `width:794px;height:${viewportH}px;overflow:hidden;margin-top:${pageTopGap.value}px;max-height:${effectivePageHeight.value}px;position:relative;`
 
     const clone = el.cloneNode(true)
-    clone.style.visibility = 'visible'
-    clone.style.opacity = '1'
-    clone.style.width = '210mm'
-    clone.style.background = '#fff'
-    clone.style.margin = `-${start}px 0 0 0`
-    clone.style.padding = el.style.padding || ''
+    clone.classList.add('resume-preview', `template-${props.templateId}`)
+    Object.assign(clone.style, previewStyle.value, {
+      visibility: 'visible',
+      opacity: '1',
+      width: '210mm',
+      background: '#fff',
+      margin: `-${start}px 0 0 0`,
+    })
 
     viewport.appendChild(clone)
     pageWrapper.appendChild(viewport)
     pages.push(pageWrapper)
   }
   return pages
+}
+
+// 获取浏览器打印导出所需内容（逐页 DOM，与屏幕预览分页对齐）
+function getPrintContent() {
+  const pages = buildPrintPageElements()
+  if (!pages.length) return null
+  return {
+    pages,
+    pageCount: pageCount.value,
+  }
 }
 
 // 获取 Word 导出用 HTML 字符串（含内联样式变量）
@@ -485,6 +511,7 @@ function calcSmartPageBreaks() {
 }
 
 const panelRef = ref(null)
+const stageRef = ref(null)
 const contentRef = ref(null)
 const pageCount = ref(1)
 const currentPage = ref(1)
@@ -575,8 +602,8 @@ watch(
 
 // 暴露方法给父组件，用于导出 PDF / Word
 defineExpose({
-  getPdfElement,
-  getPdfPageElements,
+  getPrintContent,
+  buildPrintPageElements,
   getWordHtml,
   pageCount,
   pageBreaks,
@@ -617,7 +644,7 @@ defineExpose({
   @apply relative flex w-[210mm] flex-col gap-6 pb-10;
 }
 
-/* 隐藏测量层：移出视口 + opacity 0，保留布局且 html2canvas 可渲染克隆节点 */
+/* 隐藏测量层：移出视口 + opacity 0，保留布局供分页计算与打印克隆 */
 .measure-layer {
   @apply pointer-events-none absolute left-[-9999px] top-0 w-[210mm] opacity-0;
 }

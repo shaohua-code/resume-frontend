@@ -15,7 +15,6 @@
     "@vueup/vue-quill": "^1.2.0",
     "echarts": "^6.1.0",
     "file-saver": "^2.0.5",
-    "html2pdf.js": "^0.10.2",
     "lucide-vue-next": "^0.577.0",
     "markdown-it": "^14.1.0",
     "pinia": "^2.2.4",
