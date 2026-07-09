@@ -59,7 +59,7 @@
               </a-col>
               <a-col :xs="24" :sm="12">
                 <a-form-item label="求职方向" required>
-                  <a-input :value="basicForm.target_position" placeholder="如：前端开发工程师" size="large" class="input-field" @update:value="basicForm.target_position = $event" />
+                  <a-input :value="basicForm.target_position" placeholder="如：会计，运营，前端开发工程师" size="large" class="input-field" @update:value="basicForm.target_position = $event" />
                 </a-form-item>
               </a-col>
               <a-col :xs="24" :sm="12">

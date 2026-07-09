@@ -33,7 +33,7 @@
             <a-form-item label="求职方向" required>
               <a-input
                 v-model:value="targetPosition"
-                placeholder="如：前端开发工程师 / 产品经理 / 数据分析"
+                placeholder="如：会计，运营，前端开发工程师 / 产品经理 / 数据分析"
                 size="large"
                 allow-clear
                 class="input-field"

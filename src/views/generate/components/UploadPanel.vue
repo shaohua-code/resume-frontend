@@ -11,7 +11,7 @@
           <a-input
             ref="targetInputRef"
             v-model:value="targetPosition"
-            placeholder="如：前端开发工程师 / 行政专员 / 财务会计 / 产品经理"
+            placeholder="如：会计，运营，前端开发工程师 / 行政专员 / 财务会计 / 产品经理"
             size="large"
             allow-clear
             class="input-field"

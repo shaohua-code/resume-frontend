@@ -79,7 +79,7 @@
     >
       <a-form layout="vertical">
         <a-form-item label="目标岗位">
-          <a-input :value="optimizeTarget" placeholder="如：前端开发工程师" class="editor-modal-input" @update:value="optimizeTarget = $event" />
+          <a-input :value="optimizeTarget" placeholder="如：会计，运营，前端开发工程师" class="editor-modal-input" @update:value="optimizeTarget = $event" />
         </a-form-item>
         <a-form-item label="选择要优化的项目">
           <a-select :value="optimizeIndex" class="editor-modal-select" @update:value="optimizeIndex = $event">
