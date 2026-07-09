@@ -15,16 +15,26 @@ const props = defineProps({
 const f = computed(() => useResumeFields(props.resume))
 const avatarUrl = computed(() => f.value.avatar)
 
-const jobInfo = computed(() => {
-  const list = []
-  if (f.value.targetPosition) list.push({ label: '求职意向', value: f.value.targetPosition })
-  if (f.value.targetCity) list.push({ label: '意向城市', value: f.value.targetCity })
-  if (f.value.expectedSalary) list.push({ label: '期望薪资', value: f.value.expectedSalary })
-  if (f.value.entryTime) list.push({ label: '入职时间', value: f.value.entryTime })
-  return list
+// 顶栏基本信息：左侧网格展示，合并求职字段与 basicInfoItems，避免期望薪资等重复
+const headerBasicItems = computed(() => {
+  const items = []
+  if (f.value.targetPosition) {
+    items.push({ key: 'target_position', label: '求职意向', value: f.value.targetPosition })
+  }
+  if (f.value.targetCity) {
+    items.push({ key: 'target_city', label: '意向城市', value: f.value.targetCity })
+  }
+  if (f.value.entryTime) {
+    items.push({ key: 'entry_time', label: '入职时间', value: f.value.entryTime })
+  }
+  const usedKeys = new Set(items.map((item) => item.key))
+  f.value.basicInfoItems.forEach((item) => {
+    if (!usedKeys.has(item.key)) {
+      items.push(item)
+    }
+  })
+  return items
 })
-
-const basicInfo = computed(() => f.value.basicInfoItems || [])
 
 const moduleVisibleMap = computed(() => {
   return props.visibleModules.reduce((map, item) => {
@@ -49,29 +59,26 @@ const sectionIcons = {
 
 <template>
   <div class="resume-template rt-custom-10 w-full bg-white">
-    <header data-resume-module="basic" class="rt-banner border-b border-slate-200 bg-white px-8 py-6">
-      <div class="flex items-start justify-between gap-8">
+    <header data-resume-module="basic" class="rt-top-band px-8 py-7">
+      <div class="flex items-center justify-between gap-8">
         <div class="min-w-0 flex-1">
           <h1 class="rt-name mb-4 text-3xl font-bold tracking-widest">{{ f.name }}</h1>
-          <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-            <div v-for="(item, idx) in jobInfo" :key="idx" class="flex items-center gap-2">
-              <span class="rt-label">{{ item.label }}：</span>
-              <span class="rt-value">{{ item.value }}</span>
+          <div v-if="headerBasicItems.length" class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+            <div
+              v-for="item in headerBasicItems"
+              :key="item.key"
+              class="flex min-w-0 items-start gap-1"
+            >
+              <span class="rt-label shrink-0">{{ item.label }}：</span>
+              <span class="rt-value break-all">{{ item.value }}</span>
             </div>
           </div>
         </div>
-        <div class="flex shrink-0 items-start gap-4">
-          <div v-if="basicInfo.length" class="grid grid-cols-1 gap-y-1.5 text-right text-sm">
-            <div v-for="(item, idx) in basicInfo" :key="idx" class="flex items-center justify-end gap-2">
-              <span class="rt-label text-xs opacity-60">{{ item.label }}</span>
-              <span class="rt-value">{{ item.value }}</span>
-            </div>
-          </div>
+        <div v-if="avatarUrl" class="shrink-0">
           <img
-            v-if="avatarUrl"
             :src="avatarUrl"
             alt="avatar"
-            class="h-28 w-20 border-2 border-slate-200 bg-white object-cover shadow-sm"
+            class="h-32 w-24 border-4 border-white/90 bg-white object-cover shadow-md"
           />
         </div>
       </div>

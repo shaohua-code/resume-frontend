@@ -44,7 +44,7 @@ function isBasicRowWide(index) {
           class="rt-avatar rt-banner-avatar"
         >
         <h1 class="rt-name">{{ f.name }}</h1>
-        <p v-if="f.targetPosition" class="rt-slogan rt-name-sub">{{ f.targetPosition }}</p>
+        <p v-if="f.targetPosition" class="rt-slogan rt-value">{{ f.targetPosition }}</p>
       </div>
       <div v-if="basicInfoItems.length" class="rt-basic-grid">
         <div

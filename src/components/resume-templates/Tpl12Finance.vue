@@ -91,7 +91,7 @@ const timelineModules = computed(() => [
 
 <template>
   <div
-    class="relative flex min-h-full w-full flex-col overflow-hidden bg-white"
+    class="resume-template rt-custom-12 relative flex min-h-full w-full flex-col overflow-hidden bg-white"
     :style="{
       fontFamily: 'var(--font-family, \'Microsoft YaHei\', sans-serif)',
       fontSize: 'var(--font-size, 13px)',
@@ -101,6 +101,7 @@ const timelineModules = computed(() => [
   >
     <!-- 顶部蓝色头部 -->
     <header
+      data-resume-module="basic"
       class="flex flex-col items-center gap-3 px-6 py-8 text-center text-white"
       :style="{ background: 'var(--skin-header-bg, #5b9bd5)' }"
     >
@@ -117,13 +118,13 @@ const timelineModules = computed(() => [
       </div>
 
       <!-- 姓名 -->
-      <h1 class="text-2xl font-bold tracking-widest text-white" :style="{ color: '#ffffff' }">
+      <h1 class="rt-name text-2xl font-bold tracking-widest">
         {{ f.name }}
       </h1>
 
-      <!-- 基本信息行 -->
-      <p v-if="headerLine1" class="text-sm font-medium text-white/95">{{ headerLine1 }}</p>
-      <p v-if="headerLine2" class="text-xs text-white/85">{{ headerLine2 }}</p>
+      <!-- 基本信息行：内容值跟随基本信息内容颜色 -->
+      <p v-if="headerLine1" class="rt-value text-sm font-medium">{{ headerLine1 }}</p>
+      <p v-if="headerLine2" class="rt-value text-xs">{{ headerLine2 }}</p>
     </header>
 
     <!-- 下方时间轴内容区 -->
@@ -230,3 +231,6 @@ const timelineModules = computed(() => [
     </main>
   </div>
 </template>
+
+<style src="./shared/resumeTemplateBase.css"></style>
+<style src="./shared/templateCustom.css"></style>

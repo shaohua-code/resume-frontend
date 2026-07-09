@@ -76,14 +76,29 @@
   border-color: var(--skin-divider-color, #e5e7eb) !important;
 }
 
-/* 基本信息标签色（浅色顶栏默认 #6b7280，深色顶栏由 templateVariants 覆盖 fallback） */
-.resume-template .rt-label {
+/* 基本信息标签色 */
+.resume-template .rt-label,
+.resume-template [data-resume-module="basic"] .rt-label,
+.resume-template header[data-resume-module="basic"] .rt-label,
+.resume-template .rt-basic-grid .rt-label {
   color: var(--font-label-color, #6b7280) !important;
+}
+
+/* 基本信息内容值：统一跟随「基本信息内容颜色」 */
+.resume-template .rt-value,
+.resume-template [data-resume-module="basic"] .rt-value,
+.resume-template header[data-resume-module="basic"] .rt-value,
+.resume-template .rt-basic-grid .rt-value,
+.resume-template .rt-basic-row .rt-value {
+  color: var(--font-basic-content-color, #000000) !important;
+}
+.resume-template .rt-skill-bar-head span {
+  color: var(--font-content-color, #000000) !important;
 }
 
 /* 文本内容色：段落、列表、条目正文等（不含基本信息值 .rt-value、顶栏大姓名 .rt-name 与模块大标题 .rt-title） */
 .resume-template .rt-body,
-.resume-template .rt-slogan:not(.rt-name-sub),
+.resume-template .rt-slogan:not(.rt-name-sub):not(.rt-value),
 .resume-template .rt-sub-en,
 .resume-template .rt-sub,
 .resume-template .rt-text,
@@ -93,17 +108,11 @@
 .resume-template .rt-item-header span,
 .resume-template .rt-edu-dates,
 .resume-template .rt-skill,
-.resume-template .rt-skill-bar-head,
-.resume-template .rt-skill-bar-head span {
+.resume-template .rt-skill-bar-head {
   color: var(--font-content-color, #000000) !important;
 }
 
-/* 基本信息行内容值独立色 */
-.resume-template .rt-value {
-  color: var(--font-basic-content-color, #000000) !important;
-}
-
-/* 顶栏姓名下方岗位/副标题：跟随姓名文本颜色（不含基本信息区岗位 .rt-value） */
+/* 顶栏姓名下方岗位/副标题（仅 rt-name-sub，不含已改为 rt-value 的基本信息内容） */
 .resume-template .rt-name-sub {
   color: var(--font-name-color, #000000) !important;
 }

@@ -85,7 +85,7 @@
             <a-menu>
               <a-menu-item @click="openMobilePanel('spacing')">间距设置</a-menu-item>
               <a-menu-item @click="openMobilePanel('font')">字体设置</a-menu-item>
-              <a-menu-item @click="openMobilePanel('skin')">皮肤设置</a-menu-item>
+              <!-- <a-menu-item @click="openMobilePanel('skin')">皮肤设置</a-menu-item> -->
               <a-menu-divider />
               <a-menu-item @click="emit('optimize')">AI 优化</a-menu-item>
               <a-menu-item @click="emit('match')">JD 匹配</a-menu-item>
@@ -169,7 +169,7 @@ const mobilePanel = ref('spacing')
 const mobilePanelTitle = computed(() => ({
   spacing: '间距设置',
   font: '字体设置',
-  skin: '皮肤设置',
+  // skin: '皮肤设置',
 }[mobilePanel.value] || '设置'))
 
 // 小屏打开设置面板弹窗
@@ -182,7 +182,7 @@ function openMobilePanel(key) {
 const settingItems = [
   { key: 'spacing', label: '间距设置', icon: ColumnWidthOutlined, open: showSpacing },
   { key: 'font', label: '字体', icon: FontSizeOutlined, open: showFont },
-  { key: 'skin', label: '皮肤设置', icon: BgColorsOutlined, open: showSkin },
+  // { key: 'skin', label: '皮肤设置', icon: BgColorsOutlined, open: showSkin },
 ]
 
 function onSettingsChange() {

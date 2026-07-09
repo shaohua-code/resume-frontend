@@ -6,8 +6,20 @@
   color: var(--font-name-color, #ffffff) !important;
 }
 
-/* 顶栏内其他 slogan（城市/经验等）仍走文本内容色 */
-.rt-custom-02 .rt-top-band .rt-slogan:not(.rt-name-sub),
-.rt-custom-04 .rt-top-band .rt-slogan:not(.rt-name-sub) {
-  color: var(--font-content-color, #ffffff) !important;
+/* 顶栏内基本信息内容值跟随「基本信息内容颜色」 */
+.rt-custom-02 .rt-top-band .rt-value,
+.rt-custom-04 .rt-top-band .rt-value,
+.rt-custom-08 aside .rt-value,
+.rt-custom-10 .rt-top-band .rt-value,
+.rt-custom-12 header .rt-value {
+  color: var(--font-basic-content-color, #ffffff) !important;
+}
+
+/* 顶栏内基本信息标签 */
+.rt-custom-02 .rt-top-band .rt-label,
+.rt-custom-04 .rt-top-band .rt-label,
+.rt-custom-08 aside .rt-label,
+.rt-custom-10 .rt-top-band .rt-label,
+.rt-custom-12 header .rt-label {
+  color: var(--font-label-color, #ffffff) !important;
 }

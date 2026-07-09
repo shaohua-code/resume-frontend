@@ -132,7 +132,7 @@ export const TEMPLATE_SKIN_PRESETS = {
 
   // 8. 互联网扁平：左侧 slate 蓝灰边栏 + 右侧蓝色标题条
   8: {
-    titleColor: '#3b82f6',
+    titleColor: '#5b6b7c',
     dividerColor: '#e2e8f0',
     headerBg: '#5b6b7c',
     headerBorder: '#5b6b7c',
@@ -142,7 +142,7 @@ export const TEMPLATE_SKIN_PRESETS = {
     basicRowBorder: '#cbd5e1',
     skillBg: '#eff6ff',
     skillBorder: '#bfdbfe',
-    topBandBg: '#3b82f6',
+    topBandBg: '#5b6b7c',
   },
 
   // 9. 行政文职：正式列表灰系

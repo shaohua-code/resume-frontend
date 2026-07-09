@@ -42,7 +42,7 @@ const hobbies = computed(() => f.value.skills.slice(0, 6))
 </script>
 
 <template>
-  <div class="relative flex min-h-full w-full flex-row overflow-hidden" :style="{
+  <div class="resume-template rt-custom-08 relative flex min-h-full w-full flex-row overflow-hidden" :style="{
     fontFamily: 'var(--font-family, \'Microsoft YaHei\', sans-serif)',
     fontSize: 'var(--font-size, 13px)',
     lineHeight: 'var(--line-height, 1.7)',
@@ -56,29 +56,29 @@ const hobbies = computed(() => f.value.skills.slice(0, 6))
         <div class="h-24 w-24 overflow-hidden rounded-lg border-2 border-white/30">
           <img :src="f.avatar" alt="头像" class="h-full w-full object-cover">
         </div>
-        <h1 class="text-xl font-bold tracking-wider text-white" :style="{ color: '#ffffff' }">
+        <h1 class="rt-name text-xl font-bold tracking-wider">
           {{ f.name }}
         </h1>
       </div>
       <div v-else class="flex flex-col items-center gap-3">
-        <h1 class="text-xl font-bold tracking-wider text-white" :style="{ color: '#ffffff' }">
+        <h1 class="rt-name text-xl font-bold tracking-wider">
           {{ f.name }}
         </h1>
       </div>
 
       <!-- 基本信息 -->
-      <section v-if="hasSidebarBasic" class="flex flex-col gap-2 text-sm">
+      <section v-if="hasSidebarBasic" data-resume-module="basic" class="flex flex-col gap-2 text-sm">
         <div v-if="f.age" class="flex items-center gap-2">
           <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-xs">龄</span>
-          <span>{{ f.age }}岁</span>
+          <span class="rt-value">{{ f.age }}岁</span>
         </div>
         <div v-if="f.gender" class="flex items-center gap-2">
           <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-xs">性</span>
-          <span>{{ f.gender }}</span>
+          <span class="rt-value">{{ f.gender }}</span>
         </div>
         <div v-for="item in f.basicInfoItems" :key="item.key" class="flex items-center gap-2 break-all">
           <span class="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/15 text-xs">{{ item.label.slice(0, 1) }}</span>
-          <span>{{ item.value }}</span>
+          <span class="rt-value">{{ item.value }}</span>
         </div>
       </section>
 
@@ -116,20 +116,20 @@ const hobbies = computed(() => f.value.skills.slice(0, 6))
         </div>
         <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
           <div v-if="f.targetPosition" class="flex gap-2">
-            <span class="text-slate-500">求职意向：</span>
-            <span class="font-medium text-slate-800">{{ f.targetPosition }}</span>
+            <span class="rt-label">求职意向：</span>
+            <span class="rt-value">{{ f.targetPosition }}</span>
           </div>
           <div v-if="f.targetCity" class="flex gap-2">
-            <span class="text-slate-500">意向城市：</span>
-            <span class="font-medium text-slate-800">{{ f.targetCity }}</span>
+            <span class="rt-label">意向城市：</span>
+            <span class="rt-value">{{ f.targetCity }}</span>
           </div>
           <div v-if="f.expectedSalary" class="flex gap-2">
-            <span class="text-slate-500">期望薪资：</span>
-            <span class="font-medium text-slate-800">{{ f.expectedSalary }}</span>
+            <span class="rt-label">期望薪资：</span>
+            <span class="rt-value">{{ f.expectedSalary }}</span>
           </div>
           <div v-if="f.entryTime" class="flex gap-2">
-            <span class="text-slate-500">入职时间：</span>
-            <span class="font-medium text-slate-800">{{ f.entryTime }}</span>
+            <span class="rt-label">入职时间：</span>
+            <span class="rt-value">{{ f.entryTime }}</span>
           </div>
         </div>
       </section>
@@ -233,3 +233,6 @@ const hobbies = computed(() => f.value.skills.slice(0, 6))
     </main>
   </div>
 </template>
+
+<style src="./shared/resumeTemplateBase.css"></style>
+<style src="./shared/templateCustom.css"></style>

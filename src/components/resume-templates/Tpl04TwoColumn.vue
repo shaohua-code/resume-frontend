@@ -15,12 +15,7 @@ const props = defineProps({
 const f = computed(() => useResumeFields(props.resume))
 const avatarUrl = computed(() => f.value.avatar)
 
-// 顶栏岗位行：单独展示，颜色跟随姓名（rt-name-sub）
-const positionLine = computed(() =>
-  f.value.targetPosition ? `求职意向：${f.value.targetPosition}` : '',
-)
-
-// 顶栏其他求职信息：城市/薪资等，不走姓名色
+// 顶栏求职信息：城市/薪资等，走基本信息内容色
 const jobMetaLine = computed(() => {
   const items = []
   if (f.value.targetCity) items.push(f.value.targetCity)
@@ -55,11 +50,14 @@ const sectionIcons = {
 <template>
   <div class="resume-template rt-custom-04 w-full bg-white">
     <header data-resume-module="basic" class="rt-top-band px-8 py-7">
-      <div class="mb-5 flex items-start justify-between gap-6">
+      <div class="mb-5 flex items-center justify-between gap-6">
         <div class="min-w-0 flex-1">
           <h1 class="rt-name mb-3 text-3xl font-bold tracking-widest">{{ f.name }}</h1>
-          <p v-if="positionLine" class="rt-slogan rt-name-sub text-sm">{{ positionLine }}</p>
-          <p v-if="jobMetaLine" class="rt-slogan mt-1 text-sm">{{ jobMetaLine }}</p>
+          <p v-if="f.targetPosition" class="mb-1 text-sm">
+            <span class="rt-label">求职意向：</span>
+            <span class="rt-value">{{ f.targetPosition }}</span>
+          </p>
+          
           <div v-if="basicGrid.length" class="grid grid-cols-2 gap-x-8 gap-y-2 mt-4 text-sm">
             <div v-for="(item, idx) in basicGrid" :key="idx" class="flex items-center gap-2">
               <span class="rt-label">{{ item.label }}：</span>
