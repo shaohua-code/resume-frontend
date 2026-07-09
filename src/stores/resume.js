@@ -85,6 +85,7 @@ export const useResumeStore = defineStore('resume', () => {
       if (resumeData && Object.keys(resumeData).length) {
         // 兜底：确保 target_position 不丢失（AI 可能不返回该字段）
         if (!resumeData.target_position && formData?.target_position) {
+          console.warn('[generateResume] AI 未返回 target_position，已从输入回填:', formData.target_position)
           resumeData.target_position = formData.target_position
         }
         await persistResume(resumeData)
