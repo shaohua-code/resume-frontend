@@ -110,6 +110,7 @@ onMounted(loadItems)
         :columns="currentConfig.columns"
         :data-source="items"
         :loading="loading"
+        :scroll="{ x: 'max-content' }"
         row-key="id"
         size="small"
       >

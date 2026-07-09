@@ -143,6 +143,7 @@ onMounted(loadUsers)
         :data-source="visibleUsers"
         :loading="loading"
         :pagination="{ current: query.page, pageSize: query.size, total }"
+        :scroll="{ x: 'max-content' }"
         row-key="user_id"
         size="small"
         @change="handleTableChange"

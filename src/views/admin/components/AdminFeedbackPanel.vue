@@ -82,6 +82,7 @@ onMounted(loadFeedbacks)
         :data-source="feedbacks"
         :loading="loading"
         :pagination="{ current: query.page, pageSize: query.size, total }"
+        :scroll="{ x: 'max-content' }"
         row-key="id"
         size="small"
         @change="handleTableChange"

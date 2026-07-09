@@ -91,6 +91,7 @@ onMounted(loadWallets)
         :data-source="wallets"
         :loading="loading"
         :pagination="{ current: query.page, pageSize: query.size, total }"
+        :scroll="{ x: 'max-content' }"
         row-key="user_id"
         size="small"
         @change="handleTableChange"
