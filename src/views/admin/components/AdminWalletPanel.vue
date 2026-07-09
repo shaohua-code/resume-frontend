@@ -79,30 +79,23 @@ onMounted(loadWallets)
 <template>
   <div class="space-y-4">
     <a-card :bordered="false" class="card-base">
-      <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <a-input :value="query.keyword" placeholder="搜索邮箱/昵称" class="input-field" @update:value="query.keyword = $event" />
-        <button class="btn-primary" @click="loadWallets">查询用户</button>
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <a-input :value="query.keyword" placeholder="搜索邮箱/昵称" class="h-[32px] input-field"
+          @update:value="query.keyword = $event" />
+        <div>
+
+          <button class="btn-primary h-[32px]" @click="loadWallets">查询用户</button>
+        </div>
       </div>
     </a-card>
 
     <a-card :bordered="false" class="card-base">
-      <a-table
-        :columns="columns"
-        :data-source="wallets"
-        :loading="loading"
-        :pagination="{ current: query.page, pageSize: query.size, total }"
-        :scroll="{ x: 'max-content' }"
-        row-key="user_id"
-        size="small"
-        @change="handleTableChange"
-      >
+      <a-table :columns="columns" :data-source="wallets" :loading="loading"
+        :pagination="{ current: query.page, pageSize: query.size, total }" :scroll="{ x: 'max-content' }"
+        row-key="user_id" size="small" @change="handleTableChange">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'profile'">
-            <AdminUserInfoCell
-              :user-id="record.user_id"
-              :nickname="record.nickname"
-              :email="record.email"
-            />
+            <AdminUserInfoCell :user-id="record.user_id" :nickname="record.nickname" :email="record.email" />
           </template>
           <template v-if="column.key === 'role'">
             <span class="badge">{{ getRoleLabel(record.role) }}</span>
@@ -114,7 +107,8 @@ onMounted(loadWallets)
             ¥{{ Number(record.total_consumed).toFixed(2) }}
           </template>
           <template v-if="column.key === 'status'">
-            <span :class="record.status === 'ACTIVE' ? 'badge-success' : 'tag-soft'">{{ getStatusLabel(record.status) }}</span>
+            <span :class="record.status === 'ACTIVE' ? 'badge-success' : 'tag-soft'">{{ getStatusLabel(record.status)
+            }}</span>
           </template>
           <template v-if="column.key === 'update_time'">
             {{ formatDateTime(record.update_time) }}
@@ -126,21 +120,12 @@ onMounted(loadWallets)
       </a-table>
     </a-card>
 
-    <a-modal
-      v-model:open="adjustModalOpen"
-      :title="`调整额度 - ${adjustForm.nickname}`"
-      ok-text="确认调整"
-      @ok="submitAdjust"
-    >
+    <a-modal v-model:open="adjustModalOpen" :title="`调整额度 - ${adjustForm.nickname}`" ok-text="确认调整" @ok="submitAdjust">
       <div class="space-y-4 py-2">
         <div>
           <p class="mb-2 text-sm text-muted">调整金额（正数增加，负数扣减{{ canDeduct ? '' : '，管理员仅可增加' }}）</p>
-          <a-input-number
-            v-model:value="adjustForm.amount"
-            :min="canDeduct ? undefined : 0.01"
-            :step="1"
-            class="w-full input-field"
-          />
+          <a-input-number v-model:value="adjustForm.amount" :min="canDeduct ? undefined : 0.01" :step="1"
+            class="w-full input-field" />
         </div>
         <div>
           <p class="mb-2 text-sm text-muted">备注</p>

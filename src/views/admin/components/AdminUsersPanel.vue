@@ -28,7 +28,7 @@ const columns = [
   { title: '角色', dataIndex: 'role', key: 'role', width: 170 },
   { title: '状态', dataIndex: 'status', key: 'status', width: 130 },
   { title: '创建时间', dataIndex: 'create_time', key: 'create_time', width: 190 },
-  { title: '操作', key: 'action', width: 220 },
+  { title: '操作', key: 'action', width: 240 },
 ]
 
 /**
@@ -125,44 +125,41 @@ onMounted(loadUsers)
   <div class="space-y-4">
     <a-card :bordered="false" class="card-base">
       <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <a-input :value="query.keyword" placeholder="搜索邮箱/昵称" class="input-field" @update:value="query.keyword = $event" />
-        <a-select :value="query.role" allow-clear placeholder="角色筛选" class="input-field w-full" @update:value="query.role = $event">
-          <a-select-option v-for="role in roleOptions" :key="role" :value="role">{{ getRoleLabel(role) }}</a-select-option>
+        <a-input :value="query.keyword" placeholder="搜索邮箱/昵称" class="input-field h-[32px]"
+          @update:value="query.keyword = $event" />
+        <a-select :value="query.role" allow-clear placeholder="角色筛选" class="input-field w-full"
+          @update:value="query.role = $event">
+          <a-select-option v-for="role in roleOptions" :key="role" :value="role">{{ getRoleLabel(role)
+            }}</a-select-option>
         </a-select>
-        <a-select :value="query.status" allow-clear placeholder="状态筛选" class="input-field w-full" @update:value="query.status = $event">
+        <a-select :value="query.status" allow-clear placeholder="状态筛选" class="input-field w-full"
+          @update:value="query.status = $event">
           <a-select-option value="ACTIVE">正常</a-select-option>
           <a-select-option value="BANNED">已封禁</a-select-option>
         </a-select>
-        <button class="btn-primary" @click="loadUsers">查询用户</button>
+        <div>
+          <button class="btn-primary h-[32px]" @click="loadUsers ">查询用户</button>
+        </div>
       </div>
     </a-card>
 
     <a-card :bordered="false" class="card-base">
-      <a-table
-        :columns="columns"
-        :data-source="visibleUsers"
-        :loading="loading"
-        :pagination="{ current: query.page, pageSize: query.size, total }"
-        :scroll="{ x: 'max-content' }"
-        row-key="user_id"
-        size="small"
-        @change="handleTableChange"
-      >
+      <a-table :columns="columns" :data-source="visibleUsers" :loading="loading"
+        :pagination="{ current: query.page, pageSize: query.size, total }" :scroll="{ x: 'max-content' }"
+        row-key="user_id" size="small" @change="handleTableChange">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'profile'">
-            <AdminUserInfoCell
-              :user-id="record.user_id"
-              :nickname="record.nickname"
-              :email="record.email"
-            />
+            <AdminUserInfoCell :user-id="record.user_id" :nickname="record.nickname" :email="record.email" />
           </template>
           <template v-if="column.key === 'role'">
             <a-select :value="record.role" class="input-field w-36" @update:value="record.role = $event">
-              <a-select-option v-for="role in roleOptions" :key="role" :value="role">{{ getRoleLabel(role) }}</a-select-option>
+              <a-select-option v-for="role in roleOptions" :key="role" :value="role">{{ getRoleLabel(role)
+                }}</a-select-option>
             </a-select>
           </template>
           <template v-if="column.key === 'status'">
-            <span :class="record.status === 'ACTIVE' ? 'badge-success' : 'tag-soft'">{{ getStatusLabel(record.status) }}</span>
+            <!-- <span :class="record.status === 'ACTIVE' ? 'badge-success' : 'tag-soft'">{{ getStatusLabel(record.status)
+              }}</span> -->
             <a-select :value="record.status" class="input-field mt-2 w-28" @update:value="record.status = $event">
               <a-select-option value="ACTIVE">正常</a-select-option>
               <a-select-option value="BANNED">封禁</a-select-option>
