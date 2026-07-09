@@ -39,14 +39,6 @@ const basicGrid = computed(() => {
   return list
 })
 
-function formatDesc(desc) {
-  if (!desc) return []
-  return String(desc)
-    .split(/\n|(?:\d+[\.、])|(?<=[。；;])/)
-    .map((s) => s.trim())
-    .filter(Boolean)
-}
-
 const moduleVisibleMap = computed(() => {
   return props.visibleModules.reduce((map, item) => {
     map[item.key] = item.visible !== false
@@ -121,9 +113,7 @@ const sectionIcons = {
               <span class="whitespace-nowrap">{{ intern.start_date }} ~ {{ intern.end_date }}</span>
             </div>
             <p v-if="intern.position" class="rt-sub">{{ intern.position }}</p>
-            <ul class="rt-list list-disc space-y-0.5 pl-5 text-sm leading-relaxed">
-              <li v-for="(line, idx) in formatDesc(intern.description)" :key="idx">{{ line }}</li>
-            </ul>
+            <p v-if="intern.description" class="rt-desc rt-preserve-text">{{ intern.description }}</p>
           </div>
         </div>
       </section>
@@ -142,9 +132,7 @@ const sectionIcons = {
             <p v-if="proj.role || proj.tech_stack" class="rt-sub">
               {{ proj.role }}<template v-if="proj.tech_stack"> | {{ proj.tech_stack }}</template>
             </p>
-            <ul class="rt-list list-disc space-y-0.5 pl-5 text-sm leading-relaxed">
-              <li v-for="(line, idx) in formatDesc(proj.description)" :key="idx">{{ line }}</li>
-            </ul>
+            <p v-if="proj.description" class="rt-desc rt-preserve-text">{{ proj.description }}</p>
           </div>
         </div>
       </section>
@@ -176,7 +164,7 @@ const sectionIcons = {
         </div>
         <h2 class="rt-title"><span>荣誉证书</span></h2>
         <ul class="rt-list list-disc space-y-1 pl-5 text-sm leading-relaxed">
-          <li v-for="item in f.honorList" :key="item">{{ item }}</li>
+          <li v-for="item in f.honorList" :key="item" class="rt-preserve-text">{{ item }}</li>
         </ul>
       </section>
 
@@ -185,7 +173,7 @@ const sectionIcons = {
           {{ sectionIcons.summary }}
         </div>
         <h2 class="rt-title"><span>自我评价</span></h2>
-        <p class="rt-text text-sm leading-relaxed">{{ f.summary }}</p>
+        <p class="rt-text rt-preserve-text text-sm leading-relaxed">{{ f.summary }}</p>
       </section>
     </main>
   </div>

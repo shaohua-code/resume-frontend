@@ -680,6 +680,13 @@ defineExpose({
   font-family: var(--font-family, 'Microsoft YaHei', sans-serif);
 }
 
+/* 仅指定字段保留用户输入的换行与连续空格，break-all 强制长数字/字母串换行 */
+.resume-preview :deep(.rt-preserve-text) {
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
 /* 模块间距通过 section margin 控制 */
 .resume-preview :deep(section) {
   margin-bottom: var(--section-gap, 12px);

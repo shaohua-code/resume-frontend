@@ -95,7 +95,7 @@ function isBasicRowWide(index) {
           <span>{{ intern.start_date }} ~ {{ intern.end_date }}</span>
         </div>
         <p v-if="intern.position" class="rt-sub">{{ intern.position }}</p>
-        <p class="rt-desc">{{ intern.description }}</p>
+        <p v-if="intern.description" class="rt-desc rt-preserve-text">{{ intern.description }}</p>
       </div>
     </section>
 
@@ -108,7 +108,7 @@ function isBasicRowWide(index) {
           <span>{{ proj.start_date }} ~ {{ proj.end_date }}</span>
         </div>
         <p v-if="proj.role || proj.tech_stack" class="rt-sub">{{ proj.role }}<template v-if="proj.tech_stack"> | {{ proj.tech_stack }}</template></p>
-        <p class="rt-desc">{{ proj.description }}</p>
+        <p v-if="proj.description" class="rt-desc rt-preserve-text">{{ proj.description }}</p>
       </div>
     </section>
 
@@ -135,14 +135,14 @@ function isBasicRowWide(index) {
     <section v-if="showModule('awards') && f.honorList.length" data-resume-module="awards" class="rt-section">
       <h2 class="rt-title"><span>荣誉证书</span></h2>
       <ul class="rt-list">
-        <li v-for="item in f.honorList" :key="item">{{ item }}</li>
+        <li v-for="item in f.honorList" :key="item" class="rt-preserve-text">{{ item }}</li>
       </ul>
     </section>
 
     <!-- 自我评价 -->
     <section v-if="f.summary" data-resume-module="basic" class="rt-section">
       <h2 class="rt-title"><span>自我评价</span></h2>
-      <p class="rt-text">{{ f.summary }}</p>
+      <p class="rt-text rt-preserve-text">{{ f.summary }}</p>
     </section>
   </div>
 </template>

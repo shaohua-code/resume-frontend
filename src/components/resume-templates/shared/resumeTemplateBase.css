@@ -140,3 +140,10 @@
 .resume-template .rt-skill-bar-fill {
   background: linear-gradient(90deg, var(--skin-title-color, #1677ff), var(--skin-skill-border, #69b1ff)) !important;
 }
+
+/* 仅指定字段保留用户输入的换行与连续空格，break-all 强制长数字/字母串换行 */
+.resume-template .rt-preserve-text {
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}

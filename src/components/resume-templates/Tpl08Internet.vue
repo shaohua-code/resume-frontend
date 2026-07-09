@@ -197,7 +197,7 @@ const hobbies = computed(() => f.value.skills.slice(0, 6))
             <div class="text-nowrap text-slate-500">{{ item.start_date }} ~ {{ item.end_date }}</div>
           </div>
           <div v-if="item.position" class="mt-0.5 text-sm font-medium text-slate-600">{{ item.position }}</div>
-          <p class="mt-1 text-sm leading-relaxed text-slate-700">{{ item.description }}</p>
+          <p class="rt-desc rt-preserve-text break-all mt-1 text-sm leading-relaxed text-slate-700">{{ item.description }}</p>
         </div>
       </section>
 
@@ -219,7 +219,7 @@ const hobbies = computed(() => f.value.skills.slice(0, 6))
           <div v-if="item.role || item.tech_stack" class="mt-0.5 text-sm font-medium text-slate-600">
             {{ item.role }}<template v-if="item.tech_stack"> | {{ item.tech_stack }}</template>
           </div>
-          <p class="mt-1 text-sm leading-relaxed text-slate-700">{{ item.description }}</p>
+          <p class="rt-desc rt-preserve-text break-all mt-1 text-sm leading-relaxed text-slate-700">{{ item.description }}</p>
         </div>
       </section>
 
@@ -234,7 +234,7 @@ const hobbies = computed(() => f.value.skills.slice(0, 6))
           <div class="ml-auto h-px flex-1 bg-slate-100" />
         </div>
         <ul class="list-disc pl-5 text-sm leading-relaxed text-slate-700">
-          <li v-for="item in f.honorList" :key="item">{{ item }}</li>
+          <li v-for="item in f.honorList" :key="item" class="rt-preserve-text break-all">{{ item }}</li>
         </ul>
       </section>
 
@@ -248,7 +248,7 @@ const hobbies = computed(() => f.value.skills.slice(0, 6))
           <h2 class="text-base font-bold" :style="{ color: 'var(--skin-title-color, #1e293b)' }">自我评价</h2>
           <div class="ml-auto h-px flex-1 bg-slate-100" />
         </div>
-        <p class="text-sm leading-relaxed text-slate-700">{{ f.summary }}</p>
+        <p class="rt-text rt-preserve-text break-all text-sm leading-relaxed text-slate-700">{{ f.summary }}</p>
       </section>
 
       <!-- 兴趣爱好 -->

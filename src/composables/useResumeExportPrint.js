@@ -56,6 +56,12 @@ function injectPrintStyles(targetDoc) {
       box-sizing: border-box;
       background: #fff;
     }
+    /* 打印时与屏幕预览一致：保留换行并强制长串断行 */
+    .rt-preserve-text {
+      white-space: pre-wrap;
+      word-break: break-all;
+      overflow-wrap: anywhere;
+    }
     @media print {
       @page {
         size: A4;
