@@ -41,6 +41,10 @@
           <template v-if="column.key === 'balance_after'">
             ¥{{ Number(record.balance_after).toFixed(2) }}
           </template>
+          <!-- 备注列：显示格式化后的备注（任务类型显示中文） -->
+          <template v-if="column.key === 'remark'">
+            <span class="text-sm text-ink">{{ formatRemark(record.remark, record.type) }}</span>
+          </template>
           <template v-if="column.key === 'create_time'">
             {{ formatDateTime(record.create_time) }}
           </template>
@@ -54,6 +58,8 @@
 import { computed, onMounted, ref } from 'vue'
 import { useWalletStore } from '@/stores/wallet'
 import { formatDateTime } from '@/utils/date'
+// 导入全局 AI 任务类型常量，用于备注字段的中文化
+import { getAiTaskLabel } from '@/constants/aiTasks'
 
 const walletStore = useWalletStore()
 const page = ref(1)
@@ -81,6 +87,26 @@ const consumedText = computed(() => walletStore.totalConsumed.toFixed(2))
 
 function getLedgerTypeLabel(type) {
   return LEDGER_TYPE_MAP[type] || type
+}
+
+/**
+ * 格式化备注字段，将任务类型英文标识替换为中文
+ * @param {string} remark - 原始备注内容（如 "AI消费 - project_optimize"）
+ * @param {string} type - 流水类型（如 "AI_CONSUME"）
+ * @returns {string} 格式化后的备注（如 "AI消费 - 项目经历优化"）
+ */
+function formatRemark(remark, type) {
+  if (!remark) return '-'
+
+  // 如果是 AI 消费类型，尝试将任务类型英文标识替换为中文
+  if (type === 'AI_CONSUME') {
+    // 匹配所有 8 种任务类型英文标识
+    const taskTypePattern = /(resume_generate|project_optimize|summary_optimize|skills_optimize|internship_optimize|jd_match|score|pdf_optimize)/g
+    const formattedRemark = remark.replace(taskTypePattern, (match) => getAiTaskLabel(match))
+    return formattedRemark
+  }
+
+  return remark
 }
 
 async function loadData() {

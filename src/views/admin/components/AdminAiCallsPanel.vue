@@ -3,6 +3,8 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { getAdminAiCalls } from '@/api/admin'
 import AdminUserInfoCell from './AdminUserInfoCell.vue'
 import { formatDateTime } from '@/utils/date'
+// 导入全局 AI 任务类型常量
+import { getAiTaskLabel, getAiTaskOptions } from '@/constants/aiTasks'
 
 const loading = ref(false)
 const aiCalls = ref([])
@@ -31,6 +33,9 @@ const pageSummary = computed(() => {
     { totalTokens: 0, totalCost: 0 },
   )
 })
+
+// 获取任务类型筛选选项（用于下拉框）
+const taskTypeOptions = getAiTaskOptions()
 
 function formatModel(model) {
   return model?.trim() ? model : '-'
@@ -72,7 +77,18 @@ onMounted(loadAiCalls)
   <div class="space-y-4">
     <a-card :bordered="false" class="card-base">
       <div class="flex flex-col gap-3 sm:flex-row">
-        <a-input :value="query.task_type" placeholder="任务类型，如 resume_generate" class="input-field w-full sm:w-72" @update:value="query.task_type = $event" />
+        <!-- 使用下拉选择框代替文本输入，显示任务类型中文名称 -->
+        <a-select
+          :value="query.task_type"
+          allow-clear
+          placeholder="选择任务类型"
+          class="input-field w-full sm:w-72"
+          @change="query.task_type = $event"
+        >
+          <a-select-option v-for="option in taskTypeOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </a-select-option>
+        </a-select>
         <button class="btn-primary" @click="loadAiCalls">查询记录</button>
       </div>
     </a-card>
@@ -97,6 +113,10 @@ onMounted(loadAiCalls)
               :nickname="record.user?.nickname"
               :email="record.user?.email"
             />
+          </template>
+          <!-- 任务类型列：显示中文名称 -->
+          <template v-if="column.key === 'task_type'">
+            <span class="text-sm text-ink">{{ getAiTaskLabel(record.task_type) }}</span>
           </template>
           <template v-if="column.key === 'model'">
             <span class="text-sm text-ink">{{ formatModel(record.model) }}</span>

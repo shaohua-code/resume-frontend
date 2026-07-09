@@ -1,10 +1,11 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import { getAdminUsers, resetAdminUserPassword, updateAdminUser } from '@/api/admin'
 import { getRoleLabel, getStatusLabel } from '@/constants/roles'
 import AdminUserInfoCell from './AdminUserInfoCell.vue'
 import { formatDateTime } from '@/utils/date'
+import { useUserStore } from '@/stores/user'
 
 const props = defineProps({
   mode: {
@@ -12,6 +13,10 @@ const props = defineProps({
     default: 'users',
   },
 })
+
+// 获取当前登录用户信息，用于判断是否为超级管理员
+const userStore = useUserStore()
+const isSuperAdmin = computed(() => userStore.role === 'SUPER_ADMIN')
 
 const loading = ref(false)
 const users = ref([])
@@ -26,10 +31,22 @@ const columns = [
   { title: '操作', key: 'action', width: 220 },
 ]
 
+/**
+ * 角色选项列表
+ * - 管理员账号页面（mode=admins）：显示 SUPER_ADMIN 和 ADMIN
+ * - 用户账号页面（mode=users）：
+ *   - 超级管理员可以将用户提升为 ADMIN 或 USER（不能提升为 SUPER_ADMIN）
+ *   - 普通管理员只能管理 USER 角色
+ */
 const roleOptions = computed(() => {
   if (props.mode === 'admins') {
     return ['SUPER_ADMIN', 'ADMIN']
   }
+  // 超级管理员在用户列表中可以将用户提升为管理员（但不能提升为超级管理员）
+  if (isSuperAdmin.value) {
+    return ['ADMIN', 'USER']
+  }
+  // 普通管理员只能管理普通用户
   return ['USER']
 })
 
@@ -48,13 +65,39 @@ async function loadUsers() {
   }
 }
 
+/**
+ * 保存用户信息（包括角色修改）
+ * 当将普通用户提升为管理员时，弹出二次确认框防止误操作
+ */
 async function saveUser(record) {
+  // 检查是否正在将用户提升为管理员角色
+  const isPromotingToAdmin = record.role === 'ADMIN' || record.role === 'SUPER_ADMIN'
+
+  // 如果是提升操作，需要二次确认
+  if (isPromotingToAdmin) {
+    const roleLabel = getRoleLabel(record.role)
+    const confirmed = await new Promise((resolve) => {
+      Modal.confirm({
+        title: '确认提升用户权限',
+        content: `确定要将该用户提升为「${roleLabel}」吗？该用户将获得相应的管理权限。`,
+        okText: '确认提升',
+        cancelText: '取消',
+        onOk: () => resolve(true),
+        onCancel: () => resolve(false),
+      })
+    })
+
+    if (!confirmed) return
+  }
+
   await updateAdminUser(record.user_id, {
     role: record.role,
     status: record.status,
     nickname: record.nickname,
   })
-  message.success('用户信息已保存')
+
+  const actionText = isPromotingToAdmin ? '用户权限已提升' : '用户信息已保存'
+  message.success(actionText)
   await loadUsers()
 }
 
