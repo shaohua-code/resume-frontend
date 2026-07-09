@@ -80,12 +80,12 @@ function removeCustomField(index) {
       </a-col>
       <a-col :xs="24" :sm="8">
         <a-form-item label="手机">
-          <a-input v-model:value="resume.phone" class="input-field" />
+          <a-input v-model:value="resume.phone" placeholder="请输入手机号" class="input-field" />
         </a-form-item>
       </a-col>
       <a-col :xs="24" :sm="8">
         <a-form-item label="邮箱">
-          <a-input v-model:value="resume.email" class="input-field" />
+          <a-input v-model:value="resume.email" placeholder="请输入邮箱" class="input-field" />
         </a-form-item>
       </a-col>
       <!-- 扩展基本信息字段 -->
