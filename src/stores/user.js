@@ -25,6 +25,14 @@ export const useUserStore = defineStore('user', () => {
   const permissions = computed(() => userInfo.value.permissions || [])
   const isAdmin = computed(() => ['SUPER_ADMIN', 'ADMIN'].includes(role.value))
 
+  // 额度变更时间戳：用于通知 admin/stats 页面刷新额度池数据
+  const dashboardRefreshTick = ref(0)
+
+  /** 触发 dashboard 数据刷新（额度分配/调整后调用） */
+  function triggerDashboardRefresh() {
+    dashboardRefreshTick.value = Date.now()
+  }
+
   let isRefreshing = false
   let refreshPromise = null
 
@@ -151,6 +159,7 @@ export const useUserStore = defineStore('user', () => {
     permissions,
     isAdmin,
     isLoggedIn,
+    dashboardRefreshTick,
     sendCode,
     login,
     loginWithPassword,
@@ -160,5 +169,6 @@ export const useUserStore = defineStore('user', () => {
     hasPermission,
     getValidToken,
     logout,
+    triggerDashboardRefresh,
   }
 })

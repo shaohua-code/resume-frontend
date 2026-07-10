@@ -1,9 +1,10 @@
 <script setup>
 /**
  * 注册页 - 邮箱验证码 + 用户名 + 密码
+ * 支持 URL 参数 ?invite=code 携带邀请码，注册成功后绑定归属管理员
  */
 import { onUnmounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { useUserStore } from '@/stores/user'
 import GlassCard from '@/components/GlassCard.vue'
@@ -11,12 +12,16 @@ import GradientButton from '@/components/GradientButton.vue'
 import { createCountdown } from '../login/utils/countdown'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const formRef = ref(null)
 const submitting = ref(false)
 const sending = ref(false)
 const codeCountdown = ref(0)
 const countdown = createCountdown(60)
+
+// 从 URL 读取邀请码
+const inviteCode = ref(route.query.invite || '')
 
 const form = reactive({
   email: '',
@@ -72,6 +77,7 @@ async function handleRegister() {
       code: form.code,
       username: form.username,
       password: form.password,
+      invite_code: inviteCode.value || undefined,
     })
     if (res?.need_verify) {
       message.info('请先完成邮箱验证码验证')

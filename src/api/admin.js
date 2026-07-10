@@ -37,6 +37,46 @@ export function adjustUserBalance(userId, data) {
   return request.post(`/admin/users/${userId}/balance`, data)
 }
 
+/**
+ * 通过邮箱认领用户（建立归属关系）
+ */
+export function claimUserByEmail(email) {
+  return request.post('/admin/users/claim', { email })
+}
+
+/**
+ * 获取当前管理员额度池摘要（含实付金额合计）
+ */
+export function getQuotaPoolSummary() {
+  return request.get('/admin/quota-pool/summary')
+}
+
+/**
+ * 获取消费记录列表
+ */
+export function getAdminLedgers(params = {}) {
+  return request.get('/admin/ledgers', { params })
+}
+
+/**
+ * 邀请链接管理
+ */
+export function getInviteLinks() {
+  return request.get('/admin/invite-links')
+}
+
+export function createInviteLink(data = {}) {
+  return request.post('/admin/invite-links', data)
+}
+
+export function updateInviteLink(id, data) {
+  return request.patch(`/admin/invite-links/${id}`, data)
+}
+
+export function deleteInviteLink(id) {
+  return request.delete(`/admin/invite-links/${id}`)
+}
+
 export function getAdminAiCalls(params = {}) {
   return request.get('/admin/ai-calls', { params })
 }

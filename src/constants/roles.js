@@ -36,3 +36,39 @@ export function getStatusLabel(status = 'ACTIVE') {
 export function formatBalanceText(balance = 0) {
   return `¥${Number(balance || 0).toFixed(2)}`
 }
+
+/**
+ * 流水类型中文映射
+ * 包含注册赠送、管理员增减、额度池分配、AI 消费、退款等
+ */
+export const LEDGER_TYPE_LABEL_MAP = {
+  REGISTER_GIFT: '注册赠送',
+  ADMIN_GRANT: '管理员充值',
+  ADMIN_DEDUCT: '管理员扣减',
+  ADMIN_TRANSFER_OUT: '额度划拨',
+  AI_CONSUME: 'AI 消费',
+  REFUND: '退款',
+  ADMIN_ALLOCATE: '额度池分配',
+  ADMIN_POOL_GRANT: '额度池下发',
+}
+
+/**
+ * 获取流水类型中文标签
+ */
+export function getLedgerTypeLabel(type) {
+  return LEDGER_TYPE_LABEL_MAP[type] || type
+}
+
+/**
+ * 获取流水类型选项列表（用于下拉筛选）
+ */
+export function getLedgerTypeOptions() {
+  return Object.entries(LEDGER_TYPE_LABEL_MAP).map(([value, label]) => ({ value, label }))
+}
+
+/**
+ * 判断流水类型是否显示实付金额
+ */
+export function hasPaidAmount(type) {
+  return ['ADMIN_GRANT', 'ADMIN_ALLOCATE', 'ADMIN_POOL_GRANT'].includes(type)
+}

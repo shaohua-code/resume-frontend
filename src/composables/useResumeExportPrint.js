@@ -198,7 +198,7 @@ function openPrintDialog(content) {
  * 浏览器打印 API 导出 PDF 组合式函数
  * @param {Object} options
  * @param {Function} options.getPrintContent - 从 ResumePreview 获取逐页打印内容
- * @param {Function} [options.beforeExport] - 导出前权限校验（如 VIP）
+ * @param {Function} [options.beforeExport] - 导出前权限校验
  * @param {Function} [options.onStart] - 开始导出回调
  * @param {Function} [options.onEnd] - 结束导出回调
  */
@@ -211,7 +211,7 @@ export function useResumeExportPrint({
   async function handleExportPDF() {
     onStart?.()
     try {
-      // VIP 权限与后端导出记录
+      // 导出前权限校验与后端导出记录
       if (beforeExport) {
         const canExport = await beforeExport()
         if (!canExport) return

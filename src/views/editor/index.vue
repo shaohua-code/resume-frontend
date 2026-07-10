@@ -488,7 +488,7 @@ function buildMarkdownResume() {
   const internshipText = (resume.internships || []).map((item) => {
     return `### ${item.company || '实习经历'}\n- 岗位：${item.position || ''}\n- 时间：${item.start_date || ''} - ${item.end_date || ''}\n- 描述：${item.description || ''}`
   }).join('\n\n')
-  // Markdown 导出使用当前编辑态数据，方便 VIP 下载可二次编辑的文本版本
+  // Markdown 导出使用当前编辑态数据，方便用户下载可二次编辑的文本版本
   return `# ${resume.name || '个人简历'}\n\n${resume.phone || ''} ${resume.email || ''}\n\n## 个人简介\n${resume.summary || ''}${buildMarkdownList('技能标签', resume.skills || [])}\n## 项目经历\n${projectText || '暂无'}\n\n## 实习经历\n${internshipText || '暂无'}${buildMarkdownList('获奖经历', resume.awards || [])}${buildMarkdownList('证书', resume.certificates || [])}`
 }
 

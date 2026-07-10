@@ -3,7 +3,7 @@
  */
 import {
   LayoutDashboard, ShieldCheck, Users, Wallet, Bot, FileText,
-  Megaphone, Cpu, Settings, MessageSquare,
+  Megaphone, Cpu, Settings, MessageSquare, Receipt,
 } from 'lucide-vue-next'
 
 export const ADMIN_MENU_ITEMS = [
@@ -11,6 +11,7 @@ export const ADMIN_MENU_ITEMS = [
   { key: 'admins', path: '/admin/admins', label: '管理员账号', desc: '后台账号权限', group: '用户管理', permission: 'admin:manage_admins', icon: ShieldCheck },
   { key: 'users', path: '/admin/users', label: '用户账号', desc: '普通用户管理', group: '用户管理', permission: 'admin:manage_users', icon: Users },
   { key: 'wallets', path: '/admin/wallets', label: '用户额度', desc: '余额与额度调整', group: '用户管理', permission: 'admin:wallet', icon: Wallet },
+  { key: 'ledgers', path: '/admin/ledgers', label: '消费记录', desc: '额度变动流水', group: '用户管理', permission: 'admin:view_ledgers', icon: Receipt },
   { key: 'aiCalls', path: '/admin/ai-calls', label: 'AI调用记录', desc: '模型调用审计', group: '业务管理', permission: 'admin:view_ai_calls', icon: Bot },
   { key: 'resumes', path: '/admin/resumes', label: '简历资源', desc: '只读查看简历', group: '业务管理', permission: 'admin:view_resumes', icon: FileText },
   { key: 'feedbacks', path: '/admin/feedbacks', label: '用户反馈', desc: '用户意见与建议', group: '业务管理', permission: 'admin:view_feedback', icon: MessageSquare },

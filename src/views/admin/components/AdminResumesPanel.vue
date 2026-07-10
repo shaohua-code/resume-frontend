@@ -1,15 +1,20 @@
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { getAdminResumeDetail, getAdminResumes } from '@/api/admin'
+import { useUserStore } from '@/stores/user'
 import AdminUserInfoCell from './AdminUserInfoCell.vue'
 import { formatDateTime } from '@/utils/date'
 
+const userStore = useUserStore()
 const loading = ref(false)
 const resumes = ref([])
 const total = ref(0)
 const detailOpen = ref(false)
 const resumeDetail = ref(null)
 const query = reactive({ page: 1, size: 10, user_id: '' })
+
+// 普通管理员仅能看到归属用户简历
+const isSuperAdmin = computed(() => userStore.role === 'SUPER_ADMIN')
 
 const columns = [
   { title: '标题', dataIndex: 'title', key: 'title' },
@@ -47,6 +52,10 @@ onMounted(loadResumes)
 
 <template>
   <div class="space-y-4">
+    <a-card v-if="!isSuperAdmin" :bordered="false" class="card-base">
+      <p class="text-sm text-muted">仅展示您名下归属用户的简历，超级管理员可查看全部简历。</p>
+    </a-card>
+
     <a-card :bordered="false" class="card-base">
       <div class="flex flex-col gap-3 sm:flex-row">
         <a-input :value="query.user_id" placeholder="按用户ID筛选" class="input-field w-full sm:w-80" @update:value="query.user_id = $event" />

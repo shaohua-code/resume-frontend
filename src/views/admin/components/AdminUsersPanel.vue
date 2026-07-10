@@ -1,9 +1,10 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { message, Modal } from 'ant-design-vue'
-import { getAdminUsers, resetAdminUserPassword, updateAdminUser } from '@/api/admin'
+import { getAdminUsers, resetAdminUserPassword, updateAdminUser, claimUserByEmail } from '@/api/admin'
 import { getRoleLabel, getStatusLabel } from '@/constants/roles'
 import AdminUserInfoCell from './AdminUserInfoCell.vue'
+import AdminInviteLinkPanel from './AdminInviteLinkPanel.vue'
 import { formatDateTime } from '@/utils/date'
 import { useUserStore } from '@/stores/user'
 
@@ -22,6 +23,16 @@ const loading = ref(false)
 const users = ref([])
 const total = ref(0)
 const query = reactive({ page: 1, size: 10, keyword: '', role: '', status: '' })
+
+// 邮箱认领弹窗状态
+const claimModalOpen = ref(false)
+const claimForm = reactive({ email: '' })
+const claimLoading = ref(false)
+// 保存用户信息时的 loading（防止重复点击）
+const saveLoadingMap = ref({})
+
+// 邀请链接抽屉状态
+const inviteDrawerOpen = ref(false)
 
 const columns = [
   { title: '用户信息', key: 'profile' },
@@ -70,6 +81,9 @@ async function loadUsers() {
  * 当将普通用户提升为管理员时，弹出二次确认框防止误操作
  */
 async function saveUser(record) {
+  // 防止重复点击：同一用户正在保存时忽略
+  if (saveLoadingMap.value[record.user_id]) return
+
   // 检查是否正在将用户提升为管理员角色
   const isPromotingToAdmin = record.role === 'ADMIN' || record.role === 'SUPER_ADMIN'
 
@@ -90,20 +104,49 @@ async function saveUser(record) {
     if (!confirmed) return
   }
 
-  await updateAdminUser(record.user_id, {
-    role: record.role,
-    status: record.status,
-    nickname: record.nickname,
-  })
+  saveLoadingMap.value[record.user_id] = true
+  try {
+    await updateAdminUser(record.user_id, {
+      role: record.role,
+      status: record.status,
+      nickname: record.nickname,
+    })
 
-  const actionText = isPromotingToAdmin ? '用户权限已提升' : '用户信息已保存'
-  message.success(actionText)
-  await loadUsers()
+    const actionText = isPromotingToAdmin ? '用户权限已提升' : '用户信息已保存'
+    message.success(actionText)
+    await loadUsers()
+  } finally {
+    saveLoadingMap.value[record.user_id] = false
+  }
 }
 
 async function resetPassword(record) {
   await resetAdminUserPassword(record.user_id)
   message.success('重置链接已生成')
+}
+
+/** 打开邮箱认领弹窗 */
+function openClaimModal() {
+  claimForm.email = ''
+  claimModalOpen.value = true
+}
+
+/** 提交邮箱认领 */
+async function submitClaim() {
+  const email = claimForm.email.trim()
+  if (!email) {
+    message.warning('请输入邮箱')
+    return
+  }
+  claimLoading.value = true
+  try {
+    await claimUserByEmail(email)
+    message.success('认领成功')
+    claimModalOpen.value = false
+    await loadUsers()
+  } finally {
+    claimLoading.value = false
+  }
 }
 
 function handleTableChange(pagination) {
@@ -137,8 +180,13 @@ onMounted(loadUsers)
           <a-select-option value="ACTIVE">正常</a-select-option>
           <a-select-option value="BANNED">已封禁</a-select-option>
         </a-select>
-        <div>
-          <button class="btn-primary h-[32px]" @click="loadUsers ">查询用户</button>
+        <div class="flex gap-2">
+          <button class="btn-primary h-[32px]" @click="loadUsers">查询用户</button>
+          <!-- 用户管理模式下显示添加用户和邀请链接入口 -->
+          <template v-if="mode === 'users'">
+            <button class="btn-ghost h-[32px]" @click="openClaimModal">添加用户</button>
+            <button class="btn-ghost h-[32px]" @click="inviteDrawerOpen = true">邀请链接</button>
+          </template>
         </div>
       </div>
     </a-card>
@@ -158,8 +206,6 @@ onMounted(loadUsers)
             </a-select>
           </template>
           <template v-if="column.key === 'status'">
-            <!-- <span :class="record.status === 'ACTIVE' ? 'badge-success' : 'tag-soft'">{{ getStatusLabel(record.status)
-              }}</span> -->
             <a-select :value="record.status" class="input-field mt-2 w-28" @update:value="record.status = $event">
               <a-select-option value="ACTIVE">正常</a-select-option>
               <a-select-option value="BANNED">封禁</a-select-option>
@@ -171,12 +217,28 @@ onMounted(loadUsers)
           <template v-if="column.key === 'action'">
             <a-space>
               <span class="badge">{{ getRoleLabel(record.role) }}</span>
-              <button class="btn-primary-sm" @click="saveUser(record)">保存</button>
+              <button class="btn-primary-sm" :disabled="saveLoadingMap[record.user_id]" @click="saveUser(record)">
+                {{ saveLoadingMap[record.user_id] ? '保存中...' : '保存' }}
+              </button>
               <button class="btn-ghost-sm" @click="resetPassword(record)">重置密码</button>
             </a-space>
           </template>
         </template>
       </a-table>
     </a-card>
+
+    <!-- 邮箱认领用户弹窗 -->
+    <a-modal v-model:open="claimModalOpen" title="添加用户（邮箱认领）" ok-text="认领" :confirm-loading="claimLoading"
+      @ok="submitClaim">
+      <div class="space-y-3 py-2">
+        <p class="text-sm text-muted">输入已注册的普通用户邮箱，认领后该用户将归属到您名下</p>
+        <a-input v-model:value="claimForm.email" placeholder="请输入用户邮箱" class="input-field" />
+      </div>
+    </a-modal>
+
+    <!-- 邀请链接管理抽屉 -->
+    <a-drawer v-model:open="inviteDrawerOpen" title="邀请链接管理" placement="right" :width="680">
+      <AdminInviteLinkPanel />
+    </a-drawer>
   </div>
 </template>

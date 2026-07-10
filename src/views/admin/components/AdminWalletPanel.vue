@@ -1,8 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
-import { getAdminWallets, adjustUserBalance } from '@/api/admin'
-import { getWalletBalance } from '@/api/wallet'
+import { getAdminWallets, adjustUserBalance, getQuotaPoolSummary } from '@/api/admin'
 import { getRoleLabel, getStatusLabel } from '@/constants/roles'
 import { useUserStore } from '@/stores/user'
 import AdminUserInfoCell from './AdminUserInfoCell.vue'
@@ -17,10 +16,9 @@ const query = reactive({ page: 1, size: 10, keyword: '' })
 // 当前登录角色
 const isSuperAdmin = computed(() => userStore.role === 'SUPER_ADMIN')
 const isNormalAdmin = computed(() => userStore.role === 'ADMIN')
-// 仅超级管理员可扣减额度
-const canDeduct = computed(() => isSuperAdmin.value)
-// 管理员自身可分配额度池
-const myBalance = ref(0)
+
+// 额度池摘要信息
+const quotaPool = ref({ total_quota: 0, allocated_quota: 0, available: 0, total_paid_amount: 0 })
 
 const columns = [
   { title: '用户信息', key: 'profile' },
@@ -33,21 +31,19 @@ const columns = [
 ]
 
 const adjustModalOpen = ref(false)
+// 分配弹窗提交中状态（防止重复点击）
+const adjustLoading = ref(false)
 const adjustForm = reactive({
   userId: '',
   nickname: '',
   targetRole: 'USER',
   amount: 10,
+  paidAmount: 0,
   remark: '',
 })
 
-// 管理员划拨时，单次最大金额不超过自身可分配额度
-const maxAdjustAmount = computed(() => {
-  if (isNormalAdmin.value) {
-    return myBalance.value > 0 ? myBalance.value : 0.01
-  }
-  return undefined
-})
+// 剩余可分配额度
+const availableQuota = computed(() => quotaPool.value.available || 0)
 
 // 弹窗标题：区分超管给管理员分配额度池 / 管理员向用户划拨
 const adjustModalTitle = computed(() => {
@@ -57,28 +53,18 @@ const adjustModalTitle = computed(() => {
   if (isNormalAdmin.value) {
     return `划拨额度 - ${adjustForm.nickname}`
   }
-  return `调整额度 - ${adjustForm.nickname}`
+  return `分配额度 - ${adjustForm.nickname}`
 })
 
-// 金额输入区说明文案
-const amountHint = computed(() => {
-  if (isNormalAdmin.value) {
-    return `从您的可分配额度中划拨（当前可分配 ¥${myBalance.value.toFixed(2)}）`
-  }
-  if (isSuperAdmin.value && adjustForm.targetRole === 'ADMIN') {
-    return '为管理员增加可分配额度池（正数增加，负数扣减）'
-  }
-  return `调整金额（正数增加，负数扣减${canDeduct.value ? '' : '，管理员仅可增加' }）`
-})
-
-/** 拉取管理员自身可分配额度 */
-async function loadMyBalance() {
-  if (!isNormalAdmin.value) {
-    return
-  }
-  const res = await getWalletBalance()
-  if (res.success && res.data) {
-    myBalance.value = Number(res.data.balance || 0)
+/** 拉取额度池摘要 */
+async function loadQuotaPool() {
+  try {
+    const res = await getQuotaPoolSummary()
+    if (res.success && res.data) {
+      quotaPool.value = res.data
+    }
+  } catch {
+    // 错误提示由拦截器处理
   }
 }
 
@@ -98,42 +84,59 @@ function getActionLabel(record) {
   if (isSuperAdmin.value && record.role === 'ADMIN') {
     return '分配额度池'
   }
-  if (isNormalAdmin.value) {
-    return '划拨额度'
-  }
-  return '调整额度'
+  return '分配额度'
 }
 
 function openAdjust(record) {
   adjustForm.userId = record.user_id
   adjustForm.nickname = record.nickname
   adjustForm.targetRole = record.role || 'USER'
-  adjustForm.amount = isNormalAdmin.value ? Math.min(10, myBalance.value || 10) : 10
+  adjustForm.amount = 10
+  adjustForm.paidAmount = 0
   adjustForm.remark = ''
   adjustModalOpen.value = true
 }
 
+// 定义事件：分配成功后通知父组件刷新统计页数据
+const emit = defineEmits(['quota-changed'])
+
+/** 提交额度分配 */
 async function submitAdjust() {
   const amount = Number(adjustForm.amount)
-  if (!amount) {
-    message.warning('请输入调整金额')
+  const paidAmount = Number(adjustForm.paidAmount)
+
+  // 校验分配金额
+  if (!amount || amount <= 0) {
+    message.warning('请输入分配金额（正数）')
     return
   }
-  // 管理员划拨前校验自身额度是否充足
-  if (isNormalAdmin.value && amount > 0 && amount > myBalance.value) {
-    message.warning(`可分配额度不足（当前 ¥${myBalance.value.toFixed(2)}）`)
+  // 校验实付金额（必填）
+  if (Number.isNaN(paidAmount) || paidAmount < 0) {
+    message.warning('请输入实付金额（>=0）')
     return
   }
+  // 校验可分配额度
+  if (amount > availableQuota.value) {
+    message.warning(`可分配额度不足（剩余 ¥${availableQuota.value.toFixed(2)}）`)
+    return
+  }
+  adjustLoading.value = true
   try {
     await adjustUserBalance(adjustForm.userId, {
       amount,
+      paid_amount: paidAmount,
       remark: adjustForm.remark,
     })
-    message.success(isNormalAdmin.value ? '额度已划拨' : '额度已调整')
+    message.success('额度已分配')
     adjustModalOpen.value = false
-    await Promise.all([loadWallets(), loadMyBalance()])
+    await Promise.all([loadWallets(), loadQuotaPool()])
+    // 通过 store 通知 admin/stats 页面刷新额度池数据
+    userStore.triggerDashboardRefresh()
+    emit('quota-changed')
   } catch {
     // 错误提示由 request 拦截器统一处理
+  } finally {
+    adjustLoading.value = false
   }
 }
 
@@ -144,20 +147,31 @@ function handleTableChange(pagination) {
 }
 
 onMounted(async () => {
-  await Promise.all([loadWallets(), loadMyBalance()])
+  await Promise.all([loadWallets(), loadQuotaPool()])
 })
 </script>
 
 <template>
   <div class="space-y-4">
-    <!-- 管理员展示自身可分配额度 -->
-    <a-card v-if="isNormalAdmin" :bordered="false" class="card-base">
-      <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+    <!-- 额度池摘要卡片 -->
+    <a-card :bordered="false" class="card-base">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <div>
-          <p class="text-sm text-muted">我的可分配额度</p>
-          <p class="text-2xl font-semibold text-brand-dark">¥{{ myBalance.toFixed(2) }}</p>
+          <p class="text-sm text-muted">{{ isSuperAdmin ? '总额度池' : '我的额度池' }}</p>
+          <p class="mt-2 text-2xl font-semibold text-brand-dark">¥{{ Number(quotaPool.total_quota).toFixed(2) }}</p>
         </div>
-        <p class="text-sm text-muted">向用户划拨额度时，将从此处扣减</p>
+        <div>
+          <p class="text-sm text-muted">已分配</p>
+          <p class="mt-2 text-2xl font-semibold text-ink">¥{{ Number(quotaPool.allocated_quota).toFixed(2) }}</p>
+        </div>
+        <div>
+          <p class="text-sm text-muted">剩余可分配</p>
+          <p class="mt-2 text-2xl font-semibold text-emerald-600">¥{{ Number(quotaPool.available).toFixed(2) }}</p>
+        </div>
+        <div>
+          <p class="text-sm text-muted">实付金额合计</p>
+          <p class="mt-2 text-2xl font-semibold text-ink">¥{{ Number(quotaPool.total_paid_amount).toFixed(2) }}</p>
+        </div>
       </div>
     </a-card>
 
@@ -184,6 +198,11 @@ onMounted(async () => {
           </template>
           <template v-if="column.key === 'balance'">
             <span class="font-semibold text-brand-dark">¥{{ Number(record.balance).toFixed(2) }}</span>
+            <!-- 管理员显示已分配额度 -->
+            <span v-if="record.allocated_quota !== null && record.allocated_quota !== undefined"
+              class="ml-2 text-xs text-muted">
+              (已分配 ¥{{ Number(record.allocated_quota).toFixed(2) }})
+            </span>
           </template>
           <template v-if="column.key === 'total_consumed'">
             ¥{{ Number(record.total_consumed).toFixed(2) }}
@@ -202,18 +221,23 @@ onMounted(async () => {
       </a-table>
     </a-card>
 
-    <a-modal v-model:open="adjustModalOpen" :title="adjustModalTitle" ok-text="确认" @ok="submitAdjust">
+    <!-- 分配额度弹窗 -->
+    <a-modal v-model:open="adjustModalOpen" :title="adjustModalTitle" ok-text="确认分配"
+      :confirm-loading="adjustLoading" @ok="submitAdjust">
       <div class="space-y-4 py-2">
-        <div v-if="isNormalAdmin" class="rounded-lg bg-slate-50 px-3 py-2 text-sm text-muted">
-          划拨后您的可分配额度将同步减少
+        <div class="rounded-lg bg-slate-50 px-3 py-2 text-sm text-muted">
+          当前剩余可分配额度 ¥{{ availableQuota.toFixed(2) }}，分配后将同步扣减
         </div>
         <div>
-          <p class="mb-2 text-sm text-muted">{{ amountHint }}</p>
-          <a-input-number v-model:value="adjustForm.amount"
-            :min="canDeduct ? undefined : 0.01"
-            :max="isNormalAdmin ? maxAdjustAmount : undefined"
-            :step="1"
+          <p class="mb-2 text-sm text-muted">分配金额（正数）</p>
+          <a-input-number v-model:value="adjustForm.amount" :min="0.01" :max="availableQuota" :step="1"
             class="w-full input-field" />
+        </div>
+        <!-- 实付金额（必填） -->
+        <div>
+          <p class="mb-2 text-sm text-muted">实付金额（必填，用户实际支付金额）</p>
+          <a-input-number v-model:value="adjustForm.paidAmount" :min="0" :step="0.01"
+            class="w-full input-field" placeholder="如：9.9" />
         </div>
         <div>
           <p class="mb-2 text-sm text-muted">备注</p>

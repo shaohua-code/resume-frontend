@@ -15,11 +15,12 @@ const props = defineProps({
 
 const metrics = computed(() => [
   {
-    label: '账户总余额',
-    value: Number(props.data.total_balance || 0),
+    label: '剩余可分配额度',
+    value: Number(props.data.quota_available || 0),
     icon: Wallet,
     iconClass: 'bg-brand-lighter text-brand-dark',
     prefix: '¥',
+    note: `已分配 ¥${Number(props.data.quota_allocated || 0).toFixed(2)}`,
   },
   {
     label: '累计消费',
@@ -65,6 +66,7 @@ const metrics = computed(() => [
           <p class="mt-1 truncate text-lg font-bold text-ink">
             <CountUp :value="item.value" :prefix="item.prefix || ''" :decimals="item.prefix ? 2 : 0" />
           </p>
+          <p v-if="item.note" class="mt-1 truncate text-xs text-muted">{{ item.note }}</p>
         </div>
       </div>
     </div>

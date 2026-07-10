@@ -94,6 +94,12 @@ const routes = [
         meta: { title: '用户额度', permission: 'admin:wallet' },
       },
       {
+        path: 'ledgers',
+        name: 'AdminLedgers',
+        component: () => import('@/views/admin/components/AdminLedgerPanel.vue'),
+        meta: { title: '消费记录', permission: 'admin:view_ledgers' },
+      },
+      {
         path: 'ai-calls',
         name: 'AdminAiCalls',
         component: () => import('@/views/admin/components/AdminAiCallsPanel.vue'),
