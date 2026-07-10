@@ -229,7 +229,7 @@ export function useResumeExportPrint({
       message.info('请在打印窗口中选择「另存为 PDF」或「Microsoft Print to PDF」完成导出', 5)
 
       await openPrintDialog(content)
-      message.success('打印窗口已打开')
+  
     } catch (e) {
       console.error('[导出PDF失败]', e)
       message.error('PDF导出失败')

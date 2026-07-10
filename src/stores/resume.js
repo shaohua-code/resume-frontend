@@ -7,7 +7,6 @@ import { ref } from 'vue'
 import {
   generateResume as generateApi,
   generateResumeStream as generateStreamApi,
-  optimizeProject as optimizeApi,
   matchJd as matchApi,
   scoreResume as scoreApi,
   saveResume as saveApi,
@@ -48,8 +47,6 @@ export const useResumeStore = defineStore('resume', () => {
   const generating = ref(false)
   // 流式生成过程中的实时文本（用于打字机 UI）
   const streamText = ref('')
-  // AI优化加载状态
-  const optimizing = ref(false)
   // JD匹配加载状态
   const matching = ref(false)
   // 评分加载状态
@@ -85,9 +82,15 @@ export const useResumeStore = defineStore('resume', () => {
             streamText.value += chunk
             onChunk?.(chunk)
           },
-        })
-      } catch (streamErr) {
-        console.warn('[generateResume] 流式生成失败，回退同步接口:', streamErr)
+        },
+      })
+    } catch (streamErr) {
+      // 余额不足等业务错误不再回退同步接口，避免重复弹窗
+      const streamMsg = streamErr?.message || ''
+      if (streamMsg.includes('余额不足')) {
+        throw streamErr
+      }
+      console.warn('[generateResume] 流式生成失败，回退同步接口:', streamErr)
         const res = await generateApi(formData)
         if (res.success) resumeData = res.data
       }
@@ -109,26 +112,13 @@ export const useResumeStore = defineStore('resume', () => {
       }
       message.error('生成失败，请重试')
     } catch (e) {
-      message.error(e.message || '生成失败，请重试')
+      const msg = e?.response?.data?.detail || e?.message || '生成失败，请重试'
+      // 拦截器已提示过的 axios 错误不再重复弹窗
+      if (!e?.response?.data?.detail) {
+        message.error(msg)
+      }
     } finally {
       generating.value = false
-    }
-  }
-
-  // AI优化项目描述
-  async function optimizeProject(description, targetPosition) {
-    optimizing.value = true
-    try {
-      const res = await optimizeApi(description, targetPosition)
-      if (res.success) {
-        await refreshWalletBalance()
-        message.success('优化完成')
-        return res.data
-      }
-    } catch (e) {
-      message.error(e.message || '优化失败，请重试')
-    } finally {
-      optimizing.value = false
     }
   }
 
@@ -142,7 +132,10 @@ export const useResumeStore = defineStore('resume', () => {
       }
       return res
     } catch (e) {
-      message.error(e.message || '匹配分析失败')
+      const msg = e?.response?.data?.detail || e?.message || '匹配分析失败'
+      if (!e?.response?.data?.detail) {
+        message.error(msg)
+      }
     } finally {
       matching.value = false
     }
@@ -158,7 +151,10 @@ export const useResumeStore = defineStore('resume', () => {
       }
       return res
     } catch (e) {
-      message.error(e.message || '评分失败')
+      const msg = e?.response?.data?.detail || e?.message || '评分失败'
+      if (!e?.response?.data?.detail) {
+        message.error(msg)
+      }
     } finally {
       scoring.value = false
     }
@@ -237,11 +233,9 @@ export const useResumeStore = defineStore('resume', () => {
     resumeMaxCount,
     generating,
     streamText,
-    optimizing,
     matching,
     scoring,
     generateResume,
-    optimizeProject,
     matchJd,
     scoreResume,
     saveResume,

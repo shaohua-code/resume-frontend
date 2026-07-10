@@ -6,7 +6,7 @@
     <div class="mx-auto flex h-full max-w-[1400px] items-center justify-between gap-2 px-3 sm:gap-4 sm:px-5">
       <!-- 左侧：返回 + 模板 -->
       <div class="flex items-center gap-1 shrink-0 sm:gap-2">
-        <button class="btn-ghost h-9 px-2 py-1.5 text-xs sm:px-3" @click="router.back()">
+        <button class="btn-ghost h-9 px-2 py-1.5 text-xs sm:px-3" @click="router.push('/user')">
           <LeftOutlined /> <span class="hidden sm:inline">返回</span>
         </button>
         <button class="btn-ghost h-9 max-w-[120px] truncate px-2 py-1.5 text-xs sm:max-w-none sm:px-3" @click="emit('template')">
@@ -52,7 +52,6 @@
 
       <!-- 桌面端：右侧操作 -->
       <div class="items-center hidden gap-2 shrink-0 lg:flex">
-        <button class="btn-ghost h-9 px-3 py-1.5 text-xs" @click="emit('optimize')"><BulbOutlined /> AI优化</button>
         <button class="btn-ghost h-9 px-3 py-1.5 text-xs" @click="emit('match')"><AimOutlined /> JD匹配</button>
         <button class="btn-ghost h-9 px-3 py-1.5 text-xs" :disabled="scoring" @click="emit('score')">
           <a-spin v-if="scoring" size="small" class="mr-1" />
@@ -67,8 +66,8 @@
           </GradientButton>
           <template #overlay>
             <a-menu>
-              <a-menu-item key="pdf" @click="emit('export-pdf')">导出 PDF（浏览器打印）</a-menu-item>
-              <a-menu-item key="word" @click="emit('export-word')">导出 Word（可编辑）</a-menu-item>
+              <a-menu-item key="pdf" @click="emit('export-pdf')">导出 PDF</a-menu-item>
+              <a-menu-item key="word" @click="emit('export-word')">导出 Word</a-menu-item>
             </a-menu>
           </template>
         </a-dropdown>
@@ -87,11 +86,10 @@
               <a-menu-item @click="openMobilePanel('font')">字体设置</a-menu-item>
               <!-- <a-menu-item @click="openMobilePanel('skin')">皮肤设置</a-menu-item> -->
               <a-menu-divider />
-              <a-menu-item @click="emit('optimize')">AI 优化</a-menu-item>
               <a-menu-item @click="emit('match')">JD 匹配</a-menu-item>
               <a-menu-item :disabled="scoring" @click="emit('score')">AI 评分</a-menu-item>
               <a-menu-divider />
-              <a-menu-item @click="emit('export-pdf')">导出 PDF（浏览器打印）</a-menu-item>
+              <a-menu-item @click="emit('export-pdf')">导出 PDF</a-menu-item>
               <a-menu-item @click="emit('export-word')">导出 Word</a-menu-item>
             </a-menu>
           </template>
@@ -129,7 +127,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   LeftOutlined, SaveOutlined, DownloadOutlined, MenuOutlined,
-  BulbOutlined, AimOutlined, BarChartOutlined,
+  AimOutlined, BarChartOutlined,
   AppstoreOutlined, ColumnWidthOutlined, FontSizeOutlined, BgColorsOutlined,
 } from '@ant-design/icons-vue'
 import GradientButton from '@/components/GradientButton.vue'
@@ -156,7 +154,7 @@ defineProps({
 })
 
 const emit = defineEmits([
-  'settings-change', 'template', 'optimize', 'match', 'score', 'save', 'export-pdf', 'export-word',
+  'settings-change', 'template', 'match', 'score', 'save', 'export-pdf', 'export-word',
 ])
 
 const router = useRouter()

@@ -20,7 +20,6 @@
       :exporting="exporting"
       :scoring="resumeStore.scoring"
       @template="showTemplateDrawer = true"
-      @optimize="showOptimizeModal = true"
       @match="showMatchModal = true"
       @score="handleScore"
       @save="handleSave"
@@ -52,8 +51,8 @@
           </button>
           <template #overlay>
             <a-menu>
-              <a-menu-item key="pdf" @click="handleExportPDF">导出 PDF（浏览器打印）</a-menu-item>
-              <a-menu-item key="word" @click="handleExportWord">导出 Word（可编辑）</a-menu-item>
+              <a-menu-item key="pdf" @click="handleExportPDF">导出 PDF</a-menu-item>
+              <a-menu-item key="word" @click="handleExportWord">导出 Word</a-menu-item>
               <a-menu-item key="markdown" @click="handleExportMarkdown">导出 Markdown</a-menu-item>
             </a-menu>
           </template>
@@ -68,28 +67,6 @@
       v-model:active-module="activeModule"
       :highlight-module="highlightModule"
     />
-
-    <!-- AI优化弹窗 -->
-    <a-modal
-      v-model:open="showOptimizeModal"
-      title="AI优化项目描述"
-      :confirm-loading="resumeStore.optimizing"
-      class="editor-modal"
-      @ok="handleOptimize"
-    >
-      <a-form layout="vertical">
-        <a-form-item label="目标岗位">
-          <a-input :value="optimizeTarget" placeholder="如：会计，运营，前端开发工程师" class="editor-modal-input" @update:value="optimizeTarget = $event" />
-        </a-form-item>
-        <a-form-item label="选择要优化的项目">
-          <a-select :value="optimizeIndex" class="editor-modal-select" @update:value="optimizeIndex = $event">
-            <a-select-option v-for="(p, i) in (resume.projects || [])" :key="i" :value="i">
-              {{ p.name || `项目${i + 1}` }}
-            </a-select-option>
-          </a-select>
-        </a-form-item>
-      </a-form>
-    </a-modal>
 
     <!-- JD匹配弹窗 -->
     <a-modal
@@ -276,25 +253,6 @@ function selectTemplate(id) {
   applyTemplateSkinDefaults(skinTheme, templateId.value)
   showTemplateDrawer.value = false
   message.success(`已切换到「${getTemplateName(templateId.value)}」`)
-}
-
-const showOptimizeModal = ref(false)
-const optimizeTarget = ref('')
-const optimizeIndex = ref(0)
-
-async function handleOptimize() {
-  const projects = resume.projects || []
-  const proj = projects[optimizeIndex.value]
-  if (!proj?.description) {
-    message.warning('请先填写项目描述')
-    return
-  }
-  const result = await resumeStore.optimizeProject(proj.description, optimizeTarget.value)
-  if (result) {
-    proj.description = result.optimized || proj.description
-    showOptimizeModal.value = false
-    message.success('项目描述已优化')
-  }
 }
 
 const showMatchModal = ref(false)

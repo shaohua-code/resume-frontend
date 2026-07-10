@@ -40,7 +40,6 @@ export async function optimizeResumePartStream(type, payload, handlers = {}, mod
       /* ignore */
     }
     const err = new Error(detail)
-    handlers.onError?.(err)
     throw err
   }
 
@@ -87,7 +86,6 @@ export async function generateResumeStream(data, handlers = {}, model = '') {
       /* ignore */
     }
     const err = new Error(detail)
-    onError?.(err)
     throw err
   }
 
@@ -125,9 +123,7 @@ async function readSSEStream(response, handlers = {}) {
         if (event.status) onStatus?.(event.status)
         if (event.chunk) onChunk?.(event.chunk)
         if (event.error) {
-          const err = new Error(event.error)
-          onError?.(err)
-          throw err
+          throw new Error(event.error)
         }
         if (event.done && event.data) {
           finalData = event.data
@@ -170,16 +166,10 @@ export async function uploadOptimizeResumeStream(file, targetPosition = '', hand
       /* ignore */
     }
     const err = new Error(detail)
-    handlers.onError?.(err)
     throw err
   }
 
   return readSSEStream(response, handlers)
-}
-
-/** AI优化项目描述 */
-export function optimizeProject(projectDescription, targetPosition = '', model = '') {
-  return request.post('/ai/optimize', { project_description: projectDescription, target_position: targetPosition, model })
 }
 
 /** JD岗位匹配分析 */
@@ -302,7 +292,6 @@ export async function uploadOptimizeExistingStream(targetPosition = '', handlers
       /* ignore */
     }
     const err = new Error(detail)
-    handlers.onError?.(err)
     throw err
   }
 

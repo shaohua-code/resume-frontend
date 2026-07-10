@@ -160,9 +160,6 @@ export function useResumeOptimizer({ resume }) {
             message.success('优化完成')
           }
         },
-        onError: (err) => {
-          message.error(err.message || '优化失败，请重试')
-        },
       })
     } catch (e) {
       message.error(e.message || '优化失败，请重试')
