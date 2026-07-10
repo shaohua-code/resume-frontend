@@ -93,6 +93,10 @@ export function getAdminFeedbacks(params = {}) {
   return request.get('/admin/feedbacks', { params })
 }
 
+export function getAdminVisits(params = {}) {
+  return request.get('/admin/visits', { params })
+}
+
 export function getAdminFeedbackDetail(id) {
   return request.get(`/admin/feedbacks/${id}`)
 }

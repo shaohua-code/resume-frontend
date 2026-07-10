@@ -137,6 +137,12 @@ const routes = [
         component: () => import('@/views/admin/components/AdminConfigsPanel.vue'),
         meta: { title: '系统配置', permission: 'admin:system_config' },
       },
+      {
+        path: 'visits',
+        name: 'AdminVisits',
+        component: () => import('@/views/admin/components/AdminVisitLogsPanel.vue'),
+        meta: { title: '访客记录', permission: 'admin:view_visits' },
+      },
     ],
   },
 ]

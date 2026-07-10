@@ -29,9 +29,11 @@ import { antdToken } from '@/constants/theme'
 import { useTheme } from '@/composables/useTheme'
 import AppHeader from '@/components/AppHeader.vue'
 import FeedbackFloatingButton from '@/components/FeedbackFloatingButton.vue'
+import { useVisitTracker } from '@/composables/useVisitTracker'
 
 const route = useRoute()
 const { applyCssVariables } = useTheme()
+const { init: initVisitTracker } = useVisitTracker()
 
 // 隐藏反馈按钮的路径：管理端与认证页
 const HIDDEN_FEEDBACK_PATHS = ['/login', '/register', '/forgot-password']
@@ -41,8 +43,9 @@ const showFeedback = computed(() => {
   return !HIDDEN_FEEDBACK_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
 })
 
-// 挂载时将 theme.js 变量注入 :root
+// 挂载时将 theme.js 变量注入 :root，并初始化访客追踪
 onMounted(() => {
   applyCssVariables()
+  initVisitTracker()
 })
 </script>
