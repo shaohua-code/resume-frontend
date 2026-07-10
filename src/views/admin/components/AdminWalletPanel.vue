@@ -31,29 +31,39 @@ const columns = [
 ]
 
 const adjustModalOpen = ref(false)
-// 分配弹窗提交中状态（防止重复点击）
 const adjustLoading = ref(false)
 const adjustForm = reactive({
   userId: '',
   nickname: '',
   targetRole: 'USER',
-  amount: 10,
-  paidAmount: 0,
+  amount: null,
+  paidAmount: null,
   remark: '',
 })
 
 // 剩余可分配额度
 const availableQuota = computed(() => quotaPool.value.available || 0)
 
-// 弹窗标题：区分超管给管理员分配额度池 / 管理员向用户划拨
+// 超管对普通用户/管理员可扣减（负数）
+const canDeduct = computed(() => isSuperAdmin.value && ['USER', 'ADMIN'].includes(adjustForm.targetRole))
+
+// 弹窗标题
 const adjustModalTitle = computed(() => {
   if (isSuperAdmin.value && adjustForm.targetRole === 'ADMIN') {
-    return `分配额度池 - ${adjustForm.nickname}`
+    return `调整额度池 - ${adjustForm.nickname}`
   }
   if (isNormalAdmin.value) {
-    return `划拨额度 - ${adjustForm.nickname}`
+    return `分配额度 - ${adjustForm.nickname}`
   }
-  return `分配额度 - ${adjustForm.nickname}`
+  return `调整额度 - ${adjustForm.nickname}`
+})
+
+// 金额输入说明
+const amountHint = computed(() => {
+  if (canDeduct.value) {
+    return '调整金额（正数增加，负数扣减；扣减后退回您的可分配额度池）'
+  }
+  return '分配金额（正数，必填）'
 })
 
 /** 拉取额度池摘要 */
@@ -79,10 +89,10 @@ async function loadWallets() {
   }
 }
 
-/** 根据角色与目标用户决定操作按钮文案 */
+/** 操作按钮文案 */
 function getActionLabel(record) {
-  if (isSuperAdmin.value && record.role === 'ADMIN') {
-    return '分配额度池'
+  if (isSuperAdmin.value) {
+    return record.role === 'ADMIN' ? '调整额度池' : '调整额度'
   }
   return '分配额度'
 }
@@ -91,46 +101,60 @@ function openAdjust(record) {
   adjustForm.userId = record.user_id
   adjustForm.nickname = record.nickname
   adjustForm.targetRole = record.role || 'USER'
-  adjustForm.amount = 10
-  adjustForm.paidAmount = 0
+  adjustForm.amount = null
+  adjustForm.paidAmount = null
   adjustForm.remark = ''
   adjustModalOpen.value = true
 }
 
-// 定义事件：分配成功后通知父组件刷新统计页数据
 const emit = defineEmits(['quota-changed'])
 
-/** 提交额度分配 */
+/** 提交额度调整 */
 async function submitAdjust() {
   const amount = Number(adjustForm.amount)
   const paidAmount = Number(adjustForm.paidAmount)
+  const remark = String(adjustForm.remark || '').trim()
 
-  // 校验分配金额
-  if (!amount || amount <= 0) {
-    message.warning('请输入分配金额（正数）')
+  // 金额必填且不能为 0
+  if (!adjustForm.amount && adjustForm.amount !== 0) {
+    message.warning('请输入调整金额')
     return
   }
-  // 校验实付金额（必填）
-  if (Number.isNaN(paidAmount) || paidAmount < 0) {
+  if (!amount || Number.isNaN(amount)) {
+    message.warning('调整金额无效')
+    return
+  }
+  // 实付金额必填
+  if (adjustForm.paidAmount === null || adjustForm.paidAmount === '' || Number.isNaN(paidAmount) || paidAmount < 0) {
     message.warning('请输入实付金额（>=0）')
     return
   }
-  // 校验可分配额度
-  if (amount > availableQuota.value) {
+  // 备注必填
+  if (!remark) {
+    message.warning('请输入备注')
+    return
+  }
+  // 增加额度时校验可分配额度
+  if (amount > 0 && amount > availableQuota.value) {
     message.warning(`可分配额度不足（剩余 ¥${availableQuota.value.toFixed(2)}）`)
     return
   }
+  // 普通管理员不能扣减
+  if (isNormalAdmin.value && amount < 0) {
+    message.warning('管理员仅可增加额度')
+    return
+  }
+
   adjustLoading.value = true
   try {
     await adjustUserBalance(adjustForm.userId, {
       amount,
       paid_amount: paidAmount,
-      remark: adjustForm.remark,
+      remark,
     })
-    message.success('额度已分配')
+    message.success(amount < 0 ? '额度已扣减' : '额度已分配')
     adjustModalOpen.value = false
     await Promise.all([loadWallets(), loadQuotaPool()])
-    // 通过 store 通知 admin/stats 页面刷新额度池数据
     userStore.triggerDashboardRefresh()
     emit('quota-changed')
   } catch {
@@ -153,7 +177,6 @@ onMounted(async () => {
 
 <template>
   <div class="space-y-4">
-    <!-- 额度池摘要卡片 -->
     <a-card :bordered="false" class="card-base">
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <div>
@@ -198,7 +221,6 @@ onMounted(async () => {
           </template>
           <template v-if="column.key === 'balance'">
             <span class="font-semibold text-brand-dark">¥{{ Number(record.balance).toFixed(2) }}</span>
-            <!-- 管理员显示已分配额度 -->
             <span v-if="record.allocated_quota !== null && record.allocated_quota !== undefined"
               class="ml-2 text-xs text-muted">
               (已分配 ¥{{ Number(record.allocated_quota).toFixed(2) }})
@@ -221,26 +243,37 @@ onMounted(async () => {
       </a-table>
     </a-card>
 
-    <!-- 分配额度弹窗 -->
-    <a-modal v-model:open="adjustModalOpen" :title="adjustModalTitle" ok-text="确认分配"
+    <a-modal v-model:open="adjustModalOpen" :title="adjustModalTitle" ok-text="确认"
       :confirm-loading="adjustLoading" @ok="submitAdjust">
-      <div class="space-y-4 py-2">
-        <div class="rounded-lg bg-slate-50 px-3 py-2 text-sm text-muted">
-          当前剩余可分配额度 ¥{{ availableQuota.toFixed(2) }}，分配后将同步扣减
+      <div class="py-2 space-y-4">
+        <div class="px-3 py-2 text-sm rounded-lg bg-slate-50 text-muted">
+          当前剩余可分配额度 ¥{{ availableQuota.toFixed(2) }}
+          <span v-if="canDeduct">；扣减用户/管理员额度后将退回此额度池</span>
+          <span v-else>；分配后将同步扣减</span>
         </div>
         <div>
-          <p class="mb-2 text-sm text-muted">分配金额（正数）</p>
-          <a-input-number v-model:value="adjustForm.amount" :min="0.01" :max="availableQuota" :step="1"
-            class="w-full input-field" />
+          <p class="mb-2 text-sm text-muted">{{ amountHint }} <span class="text-danger">*</span></p>
+          <a-input-number
+            v-model:value="adjustForm.amount"
+            :min="canDeduct ? undefined : 0.01"
+            :max="canDeduct ? undefined : availableQuota"
+            :step="1"
+            class="w-full input-field"
+            placeholder="如：10 "
+          />
         </div>
-        <!-- 实付金额（必填） -->
         <div>
-          <p class="mb-2 text-sm text-muted">实付金额（必填，用户实际支付金额）</p>
-          <a-input-number v-model:value="adjustForm.paidAmount" :min="0" :step="0.01"
-            class="w-full input-field" placeholder="如：9.9" />
+          <p class="mb-2 text-sm text-muted">实付金额（用户实际支付金额） <span class="text-danger">*</span></p>
+          <a-input-number
+            v-model:value="adjustForm.paidAmount"
+            :min="0"
+            :step="0.01"
+            class="w-full input-field"
+            placeholder="如：9.9"
+          />
         </div>
         <div>
-          <p class="mb-2 text-sm text-muted">备注</p>
+          <p class="mb-2 text-sm text-muted">备注 <span class="text-danger">*</span></p>
           <a-input v-model:value="adjustForm.remark" placeholder="如：活动赠送" class="input-field" />
         </div>
       </div>
