@@ -34,13 +34,19 @@ const saveLoadingMap = ref({})
 // 邀请链接抽屉状态
 const inviteDrawerOpen = ref(false)
 
-const columns = [
-  { title: '用户信息', key: 'profile' },
-  { title: '角色', dataIndex: 'role', key: 'role', width: 170 },
-  { title: '状态', dataIndex: 'status', key: 'status', width: 130 },
-  { title: '创建时间', dataIndex: 'create_time', key: 'create_time', width: 190 },
-  { title: '操作', key: 'action', width: 240 },
-]
+// 根据模式动态生成列配置
+const columns = computed(() => {
+  const baseColumns = [
+    { title: '用户信息', key: 'profile' },
+    // 管理员账号模式下显示管理人数列
+    ...(props.mode === 'admins' ? [{ title: '管理人数', dataIndex: 'managed_count', key: 'managed_count', width: 120, align: 'center' }] : []),
+    { title: '角色', dataIndex: 'role', key: 'role', width: 170 },
+    { title: '状态', dataIndex: 'status', key: 'status', width: 130 },
+    { title: '创建时间', dataIndex: 'create_time', key: 'create_time', width: 190 },
+    { title: '操作', key: 'action', width: 240 },
+  ]
+  return baseColumns
+})
 
 /**
  * 角色选项列表
@@ -198,6 +204,12 @@ onMounted(loadUsers)
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'profile'">
             <AdminUserInfoCell :user-id="record.user_id" :nickname="record.nickname" :email="record.email" />
+          </template>
+          <!-- 管理人数列：仅在管理员模式下显示 -->
+          <template v-if="column.key === 'managed_count'">
+            <span class="inline-flex items-center justify-center rounded-full bg-blue-50 px-2.5 py-0.5 text-sm font-medium text-blue-700">
+              {{ record.managed_count || 0 }} 人
+            </span>
           </template>
           <template v-if="column.key === 'role'">
             <a-select :value="record.role" class="input-field w-36" @update:value="record.role = $event">
