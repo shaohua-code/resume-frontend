@@ -82,15 +82,14 @@ export const useResumeStore = defineStore('resume', () => {
             streamText.value += chunk
             onChunk?.(chunk)
           },
-        },
-      })
-    } catch (streamErr) {
-      // 余额不足等业务错误不再回退同步接口，避免重复弹窗
-      const streamMsg = streamErr?.message || ''
-      if (streamMsg.includes('余额不足')) {
-        throw streamErr
-      }
-      console.warn('[generateResume] 流式生成失败，回退同步接口:', streamErr)
+        })
+      } catch (streamErr) {
+        // 余额不足等业务错误不再回退同步接口，避免重复弹窗
+        const streamMsg = streamErr?.message || ''
+        if (streamMsg.includes('余额不足')) {
+          throw streamErr
+        }
+        console.warn('[generateResume] 流式生成失败，回退同步接口:', streamErr)
         const res = await generateApi(formData)
         if (res.success) resumeData = res.data
       }
