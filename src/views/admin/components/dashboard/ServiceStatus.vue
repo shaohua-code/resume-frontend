@@ -16,7 +16,7 @@ const props = defineProps({
 // 服务名映射：底层 key 对应真实健康状态，展示更贴近产品的服务名
 const services = computed(() => [
   { name: 'API 服务', vendor: 'Render', key: 'api', icon: Server, latency: '36ms' },
-  { name: '数据库', vendor: 'Supabase', key: 'db', icon: Database, latency: '18ms' },
+  { name: '数据库', vendor: 'PostgreSQL', key: 'db', icon: Database, latency: '18ms' },
   { name: 'AI 服务', vendor: 'DeepSeek', key: 'ai', icon: Bot, latency: '120ms' },
   { name: '存储服务', vendor: 'Storage', key: 'storage', icon: HardDrive, latency: '24ms' },
 ].map((item) => ({
