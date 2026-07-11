@@ -67,8 +67,8 @@ async function handleReset() {
 
 <template>
   <LoginCard>
-    <h3 class="mb-1 text-center text-lg font-semibold text-ink">忘记密码</h3>
-    <p class="mb-6 text-center text-sm text-ink-secondary">通过邮箱验证码重置密码</p>
+    <h3 class="mb-1 text-lg font-semibold text-center text-ink">忘记密码</h3>
+    <p class="mb-6 text-sm text-center text-ink-secondary">通过邮箱验证码重置密码</p>
 
     <a-form v-if="step === 'send'" :model="form" layout="vertical" @finish="handleSendCode">
       <a-form-item
@@ -96,19 +96,19 @@ async function handleReset() {
       <a-form-item
         label="验证码"
         name="code"
-        :rules="[{ required: true, len: 8, message: '请输入 8 位验证码' }]"
+        :rules="[{ required: true, len: 6, message: '请输入 6 位验证码' }]"
       >
         <a-input
           v-model:value="form.code"
           placeholder="请输入验证码"
           size="large"
-          maxlength="8"
+          maxlength="6"
           class="input-field"
         >
           <template #suffix>
             <button
               type="button"
-              class="link-text text-xs disabled:text-muted"
+              class="text-xs link-text disabled:text-muted"
               :disabled="cd > 0 || sending"
               @click="handleSendCode"
             >
