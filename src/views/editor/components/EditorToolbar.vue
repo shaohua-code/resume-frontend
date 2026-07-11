@@ -53,6 +53,7 @@
       <!-- 桌面端：右侧操作 -->
       <div class="items-center hidden gap-2 shrink-0 lg:flex">
         <button class="btn-ghost h-9 px-3 py-1.5 text-xs" @click="emit('match')"><AimOutlined /> JD匹配</button>
+        <button class="btn-ghost h-9 px-3 py-1.5 text-xs" @click="emit('jd-optimize')"><ThunderboltOutlined /> JD优化</button>
         <button class="btn-ghost h-9 px-3 py-1.5 text-xs" :disabled="scoring" @click="emit('score')">
           <a-spin v-if="scoring" size="small" class="mr-1" />
           <BarChartOutlined v-else class="mr-1" /> 评分
@@ -86,7 +87,9 @@
               <a-menu-item @click="openMobilePanel('font')">字体设置</a-menu-item>
               <!-- <a-menu-item @click="openMobilePanel('skin')">皮肤设置</a-menu-item> -->
               <a-menu-divider />
+              
               <a-menu-item @click="emit('match')">JD 匹配</a-menu-item>
+              <a-menu-item @click="emit('jd-optimize')">JD 优化简历</a-menu-item>
               <a-menu-item :disabled="scoring" @click="emit('score')">AI 评分</a-menu-item>
               <a-menu-divider />
               <a-menu-item @click="emit('export-pdf')">导出 PDF</a-menu-item>
@@ -127,7 +130,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   LeftOutlined, SaveOutlined, DownloadOutlined, MenuOutlined,
-  AimOutlined, BarChartOutlined,
+  AimOutlined, BarChartOutlined, ThunderboltOutlined,
   AppstoreOutlined, ColumnWidthOutlined, FontSizeOutlined, BgColorsOutlined,
 } from '@ant-design/icons-vue'
 import GradientButton from '@/components/GradientButton.vue'
@@ -154,7 +157,7 @@ defineProps({
 })
 
 const emit = defineEmits([
-  'settings-change', 'template', 'match', 'score', 'save', 'export-pdf', 'export-word',
+  'settings-change', 'template', 'match', 'jd-optimize', 'score', 'save', 'export-pdf', 'export-word',
 ])
 
 const router = useRouter()

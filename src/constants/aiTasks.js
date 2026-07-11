@@ -16,6 +16,9 @@ export const AI_TASK_TYPES = {
   JD_MATCH: 'jd_match',
   SCORE: 'score',
   PDF_OPTIMIZE: 'pdf_optimize',
+  JD_RESUME_OPTIMIZE: 'jd_resume_optimize',
+  PDF_JD_OPTIMIZE: 'pdf_jd_optimize',
+  JD_IMAGE_EXTRACT: 'jd_image_extract',
 }
 
 /**
@@ -30,6 +33,9 @@ export const AI_TASK_TYPE_LABEL_MAP = {
   [AI_TASK_TYPES.JD_MATCH]: '岗位匹配度分析',
   [AI_TASK_TYPES.SCORE]: '简历评分',
   [AI_TASK_TYPES.PDF_OPTIMIZE]: 'PDF优化',
+  [AI_TASK_TYPES.JD_RESUME_OPTIMIZE]: 'JD简历优化',
+  [AI_TASK_TYPES.PDF_JD_OPTIMIZE]: 'PDF+JD优化',
+  [AI_TASK_TYPES.JD_IMAGE_EXTRACT]: 'JD图片提取',
 }
 
 /**

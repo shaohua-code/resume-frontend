@@ -49,6 +49,14 @@
         >
           <ThunderboltFilled /> 直接优化已上传简历
         </GradientButton>
+        <button
+          v-if="canShowJdOptimize"
+          type="button"
+          class="btn-ghost inline-flex h-10 min-w-[160px] items-center justify-center gap-1.5 rounded-button px-5 text-sm"
+          @click="openJdOptimize"
+        >
+          <AimOutlined /> 按 JD 优化简历
+        </button>
       </div>
     </a-card>
 
@@ -85,17 +93,32 @@
           <div v-if="uploadPercent < 100 && !streamText" class="mt-2 text-center text-sm text-muted">
             正在上传并连接 AI...
           </div>
-          <StreamResumePreview v-else :stream-text="streamText" :loading="uploading" />
+          <StreamResumePreview
+            v-else
+            :stream-text="streamText"
+            :loading="uploading"
+            :template-id="resumeStore.currentTemplateId"
+            :loading-hint="isJdOptimize ? 'AI 正在根据岗位 JD 优化你的简历...' : undefined"
+          />
         </div>
 
-        <div class="mt-6 flex justify-center">
+        <div class="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <GradientButton
             class="inline-flex h-10 min-w-[160px] items-center justify-center w-full sm:w-auto"
-            :loading="uploading && !useExistingFile"
+            :loading="uploading && !useExistingFile && !isJdOptimize"
             @click="handleSubmit"
           >
             <ThunderboltFilled /> 开始 AI 优化
           </GradientButton>
+          <button
+            v-if="canShowJdOptimize && fileList.length"
+            type="button"
+            class="btn-ghost inline-flex h-10 min-w-[160px] items-center justify-center gap-1.5 rounded-button px-5 text-sm"
+            :disabled="uploading"
+            @click="openJdOptimize"
+          >
+            <AimOutlined /> 按 JD 优化简历
+          </button>
         </div>
       </a-form>
     </a-card>
@@ -123,12 +146,27 @@
 
       <a-divider />
 
-      <div class="flex justify-center">
+      <div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
         <GradientButton @click="goEditor">
           <EditOutlined /> 进入编辑器查看完整简历
         </GradientButton>
+        <button
+          v-if="canShowJdOptimize"
+          type="button"
+          class="btn-ghost inline-flex h-10 items-center gap-1.5 rounded-button px-5 text-sm"
+          @click="openJdOptimize"
+        >
+          <AimOutlined /> 按 JD 优化简历
+        </button>
       </div>
     </a-card>
+
+    <!-- JD 输入弹窗（确定后复用上方 PDF 优化预览区） -->
+    <JdResumeOptimizeModal
+      v-model:open="jdOptimizeOpen"
+      :template-id="resumeStore.currentTemplateId"
+      @confirm-start="handleJdConfirmStart"
+    />
 
     <!-- 超过 5 份简历时的二次确认弹窗 -->
     <a-modal
@@ -149,7 +187,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
@@ -161,19 +199,25 @@ import {
   BulbOutlined,
   EditOutlined,
   DeleteOutlined,
+  AimOutlined,
 } from '@ant-design/icons-vue'
 import {
   uploadOptimizeResume,
   uploadOptimizeResumeStream,
   uploadOptimizeExistingStream,
   uploadOptimizeExisting,
+  uploadOptimizeByJdStream,
+  uploadOptimizeByJdExistingStream,
   getUploadedResume,
   deleteUploadedResume,
   createResume as createApi,
 } from '@/api/resume'
 import { useResumeStore } from '@/stores/resume'
 import GradientButton from '@/components/GradientButton.vue'
+import JdResumeOptimizeModal from '@/components/JdResumeOptimizeModal.vue'
 import StreamResumePreview from './StreamResumePreview.vue'
+import { normalizeResumeFields } from '@/constants/resumeFieldSchema'
+import { parsePartialResumeJson } from '../utils/streamResumeParser'
 
 const router = useRouter()
 const resumeStore = useResumeStore()
@@ -185,6 +229,8 @@ const uploadPercent = ref(0)
 const optimizeResult = ref(null)
 const streamText = ref('')
 const useExistingFile = ref(false)
+// 是否为 JD 优化流程（复用同一预览区，文案略有不同）
+const isJdOptimize = ref(false)
 
 const existingFile = ref(null)
 const deleting = ref(false)
@@ -197,6 +243,59 @@ const overLimitVisible = ref(false)
 const pendingResult = ref(null)
 // 标记是否已确认超限，避免重复弹窗
 const overLimitConfirmed = ref(false)
+
+// JD 优化弹窗
+const jdOptimizeOpen = ref(false)
+
+// 有 PDF（已上传或已选择）即可 JD 优化，无需先完成 PDF 优化
+const canShowJdOptimize = computed(() => !!(existingFile.value || fileList.value.length))
+
+/** 打开 JD 输入弹窗 */
+function openJdOptimize() {
+  if (!existingFile.value && !fileList.value.length) {
+    message.warning('请先上传或选择 PDF 简历')
+    return
+  }
+  jdOptimizeOpen.value = true
+}
+
+/** 确定后：复用 PDF 优化预览区，走 PDF+JD 流式接口 */
+async function handleJdConfirmStart({ jdText }) {
+  if (uploading.value) return
+  if (!jdText?.trim()) {
+    message.warning('JD 内容不能为空')
+    return
+  }
+
+  // 优先使用已上传 PDF；否则使用当前选择的文件
+  const useExisting = !!existingFile.value && !fileList.value.length
+  if (!useExisting && !fileList.value.length) {
+    message.warning('请先上传或选择 PDF 简历')
+    return
+  }
+
+  useExistingFile.value = useExisting
+  isJdOptimize.value = true
+  resetOptimizeState()
+
+  try {
+    let resultData = null
+    if (useExisting) {
+      resultData = await uploadOptimizeByJdExistingStream(jdText.trim(), streamHandlers)
+    } else {
+      const file = fileList.value[0]
+      const realFile = file.originFileObj || file
+      resultData = await uploadOptimizeByJdStream(realFile, jdText.trim(), streamHandlers)
+    }
+    if (resultData) await handleOptimizeSuccess(resultData)
+  } catch (e) {
+    /* request / fetch 已提示 */
+  } finally {
+    uploading.value = false
+    useExistingFile.value = false
+    isJdOptimize.value = false
+  }
+}
 
 // 未填优化方向时，滚动并聚焦到输入框
 async function focusTargetPosition() {
@@ -390,6 +489,36 @@ function formatTime(ts) {
 }
 
 onMounted(fetchExisting)
+
+/**
+ * 构建当前简历快照，供 JD 优化弹窗使用
+ */
+function getResumeSnapshot() {
+  if (optimizeResult.value?.resume && Object.keys(optimizeResult.value.resume).length) {
+    return normalizeResumeFields({ ...optimizeResult.value.resume })
+  }
+  if (streamText.value) {
+    const parsed = parsePartialResumeJson(streamText.value)
+    if (Object.keys(parsed).length) return normalizeResumeFields(parsed)
+  }
+  if (resumeStore.currentResume && Object.keys(resumeStore.currentResume).length) {
+    return normalizeResumeFields({ ...resumeStore.currentResume })
+  }
+  return null
+}
+
+/**
+ * 用户确认应用优化结果：更新预览数据（Upload 模式自动落库，无需手动应用）
+ */
+function applyOptimizedResume(optimized) {
+  optimizeResult.value = {
+    resume: normalizeResumeFields(optimized),
+    optimization_notes: optimizeResult.value?.optimization_notes || [],
+  }
+  resumeStore.currentResume = optimizeResult.value.resume
+}
+
+defineExpose({ getResumeSnapshot, applyOptimizedResume })
 </script>
 
 <style scoped>

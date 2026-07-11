@@ -21,6 +21,7 @@
       :scoring="resumeStore.scoring"
       @template="showTemplateDrawer = true"
       @match="showMatchModal = true"
+      @jd-optimize="openJdOptimizeModal"
       @score="handleScore"
       @save="handleSave"
       @export-pdf="handleExportPDF"
@@ -96,6 +97,15 @@
         </ul>
       </div>
     </a-modal>
+
+    <!-- JD 优化简历弹窗：流式预览，用户手动应用替换 -->
+    <JdResumeOptimizeModal
+      v-model:open="showJdOptimizeModal"
+      :resume="resume"
+      :template-id="templateId"
+      :input-only="false"
+      @apply="handleJdOptimizeApply"
+    />
 
     <!-- 模板选择抽屉 -->
     <a-drawer
@@ -178,10 +188,11 @@ import { EMPTY_SKIN_OVERRIDES } from '@/constants/skin'
 import { TEMPLATE_LIST, getTemplateName, clampTemplateId } from '@/constants/templateRegistry'
 import { applyTemplateFontColorDefaults } from '@/constants/templateFontColors'
 import { applyTemplateSkinDefaults } from '@/constants/templateSkinColors'
-import { normalizeResumeFields, syncFlatEducationFields, validateRequiredBasicFields } from '@/constants/resumeFieldSchema'
+import { normalizeResumeFields, syncFlatEducationFields, validateRequiredBasicFields, mergeOptimizedResume } from '@/constants/resumeFieldSchema'
 import EditorToolbar from './components/EditorToolbar.vue'
 import EditorEditPanel from './components/EditorEditPanel.vue'
 import ResumePreview from './components/ResumePreview.vue'
+import JdResumeOptimizeModal from '@/components/JdResumeOptimizeModal.vue'
 import { useResumeExportPrint } from '@/composables/useResumeExportPrint'
 
 const route = useRoute()
@@ -258,6 +269,26 @@ function selectTemplate(id) {
 const showMatchModal = ref(false)
 const jdText = ref('')
 const matchResult = ref(null)
+
+// JD 优化简历弹窗显隐
+const showJdOptimizeModal = ref(false)
+
+/** 打开 JD 优化弹窗 */
+function openJdOptimizeModal() {
+  showJdOptimizeModal.value = true
+}
+
+/**
+ * 用户确认应用 JD 优化结果后，合并到编辑器 resume
+ * 保留编辑器样式设置，不自动保存
+ */
+function handleJdOptimizeApply(optimized) {
+  const merged = mergeOptimizedResume(resume, optimized)
+  Object.keys(resume).forEach((key) => delete resume[key])
+  Object.assign(resume, merged)
+  resumeStore.currentResume = { ...merged }
+  message.success('已应用 JD 优化结果，记得保存简历')
+}
 
 // 根据匹配分数返回进度条颜色
 const matchProgressColor = computed(() => {

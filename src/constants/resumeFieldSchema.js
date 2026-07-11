@@ -234,3 +234,26 @@ export function validateRequiredBasicFields(data = {}) {
   }
   return { ok: true, name, target_position: targetPosition }
 }
+
+/**
+ * 将 JD 优化后的简历合并到目标对象（用户点击「应用替换」时调用）
+ * 保留目标对象中编辑器样式等未在 AI 结果中出现的字段
+ * @param {object} target 待写入的简历对象
+ * @param {object} optimized AI 优化后的简历
+ * @returns {object} 合并后的简历
+ */
+export function mergeOptimizedResume(target = {}, optimized = {}) {
+  const merged = normalizeResumeFields({
+    ...target,
+    ...optimized,
+    // 数组类字段以 AI 结果为准（若存在）
+    educations: optimized.educations?.length ? optimized.educations : (target.educations || []),
+    projects: optimized.projects?.length ? optimized.projects : (target.projects || []),
+    internships: optimized.internships?.length ? optimized.internships : (target.internships || []),
+    skills: optimized.skills?.length ? optimized.skills : (target.skills || []),
+    awards: optimized.awards?.length ? optimized.awards : (target.awards || []),
+    certificates: optimized.certificates?.length ? optimized.certificates : (target.certificates || []),
+    custom_fields: optimized.custom_fields?.length ? optimized.custom_fields : (target.custom_fields || []),
+  })
+  return syncFlatEducationFields(merged)
+}

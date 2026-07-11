@@ -103,7 +103,7 @@ function formatRemark(remark, type) {
   // 如果是 AI 消费类型，尝试将任务类型英文标识替换为中文
   if (type === 'AI_CONSUME') {
     // 匹配所有 8 种任务类型英文标识
-    const taskTypePattern = /(resume_generate|project_optimize|summary_optimize|skills_optimize|internship_optimize|jd_match|score|pdf_optimize)/g
+    const taskTypePattern = /(resume_generate|project_optimize|summary_optimize|skills_optimize|internship_optimize|jd_match|jd_resume_optimize|score|pdf_optimize)/g
     const formattedRemark = remark.replace(taskTypePattern, (match) => getAiTaskLabel(match))
     return formattedRemark
   }

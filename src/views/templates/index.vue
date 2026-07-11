@@ -10,8 +10,10 @@ import GradientButton from '@/components/GradientButton.vue'
 import TemplateMiniPreview from '@/views/home/components/TemplateMiniPreview.vue'
 import { getDemoResume } from '@/views/home/utils/demoResume'
 import { TEMPLATE_LIST } from '@/constants/templateRegistry'
+import { useResumeStore } from '@/stores/resume'
 
 const router = useRouter()
+const resumeStore = useResumeStore()
 const previewId = ref(null)
 const modalPreviewRef = ref(null)
 // 弹窗内预览缩放比，按容器宽度自适应
@@ -28,6 +30,12 @@ function closePreview() {
 }
 
 function goGenerate() {
+  // 若用户正在预览某套模板，带入生成页与流式预览
+  if (previewId.value) {
+    resumeStore.currentTemplateId = previewId.value
+    router.push({ path: '/generate', query: { template_id: previewId.value } })
+    return
+  }
   router.push('/generate')
 }
 

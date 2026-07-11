@@ -227,6 +227,14 @@
             <ThunderboltOutlined v-if="!resumeStore.generating" class="mr-1" />
             AI 生成简历
           </GradientButton>
+          <button
+            v-if="canShowJdOptimize"
+            type="button"
+            class="btn-ghost inline-flex h-10 min-w-[160px] items-center justify-center gap-1.5"
+            @click="openJdOptimize"
+          >
+            <AimOutlined /> 按 JD 优化简历
+          </button>
         </div>
       </div>
 
@@ -240,8 +248,12 @@
                 <a-spin size="large" class="text-brand-dark" />
               </div>
             </div>
-            <h2 class="mb-2 text-xl font-semibold text-brand-dark">AI 正在为你生成专业简历...</h2>
-            <p class="mb-2 text-sm text-muted">使用 STAR 法则优化项目描述，突出技术亮点</p>
+            <h2 class="mb-2 text-xl font-semibold text-brand-dark">
+              {{ isJdOptimizing ? 'AI 正在根据岗位 JD 优化你的简历...' : 'AI 正在为你生成专业简历...' }}
+            </h2>
+            <p class="mb-2 text-sm text-muted">
+              {{ isJdOptimizing ? '结合岗位 JD 与表单内容，针对性优化简历' : '使用 STAR 法则优化项目描述，突出技术亮点' }}
+            </p>
             <div class="mb-6 flex items-center justify-center gap-1.5">
               <span class="h-2 w-2 animate-bounce rounded-full bg-brand" style="animation-delay: 0ms" />
               <span class="h-2 w-2 animate-bounce rounded-full bg-brand-light" style="animation-delay: 150ms" />
@@ -250,12 +262,14 @@
 
             <div class="animate-fade-in rounded-card border border-line/50 bg-cream p-4 text-left sm:p-5">
               <StreamResumePreview
-                :stream-text="resumeStore.streamText"
-                :loading="resumeStore.generating"
+                :stream-text="isJdOptimizing ? jdStreamText : resumeStore.streamText"
+                :loading="isJdOptimizing ? jdLoading : resumeStore.generating"
+                :template-id="resumeStore.currentTemplateId"
+                :loading-hint="isJdOptimizing ? 'AI 正在根据岗位 JD 优化你的简历...' : undefined"
               />
             </div>
 
-            <div class="mt-6 rounded-card bg-cream p-5 text-left">
+            <div v-if="!isJdOptimizing" class="mt-6 rounded-card bg-cream p-5 text-left">
               <div
                 v-for="(step, idx) in progressSteps"
                 :key="idx"
@@ -271,7 +285,9 @@
                 {{ step }}
               </div>
             </div>
-            <p class="mt-6 text-xs text-warning">流式生成中，请耐心等待完成</p>
+            <p class="mt-6 text-xs text-warning">
+              {{ isJdOptimizing ? 'JD 优化流式输出中，请耐心等待完成' : '流式生成中，请耐心等待完成' }}
+            </p>
           </div>
         </a-card>
       </div>
@@ -310,6 +326,14 @@
         是否继续操作？
       </div>
     </a-modal>
+
+    <!-- JD 优化弹窗：确定后跳转 Step3 页内流式预览 -->
+    <JdResumeOptimizeModal
+      v-model:open="jdOptimizeOpen"
+      :resume="jdOptimizeResume"
+      :template-id="resumeStore.currentTemplateId"
+      @confirm-start="handleJdConfirmStart"
+    />
   </div>
 </template>
 
@@ -321,13 +345,17 @@ import {
   DeleteOutlined, PlusOutlined, ThunderboltOutlined,
   UserOutlined, CodeOutlined, BankOutlined, ReadOutlined,
   ArrowLeftOutlined, ArrowRightOutlined, EditOutlined, ReloadOutlined,
+  AimOutlined,
 } from '@ant-design/icons-vue'
 import { useResumeStore } from '@/stores/resume'
+import { createResume as createApi } from '@/api/resume'
 import GradientButton from '@/components/GradientButton.vue'
+import JdResumeOptimizeModal from '@/components/JdResumeOptimizeModal.vue'
 import StreamResumePreview from './StreamResumePreview.vue'
+import { useJdResumeOptimize } from '@/composables/useJdResumeOptimize'
 import ResumeBasicFieldsSection from './ResumeBasicFieldsSection.vue'
 import ResumeEducationListSection from './ResumeEducationListSection.vue'
-import { createEmptyBasicForm, syncFlatEducationFields, validateRequiredBasicFields } from '@/constants/resumeFieldSchema'
+import { createEmptyBasicForm, syncFlatEducationFields, validateRequiredBasicFields, mergeOptimizedResume, normalizeResumeFields } from '@/constants/resumeFieldSchema'
 
 const router = useRouter()
 const resumeStore = useResumeStore()
@@ -366,6 +394,90 @@ const internships = reactive([
   { company: '', position: '', description: '', start_date: '', end_date: '' },
 ])
 
+// JD 优化弹窗与页内流式状态
+const jdOptimizeOpen = ref(false)
+const jdOptimizeResume = ref({})
+const isJdOptimizing = ref(false)
+const pendingJdText = ref('')
+const {
+  streamText: jdStreamText,
+  loading: jdLoading,
+  optimizeResult: jdOptimizeResult,
+  startOptimize: startJdOptimize,
+} = useJdResumeOptimize()
+
+// Step2 且已填姓名即可 JD 优化（不要求意向岗位）
+const canShowJdOptimize = computed(() => {
+  if (currentStep.value !== 2) return false
+  return !!basicForm.name?.trim()
+})
+
+/** 打开 JD 优化输入弹窗 */
+function openJdOptimize() {
+  if (!basicForm.name?.trim()) {
+    message.warning('请先填写姓名')
+    return
+  }
+  jdOptimizeResume.value = getResumeSnapshot()
+  jdOptimizeOpen.value = true
+}
+
+/** 执行 JD 流式优化并落库 */
+async function runJdOptimize(jdText) {
+  const snapshot = getResumeSnapshot()
+  isJdOptimizing.value = true
+  currentStep.value = 3
+
+  const ok = await startJdOptimize(snapshot, {
+    jdText,
+    skipBasicCheck: true,
+    successMessage: 'JD 优化完成',
+  })
+
+  if (ok && jdOptimizeResult.value?.resume) {
+    resumeStore.currentResume = jdOptimizeResult.value.resume
+    try {
+      const createRes = await createApi({
+        title: jdOptimizeResult.value.resume?.name
+          ? `${jdOptimizeResult.value.resume.name}的简历`
+          : '未命名简历',
+        resume_json: jdOptimizeResult.value.resume,
+        template_id: resumeStore.currentTemplateId || 1,
+        score: 0,
+      })
+      if (createRes.success && createRes.data?.id) {
+        resumeStore.currentResumeId = createRes.data.id
+      }
+    } catch (createErr) {
+      console.warn('[FormPanel] JD 优化后自动创建简历失败:', createErr)
+    }
+    currentStep.value = 4
+    overLimitConfirmed.value = false
+  } else {
+    currentStep.value = 2
+  }
+  isJdOptimizing.value = false
+}
+
+/** 弹窗确定：校验超限后进入 Step3 页内预览 */
+async function handleJdConfirmStart({ jdText }) {
+  if (!basicForm.name?.trim()) {
+    message.warning('请先填写姓名')
+    return
+  }
+
+  if (!overLimitConfirmed.value) {
+    await resumeStore.fetchResumeCount()
+    if (resumeStore.resumeTotal >= resumeStore.resumeMaxCount) {
+      pendingJdText.value = jdText
+      overLimitVisible.value = true
+      return
+    }
+  }
+
+  await runJdOptimize(jdText)
+}
+
 const progressSteps = [
   '分析基本信息',
   '优化项目描述',
@@ -374,7 +486,7 @@ const progressSteps = [
 ]
 
 const progressIndex = computed(() => {
-  if (currentStep.value !== 3) return progressSteps.length
+  if (currentStep.value !== 3 || isJdOptimizing.value) return progressSteps.length
   const len = resumeStore.streamText.length
   if (len > 800) return 3
   if (len > 400) return 2
@@ -458,16 +570,97 @@ async function handleGenerate() {
   }
 }
 
-// 确认超限后继续生成
+// 确认超限后继续生成或 JD 优化
 async function confirmOverLimit() {
   overLimitVisible.value = false
   overLimitConfirmed.value = true
+  if (pendingJdText.value) {
+    const jd = pendingJdText.value
+    pendingJdText.value = ''
+    await runJdOptimize(jd)
+    return
+  }
   await handleGenerate()
 }
 
 function goToEditor() {
   router.push('/editor')
 }
+
+/**
+ * 构建当前表单简历快照，供 JD 优化弹窗使用
+ */
+function getResumeSnapshot() {
+  // 若已 AI 生成完成，优先使用 store 中的完整简历
+  if (resumeStore.currentResume && Object.keys(resumeStore.currentResume).length) {
+    return normalizeResumeFields({ ...resumeStore.currentResume })
+  }
+  const payload = {
+    ...basicForm,
+    skills: basicForm.skills
+      ? basicForm.skills.split(/[,，、]/).map((s) => s.trim()).filter(Boolean)
+      : [],
+    awards: basicForm.awards ? basicForm.awards.split('\n').map((s) => s.trim()).filter(Boolean) : [],
+    certificates: basicForm.certificates ? basicForm.certificates.split('\n').map((s) => s.trim()).filter(Boolean) : [],
+    educations: educations.filter((e) => e.school || e.major || e.degree || e.start_date || e.end_date),
+    projects: projects
+      .filter((p) => p.name || p.description)
+      .map((p) => ({
+        ...p,
+        tech_stack: p.tech_stack
+          ? (Array.isArray(p.tech_stack) ? p.tech_stack : p.tech_stack.split(/[,，、]/).map((s) => s.trim()).filter(Boolean))
+          : [],
+      })),
+    internships: internships.filter((i) => i.company || i.description),
+  }
+  syncFlatEducationFields(payload)
+  return normalizeResumeFields(payload)
+}
+
+/**
+ * 用户确认应用 JD 优化结果后，合并到表单与 store
+ */
+function applyOptimizedResume(optimized) {
+  const merged = mergeOptimizedResume(getResumeSnapshot(), optimized)
+  // 回填基本信息
+  Object.assign(basicForm, {
+    name: merged.name || basicForm.name,
+    target_position: merged.target_position || basicForm.target_position,
+    phone: merged.phone || '',
+    email: merged.email || '',
+    work_years: merged.work_years || '',
+    marital_status: merged.marital_status || undefined,
+    height: merged.height || '',
+    weight: merged.weight || '',
+    ethnicity: merged.ethnicity || '',
+    native_place: merged.native_place || '',
+    political_status: merged.political_status || undefined,
+    expected_salary: merged.expected_salary || '',
+    custom_fields: merged.custom_fields || [],
+    skills: Array.isArray(merged.skills) ? merged.skills.join('、') : '',
+    awards: Array.isArray(merged.awards) ? merged.awards.join('\n') : '',
+    certificates: Array.isArray(merged.certificates) ? merged.certificates.join('\n') : '',
+    summary: merged.summary || '',
+  })
+  // 回填教育、项目、实习
+  educations.splice(0, educations.length, ...(merged.educations || []))
+  if (!educations.length) educations.push({ school: '', major: '', degree: '', start_date: '', end_date: '' })
+  projects.splice(0, projects.length, ...(merged.projects || []).map((p) => ({
+    name: p.name || '',
+    role: p.role || '',
+    description: p.description || '',
+    tech_stack: Array.isArray(p.tech_stack) ? p.tech_stack.join('、') : (p.tech_stack || ''),
+    start_date: p.start_date || '',
+    end_date: p.end_date || '',
+  })))
+  if (!projects.length) projects.push({ name: '', role: '', description: '', tech_stack: '', start_date: '', end_date: '' })
+  internships.splice(0, internships.length, ...(merged.internships || []))
+  if (!internships.length) internships.push({ company: '', position: '', description: '', start_date: '', end_date: '' })
+  resumeStore.currentResume = merged
+  message.success('已应用 JD 优化结果')
+}
+
+defineExpose({ getResumeSnapshot, applyOptimizedResume })
 </script>
 
 <style scoped>

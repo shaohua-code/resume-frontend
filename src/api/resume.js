@@ -177,6 +177,130 @@ export function matchJd(resumeId, jdText, model = '') {
   return request.post('/ai/match', { resume_id: resumeId, jd_text: jdText, model })
 }
 
+/**
+ * 基于岗位 JD 流式优化整份简历（SSE）
+ * @param {object} resume 当前简历对象
+ * @param {string} jdText 岗位 JD 文本
+ * @param {object} handlers 流式回调 { onChunk, onDone, onError, onStatus }
+ * @param {string} model 可选模型
+ */
+export async function optimizeResumeByJdStream(resume, jdText, handlers = {}, model = '') {
+  const { useUserStore } = await import('@/stores/user')
+  const userStore = useUserStore()
+  const token = await userStore.getValidToken()
+
+  const body = { resume, jd_text: jdText }
+  if (model) body.model = model
+
+  const response = await fetch(`${API_BASE}/api/ai/optimize-by-jd/stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    let detail = 'JD 优化失败，请重试'
+    try {
+      const errJson = await response.json()
+      detail = errJson.detail || detail
+    } catch (e) {
+      /* ignore */
+    }
+    const err = new Error(detail)
+    throw err
+  }
+
+  return readSSEStream(response, handlers)
+}
+
+/**
+ * 从 JD 图片提取岗位描述文本
+ * @param {File} file 图片文件
+ */
+export function extractJdFromImage(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request.post('/ai/extract-jd-image', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 90000,
+  })
+}
+
+/**
+ * 上传 PDF 并根据岗位 JD 流式优化（SSE）
+ * @param {File} file PDF 文件
+ * @param {string} jdText 岗位 JD 文本
+ */
+export async function uploadOptimizeByJdStream(file, jdText, handlers = {}, model = '') {
+  const { useUserStore } = await import('@/stores/user')
+  const userStore = useUserStore()
+  const token = await userStore.getValidToken()
+
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('jd_text', jdText)
+  if (model) formData.append('model', model)
+
+  const response = await fetch(`${API_BASE}/api/pdf/uploadOptimizeByJd/stream`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  })
+
+  if (!response.ok) {
+    let detail = 'JD 优化失败，请重试'
+    try {
+      const errJson = await response.json()
+      detail = errJson.detail || detail
+    } catch (e) {
+      /* ignore */
+    }
+    const err = new Error(detail)
+    throw err
+  }
+
+  return readSSEStream(response, handlers)
+}
+
+/**
+ * 使用已上传 PDF 根据岗位 JD 流式优化（SSE）
+ * @param {string} jdText 岗位 JD 文本
+ */
+export async function uploadOptimizeByJdExistingStream(jdText, handlers = {}, model = '') {
+  const { useUserStore } = await import('@/stores/user')
+  const userStore = useUserStore()
+  const token = await userStore.getValidToken()
+
+  const response = await fetch(`${API_BASE}/api/pdf/uploadOptimizeByJd/existing/stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({
+      jd_text: jdText,
+      ...(model ? { model } : {}),
+    }),
+  })
+
+  if (!response.ok) {
+    let detail = 'JD 优化失败，请重试'
+    try {
+      const errJson = await response.json()
+      detail = errJson.detail || detail
+    } catch (e) {
+      /* ignore */
+    }
+    const err = new Error(detail)
+    throw err
+  }
+
+  return readSSEStream(response, handlers)
+}
+
 /** AI简历评分 */
 export function scoreResume(resumeId, model = '') {
   return request.post('/ai/score', { model }, { params: { resume_id: resumeId } })
