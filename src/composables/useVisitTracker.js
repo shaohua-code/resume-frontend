@@ -55,12 +55,12 @@ export function useVisitTracker() {
 
   function init() {
     trackEnter()
-    window.addEventListener('pagehide', trackLeave)
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') {
-        trackLeave()
-      }
-    })
+    // window.addEventListener('pagehide', trackLeave)
+    // document.addEventListener('visibilitychange', () => {
+    //   if (document.visibilityState === 'hidden') {
+    //     // trackLeave()
+    //   }
+    // })
   }
 
   return { init }
