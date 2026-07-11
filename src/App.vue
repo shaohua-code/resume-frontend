@@ -45,6 +45,7 @@ const showFeedback = computed(() => {
 
 // 挂载时将 theme.js 变量注入 :root，并初始化访客追踪
 onMounted(() => {
+  console.log('App.vue onMounted')
   applyCssVariables()
   initVisitTracker()
 })
