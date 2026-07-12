@@ -51,6 +51,58 @@ export function getWalletSummary() {
   return request.get('/admin/wallet/summary')
 }
 
+/** 获取当前管理员的充值二维码配置 */
+export function getAdminRechargeConfig() {
+  return request.get('/admin/recharge-config')
+}
+
+/** 保存当前管理员的充值二维码配置 */
+export function saveAdminRechargeConfig(data) {
+  return request.put('/admin/recharge-config', data)
+}
+
+/** 充值记录列表 */
+export function getAdminRechargeRequests(params = {}) {
+  return request.get('/admin/recharge-requests', { params })
+}
+
+/** 充值记录详情 */
+export function getAdminRechargeRequestDetail(id) {
+  return request.get(`/admin/recharge-requests/${id}`)
+}
+
+/**
+ * 充值邮件预览
+ * @param {number|string} id 充值记录 ID
+ * @param {string} type 邮件类型 admin_notify | user_confirm
+ * @param {{ grant_amount?: number }} params 可选覆盖实际充值金额
+ */
+export function previewRechargeEmail(id, type = 'admin_notify', params = {}) {
+  return request.get(`/admin/recharge-requests/${id}/email-preview`, {
+    params: { type, ...params },
+  })
+}
+
+/** 删除待充值记录（仅超管） */
+export function deleteRechargeRequest(id) {
+  return request.delete(`/admin/recharge-requests/${id}`)
+}
+
+/** 审核充值入账 */
+export function approveRechargeRequest(id, data) {
+  return request.post(`/admin/recharge-requests/${id}/approve`, data)
+}
+
+/** 读取充值邮件模板（超管） */
+export function getRechargeEmailTemplates() {
+  return request.get('/admin/recharge-email-templates')
+}
+
+/** 保存充值邮件模板（超管） */
+export function saveRechargeEmailTemplates(data) {
+  return request.put('/admin/recharge-email-templates', data)
+}
+
 /**
  * 获取消费记录列表
  */

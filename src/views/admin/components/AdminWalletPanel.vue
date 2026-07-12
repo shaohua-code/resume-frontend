@@ -15,6 +15,7 @@ const query = reactive({ page: 1, size: 10, keyword: '' })
 
 // 当前登录角色
 const isSuperAdmin = computed(() => userStore.role === 'SUPER_ADMIN')
+// 普通管理员通过「充值记录」审核入账，不在此页手动分配额度
 const isNormalAdmin = computed(() => userStore.role === 'ADMIN')
 
 // 当前管理员额度摘要
@@ -220,7 +221,15 @@ onMounted(async () => {
             {{ formatDateTime(record.update_time) }}
           </template>
           <template v-if="column.key === 'action'">
-            <button class="btn-primary-sm" @click="openAdjust(record)">{{ getActionLabel(record) }}</button>
+            <!-- 仅超管可在此页手动调整额度；普通管理员改走充值记录审核 -->
+            <button
+              v-if="isSuperAdmin"
+              class="btn-primary-sm"
+              @click="openAdjust(record)"
+            >
+              {{ getActionLabel(record) }}
+            </button>
+            <span v-else class="text-xs text-muted">请通过充值记录入账</span>
           </template>
         </template>
       </a-table>

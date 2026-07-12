@@ -13,6 +13,7 @@ import {
 } from '@/api/auth'
 import { message } from 'ant-design-vue'
 import { useWalletStore } from '@/stores/wallet'
+import { roleHasPermission } from '@/constants/permissions'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref(localStorage.getItem('token') || '')
@@ -126,7 +127,9 @@ export const useUserStore = defineStore('user', () => {
   }
 
   function hasPermission(permission) {
-    return permissions.value.includes(permission)
+    // 优先读登录缓存；新增权限后旧会话可能未更新，回退到角色权限表
+    if (permissions.value.includes(permission)) return true
+    return roleHasPermission(role.value, permission)
   }
 
   async function getValidToken() {

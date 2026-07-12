@@ -94,6 +94,18 @@ const routes = [
         meta: { title: '用户额度', permission: 'admin:wallet' },
       },
       {
+        path: 'recharge',
+        name: 'AdminRecharge',
+        component: () => import('@/views/admin/components/AdminRechargePanel.vue'),
+        meta: { title: '充值管理', permission: 'admin:recharge_manage' },
+      },
+      {
+        path: 'recharge-requests',
+        name: 'AdminRechargeRequests',
+        component: () => import('@/views/admin/components/AdminRechargeRequestPanel.vue'),
+        meta: { title: '充值记录', permission: 'admin:view_recharge_requests' },
+      },
+      {
         path: 'ledgers',
         name: 'AdminLedgers',
         component: () => import('@/views/admin/components/AdminLedgerPanel.vue'),

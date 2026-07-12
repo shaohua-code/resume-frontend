@@ -22,8 +22,11 @@
                 {{ getStatusLabel(userStore.userInfo.status) }}
               </span>
             </a-descriptions-item>
-            <a-descriptions-item label="账户余额" :span="2" >
-              <span class="text-danger">{{ balanceText }}</span>
+            <a-descriptions-item label="账户余额" :span="2">
+              <span class="inline-flex flex-wrap items-center gap-2">
+                <span class="text-danger">{{ balanceText }}</span>
+                <GradientButton size="small" @click="rechargeOpen = true">充值</GradientButton>
+              </span>
             </a-descriptions-item>
           </a-descriptions>
         </div>
@@ -121,7 +124,7 @@
           </a-table>
 
           <!-- 移动端分页 -->
-          <div v-if="isMobile && resumeStore.resumeTotal > 10" class="mt-4 flex justify-center">
+          <div v-if="isMobile && resumeStore.resumeTotal > 10" class="flex justify-center mt-4">
             <a-pagination
               :current="mobilePage"
               :page-size="10"
@@ -137,6 +140,8 @@
         <UsagePanel  v-if="activeTab === 'usage'"/>
       </a-tab-pane>
     </a-tabs>
+
+    <RechargeModal v-model:open="rechargeOpen" />
 
     <a-modal
       v-model:open="overLimitVisible"
@@ -169,6 +174,7 @@ import THEME from '@/constants/theme'
 import GradientButton from '@/components/GradientButton.vue'
 import UsagePanel from './components/UsagePanel.vue'
 import ResumeCardList from './components/ResumeCardList.vue'
+import RechargeModal from './components/RechargeModal.vue'
 import { formatDateTime } from '@/utils/date'
 import { useMediaQuery } from '@/composables/useMediaQuery'
 
@@ -181,6 +187,7 @@ const loading = ref(false)
 const activeTab = ref('resumes')
 const mobilePage = ref(1)
 const balanceText = computed(() => formatBalanceText(walletStore.balance))
+const rechargeOpen = ref(false)
 
 const selectedRowKeys = ref([])
 function onSelectChange(keys) {
