@@ -55,20 +55,20 @@ defineProps({
 
       <!-- 统计徽章：白底高对比，适配亮点文案 -->
       <div
-        v-if="stats.length"
-        class="mx-auto grid w-full max-w-lg grid-cols-3 gap-2 sm:max-w-xl sm:gap-3"
+       v-if="stats.length"
+        class="grid w-full max-w-lg grid-cols-3 gap-2 mx-auto sm:max-w-xl sm:gap-3"
         :class="compact ? 'mt-4 sm:mt-5' : 'mt-10 sm:mt-12'"
       >
         <div
           v-for="stat in stats"
           :key="stat.label"
-          class="flex min-h-[4.5rem] min-w-0 flex-col items-center justify-center gap-1 rounded-2xl border border-white/80 bg-white/95 px-2 py-2.5 shadow-lg shadow-black/10 backdrop-blur-sm sm:min-h-[5rem] sm:gap-1.5 sm:px-3 sm:py-3"
+          class="flex min-h-[4.5rem] min-w-0 flex-col items-center justify-center gap-1 rounded-2xl border border-white/25  px-2 py-2.5 shadow-lg shadow-black/10 backdrop-blur-sm sm:min-h-[5rem] sm:gap-1.5 sm:px-3 sm:py-3"
         >
-          <span class="whitespace-nowrap text-xs font-bold leading-none text-brand-dark sm:text-sm">{{ stat.value }}</span>
-          <span class="line-clamp-2 text-center text-[10px] leading-snug text-ink-secondary sm:text-xs">{{ stat.label }}</span>
+          <span class="text-xs font-bold leading-none text-white whitespace-nowrap sm:text-sm">{{ stat.value }}</span>
+          <span class="line-clamp-2 text-center text-[10px] leading-snug text-white sm:text-xs">{{ stat.label }}</span>
         </div>
       </div>
-
+ 
       <!-- 额外内容插槽（如 JD 输入模块） -->
       <div v-if="$slots.default" class="mt-10 sm:mt-12">
         <slot />
