@@ -15,6 +15,8 @@ const props = defineProps({
   highlightModule: { type: String, default: '' },
 })
 
+const emit = defineEmits(['collapsed-change'])
+
 const tabScrollRef = ref(null)
 const formRef = ref(null)
 const isMobile = useMediaQuery()
@@ -27,6 +29,11 @@ onMounted(() => {
   if (isMobile.value) {
     collapsed.value = true
   }
+  emit('collapsed-change', collapsed.value)
+})
+
+watch(collapsed, (value) => {
+  emit('collapsed-change', value)
 })
 
 // 切换 Tab
@@ -63,7 +70,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="fixed bottom-0 left-0 right-0 z-50 border-t border-line/60 bg-white shadow-[0_-4px_16px_rgba(31,41,55,0.06)]">
+  <div class="fixed bottom-0 left-0 right-0 z-50 border-t border-line/60 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(31,41,55,0.06)]">
     <div class="flex h-12 items-center bg-cream px-2">
       <div ref="tabScrollRef" class="flex-1 overflow-x-auto scrollbar-hide">
         <ul class="flex items-center gap-1 whitespace-nowrap px-2 py-0">

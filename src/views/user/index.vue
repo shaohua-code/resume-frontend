@@ -47,11 +47,11 @@
                 title="确定批量删除选中的简历？"
                 @confirm="handleBatchDelete"
               >
-                <button class="inline-flex h-9 min-h-[44px] items-center gap-1 rounded-button border border-danger/30 px-3 text-sm font-medium text-danger transition-colors hover:bg-red-50">
+                <button class="btn-ghost-sm border-danger/30 text-danger hover:bg-red-50">
                   <DeleteOutlined /> 批量删除 ({{ selectedRowKeys.length }})
                 </button>
               </a-popconfirm>
-              <GradientButton size="small" class="!h-9 !min-h-[44px] !min-w-[100px]" @click="handleCreate">
+              <GradientButton size="small" class="!min-w-[100px]" @click="handleCreate">
                 <PlusOutlined /> 新建简历
               </GradientButton>
             </div>

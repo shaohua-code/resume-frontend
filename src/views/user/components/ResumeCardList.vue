@@ -88,7 +88,7 @@ function handleEdit(id) {
       <div class="mt-4 flex gap-2">
         <button
           type="button"
-          class="btn-primary-sm min-h-[44px] flex-1"
+          class="btn-primary-sm flex-1"
           @click="handleEdit(record.id)"
         >
           编辑
@@ -96,7 +96,7 @@ function handleEdit(id) {
         <a-popconfirm title="确定删除？" @confirm="emit('delete', record.id)">
           <button
             type="button"
-            class="btn-ghost-sm min-h-[44px] flex-1 border-danger/30 text-danger hover:bg-red-50"
+            class="btn-ghost-sm flex-1 border-danger/30 text-danger hover:bg-red-50"
           >
             <DeleteOutlined /> 删除
           </button>

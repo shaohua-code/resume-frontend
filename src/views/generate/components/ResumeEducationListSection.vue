@@ -67,7 +67,7 @@ function removeEducation(index) {
         </a-row>
       </a-form>
     </div>
-    <button type="button" class="btn-ghost w-full border-dashed py-2 text-sm" @click="addEducation">
+    <button type="button" class="btn-ghost-dashed text-sm" @click="addEducation">
       <PlusOutlined /> 添加教育经历
     </button>
   </div>

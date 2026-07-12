@@ -104,7 +104,7 @@ const panelKey = computed(() => props.templateId)
 
     <div class="mb-3 flex items-center justify-between">
       <h5 class="m-0 text-sm font-semibold text-ink">字体颜色</h5>
-      <button type="button" class="btn-ghost h-7 px-2 py-1 text-xs" @click="resetFontColors">
+      <button type="button" class="btn-ghost-sm px-3 text-xs" @click="resetFontColors">
         重置
       </button>
     </div>

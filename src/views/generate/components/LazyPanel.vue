@@ -62,7 +62,7 @@
           <div class="mt-2 flex justify-end">
             <button
               type="button"
-              class="btn-ghost inline-flex h-9 items-center gap-1.5 rounded-button px-4 text-sm"
+              class="btn-ghost inline-flex items-center gap-1.5 rounded-button px-4 text-sm"
               @click="fillExample"
             >
               <FileTextOutlined /> 填入示例
@@ -92,27 +92,30 @@
 
       <!-- Step1: AI 流式生成中 -->
       <div v-show="currentStep === 1">
-        <a-card class="card-base mb-4 py-12 text-center" :bordered="false">
+        <a-card class="card-base mb-4 py-4 text-center lg:py-12" :bordered="false">
           <div class="mx-auto max-w-2xl">
-            <div class="relative mx-auto mb-6 flex h-16 w-16 items-center justify-center">
+            <div class="relative mx-auto mb-3 flex h-12 w-12 items-center justify-center lg:mb-6 lg:h-16 lg:w-16">
               <div class="absolute inset-0 animate-pulse rounded-full bg-brand/20 blur-xl" />
-              <div class="relative flex h-16 w-16 items-center justify-center rounded-full bg-brand-lighter">
+              <div class="relative flex h-12 w-12 items-center justify-center rounded-full bg-brand-lighter lg:h-16 lg:w-16">
                 <a-spin size="large" class="text-brand-dark" />
               </div>
             </div>
-            <h2 class="mb-2 text-xl font-semibold text-brand-dark">
+            <h2 class="mb-2 text-lg font-semibold text-brand-dark lg:text-xl">
               {{ isJdOptimizing ? 'AI 正在根据岗位 JD 优化你的简历...' : 'AI 正在解析并生成专业简历...' }}
             </h2>
             <p class="mb-2 text-sm text-muted">
               {{ isJdOptimizing ? '结合岗位 JD 与自由文本，针对性优化简历' : '智能提取你的信息，用 STAR 法则优化项目描述' }}
             </p>
-            <div class="mb-6 flex items-center justify-center gap-1.5">
+            <div class="mb-4 flex items-center justify-center gap-1.5 lg:mb-6">
               <span class="h-2 w-2 animate-bounce rounded-full bg-brand" style="animation-delay: 0ms" />
               <span class="h-2 w-2 animate-bounce rounded-full bg-brand-light" style="animation-delay: 150ms" />
               <span class="h-2 w-2 animate-bounce rounded-full bg-accent" style="animation-delay: 300ms" />
             </div>
 
-            <div class="animate-fade-in rounded-card border border-line/50 bg-cream p-4 text-left sm:p-5">
+            <div
+              ref="streamPreviewAnchorRef"
+              class="animate-fade-in rounded-card border border-line/50 bg-cream p-2 text-left sm:p-5"
+            >
               <StreamResumePreview
                 :stream-text="isJdOptimizing ? jdStreamText : resumeStore.streamText"
                 :loading="isJdOptimizing ? jdLoading : resumeStore.generating"
@@ -121,7 +124,7 @@
               />
             </div>
 
-            <div v-if="!isJdOptimizing" class="mt-6 rounded-card bg-cream p-5 text-left">
+            <div v-if="!isJdOptimizing" class="mt-4 rounded-card bg-cream p-3 text-left lg:mt-6 lg:p-5">
               <div
                 v-for="(step, idx) in progressSteps"
                 :key="idx"
@@ -210,10 +213,13 @@ import GradientButton from '@/components/GradientButton.vue'
 import JdResumeOptimizeModal from '@/components/JdResumeOptimizeModal.vue'
 import StreamResumePreview from './StreamResumePreview.vue'
 import { useJdResumeOptimize } from '@/composables/useJdResumeOptimize'
+import { useScrollToStreamPreview } from '@/composables/useScrollToStreamPreview'
 import { REQUIRED_BASIC_FORM_RULES, mergeOptimizedResume, normalizeResumeFields } from '@/constants/resumeFieldSchema'
 
 const router = useRouter()
 const resumeStore = useResumeStore()
+const streamPreviewAnchorRef = ref(null)
+const { scrollToStreamPreview } = useScrollToStreamPreview(streamPreviewAnchorRef)
 
 // 智能识别示例模板（键值对格式）
 const EXAMPLE_TEMPLATE = `姓名：张三
@@ -338,6 +344,7 @@ async function runJdOptimize(jdText) {
   const snapshot = getResumeSnapshot()
   isJdOptimizing.value = true
   currentStep.value = 1
+  await scrollToStreamPreview()
 
   const ok = await startJdOptimize(snapshot, {
     jdText,
@@ -455,6 +462,7 @@ async function handleGenerate() {
   }
 
   currentStep.value = 1
+  await scrollToStreamPreview()
   // 若自由文本未包含姓名，自动补一行便于 AI 识别
   const rawText = /姓名\s*[:：]/.test(text) ? text : `姓名：${name}\n${text}`
   const result = await resumeStore.generateResume({

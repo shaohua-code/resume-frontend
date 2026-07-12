@@ -174,7 +174,7 @@ onMounted(loadUsers)
   <div class="space-y-4">
     <a-card :bordered="false" class="card-base">
       <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <a-input :value="query.keyword" placeholder="搜索邮箱/昵称" class="input-field h-[32px]"
+        <a-input :value="query.keyword" placeholder="搜索邮箱/昵称" class="input-field"
           @update:value="query.keyword = $event" />
         <a-select :value="query.role" allow-clear placeholder="角色筛选" class="input-field w-full"
           @update:value="query.role = $event">
@@ -187,11 +187,11 @@ onMounted(loadUsers)
           <a-select-option value="BANNED">已封禁</a-select-option>
         </a-select>
         <div class="flex gap-2">
-          <button class="btn-primary h-[32px]" @click="loadUsers">查询用户</button>
+          <button class="btn-primary" @click="loadUsers">查询用户</button>
           <!-- 用户管理模式下显示添加用户和邀请链接入口 -->
           <template v-if="mode === 'users'">
-            <button class="btn-ghost h-[32px]" @click="openClaimModal">添加用户</button>
-            <button class="btn-ghost h-[32px]" @click="inviteDrawerOpen = true">邀请链接</button>
+            <button class="btn-ghost" @click="openClaimModal">添加用户</button>
+            <button class="btn-ghost" @click="inviteDrawerOpen = true">邀请链接</button>
           </template>
         </div>
       </div>

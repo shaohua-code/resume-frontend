@@ -1,6 +1,7 @@
 <script setup>
 /**
  * 渐变主按钮 - 封装 a-button + Glassmorphism 渐变样式
+ * 全站统一 40px（h-10）高度
  */
 import { computed } from 'vue'
 
@@ -39,9 +40,12 @@ const props = defineProps({
 
 const emit = defineEmits(['click'])
 
+// small/middle 均使用标准高度 btn 类，表格行内用 -sm 变体仅缩小横向 padding
 const btnClass = computed(() => {
   if (props.variant === 'heroPrimary') return 'btn-hero-primary'
-  if (props.variant === 'ghost' || props.ghost) return 'btn-ghost'
+  if (props.variant === 'ghost' || props.ghost) {
+    return props.size === 'small' ? 'btn-ghost-sm' : 'btn-ghost'
+  }
   return props.size === 'small' ? 'btn-primary-sm' : 'btn-primary'
 })
 </script>
@@ -49,7 +53,7 @@ const btnClass = computed(() => {
 <template>
   <a-button
     :class="btnClass"
-    :size="size"
+    size="middle"
     :loading="loading"
     :disabled="disabled"
     :block="block"

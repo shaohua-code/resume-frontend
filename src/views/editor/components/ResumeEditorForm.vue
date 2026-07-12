@@ -206,7 +206,7 @@ const educationsModel = computed({
           </GradientButton>
         </div>
       </div>
-      <button class="btn-ghost w-full border-dashed py-2 text-sm" @click="addProject">
+      <button class="btn-ghost-dashed text-sm" @click="addProject">
         <PlusOutlined /> 添加项目
       </button>
     </template>
@@ -234,7 +234,7 @@ const educationsModel = computed({
           </GradientButton>
         </div>
       </div>
-      <button class="btn-ghost w-full border-dashed py-2 text-sm" @click="addInternship">
+      <button class="btn-ghost-dashed text-sm" @click="addInternship">
         <PlusOutlined /> 添加实习
       </button>
     </template>

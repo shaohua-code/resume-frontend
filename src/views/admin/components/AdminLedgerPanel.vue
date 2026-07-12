@@ -102,7 +102,7 @@ onMounted(() => {
           </a-select-option>
         </a-select>
         <div class="md:col-span-2">
-          <button class="btn-primary h-[32px]" @click="loadLedgers">查询记录</button>
+          <button class="btn-primary" @click="loadLedgers">查询记录</button>
         </div>
       </div>
     </a-card>

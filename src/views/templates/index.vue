@@ -121,7 +121,7 @@ onUnmounted(() => {
             :show-label="false"
           />
         </div>
-        <GradientButton class="!h-9 !min-w-[100px] mt-[10px]" @click="goGenerate">使用此模板生成</GradientButton>
+        <GradientButton class="!min-w-[100px] mt-[10px]" @click="goGenerate">使用此模板生成</GradientButton>
       </div>
     </a-modal>
   </div>

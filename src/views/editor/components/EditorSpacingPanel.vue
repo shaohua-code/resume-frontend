@@ -35,7 +35,7 @@ function resetKey(key) {
           :handle-style="{ borderColor: '#7DD3E8' }"
           @change="emit('change')"
         />
-        <button class="btn-ghost h-7 px-2 py-1 text-xs" @click="resetKey('sectionGap')">重置</button>
+        <button class="btn-ghost-sm px-3 text-xs" @click="resetKey('sectionGap')">重置</button>
       </div>
     </div>
 
@@ -54,7 +54,7 @@ function resetKey(key) {
           :handle-style="{ borderColor: '#7DD3E8' }"
           @change="emit('change')"
         />
-        <button class="btn-ghost h-7 px-2 py-1 text-xs" @click="resetKey('lineHeight')">重置</button>
+        <button class="btn-ghost-sm px-3 text-xs" @click="resetKey('lineHeight')">重置</button>
       </div>
     </div>
 
@@ -73,7 +73,7 @@ function resetKey(key) {
           :handle-style="{ borderColor: '#7DD3E8' }"
           @change="emit('change')"
         />
-        <button class="btn-ghost h-7 px-2 py-1 text-xs" @click="resetKey('padding')">重置</button>
+        <button class="btn-ghost-sm px-3 text-xs" @click="resetKey('padding')">重置</button>
       </div>
     </div>
 
@@ -92,7 +92,7 @@ function resetKey(key) {
           :handle-style="{ borderColor: '#7DD3E8' }"
           @change="emit('change')"
         />
-        <button class="btn-ghost h-7 px-2 py-1 text-xs" @click="resetKey('pageTopGap')">重置</button>
+        <button class="btn-ghost-sm px-3 text-xs" @click="resetKey('pageTopGap')">重置</button>
       </div>
     </div>
 
@@ -111,7 +111,7 @@ function resetKey(key) {
           :handle-style="{ borderColor: '#7DD3E8' }"
           @change="emit('change')"
         />
-        <button class="btn-ghost h-7 px-2 py-1 text-xs" @click="resetKey('pageBottomGap')">重置</button>
+        <button class="btn-ghost-sm px-3 text-xs" @click="resetKey('pageBottomGap')">重置</button>
       </div>
     </div>
 

@@ -3,12 +3,16 @@
  * 流式生成/优化时的简历模板实时预览
  * 使用当前选中模板渲染，不展示原始 JSON
  */
-import { computed } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import ResumeTemplate from '@/components/ResumeTemplate.vue'
 import { DEFAULT_MODULES, fontColorsToCssVars } from '@/constants/editorSettings'
 import { skinThemeToCssVars, EMPTY_SKIN_OVERRIDES } from '@/constants/skin'
 import { clampTemplateId } from '@/constants/templateRegistry'
+import { usePreviewScale } from '@/composables/usePreviewScale'
 import { parsePartialResumeJson, hasStreamResumeContent } from '../utils/streamResumeParser'
+
+const A4_WIDTH_PX = 794
+const MAX_PREVIEW_VH = 0.7
 
 const props = defineProps({
   streamText: {
@@ -19,6 +23,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // 桌面端缩放上限，H5 会按容器宽度等比缩小
   scale: {
     type: Number,
     default: 0.45,
@@ -33,77 +38,134 @@ const props = defineProps({
     type: String,
     default: 'AI 正在生成你的简历...',
   },
-  // 为 true 时高度随内容收缩，去除底部留白（JD 优化弹窗用）
-  fitContent: {
-    type: Boolean,
-    default: false,
-  },
 })
+
+const containerRef = ref(null)
+const innerRef = ref(null)
+const rawContentHeight = ref(0)
+let resizeObserver = null
+
+// 根据容器宽度自适应缩放，不超过 props.scale
+const { scale: containerScale } = usePreviewScale(containerRef, {
+  horizontalPadding: 0,
+  maxScale: 1,
+})
+const effectiveScale = computed(() => Math.min(props.scale, containerScale.value))
 
 // 流式文本增量解析为简历对象
 const resume = computed(() => parsePartialResumeJson(props.streamText))
 const hasContent = computed(() => hasStreamResumeContent(resume.value))
 const visibleModules = DEFAULT_MODULES.filter((m) => m.visible).map((m) => m.key)
-// 规范化模板 ID
 const resolvedTemplateId = computed(() => clampTemplateId(props.templateId))
 
-// 外层容器样式：fitContent 模式不固定 minHeight，避免大量留白
+// 缩放后的视觉高度与宽度
+const scaledHeight = computed(() => Math.ceil(rawContentHeight.value * effectiveScale.value))
+const scaledWidth = computed(() => Math.ceil(A4_WIDTH_PX * effectiveScale.value))
+const maxPreviewHeightPx = computed(() => Math.floor(window.innerHeight * MAX_PREVIEW_VH))
+const exceedsMaxHeight = computed(() => scaledHeight.value > maxPreviewHeightPx.value)
+
+/** 测量内容原始高度，修正 transform scale 的布局占位 */
+function updateScaledHeight() {
+  if (!innerRef.value) return
+  rawContentHeight.value = innerRef.value.scrollHeight || innerRef.value.offsetHeight || 0
+}
+
+// 外层容器样式：精确匹配视觉高度，消除底部留白
 const wrapperStyle = computed(() => {
-  const base = { width: `${794 * props.scale}px` }
-  if (props.fitContent) {
-    return { ...base, height: 'auto' }
+  const height = scaledHeight.value || undefined
+  return {
+    width: `${scaledWidth.value}px`,
+    height: height ? `${Math.min(height, maxPreviewHeightPx.value)}px` : 'auto',
+    maxHeight: `${maxPreviewHeightPx.value}px`,
+    overflow: exceedsMaxHeight.value ? 'auto' : 'hidden',
   }
-  return { ...base, minHeight: `${400 * props.scale}px` }
+})
+
+// 内层滚动占位（超长时可滚动）
+const scrollSpacerStyle = computed(() => {
+  if (!scaledHeight.value) return {}
+  return {
+    width: `${scaledWidth.value}px`,
+    height: `${scaledHeight.value}px`,
+    position: 'relative',
+  }
 })
 
 const innerStyle = computed(() => ({
-  width: '794px',
-  transform: `scale(${props.scale})`,
+  width: `${A4_WIDTH_PX}px`,
+  transform: `scale(${effectiveScale.value})`,
   transformOrigin: 'top left',
 }))
 
-// 按当前模板应用默认字体色与皮肤 CSS 变量
 const templatePreviewStyle = computed(() => ({
   ...fontColorsToCssVars({ templateId: resolvedTemplateId.value }),
   ...skinThemeToCssVars(EMPTY_SKIN_OVERRIDES, resolvedTemplateId.value),
 }))
+
+watch(
+  () => [props.streamText, effectiveScale.value, props.templateId, resume.value],
+  async () => {
+    await nextTick()
+    updateScaledHeight()
+  },
+  { flush: 'post' },
+)
+
+onMounted(async () => {
+  await nextTick()
+  updateScaledHeight()
+  if (innerRef.value && typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(() => updateScaledHeight())
+    resizeObserver.observe(innerRef.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect()
+  resizeObserver = null
+})
 </script>
 
 <template>
-  <div class="animate-fade-in">
-    <p class="mb-3 text-center text-sm font-medium text-brand-dark">
+  <div ref="containerRef" class="animate-fade-in">
+    <p class="mb-2 text-center text-sm font-medium text-brand-dark lg:mb-3">
       {{ loadingHint }}
     </p>
 
     <div
       v-if="hasContent"
-      class="relative mx-auto overflow-hidden rounded-card border border-line/50 bg-white shadow-card"
-      :class="fitContent ? 'max-h-[70vh] overflow-y-auto' : ''"
+      class="relative mx-auto rounded-card border border-line/50 bg-white shadow-card"
       :style="wrapperStyle"
     >
-      <div class="pointer-events-none origin-top-left bg-white" :style="innerStyle">
+      <!-- 绝对定位缩放层 + 精确占位高度 -->
+      <div :style="scrollSpacerStyle">
         <div
-          class="w-[794px] px-8 py-8 text-sm leading-relaxed text-ink"
-          :style="templatePreviewStyle"
+          ref="innerRef"
+          class="pointer-events-none absolute left-0 top-0 origin-top-left bg-white"
+          :style="innerStyle"
         >
-          <ResumeTemplate
-            :resume="resume"
-            :template-id="resolvedTemplateId"
-            :visible-modules="visibleModules"
-          />
+          <div
+            class="w-[794px] px-4 py-4 text-sm leading-relaxed text-ink lg:px-8 lg:py-8"
+            :style="templatePreviewStyle"
+          >
+            <ResumeTemplate
+              :resume="resume"
+              :template-id="resolvedTemplateId"
+              :visible-modules="visibleModules"
+            />
+          </div>
         </div>
       </div>
-      <div class="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white to-transparent" />
       <span
         v-if="loading"
-        class="absolute bottom-3 left-4 inline-block h-4 w-0.5 animate-pulse bg-brand-dark"
+        class="absolute bottom-3 left-4 z-10 inline-block h-4 w-0.5 animate-pulse bg-brand-dark"
       />
     </div>
 
     <!-- 未解析出字段时显示骨架屏 -->
     <div
       v-else
-      class="mx-auto flex max-w-md flex-col items-center gap-4 rounded-card border border-line/40 bg-cream/80 p-8"
+      class="mx-auto flex max-w-md flex-col items-center gap-4 rounded-card border border-line/40 bg-cream/80 p-4 lg:p-8"
     >
       <div class="h-6 w-32 rounded-button skeleton-soft" />
       <div class="h-4 w-48 rounded-button skeleton-soft" />

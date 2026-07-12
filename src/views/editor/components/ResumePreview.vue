@@ -8,28 +8,46 @@
   4. 大模块跨页时，优先保持标题完整，项目条目在合适位置拆分
 -->
 <template>
-  <div ref="panelRef" class="resume-preview-panel">
-    <!-- 页面导航栏 -->
+  <div
+    ref="panelRef"
+    class="resume-preview-panel"
+    :class="editPanelCollapsed ? 'resume-preview-panel--mobile-collapsed' : 'resume-preview-panel--mobile-expanded'"
+  >
+    <!-- 页面导航栏：多页时展示，移动端 sticky 固定在预览区顶部 -->
     <div v-if="pageCount > 1" class="page-nav-bar">
       <div class="page-nav-info">
         <span class="page-nav-label">共 {{ pageCount }} 页</span>
       </div>
-      <div class="page-nav-buttons max-lg:flex-wrap max-lg:justify-end">
-        <a-button size="small" :disabled="currentPage <= 1" @click="scrollToPage(currentPage - 1)">
+      <div class="page-nav-buttons">
+        <button
+          type="button"
+          class="btn-ghost-sm px-3 text-xs"
+          :disabled="currentPage <= 1"
+          @click="scrollToPage(currentPage - 1)"
+        >
           <LeftOutlined /> 上一页
-        </a-button>
-        <a-select size="small" :value="currentPage" class="page-nav-select" @change="scrollToPage">
+        </button>
+        <a-select
+          :value="currentPage"
+          class="page-nav-select input-field"
+          @change="scrollToPage"
+        >
           <a-select-option v-for="p in pageCount" :key="p" :value="p">第 {{ p }} 页</a-select-option>
         </a-select>
-        <a-button size="small" :disabled="currentPage >= pageCount" @click="scrollToPage(currentPage + 1)">
+        <button
+          type="button"
+          class="btn-ghost-sm px-3 text-xs"
+          :disabled="currentPage >= pageCount"
+          @click="scrollToPage(currentPage + 1)"
+        >
           下一页
           <RightOutlined />
-        </a-button>
+        </button>
       </div>
     </div>
 
     <!-- 多页预览：隐藏层测量高度 + 每页 overflow 窗口切片显示 -->
-    <div ref="stageRef" class="preview-stage">
+    <div ref="stageRef" class="preview-stage" :style="previewStageStyle">
       <!-- 隐藏完整文档：用于分页计算与 PDF 导出 -->
       <div class="measure-layer" aria-hidden="true">
         <div
@@ -59,7 +77,7 @@
         <div class="preview-page-scaler" :style="pageScalerStyle">
           <div
             class="preview-page"
-            :style="{ height: pageHeightPx + 'px' }"
+            :style="{ height: getPreviewPageOuterHeight(n) + 'px' }"
           >
             <div
               class="page-viewport"
@@ -99,7 +117,6 @@ import {
   fontColorsToCssVars,
 } from '@/constants/editorSettings'
 import ResumeTemplate from '@/components/ResumeTemplate.vue'
-import { useMediaQuery } from '@/composables/useMediaQuery'
 import { usePreviewScale } from '@/composables/usePreviewScale'
 
 const A4_WIDTH_PX = 794
@@ -116,21 +133,35 @@ const props = defineProps({
   contentColor: { type: String, default: null },
   skinTheme: { type: Object, default: () => ({ ...EMPTY_SKIN_OVERRIDES }) },
   visibleModules: { type: Array, default: () => [] },
+  // 底部编辑栏是否收起，用于移动端预览区高度计算
+  editPanelCollapsed: { type: Boolean, default: true },
 })
 
 const emit = defineEmits(['section-click'])
 
-const isMobile = useMediaQuery()
+// 缩放由 preview-stage 容器宽度驱动
 const panelRef = ref(null)
-const { scale: previewScale } = usePreviewScale(panelRef, {
+const stageRef = ref(null)
+const { scale: previewScale } = usePreviewScale(stageRef, {
   baseWidth: A4_WIDTH_PX,
-  horizontalPadding: 32,
+  horizontalPadding: 0,
   maxScale: 1,
 })
 
-// 移动端缩放内层样式：794px 原始尺寸 + transform 等比缩小
+// 容器宽度不足 A4 时启用等比缩放
+const needsScale = computed(() => previewScale.value < 0.999)
+
+// 多页间距随缩放比例同步缩小
+const previewStageStyle = computed(() => {
+  if (!needsScale.value) {
+    return { gap: '24px' }
+  }
+  return { gap: `${24 * previewScale.value}px` }
+})
+
+// 794px 原始尺寸 + transform 等比缩小
 const pageScalerStyle = computed(() => {
-  if (!isMobile.value || previewScale.value >= 1) {
+  if (!needsScale.value) {
     return { width: `${A4_WIDTH_PX}px` }
   }
   return {
@@ -141,17 +172,26 @@ const pageScalerStyle = computed(() => {
 })
 
 // 外层容器尺寸跟随缩放比例，避免横向溢出
+function getPreviewPageOuterHeight(n) {
+  const contentH = getPageContentHeight(n)
+  // 内容填满一页时使用标准 A4 高度
+  if (contentH >= effectivePageHeight.value - 1) {
+    return pageHeightPx.value
+  }
+  const bottomGap = n === pageCount.value ? pageBottomGap.value : 0
+  // 未满一页时纸张高度跟随实际内容，避免页内大块空白
+  return Math.min(pageHeightPx.value, pageTopGap.value + contentH + bottomGap)
+}
+
 function getPageOuterStyle(n) {
-  const pageHeight = pageHeightPx.value
-  if (!isMobile.value || previewScale.value >= 1) {
+  const pageHeight = getPreviewPageOuterHeight(n)
+  if (!needsScale.value) {
     return { width: `${A4_WIDTH_PX}px`, height: `${pageHeight}px` }
   }
-  const contentHeight = getPageContentHeight(n)
-  const scaledPageHeight = pageHeight * previewScale.value
-  const scaledContentHeight = (pageTopGap.value + contentHeight) * previewScale.value
+  const scale = previewScale.value
   return {
-    width: `${A4_WIDTH_PX * previewScale.value}px`,
-    height: `${Math.max(scaledPageHeight, scaledContentHeight)}px`,
+    width: `${A4_WIDTH_PX * scale}px`,
+    height: `${pageHeight * scale}px`,
   }
 }
 
@@ -267,19 +307,27 @@ function buildPrintPageElements() {
   const pageH = pageHeightPx.value
   const pages = []
 
-  // 优先克隆屏幕上已渲染的 preview-page（与用户所见一致）
+  // 优先克隆屏幕上已渲染的 preview-page（打印仍用标准 A4 高度）
   const visiblePages = stage?.querySelectorAll('.preview-page')
   if (visiblePages?.length) {
-    visiblePages.forEach((pageEl) => {
+    visiblePages.forEach((pageEl, index) => {
       const viewport = pageEl.querySelector('.page-viewport')
       if (!viewport) return
+
+      const pageNum = index + 1
+      const contentH = getPageContentHeight(pageNum)
+      const isFullPage = contentH >= effectivePageHeight.value - 1
 
       const pageWrapper = document.createElement('div')
       pageWrapper.className = 'print-page'
       pageWrapper.style.cssText = `width:794px;height:${pageH}px;overflow:hidden;background:#fff;box-sizing:border-box;position:relative;`
 
       const viewportClone = viewport.cloneNode(true)
-      // 重置克隆节点样式，确保打印时可见且不被截断
+      // 满页时使用标准 A4 内容区高度，保证 PDF 分页正确
+      if (isFullPage) {
+        viewportClone.style.height = `${effectivePageHeight.value}px`
+        viewportClone.style.maxHeight = `${effectivePageHeight.value}px`
+      }
       viewportClone.querySelectorAll('.resume-preview').forEach((el) => {
         el.style.visibility = 'visible'
         el.style.opacity = '1'
@@ -444,6 +492,14 @@ function collectPageSegments(content, contentRect) {
     })
     paragraphs.forEach((p) => pushBlock(p, 'paragraph'))
 
+    // 技能/荣誉等 ul 列表（Tpl04 等无 rt-item 的模块）
+    section.querySelectorAll('ul.rt-list').forEach((list) => {
+      pushBlock(list, 'list')
+      list.querySelectorAll('li').forEach((li) => pushLineSegments(li, contentRect, segments))
+    })
+    // 技能进度条等 grid 区块
+    section.querySelectorAll(':scope > .grid').forEach((grid) => pushBlock(grid, 'block'))
+
     if (!title && items.length === 0 && paragraphs.length === 0) {
       pushBlock(section, 'section')
     }
@@ -526,6 +582,20 @@ function calcSmartPageBreaks() {
       const safeBreak = findSafeBreakBefore(crossing, pos, target, contentRect)
       if (safeBreak !== null && safeBreak > pos) {
         nextBreak = safeBreak
+      } else if (crossing.type === 'title') {
+        // 标题后剩余空间不足时，整段移到下一页，避免标题孤立在页底
+        const sectionEl = crossing.el?.closest?.('section')
+        if (sectionEl) {
+          const sectionBox = measureEl(sectionEl, contentRect)
+          const remaining = sectionBox.bottom - crossing.top
+          if (remaining > 0 && remaining < chunkHeight * 0.6 && crossing.top > pos) {
+            nextBreak = crossing.top
+          } else if (crossing.top > pos) {
+            nextBreak = crossing.top
+          }
+        } else if (crossing.top > pos) {
+          nextBreak = crossing.top
+        }
       } else if (crossing.height > chunkHeight) {
         const lineBefore = boundaries.filter((b) => b > pos && b <= target).pop()
         nextBreak = lineBefore && lineBefore > pos ? lineBefore : target
@@ -551,7 +621,6 @@ function calcSmartPageBreaks() {
   return filterGhostPages(starts, totalHeight.value, segments)
 }
 
-const stageRef = ref(null)
 const contentRef = ref(null)
 const pageCount = ref(1)
 const currentPage = ref(1)
@@ -640,6 +709,12 @@ watch(
   { deep: true }
 )
 
+// 缩放比例变化后同步当前页指示，避免翻页错位
+watch(previewScale, async () => {
+  await nextTick()
+  updateCurrentPage()
+})
+
 // 暴露方法给父组件，用于导出 PDF / Word
 defineExpose({
   getPrintContent,
@@ -653,18 +728,28 @@ defineExpose({
 </script>
 
 <style scoped>
-/* 预览面板：深色背景，突出 A4 白纸 */
+/* 预览面板：深色背景，突出 A4 白纸；移动端限定高度以启用内部滚动与 sticky 导航 */
 .resume-preview-panel {
-  @apply relative flex w-full flex-1 flex-col items-center overflow-y-auto px-4 py-6 pb-10;
+  @apply relative flex w-full max-w-full flex-1 flex-col items-center overflow-x-hidden overflow-y-auto px-4 py-6 pb-10 max-lg:min-h-0 max-lg:w-full;
 }
 
-/* 页面导航栏：磨砂玻璃，移动端自适应宽度 */
+/* 移动端：底部编辑栏收起时的预览可视高度 */
+.resume-preview-panel--mobile-collapsed {
+  @apply max-lg:max-h-[calc(100dvh-56px-72px-env(safe-area-inset-bottom,0px))];
+}
+
+/* 移动端：底部编辑栏展开时缩小预览区，保留分页导航可见 */
+.resume-preview-panel--mobile-expanded {
+  @apply max-lg:max-h-[calc(60dvh-56px-env(safe-area-inset-bottom,0px))];
+}
+
+/* 页面导航栏：sticky 固定在预览滚动区顶部 */
 .page-nav-bar {
-  @apply sticky top-0 z-20 mb-4 flex w-full max-w-[210mm] items-center justify-between rounded-card border border-line/60 bg-white/95 px-4 py-2 shadow-card backdrop-blur-md max-lg:max-w-[calc(100vw-32px)] max-lg:flex-wrap max-lg:gap-2;
+  @apply sticky top-0 z-30 mb-4 flex w-full max-w-[210mm] shrink-0 items-center justify-between gap-2 rounded-card border border-line/60 bg-white/95 px-3 py-2 shadow-card backdrop-blur-md max-lg:max-w-full max-lg:flex-wrap;
 }
 
 .page-nav-info {
-  @apply flex items-center;
+  @apply flex shrink-0 items-center;
 }
 
 .page-nav-label {
@@ -672,16 +757,16 @@ defineExpose({
 }
 
 .page-nav-buttons {
-  @apply flex items-center;
+  @apply flex flex-wrap items-center justify-end gap-2;
 }
 
 .page-nav-select {
-  @apply mx-2 w-24;
+  @apply mx-0 w-24 min-w-[96px];
 }
 
 /* 多页预览舞台：移动端居中且宽度随屏适配 */
 .preview-stage {
-  @apply relative flex w-full max-w-[210mm] flex-col items-center gap-6 pb-10 max-lg:w-full max-lg:max-w-full;
+  @apply relative flex w-full max-w-full flex-col items-center pb-10 max-lg:w-full lg:max-w-[210mm];
 }
 
 /* 缩放外层：控制可见区域尺寸，避免 A4 预览溢出 */

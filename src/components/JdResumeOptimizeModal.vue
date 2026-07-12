@@ -17,6 +17,8 @@ import StreamResumePreview from '@/views/generate/components/StreamResumePreview
 import { useJdResumeOptimize } from '@/composables/useJdResumeOptimize'
 import { extractJdFromImage } from '@/api/resume'
 import { clampTemplateId } from '@/constants/templateRegistry'
+import { useMediaQuery } from '@/composables/useMediaQuery'
+import { useScrollToStreamPreview } from '@/composables/useScrollToStreamPreview'
 
 // 弹窗显隐，父组件 v-model:open 控制
 const open = defineModel('open', { type: Boolean, default: false })
@@ -40,6 +42,10 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['apply', 'confirm-start'])
+
+const isMobile = useMediaQuery()
+const streamPreviewAnchorRef = ref(null)
+const { scrollToStreamPreview } = useScrollToStreamPreview(streamPreviewAnchorRef)
 
 // 弹窗阶段：input 输入 JD | preview 流式预览（仅 inputOnly=false）
 const phase = ref('input')
@@ -67,12 +73,13 @@ const modalTitle = computed(() => (
   phase.value === 'input' ? '按岗位 JD 优化简历' : 'JD 优化预览'
 ))
 
-// 弹窗宽度：预览阶段更宽
-const modalWidth = computed(() => (
-  phase.value === 'preview' ? 860 : 640
-))
+// 弹窗宽度：移动端预览阶段 95vw
+const modalWidth = computed(() => {
+  if (isMobile.value) return '95vw'
+  return phase.value === 'preview' ? 860 : 640
+})
 
-/** 打开/关闭弹窗时重置状态 */
+// 打开/关闭弹窗时重置状态
 watch(open, (val) => {
   if (val) {
     phase.value = 'input'
@@ -160,6 +167,7 @@ async function handleConfirm() {
 
   // 编辑器：弹窗内进入预览并自动开始优化
   phase.value = 'preview'
+  await scrollToStreamPreview()
   await startOptimize(props.resume, { jdText: finalJdText, skipBasicCheck: true, inputOnly: false })
 }
 
@@ -250,21 +258,24 @@ function handleCancel() {
 
     <!-- 阶段2：流式预览 + 优化要点（仅编辑器 inputOnly=false） -->
     <template v-else>
-      <div class="mb-4 rounded-card border border-line/50 bg-cream/80 p-4">
-        <StreamResumePreview
-          :stream-text="streamText"
-          :loading="loading"
-          :template-id="previewTemplateId"
-          :scale="0.6"
-          fit-content
-          loading-hint="AI 正在根据岗位 JD 优化你的简历..."
-        />
-      </div>
+      <div class="max-h-[calc(100vh-120px)] overflow-y-auto">
+        <div
+          ref="streamPreviewAnchorRef"
+          class="mb-4 rounded-card border border-line/50 bg-cream p-2 lg:p-4"
+        >
+          <StreamResumePreview
+            :stream-text="streamText"
+            :loading="loading"
+            :template-id="previewTemplateId"
+            :scale="0.6"
+            loading-hint="AI 正在根据岗位 JD 优化你的简历..."
+          />
+        </div>
 
-      <div
-        v-if="optimizeResult && !loading"
-        class="mb-4 rounded-card border border-line/40 bg-white p-4 shadow-soft"
-      >
+        <div
+          v-if="optimizeResult && !loading"
+          class="mb-4 rounded-card border border-line/40 bg-white p-3 shadow-soft lg:p-4"
+        >
         <p class="mb-3 flex items-center gap-2 text-base font-semibold text-ink">
           <CheckCircleFilled class="text-success" /> 优化完成
         </p>
@@ -282,23 +293,24 @@ function handleCancel() {
             （AI 未返回优化要点）
           </li>
         </ul>
-      </div>
+        </div>
 
-      <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <button
-          type="button"
-          class="btn-ghost inline-flex h-10 items-center justify-center px-6"
-          @click="handleCancel"
-        >
-          取消
-        </button>
-        <GradientButton
-          class="inline-flex h-10 items-center justify-center px-6"
-          :disabled="!optimizeResult || loading"
-          @click="handleApply"
-        >
-          应用替换
-        </GradientButton>
+        <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            class="btn-ghost inline-flex h-10 items-center justify-center px-6"
+            @click="handleCancel"
+          >
+            取消
+          </button>
+          <GradientButton
+            class="inline-flex h-10 items-center justify-center px-6"
+            :disabled="!optimizeResult || loading"
+            @click="handleApply"
+          >
+            应用替换
+          </GradientButton>
+        </div>
       </div>
     </template>
   </a-modal>

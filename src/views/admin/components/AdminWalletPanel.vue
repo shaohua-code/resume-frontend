@@ -187,10 +187,10 @@ onMounted(async () => {
 
     <a-card :bordered="false" class="card-base">
       <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <a-input :value="query.keyword" placeholder="搜索邮箱/昵称" class="h-[32px] input-field"
+        <a-input :value="query.keyword" placeholder="搜索邮箱/昵称" class="input-field"
           @update:value="query.keyword = $event" />
         <div>
-          <button class="btn-primary h-[32px]" @click="loadWallets">查询用户</button>
+          <button class="btn-primary" @click="loadWallets">查询用户</button>
         </div>
       </div>
     </a-card>

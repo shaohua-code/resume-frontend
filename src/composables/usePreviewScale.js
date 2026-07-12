@@ -24,26 +24,39 @@ export function usePreviewScale(
   // 根据容器宽度计算缩放比例，保证 A4 预览不溢出屏幕
   function updateScale() {
     const container = containerRef.value
-    const availableWidth = container
+    const availableWidth = container?.clientWidth
       ? container.clientWidth
-      : window.innerWidth - horizontalPadding
+      : Math.max(0, window.innerWidth - horizontalPadding)
 
     const nextScale = Math.min(maxScale, availableWidth / baseWidth)
     scale.value = Number(Math.max(0.2, nextScale).toFixed(4))
   }
 
+  let rafId = null
+  function scheduleUpdateScale() {
+    if (rafId !== null) return
+    rafId = requestAnimationFrame(() => {
+      rafId = null
+      updateScale()
+    })
+  }
+
   onMounted(() => {
     updateScale()
-    window.addEventListener('resize', updateScale)
+    window.addEventListener('resize', scheduleUpdateScale)
 
     if (containerRef.value && typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(() => updateScale())
+      resizeObserver = new ResizeObserver(() => scheduleUpdateScale())
       resizeObserver.observe(containerRef.value)
     }
   })
 
   onUnmounted(() => {
-    window.removeEventListener('resize', updateScale)
+    window.removeEventListener('resize', scheduleUpdateScale)
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId)
+      rafId = null
+    }
     resizeObserver?.disconnect()
     resizeObserver = null
   })
@@ -54,7 +67,7 @@ export function usePreviewScale(
 
     if (!element || typeof ResizeObserver === 'undefined') return
 
-    resizeObserver = new ResizeObserver(() => updateScale())
+    resizeObserver = new ResizeObserver(() => scheduleUpdateScale())
     resizeObserver.observe(element)
     updateScale()
 

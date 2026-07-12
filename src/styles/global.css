@@ -114,7 +114,7 @@ body {
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-button px-5 py-2.5 text-sm font-medium text-white shadow-glow transition-all duration-200 ease-smooth active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button px-5 py-0 text-sm font-medium leading-none text-white shadow-glow transition-all duration-200 ease-smooth active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
     background: var(--gradient-primary);
   }
 
@@ -124,24 +124,29 @@ body {
   }
 
   .btn-primary-sm {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-button px-3 py-1.5 text-xs font-medium text-white shadow-soft transition-all duration-200 ease-smooth active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-1.5 rounded-button px-3 py-0 text-sm font-medium leading-none text-white shadow-soft transition-all duration-200 ease-smooth active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
     background: var(--gradient-primary);
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-button border border-line bg-white/60 px-5 py-2.5 text-sm font-medium text-ink-secondary backdrop-blur-sm transition-all duration-200 ease-smooth hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button border border-line bg-white/60 px-5 py-0 text-sm font-medium leading-none text-ink-secondary backdrop-blur-sm transition-all duration-200 ease-smooth hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-ghost-sm {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-button border border-line bg-white/60 px-3 py-1.5 text-xs font-medium text-ink-secondary backdrop-blur-sm transition-all duration-200 ease-smooth hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-1.5 rounded-button border border-line bg-white/60 px-3 py-0 text-sm font-medium leading-none text-ink-secondary backdrop-blur-sm transition-all duration-200 ease-smooth hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  /* 全宽虚线添加按钮（添加项目/教育/实习等） */
+  .btn-ghost-dashed {
+    @apply btn-ghost h-10 w-full border-dashed;
   }
 
   .btn-mint {
-    @apply inline-flex items-center justify-center gap-2 rounded-button bg-mint px-5 py-2.5 text-sm font-medium text-emerald-700 shadow-sm transition-all duration-200 ease-smooth hover:bg-emerald-200 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button bg-mint px-5 py-0 text-sm font-medium leading-none text-emerald-700 shadow-sm transition-all duration-200 ease-smooth hover:bg-emerald-200 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 rounded-button bg-danger px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 ease-smooth hover:bg-red-500 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button bg-danger px-5 py-0 text-sm font-medium leading-none text-white shadow-sm transition-all duration-200 ease-smooth hover:bg-red-500 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .input-field {
@@ -167,7 +172,7 @@ body {
 
   /* Hero 主 CTA - 白底实色容器，渐变文字由组件内 span 承载 */
   .btn-hero-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-button border-0 bg-white px-5 py-2.5 text-sm font-semibold shadow-lift transition-all duration-200 ease-smooth hover:brightness-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button border-0 bg-white px-5 py-0 text-sm font-semibold leading-none shadow-lift transition-all duration-200 ease-smooth hover:brightness-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-hero-primary:hover {
@@ -176,7 +181,7 @@ body {
 
   /* Hero 次 CTA - 毛玻璃白边 */
   .btn-hero-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-button border border-white/60 bg-white/15 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-md transition-all duration-200 ease-smooth hover:border-white/80 hover:bg-white/25 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button border border-white/60 bg-white/15 px-5 py-0 text-sm font-medium leading-none text-white backdrop-blur-md transition-all duration-200 ease-smooth hover:border-white/80 hover:bg-white/25 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .badge-success {
@@ -310,4 +315,30 @@ input.ant-input.input-field:not(textarea) {
 
 .input-field .ant-input {
   @apply bg-transparent text-sm text-ink placeholder:text-muted;
+}
+
+/* 全站按钮统一 40px 高度（与 input-field 一致） */
+.ant-btn.btn-primary,
+.ant-btn.btn-primary-sm,
+.ant-btn.btn-ghost,
+.ant-btn.btn-ghost-sm,
+.ant-btn.btn-ghost-dashed,
+.ant-btn.btn-hero-primary,
+.ant-btn.btn-hero-ghost,
+.ant-btn.btn-mint,
+.ant-btn.btn-danger {
+  height: 2.5rem !important;
+  min-height: 2.5rem !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: 1.25rem !important;
+}
+
+/* Modal / 表单内原生 Ant 按钮 middle 尺寸对齐 */
+.ant-btn:not(.ant-btn-sm):not(.ant-btn-lg):not(.ant-btn-link):not(.ant-btn-text) {
+  height: 2.5rem;
+  min-height: 2.5rem;
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 1.25rem;
 }

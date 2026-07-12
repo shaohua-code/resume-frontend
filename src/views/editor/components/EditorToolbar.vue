@@ -6,10 +6,10 @@
     <div class="mx-auto flex h-full max-w-[1400px] items-center justify-between gap-2 px-3 sm:gap-4 sm:px-5">
       <!-- 左侧：返回 + 模板 -->
       <div class="flex items-center gap-1 shrink-0 sm:gap-2">
-        <button class="btn-ghost h-9 px-2 py-1.5 text-xs sm:px-3" @click="router.push('/user')">
+        <button class="px-2 text-xs btn-ghost sm:px-3" @click="router.push('/user')">
           <LeftOutlined /> <span class="hidden sm:inline">返回</span>
         </button>
-        <button class="btn-ghost h-9 max-w-[120px] truncate px-2 py-1.5 text-xs sm:max-w-none sm:px-3" @click="emit('template')">
+        <button class="btn-ghost max-w-[120px] truncate px-2 text-xs sm:max-w-none sm:px-3" @click="emit('template')">
           <AppstoreOutlined /> <span class="hidden md:inline">模板：</span>{{ currentTemplateName }}
         </button>
       </div>
@@ -52,17 +52,17 @@
 
       <!-- 桌面端：右侧操作 -->
       <div class="items-center hidden gap-2 shrink-0 lg:flex">
-        <button class="btn-ghost h-9 px-3 py-1.5 text-xs" @click="emit('match')"><AimOutlined /> JD匹配</button>
-        <button class="btn-ghost h-9 px-3 py-1.5 text-xs" @click="emit('jd-optimize')"><ThunderboltOutlined /> JD优化</button>
-        <button class="btn-ghost h-9 px-3 py-1.5 text-xs" :disabled="scoring" @click="emit('score')">
+        <button class="px-3 text-xs btn-ghost" @click="emit('match')"><AimOutlined /> JD匹配</button>
+        <button class="px-3 text-xs btn-ghost" @click="emit('jd-optimize')"><ThunderboltOutlined /> JD优化</button>
+        <button class="px-3 text-xs btn-ghost" :disabled="scoring" @click="emit('score')">
           <a-spin v-if="scoring" size="small" class="mr-1" />
           <BarChartOutlined v-else class="mr-1" /> 评分
         </button>
-        <GradientButton  class="!h-9 " :loading="saving" @click="emit('save')">
+        <GradientButton :loading="saving" @click="emit('save')">
           <SaveOutlined /> {{ saving ? '保存中' : '保存' }}
         </GradientButton>
         <a-dropdown :disabled="exporting">
-          <GradientButton  class="!h-9" :loading="exporting">
+          <GradientButton :loading="exporting">
             <DownloadOutlined /> {{ exporting ? '导出中' : '导出' }}
           </GradientButton>
           <template #overlay>
@@ -76,16 +76,16 @@
 
       <!-- 小屏：更多操作下拉 -->
       <div class="flex items-center gap-2 shrink-0 lg:hidden">
-        <GradientButton size="small" class="h-9" :loading="saving" @click="emit('save')">
+        <GradientButton size="small" :loading="saving" @click="emit('save')">
           <SaveOutlined />
         </GradientButton>
         <a-dropdown>
-          <button class="btn-ghost h-9 px-2 py-1.5 text-xs"><MenuOutlined /></button>
+          <button class="px-2 text-xs btn-ghost"><MenuOutlined /></button>
           <template #overlay>
             <a-menu>
               <a-menu-item @click="openMobilePanel('spacing')">间距设置</a-menu-item>
               <a-menu-item @click="openMobilePanel('font')">字体设置</a-menu-item>
-              <a-menu-item @click="openMobilePanel('skin')">皮肤设置</a-menu-item>
+              <!-- <a-menu-item @click="openMobilePanel('skin')">皮肤设置</a-menu-item> -->
               <a-menu-divider />
               
               <a-menu-item @click="emit('match')">JD 匹配</a-menu-item>

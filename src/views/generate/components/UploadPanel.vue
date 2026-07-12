@@ -83,7 +83,11 @@
           <p class="ant-upload-hint text-sm text-muted">仅支持 PDF 格式，单个文件不超过 10MB</p>
         </a-upload-dragger>
 
-        <div v-if="uploading" class="mt-4 rounded-card bg-cream p-4">
+        <div
+          v-if="uploading"
+          ref="streamPreviewAnchorRef"
+          class="mt-4 rounded-card border border-line/50 bg-cream p-2 sm:p-4"
+        >
           <a-progress
             v-if="uploadPercent < 100 && !streamText"
             :percent="uploadPercent"
@@ -93,13 +97,14 @@
           <div v-if="uploadPercent < 100 && !streamText" class="mt-2 text-center text-sm text-muted">
             正在上传并连接 AI...
           </div>
-          <StreamResumePreview
-            v-else
-            :stream-text="streamText"
-            :loading="uploading"
-            :template-id="resumeStore.currentTemplateId"
-            :loading-hint="isJdOptimize ? 'AI 正在根据岗位 JD 优化你的简历...' : undefined"
-          />
+          <div v-else class="text-left">
+            <StreamResumePreview
+              :stream-text="streamText"
+              :loading="uploading"
+              :template-id="resumeStore.currentTemplateId"
+              :loading-hint="isJdOptimize ? 'AI 正在根据岗位 JD 优化你的简历...' : undefined"
+            />
+          </div>
         </div>
 
         <div class="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -216,11 +221,14 @@ import { useResumeStore } from '@/stores/resume'
 import GradientButton from '@/components/GradientButton.vue'
 import JdResumeOptimizeModal from '@/components/JdResumeOptimizeModal.vue'
 import StreamResumePreview from './StreamResumePreview.vue'
+import { useScrollToStreamPreview } from '@/composables/useScrollToStreamPreview'
 import { normalizeResumeFields } from '@/constants/resumeFieldSchema'
 import { parsePartialResumeJson } from '../utils/streamResumeParser'
 
 const router = useRouter()
 const resumeStore = useResumeStore()
+const streamPreviewAnchorRef = ref(null)
+const { scrollToStreamPreview } = useScrollToStreamPreview(streamPreviewAnchorRef)
 
 const fileList = ref([])
 const targetPosition = ref('')
@@ -276,7 +284,7 @@ async function handleJdConfirmStart({ jdText }) {
 
   useExistingFile.value = useExisting
   isJdOptimize.value = true
-  resetOptimizeState()
+  await beginStreamingPreview()
 
   try {
     let resultData = null
@@ -323,6 +331,12 @@ function resetOptimizeState() {
   uploadPercent.value = 0
   optimizeResult.value = null
   streamText.value = ''
+}
+
+/** 开始流式优化并重置状态，同时滚动到预览区 */
+async function beginStreamingPreview() {
+  resetOptimizeState()
+  await scrollToStreamPreview()
 }
 
 // 流式回调：onStatus 仅内部使用，不渲染技术文案
@@ -397,7 +411,7 @@ async function handleSubmit() {
   const realFile = file.originFileObj || file
 
   useExistingFile.value = false
-  resetOptimizeState()
+  await beginStreamingPreview()
 
   try {
     let resultData = null
@@ -431,7 +445,7 @@ async function handleOptimizeExisting() {
   if (uploading.value) return
 
   useExistingFile.value = true
-  resetOptimizeState()
+  await beginStreamingPreview()
 
   try {
     let resultData = null

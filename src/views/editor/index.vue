@@ -28,7 +28,7 @@
       @export-word="handleExportWord"
     />
 
-    <main class="editor-main">
+    <main class="editor-main" :class="{ 'editor-main--panel-collapsed': editPanelCollapsed }">
       <div class="preview-area">
         <ResumePreview
           ref="previewRef"
@@ -43,12 +43,19 @@
           :content-color="contentColor"
           :skin-theme="skinTheme"
           :visible-modules="modules"
+          :edit-panel-collapsed="editPanelCollapsed"
           @section-click="handleSectionClick"
         />
         <a-dropdown :disabled="exporting">
-          <button type="button" class="down-big max-lg:hidden" :disabled="exporting">
+          <button
+            type="button"
+            class="down-big"
+            :class="editPanelCollapsed ? 'down-big--panel-collapsed' : 'down-big--panel-expanded'"
+            :disabled="exporting"
+          >
             <DownloadOutlined />
-            下载/导出简历
+            <span class="hidden sm:inline">下载/导出简历</span>
+            <span class="sm:hidden">导出</span>
           </button>
           <template #overlay>
             <a-menu>
@@ -67,6 +74,7 @@
       v-model:modules="modules"
       v-model:active-module="activeModule"
       :highlight-module="highlightModule"
+      @collapsed-change="editPanelCollapsed = $event"
     />
 
     <!-- JD匹配弹窗 -->
@@ -92,7 +100,7 @@
         <p><strong>岗位关键词：</strong>{{ matchResult.keywords?.join('、') }}</p>
         <p><strong>缺失技能：</strong>{{ matchResult.missing_skills?.join('、') || '无' }}</p>
         <p><strong>优化建议：</strong></p>
-        <ul class="list-disc pl-5 text-sm text-ink-secondary">
+        <ul class="pl-5 text-sm list-disc text-ink-secondary">
           <li v-for="(s, i) in matchResult.suggestions" :key="i">{{ s }}</li>
         </ul>
       </div>
@@ -159,7 +167,7 @@
           <a-col v-for="item in scoreItems" :key="item.key" :span="12">
             <a-card size="small" class="score-item-card">
               <a-progress :percent="Math.round((scoreResult[item.key] / item.max) * 100)" :format="() => `${scoreResult[item.key]}/${item.max}`" />
-              <div class="mt-1 text-center text-xs text-ink-secondary">{{ item.label }}</div>
+              <div class="mt-1 text-xs text-center text-ink-secondary">{{ item.label }}</div>
             </a-card>
           </a-col>
         </a-row>
@@ -200,6 +208,7 @@ const route = useRoute()
 const resumeStore = useResumeStore()
 const userStore = useUserStore()
 const isMobile = useMediaQuery()
+const editPanelCollapsed = ref(isMobile.value)
 
 const templateId = ref(clampTemplateId(resumeStore.currentTemplateId))
 const currentResumeId = ref(resumeStore.currentResumeId)
@@ -520,22 +529,37 @@ onMounted(async () => {
 <style scoped>
 /* 编辑器外层：深色工作区，突出 A4 纸张 */
 .editor-page {
-  @apply min-h-screen bg-[#39394d];
+  @apply min-h-screen max-w-full overflow-x-hidden bg-[#39394d];
 }
 
 /* 主内容区：留出顶部工具栏 + 底部编辑面板空间，移动端缩减间距 */
 .editor-main {
-  @apply min-h-screen pt-[56px] pb-[200px] lg:pt-[70px] lg:pb-[340px];
+  @apply flex min-h-screen max-w-full flex-col overflow-x-hidden pt-[56px] pb-[200px] lg:pt-[70px] lg:pb-[340px];
 }
 
-/* 预览区居中，移动端减少最小高度计算 */
+/* 底部面板折叠时减少留白，扩大预览可视区 */
+.editor-main--panel-collapsed {
+  @apply max-lg:pb-[120px];
+}
+
+/* 预览区居中，移动端限定高度使预览区内部可滚动 */
 .preview-area {
-  @apply relative flex min-h-[calc(100vh-280px)] flex-col items-center lg:min-h-[calc(100vh-410px)];
+  @apply relative flex min-h-[calc(100vh-280px)] max-w-full flex-1 flex-col items-center overflow-x-hidden max-lg:min-h-0 lg:min-h-[calc(100vh-410px)];
 }
 
-/* 右下角大下载按钮 */
+/* 右下角下载/导出按钮：桌面固定于编辑区上方，移动端贴近底部编辑栏 */
 .down-big {
-  @apply fixed bottom-[360px] right-8 z-40 inline-flex items-center gap-2 rounded-pill bg-gradient-to-r from-brand to-brand-light px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60;
+  @apply fixed bottom-[360px] right-8 z-40 inline-flex h-10 items-center gap-2 rounded-pill bg-gradient-to-r from-brand to-brand-light px-6 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60;
+}
+
+/* 移动端：底部编辑栏收起时 */
+.down-big--panel-collapsed {
+  @apply max-lg:bottom-[calc(72px+env(safe-area-inset-bottom,0px))] max-lg:right-4 max-lg:px-4;
+}
+
+/* 移动端：底部编辑栏展开时，上移避免遮挡 */
+.down-big--panel-expanded {
+  @apply max-lg:bottom-[calc(40vh+56px+env(safe-area-inset-bottom,0px))] max-lg:right-4 max-lg:px-4;
 }
 
 /* JD 匹配结果展示 */
