@@ -207,7 +207,7 @@ function handleCancel() {
           />
         </a-form-item>
 
-        <a-form-item class="mb-0">
+        <a-form-item class="mb-0" v-if="false">
           <template #label>
             <span class="inline-flex items-center gap-1.5 text-sm text-ink-secondary">
               <PictureOutlined /> 或上传 JD 图片
@@ -220,7 +220,7 @@ function handleCancel() {
           >
             <button
               type="button"
-              class="flex h-10 w-full items-center justify-center gap-2 rounded-button border border-dashed border-line/60 bg-cream/50 text-sm text-ink-secondary transition-colors hover:border-brand/40 hover:bg-brand-lighter/30"
+              class="flex items-center justify-center w-full h-10 gap-2 text-sm transition-colors border border-dashed rounded-button border-line/60 bg-cream/50 text-ink-secondary hover:border-brand/40 hover:bg-brand-lighter/30"
             >
               <UploadOutlined />
               {{ jdImageName || '点击上传 JD 截图/图片（支持 OCR 识别）' }}
@@ -229,7 +229,7 @@ function handleCancel() {
           <button
             v-if="jdImageName"
             type="button"
-            class="mt-2 text-xs text-muted underline hover:text-danger"
+            class="mt-2 text-xs underline text-muted hover:text-danger"
             @click="clearJdImage"
           >
             清除已选图片
@@ -238,16 +238,16 @@ function handleCancel() {
         </a-form-item>
       </a-form>
 
-      <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <div class="flex flex-col-reverse gap-3 mt-6 sm:flex-row sm:justify-end">
         <button
           type="button"
-          class="btn-ghost inline-flex h-10 items-center justify-center px-6"
+          class="inline-flex items-center justify-center h-10 px-6 btn-ghost"
           @click="handleCancel"
         >
           取消
         </button>
         <GradientButton
-          class="inline-flex h-10 items-center justify-center px-6"
+          class="inline-flex items-center justify-center h-10 px-6"
           :loading="extracting"
           @click="handleConfirm"
         >
@@ -261,7 +261,7 @@ function handleCancel() {
       <div class="max-h-[calc(100vh-120px)] overflow-y-auto">
         <div
           ref="streamPreviewAnchorRef"
-          class="mb-4 rounded-card border border-line/50 bg-cream p-2 lg:p-4"
+          class="p-2 mb-4 border rounded-card border-line/50 bg-cream lg:p-4"
         >
           <StreamResumePreview
             :stream-text="streamText"
@@ -274,9 +274,9 @@ function handleCancel() {
 
         <div
           v-if="optimizeResult && !loading"
-          class="mb-4 rounded-card border border-line/40 bg-white p-3 shadow-soft lg:p-4"
+          class="p-3 mb-4 bg-white border rounded-card border-line/40 shadow-soft lg:p-4"
         >
-        <p class="mb-3 flex items-center gap-2 text-base font-semibold text-ink">
+        <p class="flex items-center gap-2 mb-3 text-base font-semibold text-ink">
           <CheckCircleFilled class="text-success" /> 优化完成
         </p>
         <h4 class="mb-2 text-sm font-medium text-ink-secondary">AI 优化要点</h4>
@@ -284,7 +284,7 @@ function handleCancel() {
           <li
             v-for="(note, idx) in optimizeResult.optimization_notes"
             :key="idx"
-            class="flex items-start gap-2 border-b border-dashed border-line/60 py-2 text-sm text-ink-secondary last:border-b-0"
+            class="flex items-start gap-2 py-2 text-sm border-b border-dashed border-line/60 text-ink-secondary last:border-b-0"
           >
             <BulbOutlined class="mt-0.5 shrink-0 text-warning" />
             <span>{{ note }}</span>
@@ -298,13 +298,13 @@ function handleCancel() {
         <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <button
             type="button"
-            class="btn-ghost inline-flex h-10 items-center justify-center px-6"
+            class="inline-flex items-center justify-center h-10 px-6 btn-ghost"
             @click="handleCancel"
           >
             取消
           </button>
           <GradientButton
-            class="inline-flex h-10 items-center justify-center px-6"
+            class="inline-flex items-center justify-center h-10 px-6"
             :disabled="!optimizeResult || loading"
             @click="handleApply"
           >
