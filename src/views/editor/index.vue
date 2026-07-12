@@ -46,7 +46,7 @@
           @section-click="handleSectionClick"
         />
         <a-dropdown :disabled="exporting">
-          <button type="button" class="down-big" :disabled="exporting">
+          <button type="button" class="down-big max-lg:hidden" :disabled="exporting">
             <DownloadOutlined />
             下载/导出简历
           </button>
@@ -74,7 +74,7 @@
       v-model:open="showMatchModal"
       title="JD岗位匹配分析"
       :confirm-loading="resumeStore.matching"
-      width="600px"
+      :width="isMobile ? '95vw' : '600px'"
       class="editor-modal"
       @ok="handleMatch"
     >
@@ -112,7 +112,7 @@
       v-model:open="showTemplateDrawer"
       title="选择简历模板"
       placement="right"
-      width="760"
+      :width="isMobile ? '100%' : 760"
       root-class-name="template-drawer"
     >
       <div class="template-scroll">
@@ -147,7 +147,7 @@
       v-model:open="showScoreModal"
       title="AI简历评分"
       :footer="null"
-      width="500px"
+      :width="isMobile ? '95vw' : '500px'"
       class="editor-modal"
     >
       <div v-if="scoreResult" class="score-result">
@@ -194,10 +194,12 @@ import EditorEditPanel from './components/EditorEditPanel.vue'
 import ResumePreview from './components/ResumePreview.vue'
 import JdResumeOptimizeModal from '@/components/JdResumeOptimizeModal.vue'
 import { useResumeExportPrint } from '@/composables/useResumeExportPrint'
+import { useMediaQuery } from '@/composables/useMediaQuery'
 
 const route = useRoute()
 const resumeStore = useResumeStore()
 const userStore = useUserStore()
+const isMobile = useMediaQuery()
 
 const templateId = ref(clampTemplateId(resumeStore.currentTemplateId))
 const currentResumeId = ref(resumeStore.currentResumeId)
@@ -521,14 +523,14 @@ onMounted(async () => {
   @apply min-h-screen bg-[#39394d];
 }
 
-/* 主内容区：留出顶部工具栏 + 底部编辑面板空间 */
+/* 主内容区：留出顶部工具栏 + 底部编辑面板空间，移动端缩减间距 */
 .editor-main {
-  @apply min-h-screen pb-[340px] pt-[70px];
+  @apply min-h-screen pt-[56px] pb-[200px] lg:pt-[70px] lg:pb-[340px];
 }
 
-/* 预览区居中 */
+/* 预览区居中，移动端减少最小高度计算 */
 .preview-area {
-  @apply relative flex min-h-[calc(100vh-410px)] flex-col items-center;
+  @apply relative flex min-h-[calc(100vh-280px)] flex-col items-center lg:min-h-[calc(100vh-410px)];
 }
 
 /* 右下角大下载按钮 */
@@ -583,9 +585,9 @@ onMounted(async () => {
   @apply rounded-pill bg-canvas;
 }
 
-/* 模板网格布局 */
+/* 模板网格布局：移动端单列 */
 .template-grid {
-  @apply grid grid-cols-2 gap-4 pb-2;
+  @apply grid grid-cols-1 gap-4 pb-2 sm:grid-cols-2;
 }
 
 .template-card {

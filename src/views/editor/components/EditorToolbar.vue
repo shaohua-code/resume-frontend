@@ -2,7 +2,7 @@
   编辑器顶部固定工具栏 - 磨砂玻璃 + 小屏折叠菜单
 -->
 <template>
-  <header class="glass fixed left-0 right-0 top-0 z-[100] h-[70px] shadow-glass">
+  <header class="glass fixed left-0 right-0 top-0 z-[100] h-[56px] shadow-glass lg:h-[70px]">
     <div class="mx-auto flex h-full max-w-[1400px] items-center justify-between gap-2 px-3 sm:gap-4 sm:px-5">
       <!-- 左侧：返回 + 模板 -->
       <div class="flex items-center gap-1 shrink-0 sm:gap-2">
@@ -85,7 +85,7 @@
             <a-menu>
               <a-menu-item @click="openMobilePanel('spacing')">间距设置</a-menu-item>
               <a-menu-item @click="openMobilePanel('font')">字体设置</a-menu-item>
-              <!-- <a-menu-item @click="openMobilePanel('skin')">皮肤设置</a-menu-item> -->
+              <a-menu-item @click="openMobilePanel('skin')">皮肤设置</a-menu-item>
               <a-menu-divider />
               
               <a-menu-item @click="emit('match')">JD 匹配</a-menu-item>
@@ -100,8 +100,14 @@
       </div>
     </div>
 
-    <!-- 小屏设置弹窗 -->
-    <a-modal v-model:open="mobilePanelOpen" :title="mobilePanelTitle" :footer="null" class="modal-fresh">
+    <!-- 小屏设置弹窗：移动端全宽展示 -->
+    <a-modal
+      v-model:open="mobilePanelOpen"
+      :title="mobilePanelTitle"
+      :footer="null"
+      :width="isMobile ? '95vw' : undefined"
+      class="modal-fresh"
+    >
       <EditorSpacingPanel v-if="mobilePanel === 'spacing'" :spacing="spacing" :page-count="pageCount" @change="onSettingsChange" />
       <EditorFontPanel
         v-else-if="mobilePanel === 'font'"
@@ -137,6 +143,7 @@ import GradientButton from '@/components/GradientButton.vue'
 import EditorSpacingPanel from './EditorSpacingPanel.vue'
 import EditorFontPanel from './EditorFontPanel.vue'
 import EditorSkinPanel from './EditorSkinPanel.vue'
+import { useMediaQuery } from '@/composables/useMediaQuery'
 
 const spacing = defineModel('spacing', { type: Object, required: true })
 const fontSize = defineModel('fontSize', { type: Number, required: true })
@@ -161,6 +168,7 @@ const emit = defineEmits([
 ])
 
 const router = useRouter()
+const isMobile = useMediaQuery()
 const showSpacing = ref(false)
 const showFont = ref(false)
 const showSkin = ref(false)
@@ -170,7 +178,7 @@ const mobilePanel = ref('spacing')
 const mobilePanelTitle = computed(() => ({
   spacing: '间距设置',
   font: '字体设置',
-  // skin: '皮肤设置',
+  skin: '皮肤设置',
 }[mobilePanel.value] || '设置'))
 
 // 小屏打开设置面板弹窗

@@ -2,9 +2,10 @@
   底部编辑区：横向 Tab + 模块显隐 + 表单内容
 -->
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, onMounted } from 'vue'
 import { UpOutlined, DownOutlined } from '@ant-design/icons-vue'
 import ResumeEditorForm from './ResumeEditorForm.vue'
+import { useMediaQuery } from '@/composables/useMediaQuery'
 
 const resume = defineModel({ type: Object, required: true })
 const activeModule = defineModel('activeModule', { type: String, default: 'basic' })
@@ -16,9 +17,17 @@ const props = defineProps({
 
 const tabScrollRef = ref(null)
 const formRef = ref(null)
+const isMobile = useMediaQuery()
 
-// 整个编辑面板的折叠状态（true=收起，false=展开）
+// 整个编辑面板的折叠状态（true=收起，false=展开），移动端默认收起以突出预览
 const collapsed = ref(false)
+
+// 移动端默认折叠编辑面板，优先展示 A4 预览
+onMounted(() => {
+  if (isMobile.value) {
+    collapsed.value = true
+  }
+})
 
 // 切换 Tab
 function selectTab(key) {
@@ -61,7 +70,7 @@ defineExpose({
           <li
             v-for="(mod, idx) in modules"
             :key="mod.key"
-            class="inline-flex cursor-pointer items-center gap-2 rounded-t-md border-b-2 border-transparent px-4 py-2 text-sm text-ink-secondary transition-all duration-200 hover:bg-brand-lighter hover:text-brand-dark"
+            class="inline-flex cursor-pointer items-center gap-2 rounded-t-md border-b-2 border-transparent px-4 py-2 text-sm text-ink-secondary transition-all duration-200 hover:bg-brand-lighter hover:text-brand-dark max-lg:px-2 max-lg:text-xs"
             :class="{
               'bg-white font-semibold text-brand-dark border-b-brand-dark': activeModule === mod.key,
               'animate-pulse bg-brand-lighter': highlightModule === mod.key,
@@ -90,7 +99,7 @@ defineExpose({
       <component :is="collapsed ? UpOutlined : DownOutlined" />
     </div>
 
-    <div v-show="!collapsed" ref="editContentRef" class="max-h-[280px] overflow-y-auto px-6 py-4">
+    <div v-show="!collapsed" ref="editContentRef" class="max-h-[40vh] overflow-y-auto px-6 py-4 max-lg:max-h-[40vh] max-lg:px-3 max-lg:py-3 lg:max-h-[280px]">
       <ResumeEditorForm
         ref="formRef"
         v-model="resume"

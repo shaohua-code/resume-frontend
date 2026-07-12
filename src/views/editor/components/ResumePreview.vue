@@ -14,7 +14,7 @@
       <div class="page-nav-info">
         <span class="page-nav-label">共 {{ pageCount }} 页</span>
       </div>
-      <div class="page-nav-buttons">
+      <div class="page-nav-buttons max-lg:flex-wrap max-lg:justify-end">
         <a-button size="small" :disabled="currentPage <= 1" @click="scrollToPage(currentPage - 1)">
           <LeftOutlined /> 上一页
         </a-button>
@@ -48,41 +48,43 @@
         </div>
       </div>
 
-      <!-- 可见分页：overflow + 负 marginTop 截取对应页内容 -->
+      <!-- 可见分页：移动端等比缩放 + overflow 窗口切片 -->
       <div
         v-for="n in pageCount"
         :key="`${n}-${templateId}-${previewRenderKey}`"
-        class="preview-page"
+        class="preview-page-outer"
         :class="{ active: n === currentPage }"
-        :style="{ height: pageHeightPx + 'px' }"
+        :style="getPageOuterStyle(n)"
       >
-        <div
-          class="page-viewport"
-          :style="{
-            marginTop: pageTopGap + 'px',
-            height: getPageContentHeight(n) + 'px',
-            maxHeight: effectivePageHeight + 'px',
-          }"
-        >
+        <div class="preview-page-scaler" :style="pageScalerStyle">
           <div
-            class="resume-preview"
-            :class="'template-' + templateId"
-            :style="{ ...previewStyle, marginTop: -(pageBreaks[n - 1] || 0) + 'px' }"
-            @click="handleSectionClick"
+            class="preview-page"
+            :style="{ height: pageHeightPx + 'px' }"
           >
-            <ResumeTemplate
-              :key="`page-${n}-${templateId}`"
-              :resume="resume"
-              :template-id="templateId"
-              :visible-modules="visibleModules"
-            />
+            <div
+              class="page-viewport"
+              :style="{
+                marginTop: pageTopGap + 'px',
+                height: getPageContentHeight(n) + 'px',
+                maxHeight: effectivePageHeight + 'px',
+              }"
+            >
+              <div
+                class="resume-preview"
+                :class="'template-' + templateId"
+                :style="{ ...previewStyle, marginTop: -(pageBreaks[n - 1] || 0) + 'px' }"
+                @click="handleSectionClick"
+              >
+                <ResumeTemplate
+                  :key="`page-${n}-${templateId}`"
+                  :resume="resume"
+                  :template-id="templateId"
+                  :visible-modules="visibleModules"
+                />
+              </div>
+            </div>
           </div>
         </div>
-        <!-- <span class="page-number">
-          <span class="page-number-text">第 {{ n }} 页</span>
-          <span class="page-number-divider">/</span>
-          <span class="page-number-total">共 {{ pageCount }} 页</span>
-        </span> -->
       </div>
     </div>
   </div>
@@ -97,6 +99,10 @@ import {
   fontColorsToCssVars,
 } from '@/constants/editorSettings'
 import ResumeTemplate from '@/components/ResumeTemplate.vue'
+import { useMediaQuery } from '@/composables/useMediaQuery'
+import { usePreviewScale } from '@/composables/usePreviewScale'
+
+const A4_WIDTH_PX = 794
 
 const props = defineProps({
   resume: { type: Object, required: true },
@@ -113,6 +119,41 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['section-click'])
+
+const isMobile = useMediaQuery()
+const panelRef = ref(null)
+const { scale: previewScale } = usePreviewScale(panelRef, {
+  baseWidth: A4_WIDTH_PX,
+  horizontalPadding: 32,
+  maxScale: 1,
+})
+
+// 移动端缩放内层样式：794px 原始尺寸 + transform 等比缩小
+const pageScalerStyle = computed(() => {
+  if (!isMobile.value || previewScale.value >= 1) {
+    return { width: `${A4_WIDTH_PX}px` }
+  }
+  return {
+    width: `${A4_WIDTH_PX}px`,
+    transform: `scale(${previewScale.value})`,
+    transformOrigin: 'top left',
+  }
+})
+
+// 外层容器尺寸跟随缩放比例，避免横向溢出
+function getPageOuterStyle(n) {
+  const pageHeight = pageHeightPx.value
+  if (!isMobile.value || previewScale.value >= 1) {
+    return { width: `${A4_WIDTH_PX}px`, height: `${pageHeight}px` }
+  }
+  const contentHeight = getPageContentHeight(n)
+  const scaledPageHeight = pageHeight * previewScale.value
+  const scaledContentHeight = (pageTopGap.value + contentHeight) * previewScale.value
+  return {
+    width: `${A4_WIDTH_PX * previewScale.value}px`,
+    height: `${Math.max(scaledPageHeight, scaledContentHeight)}px`,
+  }
+}
 
 // 皮肤 CSS 变量（仅 .rt-title 使用 titleColor，其余控制背景/边框）
 const skinCssVars = computed(() => skinThemeToCssVars(props.skinTheme, props.templateId))
@@ -510,7 +551,6 @@ function calcSmartPageBreaks() {
   return filterGhostPages(starts, totalHeight.value, segments)
 }
 
-const panelRef = ref(null)
 const stageRef = ref(null)
 const contentRef = ref(null)
 const pageCount = ref(1)
@@ -530,7 +570,7 @@ function scrollToPage(page) {
   const container = panelRef.value
   if (!container) return
   const targetPage = Math.max(1, Math.min(page, pageCount.value))
-  const pageEls = container.querySelectorAll('.preview-page')
+  const pageEls = container.querySelectorAll('.preview-page-outer')
   const targetEl = pageEls[targetPage - 1]
   if (targetEl) {
     targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -541,7 +581,7 @@ function updateCurrentPage() {
   const container = panelRef.value
   if (!container) return
   const scrollTop = container.scrollTop
-  const pageEls = Array.from(container.querySelectorAll('.preview-page'))
+  const pageEls = Array.from(container.querySelectorAll('.preview-page-outer'))
   let page = 1
   for (let i = 0; i < pageEls.length; i++) {
     const el = pageEls[i]
@@ -618,9 +658,9 @@ defineExpose({
   @apply relative flex w-full flex-1 flex-col items-center overflow-y-auto px-4 py-6 pb-10;
 }
 
-/* 页面导航栏：磨砂玻璃 */
+/* 页面导航栏：磨砂玻璃，移动端自适应宽度 */
 .page-nav-bar {
-  @apply sticky top-0 z-20 mb-4 flex w-[210mm] items-center justify-between rounded-card border border-line/60 bg-white/95 px-4 py-2 shadow-card backdrop-blur-md;
+  @apply sticky top-0 z-20 mb-4 flex w-full max-w-[210mm] items-center justify-between rounded-card border border-line/60 bg-white/95 px-4 py-2 shadow-card backdrop-blur-md max-lg:max-w-[calc(100vw-32px)] max-lg:flex-wrap max-lg:gap-2;
 }
 
 .page-nav-info {
@@ -639,9 +679,23 @@ defineExpose({
   @apply mx-2 w-24;
 }
 
-/* 多页预览舞台 */
+/* 多页预览舞台：移动端居中且宽度随屏适配 */
 .preview-stage {
-  @apply relative flex w-[210mm] flex-col gap-6 pb-10;
+  @apply relative flex w-full max-w-[210mm] flex-col items-center gap-6 pb-10 max-lg:w-full max-lg:max-w-full;
+}
+
+/* 缩放外层：控制可见区域尺寸，避免 A4 预览溢出 */
+.preview-page-outer {
+  @apply relative flex-shrink-0 overflow-hidden rounded-sm shadow-card transition-shadow duration-300 max-lg:mx-auto;
+}
+
+.preview-page-outer.active {
+  @apply shadow-card-hover;
+}
+
+/* 缩放内层：794px 原始尺寸，移动端通过 transform 等比缩小 */
+.preview-page-scaler {
+  @apply origin-top-left;
 }
 
 /* 隐藏测量层：移出视口 + opacity 0，保留布局供分页计算与打印克隆 */
@@ -651,11 +705,7 @@ defineExpose({
 
 /* 每一页：固定 A4 高度，页眉/页脚留白由 page-viewport marginTop + 提前断点实现 */
 .preview-page {
-  @apply relative box-border w-[210mm] flex-shrink-0 cursor-pointer overflow-hidden rounded-sm bg-white shadow-card transition-shadow duration-300;
-}
-
-.preview-page.active {
-  @apply shadow-card-hover;
+  @apply relative box-border w-[210mm] flex-shrink-0 cursor-pointer overflow-hidden bg-white;
 }
 
 .page-viewport {

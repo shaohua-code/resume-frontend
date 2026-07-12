@@ -1,5 +1,6 @@
 <!--
   用量明细面板 - 余额卡片 + 流水列表
+  移动端采用卡片列表，桌面端保留表格
 -->
 <template>
   <div class="space-y-4">
@@ -20,13 +21,55 @@
       <template #title>
         <span class="text-base font-semibold text-ink">额度变动记录</span>
       </template>
+
+      <!-- 移动端：流水卡片列表 -->
+      <div v-if="isMobile" class="space-y-3">
+        <div
+          v-for="record in walletStore.ledgerList"
+          :key="record.id"
+          class="rounded-card border border-line/60 bg-white p-4 shadow-sm"
+        >
+          <div class="flex items-center justify-between gap-2">
+            <span class="tag-soft">{{ getLedgerTypeLabel(record.type) }}</span>
+            <span
+              :class="record.amount >= 0 ? 'text-emerald-600' : 'text-danger'"
+              class="text-base font-semibold"
+            >
+              {{ record.amount >= 0 ? '+' : '' }}¥{{ Number(record.amount).toFixed(4) }}
+            </span>
+          </div>
+          <div class="mt-2 flex items-center justify-between text-sm text-ink-secondary">
+            <span>余额 ¥{{ Number(record.balance_after).toFixed(2) }}</span>
+            <span class="text-xs text-muted">{{ formatDateTime(record.create_time) }}</span>
+          </div>
+          <p v-if="formatRemark(record.remark, record.type) !== '-'" class="mt-2 text-sm text-ink">
+            {{ formatRemark(record.remark, record.type) }}
+          </p>
+        </div>
+
+        <div v-if="walletStore.loading" class="py-6 text-center text-sm text-muted">加载中...</div>
+        <div v-else-if="!walletStore.ledgerList.length" class="py-6 text-center text-sm text-muted">暂无流水记录</div>
+
+        <div v-if="walletStore.ledgerTotal > size" class="flex justify-center pt-2">
+          <a-pagination
+            :current="page"
+            :page-size="size"
+            :total="walletStore.ledgerTotal"
+            size="small"
+            @change="handleMobilePageChange"
+          />
+        </div>
+      </div>
+
+      <!-- 桌面端：流水表格 -->
       <a-table
+        v-else
         :data-source="walletStore.ledgerList"
         :columns="columns"
         :loading="walletStore.loading"
         :pagination="{ current: page, pageSize: size, total: walletStore.ledgerTotal }"
         row-key="id"
-          :scroll="{ x: 'max-content' }"
+        :scroll="{ x: 'max-content' }"
         size="small"
         @change="handleTableChange"
       >
@@ -59,10 +102,11 @@
 import { computed, onMounted, ref } from 'vue'
 import { useWalletStore } from '@/stores/wallet'
 import { formatDateTime } from '@/utils/date'
-// 导入全局 AI 任务类型常量，用于备注字段的中文化
 import { getAiTaskLabel } from '@/constants/aiTasks'
+import { useMediaQuery } from '@/composables/useMediaQuery'
 
 const walletStore = useWalletStore()
+const isMobile = useMediaQuery()
 const page = ref(1)
 const size = ref(10)
 
@@ -102,10 +146,8 @@ function formatRemark(remark, type) {
 
   // 如果是 AI 消费类型，尝试将任务类型英文标识替换为中文
   if (type === 'AI_CONSUME') {
-    // 匹配所有 8 种任务类型英文标识
     const taskTypePattern = /(resume_generate|project_optimize|summary_optimize|skills_optimize|internship_optimize|jd_match|jd_resume_optimize|score|pdf_optimize)/g
-    const formattedRemark = remark.replace(taskTypePattern, (match) => getAiTaskLabel(match))
-    return formattedRemark
+    return remark.replace(taskTypePattern, (match) => getAiTaskLabel(match))
   }
 
   return remark
@@ -119,6 +161,12 @@ async function loadData() {
 async function handleTableChange(pagination) {
   page.value = pagination.current
   size.value = pagination.pageSize
+  await walletStore.fetchLedger(page.value, size.value)
+}
+
+/** 移动端分页切换 */
+async function handleMobilePageChange(nextPage) {
+  page.value = nextPage
   await walletStore.fetchLedger(page.value, size.value)
 }
 

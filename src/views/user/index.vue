@@ -41,22 +41,45 @@
             <span class="text-base font-semibold text-ink">我的简历</span>
           </template>
           <template #extra>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
               <a-popconfirm
                 v-if="selectedRowKeys.length"
                 title="确定批量删除选中的简历？"
                 @confirm="handleBatchDelete"
               >
-                <button class="inline-flex h-9 items-center gap-1 rounded-button border border-danger/30 px-3 text-sm font-medium text-danger transition-colors hover:bg-red-50">
+                <button class="inline-flex h-9 min-h-[44px] items-center gap-1 rounded-button border border-danger/30 px-3 text-sm font-medium text-danger transition-colors hover:bg-red-50">
                   <DeleteOutlined /> 批量删除 ({{ selectedRowKeys.length }})
                 </button>
               </a-popconfirm>
-              <GradientButton size="small" class="!h-9 !min-w-[100px]" @click="handleCreate">
+              <GradientButton size="small" class="!h-9 !min-h-[44px] !min-w-[100px]" @click="handleCreate">
                 <PlusOutlined /> 新建简历
               </GradientButton>
             </div>
           </template>
+
+          <!-- 移动端：空状态 -->
+          <div v-if="isMobile && !loading && !resumeStore.resumeList.length" class="py-12 empty-state">
+            <div class="empty-icon">📝</div>
+            <div class="empty-title">还没有简历</div>
+            <div class="empty-desc">点击右上角新建简历，开启你的 AI 简历之旅</div>
+            <GradientButton class="inline-flex h-10 min-w-[160px] items-center justify-center gap-2" @click="$router.push('/generate')">
+              <PlusOutlined /> 新建简历
+            </GradientButton>
+          </div>
+
+          <!-- 移动端：卡片列表 -->
+          <ResumeCardList
+            v-else-if="isMobile"
+            v-model:selected-keys="selectedRowKeys"
+            :list="resumeStore.resumeList"
+            :loading="loading"
+            :get-template-name="getTemplateName"
+            @delete="handleDelete"
+          />
+
+          <!-- 桌面端：表格列表 -->
           <a-table
+            v-else
             :data-source="resumeStore.resumeList"
             :columns="columns"
             :pagination="{ pageSize: 10, total: resumeStore.resumeTotal }"
@@ -96,6 +119,17 @@
               </div>
             </template>
           </a-table>
+
+          <!-- 移动端分页 -->
+          <div v-if="isMobile && resumeStore.resumeTotal > 10" class="mt-4 flex justify-center">
+            <a-pagination
+              :current="mobilePage"
+              :page-size="10"
+              :total="resumeStore.resumeTotal"
+              size="small"
+              @change="handleMobilePageChange"
+            />
+          </div>
         </a-card>
       </a-tab-pane>
 
@@ -109,6 +143,7 @@
       title="简历数量超限提醒"
       ok-text="继续生成（替换最后一份）"
       cancel-text="取消"
+      :width="isMobile ? '95vw' : 520"
       @ok="confirmOverLimit"
     >
       <div class="py-2 text-sm leading-relaxed text-ink-secondary">
@@ -133,14 +168,18 @@ import { getTemplateName } from '@/constants/templateNames'
 import THEME from '@/constants/theme'
 import GradientButton from '@/components/GradientButton.vue'
 import UsagePanel from './components/UsagePanel.vue'
+import ResumeCardList from './components/ResumeCardList.vue'
 import { formatDateTime } from '@/utils/date'
+import { useMediaQuery } from '@/composables/useMediaQuery'
 
 const router = useRouter()
 const userStore = useUserStore()
 const walletStore = useWalletStore()
 const resumeStore = useResumeStore()
+const isMobile = useMediaQuery()
 const loading = ref(false)
 const activeTab = ref('resumes')
+const mobilePage = ref(1)
 const balanceText = computed(() => formatBalanceText(walletStore.balance))
 
 const selectedRowKeys = ref([])
@@ -176,7 +215,16 @@ onMounted(async () => {
 
 async function handleTableChange(pagination) {
   loading.value = true
+  mobilePage.value = pagination.current
   await resumeStore.fetchResumeList(pagination.current, pagination.pageSize)
+  loading.value = false
+}
+
+/** 移动端分页切换 */
+async function handleMobilePageChange(page) {
+  loading.value = true
+  mobilePage.value = page
+  await resumeStore.fetchResumeList(page, 10)
   loading.value = false
 }
 
