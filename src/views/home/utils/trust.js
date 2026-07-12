@@ -1,7 +1,17 @@
 /**
- * 信任背书区配置 - 行业标签 + 匿名证言
+ * 信任背书区配置 - 社会证明数据 + 行业标签 + 匿名证言
  */
 export const TRUST_OFFER_COUNT = '12,000+'
+
+/** 主 Offer 文案 */
+export const TRUST_OFFER_HEADLINE = '已帮助 12,000+ 位求职者优化简历并斩获 Offer'
+
+/** 背书区 mini stats - 与 Hero 能力数据互补 */
+export const TRUST_MINI_STATS = [
+  { value: '12,000+', label: '求职者使用' },
+  { value: '20+', label: '专业模板' },
+  { value: '98%', label: '用户满意' },
+]
 
 export const TRUST_INDUSTRIES = [
   '互联网',
@@ -29,5 +39,10 @@ export const TRUST_TESTIMONIALS = [
     avatar: '王',
     quote: '模板好看又专业，导出 PDF 直接投递，效率翻倍',
     role: '金融专业硕士',
+  },
+  {
+    avatar: '陈',
+    quote: '粘贴 JD 后整份简历被针对性改写，面试邀约明显多了',
+    role: '互联网产品经理',
   },
 ]

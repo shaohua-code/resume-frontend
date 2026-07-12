@@ -47,7 +47,7 @@ export const HOME_FEATURES = [
 ]
 
 export const HOME_STATS = [
-  { value: 'AI', label: '智能一键生成' },
-  { value: '20', label: '套专业模板' },
-  { value: '100', label: '分 AI 评分' },
+  { value: 'AI极速生成', label: '30秒完成简历' },
+  { value: 'JD定向优化', label: '提升面试邀约率' },
+  { value: 'AI测评', label: '自动诊断短板' },
 ]

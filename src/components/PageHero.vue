@@ -24,16 +24,16 @@ defineProps({
 
 <template>
   <section
-    class="relative overflow-hidden px-4 text-center text-white sm:px-6 lg:px-8"
+    class="relative px-4 overflow-hidden text-center text-white sm:px-6 lg:px-8"
     :class="compact ? 'py-6 sm:py-8' : 'py-16 sm:py-20'"
     style="background: var(--gradient-hero)"
   >
     <!-- 背景装饰光斑 -->
-    <div class="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/20 blur-3xl" />
-    <div class="pointer-events-none absolute -bottom-20 -right-20 h-80 w-80 rounded-full bg-white/15 blur-3xl" />
-    <div class="pointer-events-none absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/20 blur-3xl" />
+    <div class="absolute w-64 h-64 rounded-full pointer-events-none -left-20 -top-20 bg-white/20 blur-3xl" />
+    <div class="absolute rounded-full pointer-events-none -bottom-20 -right-20 h-80 w-80 bg-white/15 blur-3xl" />
+    <div class="absolute -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none left-1/2 top-1/2 h-96 w-96 bg-accent/20 blur-3xl" />
 
-    <div class="relative mx-auto max-w-4xl">
+    <div class="relative max-w-4xl mx-auto">
       <h1
         class="mb-4 font-bold tracking-tight"
         :class="compact ? 'text-xl sm:text-2xl' : 'text-3xl sm:text-4xl lg:text-5xl'"
@@ -53,19 +53,19 @@ defineProps({
         <slot name="actions" />
       </div>
 
-      <!-- 统计徽章：紧凑三列布局 -->
+      <!-- 统计徽章：白底高对比，适配亮点文案 -->
       <div
         v-if="stats.length"
-        class="mx-auto grid max-w-sm grid-cols-3 gap-2 sm:max-w-md sm:gap-3"
+        class="mx-auto grid w-full max-w-lg grid-cols-3 gap-2 sm:max-w-xl sm:gap-3"
         :class="compact ? 'mt-4 sm:mt-5' : 'mt-10 sm:mt-12'"
       >
         <div
           v-for="stat in stats"
           :key="stat.label"
-          class="flex flex-col items-center justify-center gap-0.5 rounded-2xl border border-white/25 bg-white/15 px-2 py-2 backdrop-blur-md sm:gap-1 sm:px-3 sm:py-2.5"
+          class="flex min-h-[4.5rem] min-w-0 flex-col items-center justify-center gap-1 rounded-2xl border border-white/80 bg-white/95 px-2 py-2.5 shadow-lg shadow-black/10 backdrop-blur-sm sm:min-h-[5rem] sm:gap-1.5 sm:px-3 sm:py-3"
         >
-          <span class="text-base font-bold leading-none text-white drop-shadow-sm sm:text-lg">{{ stat.value }}</span>
-          <span class="text-center text-[10px] leading-tight text-white/85 sm:text-xs">{{ stat.label }}</span>
+          <span class="whitespace-nowrap text-xs font-bold leading-none text-brand-dark sm:text-sm">{{ stat.value }}</span>
+          <span class="line-clamp-2 text-center text-[10px] leading-snug text-ink-secondary sm:text-xs">{{ stat.label }}</span>
         </div>
       </div>
 
