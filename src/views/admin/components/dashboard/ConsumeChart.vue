@@ -67,7 +67,11 @@ const option = computed(() => ({
 <template>
   <div class="card-base">
     <div class="mb-2 flex items-center justify-between">
-      <h3 class="text-base font-semibold text-ink">余额变动趋势</h3>
+      <div>
+        <h3 class="text-base font-semibold text-ink">余额变动趋势</h3>
+        <!-- 与卡片「累计消费 / 额度发放」同口径：仅当前登录账号自己的流水 -->
+        <p class="mt-1 text-xs text-muted">仅统计我自己的 AI 消费与额度发放</p>
+      </div>
     </div>
     <BaseChart :option="option" :loading="loading" height="280px" />
   </div>

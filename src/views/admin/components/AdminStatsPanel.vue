@@ -71,8 +71,8 @@ onMounted(() => loadDashboard(activeRange.value))
         />
       </div>
       <BalanceChart
-        :total-balance="dashboard.total_balance || 0"
-        :total-consumed="dashboard.total_consumed || 0"
+        :total-balance="dashboard.my_balance || 0"
+        :total-consumed="dashboard.my_consumed || 0"
         :loading="loading"
       />
     </div>

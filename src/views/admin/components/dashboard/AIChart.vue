@@ -65,8 +65,8 @@ const option = computed(() => ({
 
 <template>
   <div class="card-base">
-    <div class="mb-2 flex items-center justify-between">
-      <h3 class="text-base font-semibold text-ink">AI 调用趋势</h3>
+    <div class="flex items-center justify-between mb-2">
+      <h3 class="text-base font-semibold text-ink">AI 调用趋势（所有用户）</h3>
     </div>
     <BaseChart :option="option" :loading="loading" height="300px" />
   </div>

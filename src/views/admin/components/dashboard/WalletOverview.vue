@@ -3,7 +3,7 @@
  * 余额消费概览
  */
 import { computed } from 'vue'
-import { Wallet, TrendingDown, Users, Bot } from 'lucide-vue-next'
+import { Wallet, TrendingDown, TrendingUp, Bot } from 'lucide-vue-next'
 import CountUp from './CountUp.vue'
 
 const props = defineProps({
@@ -23,18 +23,20 @@ const metrics = computed(() => [
     note: '可分配余额',
   },
   {
+    label: '累计发放',
+    value: Number(props.data.my_granted || 0),
+    icon: TrendingUp,
+    iconClass: 'bg-mint text-emerald-700',
+    prefix: '¥',
+    note: '我转出的额度合计',
+  },
+  {
     label: '累计消费',
-    value: Number(props.data.total_consumed || 0),
+    value: Number(props.data.my_consumed || 0),
     icon: TrendingDown,
     iconClass: 'bg-cream text-warning',
     prefix: '¥',
-  },
-  {
-    label: '用户总数',
-    value: props.data.user_count || 0,
-    icon: Users,
-    iconClass: 'bg-mint text-emerald-700',
-    prefix: '',
+    note: '我的 AI 调用扣费',
   },
   {
     label: 'AI 调用次数',

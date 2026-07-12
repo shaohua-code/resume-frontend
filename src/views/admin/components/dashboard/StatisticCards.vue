@@ -7,6 +7,7 @@ import {
   Users,
   Wallet,
   TrendingDown,
+  TrendingUp,
   UserPlus,
   Bot,
   Activity,
@@ -48,11 +49,19 @@ const cards = computed(() => [
   },
   {
     label: '累计消费',
-    value: Number(props.data.total_consumed || 0),
+    value: Number(props.data.my_consumed || 0),
     icon: TrendingDown,
     iconBg: 'bg-cream text-warning',
     prefix: '¥',
-    note: 'AI 调用扣费',
+    note: '我的 AI 调用扣费',
+  },
+  {
+    label: '累计发放',
+    value: Number(props.data.my_granted || 0),
+    icon: TrendingUp,
+    iconBg: 'bg-mint text-emerald-700',
+    prefix: '¥',
+    note: '我转出的额度合计',
   },
   {
     label: '今日新增用户',
@@ -63,11 +72,11 @@ const cards = computed(() => [
     trendLabel: '较昨日',
   },
   {
-    label: 'AI调用次数',
+    label: 'AI调用次数(所有用户)',
     value: props.data.ai_call_count || 0,
     icon: Bot,
     iconBg: 'bg-brand-lighter text-brand-dark',
-    note: '近一年累计',
+    note: '所选时间范围累计',
   },
   {
     label: '系统运行状态',
@@ -80,7 +89,7 @@ const cards = computed(() => [
 </script>
 
 <template>
-  <div class="grid grid-cols-2 gap-4 lg:grid-cols-3 2xl:grid-cols-6">
+  <div class="grid grid-cols-2 gap-4 lg:grid-cols-3 2xl:grid-cols-4">
     <div
       v-for="item in cards"
       :key="item.label"
@@ -97,7 +106,7 @@ const cards = computed(() => [
           />
           <span v-else>{{ item.text }}</span>
         </p>
-        <p class="mt-2 flex items-center gap-1 text-xs">
+        <p class="flex items-center gap-1 mt-2 text-xs">
           <template v-if="item.trend !== null && item.trend !== undefined">
             <ArrowUp v-if="item.trend >= 0" class="h-3.5 w-3.5 text-success" />
             <ArrowDown v-else class="h-3.5 w-3.5 text-danger" />
@@ -107,8 +116,8 @@ const cards = computed(() => [
           <span v-else class="text-muted">{{ item.note }}</span>
         </p>
       </div>
-      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" :class="item.iconBg">
-        <component :is="item.icon" class="h-5 w-5" />
+      <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl" :class="item.iconBg">
+        <component :is="item.icon" class="w-5 h-5" />
       </span>
     </div>
   </div>
