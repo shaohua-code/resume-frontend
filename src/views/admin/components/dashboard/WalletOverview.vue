@@ -15,12 +15,12 @@ const props = defineProps({
 
 const metrics = computed(() => [
   {
-    label: '剩余可分配额度',
-    value: Number(props.data.quota_available || 0),
+    label: '我的可用额度',
+    value: Number(props.data.my_balance || 0),
     icon: Wallet,
     iconClass: 'bg-brand-lighter text-brand-dark',
     prefix: '¥',
-    note: `已分配 ¥${Number(props.data.quota_allocated || 0).toFixed(2)}`,
+    note: '可分配余额',
   },
   {
     label: '累计消费',

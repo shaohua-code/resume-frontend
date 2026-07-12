@@ -45,10 +45,10 @@ export function claimUserByEmail(email) {
 }
 
 /**
- * 获取当前管理员额度池摘要（含实付金额合计）
+ * 获取当前管理员额度摘要（我的可用额度 + 实付合计）
  */
-export function getQuotaPoolSummary() {
-  return request.get('/admin/quota-pool/summary')
+export function getWalletSummary() {
+  return request.get('/admin/wallet/summary')
 }
 
 /**

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
-import { getAdminWallets, adjustUserBalance, getQuotaPoolSummary } from '@/api/admin'
+import { getAdminWallets, adjustUserBalance, getWalletSummary } from '@/api/admin'
 import { getRoleLabel, getStatusLabel } from '@/constants/roles'
 import { useUserStore } from '@/stores/user'
 import AdminUserInfoCell from './AdminUserInfoCell.vue'
@@ -17,8 +17,8 @@ const query = reactive({ page: 1, size: 10, keyword: '' })
 const isSuperAdmin = computed(() => userStore.role === 'SUPER_ADMIN')
 const isNormalAdmin = computed(() => userStore.role === 'ADMIN')
 
-// 额度池摘要信息
-const quotaPool = ref({ total_quota: 0, allocated_quota: 0, available: 0, total_paid_amount: 0 })
+// 当前管理员额度摘要
+const walletSummary = ref({ my_balance: 0, total_paid_amount: 0 })
 
 const columns = [
   { title: '用户信息', key: 'profile' },
@@ -41,37 +41,36 @@ const adjustForm = reactive({
   remark: '',
 })
 
-// 剩余可分配额度
-const availableQuota = computed(() => quotaPool.value.available || 0)
+// 我的可用额度
+const myBalance = computed(() => walletSummary.value.my_balance || 0)
 
 // 超管对普通用户/管理员可扣减（负数）
 const canDeduct = computed(() => isSuperAdmin.value && ['USER', 'ADMIN'].includes(adjustForm.targetRole))
 
 // 弹窗标题
 const adjustModalTitle = computed(() => {
-  if (isSuperAdmin.value && adjustForm.targetRole === 'ADMIN') {
-    return `调整额度池 - ${adjustForm.nickname}`
-  }
   if (isNormalAdmin.value) {
     return `分配额度 - ${adjustForm.nickname}`
   }
-  return `调整额度 - ${adjustForm.nickname}`
+  return canDeduct.value && Number(adjustForm.amount) < 0
+    ? `回收额度 - ${adjustForm.nickname}`
+    : `分配额度 - ${adjustForm.nickname}`
 })
 
 // 金额输入说明
 const amountHint = computed(() => {
   if (canDeduct.value) {
-    return '调整金额（正数增加，负数扣减；扣减后退回您的可分配额度池）'
+    return '调整金额（正数分配，负数回收；回收后退回您的余额）'
   }
   return '分配金额（正数，必填）'
 })
 
-/** 拉取额度池摘要 */
-async function loadQuotaPool() {
+/** 拉取当前管理员额度摘要 */
+async function loadWalletSummary() {
   try {
-    const res = await getQuotaPoolSummary()
+    const res = await getWalletSummary()
     if (res.success && res.data) {
-      quotaPool.value = res.data
+      walletSummary.value = res.data
     }
   } catch {
     // 错误提示由拦截器处理
@@ -92,7 +91,7 @@ async function loadWallets() {
 /** 操作按钮文案 */
 function getActionLabel(record) {
   if (isSuperAdmin.value) {
-    return record.role === 'ADMIN' ? '调整额度池' : '调整额度'
+    return '调整额度'
   }
   return '分配额度'
 }
@@ -115,7 +114,6 @@ async function submitAdjust() {
   const paidAmount = Number(adjustForm.paidAmount)
   const remark = String(adjustForm.remark || '').trim()
 
-  // 金额必填且不能为 0
   if (!adjustForm.amount && adjustForm.amount !== 0) {
     message.warning('请输入调整金额')
     return
@@ -124,24 +122,21 @@ async function submitAdjust() {
     message.warning('调整金额无效')
     return
   }
-  // 实付金额必填
   if (adjustForm.paidAmount === null || adjustForm.paidAmount === '' || Number.isNaN(paidAmount) || paidAmount < 0) {
     message.warning('请输入实付金额（>=0）')
     return
   }
-  // 备注必填
   if (!remark) {
     message.warning('请输入备注')
     return
   }
-  // 增加额度时校验可分配额度
-  if (amount > 0 && amount > availableQuota.value) {
-    message.warning(`可分配额度不足（剩余 ¥${availableQuota.value.toFixed(2)}）`)
+  // 分配时校验自身可用额度
+  if (amount > 0 && amount > myBalance.value) {
+    message.warning(`可用额度不足（剩余 ¥${myBalance.value.toFixed(2)}）`)
     return
   }
-  // 普通管理员不能扣减
   if (isNormalAdmin.value && amount < 0) {
-    message.warning('管理员仅可增加额度')
+    message.warning('管理员仅可分配额度，不可扣减')
     return
   }
 
@@ -152,9 +147,9 @@ async function submitAdjust() {
       paid_amount: paidAmount,
       remark,
     })
-    message.success(amount < 0 ? '额度已扣减' : '额度已分配')
+    message.success(amount < 0 ? '额度已回收' : '额度已分配')
     adjustModalOpen.value = false
-    await Promise.all([loadWallets(), loadQuotaPool()])
+    await Promise.all([loadWallets(), loadWalletSummary()])
     userStore.triggerDashboardRefresh()
     emit('quota-changed')
   } catch {
@@ -171,29 +166,21 @@ function handleTableChange(pagination) {
 }
 
 onMounted(async () => {
-  await Promise.all([loadWallets(), loadQuotaPool()])
+  await Promise.all([loadWallets(), loadWalletSummary()])
 })
 </script>
 
 <template>
   <div class="space-y-4">
     <a-card :bordered="false" class="card-base">
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <p class="text-sm text-muted">{{ isSuperAdmin ? '总额度池' : '我的额度池' }}</p>
-          <p class="mt-2 text-2xl font-semibold text-brand-dark">¥{{ Number(quotaPool.total_quota).toFixed(2) }}</p>
-        </div>
-        <div>
-          <p class="text-sm text-muted">已分配</p>
-          <p class="mt-2 text-2xl font-semibold text-ink">¥{{ Number(quotaPool.allocated_quota).toFixed(2) }}</p>
-        </div>
-        <div>
-          <p class="text-sm text-muted">剩余可分配</p>
-          <p class="mt-2 text-2xl font-semibold text-emerald-600">¥{{ Number(quotaPool.available).toFixed(2) }}</p>
+          <p class="text-sm text-muted">我的可用额度</p>
+          <p class="mt-2 text-2xl font-semibold text-emerald-600">¥{{ Number(walletSummary.my_balance).toFixed(2) }}</p>
         </div>
         <div>
           <p class="text-sm text-muted">实付金额合计</p>
-          <p class="mt-2 text-2xl font-semibold text-ink">¥{{ Number(quotaPool.total_paid_amount).toFixed(2) }}</p>
+          <p class="mt-2 text-2xl font-semibold text-ink">¥{{ Number(walletSummary.total_paid_amount).toFixed(2) }}</p>
         </div>
       </div>
     </a-card>
@@ -221,10 +208,6 @@ onMounted(async () => {
           </template>
           <template v-if="column.key === 'balance'">
             <span class="font-semibold text-brand-dark">¥{{ Number(record.balance).toFixed(2) }}</span>
-            <span v-if="record.allocated_quota !== null && record.allocated_quota !== undefined"
-              class="ml-2 text-xs text-muted">
-              (已分配 ¥{{ Number(record.allocated_quota).toFixed(2) }})
-            </span>
           </template>
           <template v-if="column.key === 'total_consumed'">
             ¥{{ Number(record.total_consumed).toFixed(2) }}
@@ -247,16 +230,16 @@ onMounted(async () => {
       :confirm-loading="adjustLoading" @ok="submitAdjust">
       <div class="py-2 space-y-4">
         <div class="px-3 py-2 text-sm rounded-lg bg-slate-50 text-muted">
-          当前剩余可分配额度 ¥{{ availableQuota.toFixed(2) }}
-          <span v-if="canDeduct">；扣减用户/管理员额度后将退回此额度池</span>
-          <span v-else>；分配后将同步扣减</span>
+          当前可用额度 ¥{{ myBalance.toFixed(2) }}
+          <span v-if="canDeduct">；回收后将退回您的余额</span>
+          <span v-else>；分配后将同步扣减您的余额</span>
         </div>
         <div>
           <p class="mb-2 text-sm text-muted">{{ amountHint }} <span class="text-danger">*</span></p>
           <a-input-number
             v-model:value="adjustForm.amount"
             :min="canDeduct ? undefined : 0.01"
-            :max="canDeduct ? undefined : availableQuota"
+            :max="canDeduct ? undefined : myBalance"
             :step="1"
             class="w-full input-field"
             placeholder="如：10 "

@@ -41,7 +41,7 @@ watch(activeRange, (newRange) => {
   loadDashboard(newRange)
 })
 
-// 监听额度池变更（AdminWalletPanel 分配额度后触发），自动刷新数据
+// 监听额度变更（AdminWalletPanel 分配额度后触发），自动刷新数据
 watch(() => userStore.dashboardRefreshTick, () => {
   loadDashboard(activeRange.value)
 })

@@ -39,17 +39,14 @@ export function formatBalanceText(balance = 0) {
 
 /**
  * 流水类型中文映射
- * 包含注册赠送、管理员增减、额度池分配、AI 消费、退款等
+ * 包含注册赠送、管理员分配/回收、AI 消费、退款等
  */
 export const LEDGER_TYPE_LABEL_MAP = {
   REGISTER_GIFT: '注册赠送',
-  ADMIN_GRANT: '管理员充值',
-  ADMIN_DEDUCT: '管理员扣减',
-  ADMIN_TRANSFER_OUT: '额度划拨',
+  ADMIN_GRANT: '额度分配',
+  ADMIN_DEDUCT: '额度回收',
   AI_CONSUME: 'AI 消费',
   REFUND: '退款',
-  ADMIN_ALLOCATE: '额度池分配',
-  ADMIN_POOL_GRANT: '额度池下发',
 }
 
 /**
@@ -70,5 +67,5 @@ export function getLedgerTypeOptions() {
  * 判断流水类型是否显示实付金额
  */
 export function hasPaidAmount(type) {
-  return ['ADMIN_GRANT', 'ADMIN_ALLOCATE', 'ADMIN_POOL_GRANT'].includes(type)
+  return type === 'ADMIN_GRANT'
 }
