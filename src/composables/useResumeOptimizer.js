@@ -85,10 +85,10 @@ export function useResumeOptimizer({ resume }) {
   }
 
   /**
-   * 触发指定模块的 AI 流式优化
-   * @param {'summary'|'skills'|'project'|'internship'} type 优化类型
-   * @param {number} [index] 项目或实习索引
-   */
+ * 触发指定模块的 AI 流式优化
+ * @param {'summary'|'skills'|'project'|'internship'|'work_experience'} type 优化类型
+ * @param {number} [index] 项目/实习/工作经历索引
+ */
   async function optimize(type, index) {
     const basicCheck = validateRequiredBasicFields(resume.value || {})
     if (!basicCheck.ok) {
@@ -100,9 +100,11 @@ export function useResumeOptimizer({ resume }) {
     const key = getKey(type, index)
     if (optimizingMap.get(key)) return
 
-    // 项目/实习需确保目标项存在
-    if (type === 'project' || type === 'internship') {
-      const list = type === 'project' ? resume.value.projects : resume.value.internships
+    // 项目/实习/工作经历需确保目标项存在
+    if (type === 'project' || type === 'internship' || type === 'work_experience') {
+      // 类型到 resume 字段的映射
+      const listMap = { project: 'projects', internship: 'internships', work_experience: 'work_experiences' }
+      const list = resume.value[listMap[type]]
       if (!list || index < 0 || index >= list.length) {
         message.warning('目标项不存在')
         return
@@ -115,7 +117,8 @@ export function useResumeOptimizer({ resume }) {
 
     try {
       const payload = { resume: resume.value }
-      if (type === 'project' || type === 'internship') {
+      // 项目/实习/工作经历需要传递索引
+      if (type === 'project' || type === 'internship' || type === 'work_experience') {
         payload.index = index
       }
 
@@ -135,6 +138,9 @@ export function useResumeOptimizer({ resume }) {
             resume.value.projects[index].description = filtered
           } else if (type === 'internship') {
             resume.value.internships[index].description = filtered
+          } else if (type === 'work_experience') {
+            // 工作经历流式回填描述字段
+            resume.value.work_experiences[index].description = filtered
           }
         },
         onDone: (data) => {
@@ -155,6 +161,9 @@ export function useResumeOptimizer({ resume }) {
               resume.value.projects[index].description = optimized
             } else if (type === 'internship') {
               resume.value.internships[index].description = optimized
+            } else if (type === 'work_experience') {
+              // 工作经历优化完成后最终赋值
+              resume.value.work_experiences[index].description = optimized
             }
             streamingText.value = ''
             message.success('优化完成')

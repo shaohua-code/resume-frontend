@@ -262,6 +262,10 @@ export function mergeOptimizedResume(target = {}, optimized = {}) {
     educations: optimized.educations?.length ? optimized.educations : (target.educations || []),
     projects: optimized.projects?.length ? optimized.projects : (target.projects || []),
     internships: optimized.internships?.length ? optimized.internships : (target.internships || []),
+    // 工作经历合并：AI 优化结果优先，无则保留原始数据
+    work_experiences: optimized.work_experiences?.length
+      ? optimized.work_experiences
+      : (target.work_experiences || []),
     skills: optimized.skills?.length ? optimized.skills : (target.skills || []),
     awards: optimized.awards?.length ? optimized.awards : (target.awards || []),
     certificates: optimized.certificates?.length ? optimized.certificates : (target.certificates || []),

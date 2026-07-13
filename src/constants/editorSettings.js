@@ -50,6 +50,7 @@ export const DEFAULT_MODULES = [
   { key: 'educations', title: '教育背景', visible: true },
   { key: 'skills', title: '技能特长', visible: true },
   { key: 'projects', title: '项目经验', visible: true },
+  { key: 'work_experience', title: '工作经历', visible: true },
   { key: 'internships', title: '实习经历', visible: true },
   { key: 'awards', title: '荣誉证书', visible: true },
 ]

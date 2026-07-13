@@ -80,9 +80,10 @@ const extendedBasicItems = computed(() =>
         </div>
       </section>
 
+      <!-- 实习经历（学生兼职/实习） -->
       <section v-if="showModule('internships') && f.internships.length" data-resume-module="internships"
         class="rt-section mb-5">
-        <h2 class="rt-title"><span>工作经历</span></h2>
+        <h2 class="rt-title"><span>实习经历</span></h2>
         <div v-for="intern in f.internships" :key="intern.company + intern.start_date" class="rt-item mb-4">
           <div class="rt-item-header">
             <strong>{{ intern.company }}</strong>
@@ -90,6 +91,22 @@ const extendedBasicItems = computed(() =>
           </div>
           <p v-if="intern.position" class="rt-sub">{{ intern.position }}</p>
           <p v-if="intern.description" class="rt-desc rt-preserve-text">{{ intern.description }}</p>
+        </div>
+      </section>
+
+      <!-- 工作经历（正式全职工作） -->
+      <section v-if="showModule('work_experience') && f.workExperiences.length"
+               data-resume-module="work_experience" class="rt-section mb-5">
+        <h2 class="rt-title"><span>工作经历</span></h2>
+        <div v-for="(exp, idx) in f.workExperiences" :key="idx + (exp.company || '')" class="rt-item mb-4">
+          <div class="rt-item-header">
+            <strong>{{ exp.company }}</strong>
+            <span>{{ exp.start_date }} ~ {{ exp.end_date }}</span>
+          </div>
+          <p v-if="exp.position || exp.department" class="rt-sub">
+            {{ exp.position }}<template v-if="exp.department"> · {{ exp.department }}</template>
+          </p>
+          <p v-if="exp.description" class="rt-desc rt-preserve-text">{{ exp.description }}</p>
         </div>
       </section>
 

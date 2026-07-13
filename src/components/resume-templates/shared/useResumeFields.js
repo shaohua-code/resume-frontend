@@ -24,6 +24,7 @@ export function useResumeFields(resume) {
     summary: r.summary || '',
     skills: r.skills || [],
     projects: r.projects || [],
+    workExperiences: r.work_experiences || [],
     internships: r.internships || [],
     awards: r.awards || [],
     certificates: r.certificates || [],

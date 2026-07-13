@@ -112,6 +112,27 @@ function removeInternship(i) {
   resume.value.internships.splice(i, 1)
 }
 
+// ====== 工作经历增删逻辑 ======
+
+/** 添加一条工作经历（正式工作，区别于实习） */
+function addWorkExperience() {
+  resume.value.work_experiences = resume.value.work_experiences || []
+  resume.value.work_experiences.push({
+    company: '',
+    position: '',
+    department: '',
+    start_date: '',
+    end_date: '',
+    description: '',
+  })
+}
+
+/** 删除指定索引的工作经历（含越界保护防止重复删除） */
+function removeWorkExperience(i) {
+  if (!resume.value.work_experiences || i < 0 || i >= resume.value.work_experiences.length) return
+  resume.value.work_experiences.splice(i, 1)
+}
+
 // 教育背景列表：确保数组存在并同步扁平字段
 const educationsModel = computed({
   get: () => {
@@ -236,6 +257,62 @@ const educationsModel = computed({
       </div>
       <button class="btn-ghost-dashed text-sm" @click="addInternship">
         <PlusOutlined /> 添加实习
+      </button>
+    </template>
+
+    <!-- 工作经历（正式工作，区别于实习） -->
+    <template v-else-if="activeModule === 'work_experience'">
+      <div v-for="(exp, i) in (resume.work_experiences || [])" :key="i" class="mb-4 border-b border-dashed border-line/60 pb-4">
+        <!-- 标题行：序号 + 公司名称 + 删除按钮 -->
+        <div class="mb-2 flex items-center justify-between text-sm font-semibold text-ink">
+          <span>工作{{ i + 1 }}：{{ exp.company || '未命名' }}</span>
+          <button class="text-sm font-medium text-danger transition-colors hover:text-red-500" @click="removeWorkExperience(i)">删除</button>
+        </div>
+        <a-form layout="vertical" size="small">
+          <a-row :gutter="[16, 0]">
+            <a-col :xs="24" :sm="12">
+              <a-form-item label="公司名称">
+                <a-input v-model:value="exp.company" placeholder="如：某科技有限公司" class="input-field" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :sm="12">
+              <a-form-item label="岗位">
+                <a-input v-model:value="exp.position" placeholder="如：前端开发工程师" class="input-field" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :sm="12">
+              <a-form-item label="部门（选填）">
+                <a-input v-model:value="exp.department" placeholder="如：技术研发部" class="input-field" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :sm="12">
+              <a-form-item label="开始时间">
+                <a-input v-model:value="exp.start_date" placeholder="如 2023-01" class="input-field" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :sm="12">
+              <a-form-item label="结束时间">
+                <a-input v-model:value="exp.end_date" placeholder="如 2024-06 或 至今" class="input-field" />
+              </a-form-item>
+            </a-col>
+            <a-col :span="24">
+              <a-form-item label="工作描述">
+                <a-textarea v-model:value="exp.description" :rows="3"
+                  placeholder="描述你的主要职责和工作成果，AI 会自动用 STAR 法则优化..." class="input-field" />
+              </a-form-item>
+            </a-col>
+          </a-row>
+        </a-form>
+        <!-- 每条工作经历的 AI 优化按钮 -->
+        <div class="flex justify-end">
+          <GradientButton :loading="isOptimizing('work_experience', i)" @click="optimize('work_experience', i)">
+            <ThunderboltOutlined /> 优化工作经历
+          </GradientButton>
+        </div>
+      </div>
+      <!-- 添加工作经历按钮 -->
+      <button class="btn-ghost-dashed text-sm" @click="addWorkExperience">
+        <PlusOutlined /> 添加工作经历
       </button>
     </template>
 

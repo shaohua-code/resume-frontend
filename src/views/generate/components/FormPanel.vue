@@ -1,6 +1,6 @@
 <!--
   表单填写生成简历面板
-  Step0~4：基本信息 → 教育背景 → 项目/实习 → AI 生成 → 预览编辑
+  Step0~4：基本信息 → 教育背景 → 经历信息（项目/实习/工作）→ AI 生成 → 预览编辑
 -->
 <template>
   <div class="mx-auto max-w-6xl">
@@ -8,7 +8,7 @@
       <a-steps :current="currentStep" class="gen-steps">
         <a-step title="基本信息" description="填写个人资料" />
         <a-step title="教育背景（选填）" description="就读与毕业信息" />
-        <a-step title="项目经历（选填）" description="描述你做过的项目" />
+        <a-step title="经历信息（选填）" description="项目、实习与工作经历" />
         <a-step title="AI生成" description="智能生成简历" />
         <a-step title="预览编辑" description="进入编辑器" />
       </a-steps>
@@ -84,7 +84,7 @@
             <ArrowLeftOutlined /> 上一步
           </button>
           <GradientButton class="inline-flex h-10 min-w-[160px] items-center justify-center gap-2" @click="currentStep = 2">
-            下一步：项目经历（选填）
+            下一步：经历信息（选填）
             <ArrowRightOutlined />
           </GradientButton>
         </div>
@@ -216,6 +216,73 @@
           </div>
           <button class="btn-ghost mt-4 w-full border-dashed py-2.5" @click="addInternship">
             <PlusOutlined /> 添加实习
+          </button>
+        </a-card>
+
+        <!-- 工作经历（正式全职工作，选填） -->
+        <a-card class="card-base mb-4" :bordered="false">
+          <template #title>
+            <span class="flex items-center gap-2 text-base font-semibold text-ink">
+              <BankOutlined /> 工作经历（选填）
+              <span class="badge">{{ workExperiences.filter(w => w.company || w.description).length }} 段工作</span>
+            </span>
+          </template>
+          <div class="space-y-4">
+          <div v-for="(exp, index) in workExperiences" :key="index" class="rounded-card border border-line/50 bg-canvas/50 p-4 transition-shadow duration-200 hover:shadow-sm sm:p-5">
+            <div class="mb-4 flex items-center justify-between">
+              <h4 class="flex items-center gap-2 text-base font-semibold text-ink">
+                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-dark text-xs font-semibold text-white">{{ index + 1 }}</span> 工作 {{ index + 1 }}
+              </h4>
+              <button v-if="workExperiences.length > 1" class="link-text text-xs text-danger hover:text-red-500" @click="removeWorkExperience(index)">
+                <DeleteOutlined /> 删除
+              </button>
+            </div>
+            <a-form layout="vertical">
+              <a-row :gutter="[16, 0]">
+                <a-col :xs="24" :sm="12">
+                  <a-form-item label="公司名称">
+                    <a-input :value="exp.company" placeholder="如：某科技有限公司" class="input-field" @update:value="exp.company = $event" />
+                  </a-form-item>
+                </a-col>
+                <a-col :xs="24" :sm="12">
+                  <a-form-item label="岗位">
+                    <a-input :value="exp.position" placeholder="如：前端开发工程师" class="input-field" @update:value="exp.position = $event" />
+                  </a-form-item>
+                </a-col>
+                <a-col :xs="24" :sm="12">
+                  <a-form-item label="部门（选填）">
+                    <a-input :value="exp.department" placeholder="如：技术研发部" class="input-field" @update:value="exp.department = $event" />
+                  </a-form-item>
+                </a-col>
+                <a-col :xs="24" :sm="12">
+                  <a-form-item label="开始时间">
+                    <a-date-picker :value="exp.start_date" picker="month" value-format="YYYY.MM" placeholder="2023.01" class="input-field w-full" @update:value="exp.start_date = $event" />
+                  </a-form-item>
+                </a-col>
+                <a-col :xs="24" :sm="12">
+                  <a-form-item label="结束时间">
+                    <a-date-picker :value="exp.end_date" picker="month" value-format="YYYY.MM" placeholder="2024.06 或 至今" class="input-field w-full" @update:value="exp.end_date = $event" />
+                  </a-form-item>
+                </a-col>
+                <a-col :span="24">
+                  <a-form-item label="工作描述（简单描述即可，AI 会自动优化）">
+                    <a-textarea
+                      :value="exp.description"
+                      :auto-size="{ minRows: 4, maxRows: 8 }"
+                      :maxlength="500"
+                      show-count
+                      placeholder="例如：负责公司前端架构设计与核心业务开发，带领 3 人团队完成后台管理系统重构。AI 会自动用 STAR 法则改写为更专业的描述。"
+                      class="project-desc-field"
+                      @update:value="exp.description = $event"
+                    />
+                  </a-form-item>
+                </a-col>
+              </a-row>
+            </a-form>
+          </div>
+          </div>
+          <button class="btn-ghost mt-4 w-full border-dashed py-2.5" @click="addWorkExperience">
+            <PlusOutlined /> 添加工作经历
           </button>
         </a-card>
 
@@ -394,6 +461,11 @@ const internships = reactive([
   { company: '', position: '', description: '', start_date: '', end_date: '' },
 ])
 
+// 工作经历列表（正式全职工作，区别于实习）
+const workExperiences = reactive([
+  { company: '', position: '', department: '', start_date: '', end_date: '', description: '' },
+])
+
 // JD 优化弹窗与页内流式状态
 const jdOptimizeOpen = ref(false)
 const jdOptimizeResume = ref({})
@@ -516,6 +588,18 @@ function removeInternship(index) {
   internships.splice(index, 1)
 }
 
+// ====== 工作经历增删方法 ======
+
+/** 添加一条工作经历（正式全职工作） */
+function addWorkExperience() {
+  workExperiences.push({ company: '', position: '', department: '', start_date: '', end_date: '', description: '' })
+}
+
+/** 删除指定索引的工作经历 */
+function removeWorkExperience(index) {
+  workExperiences.splice(index, 1)
+}
+
 async function nextFromBasic() {
   const valid = await basicFieldsRef.value?.validate()
   if (!valid) return
@@ -552,20 +636,22 @@ async function handleGenerate() {
     }
   }
 
-  currentStep.value = 3
+  currentStep.value = 3  // 跳转到 Step3（AI生成页）
   const payload = {
     ...basicForm,
     educations: educations.filter((e) => e.school || e.major || e.degree || e.start_date || e.end_date),
     projects: projects.filter((p) => p.name || p.description),
     internships: internships.filter((i) => i.company || i.description),
+    // 新增：工作经历（正式全职工作）
+    work_experiences: workExperiences.filter((w) => w.company || w.description),
   }
   syncFlatEducationFields(payload)
   const result = await resumeStore.generateResume(payload)
   if (result) {
-    currentStep.value = 4
+    currentStep.value = 4  // 跳转到 Step4（生成成功页）
     overLimitConfirmed.value = false
   } else {
-    currentStep.value = 2
+    currentStep.value = 2  // 失败回退到 Step2（经历信息页）
     overLimitConfirmed.value = false
   }
 }
@@ -612,6 +698,8 @@ function getResumeSnapshot() {
           : [],
       })),
     internships: internships.filter((i) => i.company || i.description),
+    // 工作经历（供 JD 优化使用）
+    work_experiences: workExperiences.filter((w) => w.company || w.description),
   }
   syncFlatEducationFields(payload)
   return normalizeResumeFields(payload)

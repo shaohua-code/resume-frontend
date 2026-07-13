@@ -151,12 +151,12 @@ const hobbies = computed(() => f.value.skills.slice(0, 6))
         </div>
       </section>
 
-      <!-- 工作经历 -->
+      <!-- 实习经历（学生兼职/实习） -->
       <section v-if="showModule('internships') && f.internships.length" data-resume-module="internships" class="mb-5">
         <div class="mb-3 flex items-center gap-2">
           <span class="flex h-6 w-6 items-center justify-center rounded bg-slate-100 text-sm font-bold"
-            :style="{ color: 'var(--skin-title-color, #3b82f6)' }">工</span>
-          <h2 class="text-base font-bold" :style="{ color: 'var(--skin-title-color, #1e293b)' }">工作经历</h2>
+            :style="{ color: 'var(--skin-title-color, #3b82f6)' }">实</span>
+          <h2 class="text-base font-bold" :style="{ color: 'var(--skin-title-color, #1e293b)' }">实习经历</h2>
           <div class="ml-auto h-px flex-1 bg-slate-100" />
         </div>
         <div v-for="item in f.internships" :key="item.company + item.start_date" class="mb-3">
@@ -167,6 +167,27 @@ const hobbies = computed(() => f.value.skills.slice(0, 6))
           <div v-if="item.position" class="mt-0.5 text-sm font-medium text-slate-600">{{ item.position }}</div>
           <p class="rt-desc rt-preserve-text break-all mt-1 text-sm leading-relaxed text-slate-700">{{ item.description
             }}</p>
+        </div>
+      </section>
+
+      <!-- 工作经历（正式全职工作） -->
+      <section v-if="showModule('work_experience') && f.workExperiences.length"
+               data-resume-module="work_experience" class="mb-5">
+        <div class="mb-3 flex items-center gap-2">
+          <span class="flex h-6 w-6 items-center justify-center rounded bg-slate-100 text-sm font-bold"
+            :style="{ color: 'var(--skin-title-color, #3b82f6)' }">工</span>
+          <h2 class="text-base font-bold" :style="{ color: 'var(--skin-title-color, #1e293b)' }">工作经历</h2>
+          <div class="ml-auto h-px flex-1 bg-slate-100" />
+        </div>
+        <div v-for="(exp, idx) in f.workExperiences" :key="idx + (exp.company || '')" class="mb-3">
+          <div class="flex items-start justify-between gap-4 text-sm">
+            <div class="font-bold text-slate-800">{{ exp.company }}</div>
+            <div class="text-nowrap text-slate-500">{{ exp.start_date }} ~ {{ exp.end_date }}</div>
+          </div>
+          <div v-if="exp.position || exp.department" class="mt-0.5 text-sm font-medium text-slate-600">
+            {{ exp.position }}<template v-if="exp.department"> · {{ exp.department }}</template>
+          </div>
+          <p class="rt-desc rt-preserve-text break-all mt-1 text-sm leading-relaxed text-slate-700">{{ exp.description }}</p>
         </div>
       </section>
 
