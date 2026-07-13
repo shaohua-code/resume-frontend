@@ -62,7 +62,7 @@ SUPER_ADMIN, ADMIN, USER（`constants/roles.js`，已移除 VIP 文案）
 
 ## 导出
 
-- PDF：`useResumeExportPrint`（浏览器打印）
+- PDF：`useResumeExportPrint`（浏览器打印，逐页固定 A4 页盒，打印 iframe 按页数撑高后离屏打印）
 - 无 VIP 校验，`ensureCanExport` 仅保存+记录导出
 
 ## resume_json 字段
@@ -71,9 +71,35 @@ SUPER_ADMIN, ADMIN, USER（`constants/roles.js`，已移除 VIP 文案）
 
 教育背景：`educations[]`（`school`, `major`, `degree`, `start_date`, `end_date`），编辑器模块 key 为 `educations`
 
+经历模块：
+
+- `projects[]`：`name`, `role`, `description`, `tech_stack`, `start_date`, `end_date`
+- `internships[]`：`company`, `position`, `description`, `start_date`, `end_date`
+- `work_experiences[]`：`company`, `position`, `department`, `description`, `start_date`, `end_date`
+
+编辑器 AI 优化类型：`summary | skills | project | internship | work_experience`。
+
 兼容扁平：`school`, `major`, `education` ↔ `educations[0]`
 
 工具：`constants/resumeFieldSchema.js`、`useResumeFields.js`；共享表单：`ResumeBasicFieldsSection.vue`、`ResumeEducationListSection.vue`
+
+## 模板与全行业示例
+
+- 模板注册：`constants/templateRegistry.js`（20 套，带分类、说明与主题色）
+- 模板库：`views/templates/index.vue`（分类筛选、完整预览、移动端单列）
+- 示例数据：`views/home/utils/demoResume.js`（按模板映射多行业画像）
+- 本地品牌资源：`public/brand-mark.svg`, `public/demo-avatar.svg`
+- 模板不得根据技能数组下标虚构熟练度或百分比；缺失模块保持不显示。
+
+## 响应式基线
+
+- 375px+ 无页面级横向滚动，窄屏表单单列，主要触控区域至少 44px。
+- 全局移动端 Modal 最大宽度 `calc(100vw - 24px)`，正文内部滚动。
+- A4 简历只缩放预览，保持打印/导出尺寸。
+- 移动端编辑器不显示分页控制器，但继续纵向滚动展示多张 A4。
+- 编辑器每一页（含最后一页）都显示完整 A4 纸张，内容不足时留白，不按内容高度缩短。
+- 间距面板的“左右边距”仅控制 A4 左右内边距，范围 0-50；上下留白使用页眉/页脚安全边距。
+- 模板分页依赖 `data-resume-module`、`rt-section`、`rt-item`、`rt-desc` 等标记；金融会计等非标准时间轴模板必须补齐标记，模板根节点不得裁切分页内容。
 
 ## Vite
 

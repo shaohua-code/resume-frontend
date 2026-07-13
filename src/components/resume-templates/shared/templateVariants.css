@@ -39,7 +39,7 @@
 .rt-v07 .rt-title::before { border-radius: 0; }
 .rt-v07 .rt-skill { border-radius: 0; }
 
-/* 08 互联网扁平：紫色圆角卡片 */
+/* 08 现代扁平：紫色圆角卡片 */
 .rt-v08 .rt-banner { padding: 18px; border: 0; border-radius: 16px; }
 .rt-v08 .rt-item, .rt-v08 .rt-basic-row { border-radius: 8px; }
 
@@ -78,9 +78,10 @@
 .rt-v16 .rt-item { position: relative; margin-left: 10px; padding-left: 20px; border-left: 3px solid var(--skin-title-color); }
 .rt-v16 .rt-item::before { content: ''; position: absolute; left: -7px; top: 16px; width: 10px; height: 10px; background: #fff; border: 3px solid var(--skin-title-color); border-radius: 50%; }
 
-/* 17 技能进度：强化进度条 */
-.rt-v17 .rt-skill-bar-track { height: 10px; background: var(--skin-skill-bg); }
-.rt-v17 .rt-skill-bar-fill { background: linear-gradient(90deg, var(--skin-title-color), var(--skin-skill-border)); }
+/* 17 能力矩阵：使用结构化标签，不根据排序伪造熟练度 */
+.rt-v17 .rt-skill-matrix { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; counter-reset: skill; }
+.rt-v17 .rt-skill-matrix .rt-skill { counter-increment: skill; display: flex; align-items: center; gap: 9px; border-radius: 8px; padding: 8px 10px; }
+.rt-v17 .rt-skill-matrix .rt-skill::before { content: counter(skill, decimal-leading-zero); color: var(--skin-title-color); font-size: 10px; font-weight: 800; letter-spacing: 0.08em; }
 
 /* 18 极简线条：只保留线条 */
 .rt-v18 .rt-basic-row, .rt-v18 .rt-item { background: transparent !important; border: 0; border-bottom: 1px solid var(--skin-divider-color); border-radius: 0; padding-left: 0; padding-right: 0; }

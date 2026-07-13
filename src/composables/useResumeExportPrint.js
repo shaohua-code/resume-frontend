@@ -29,16 +29,19 @@ function injectPrintStyles(targetDoc) {
       margin: 0;
       padding: 0;
       background: #fff;
+      width: 794px;
+      overflow: visible;
     }
     .print-page {
+      display: block;
       width: 794px;
       height: 1123px;
       overflow: hidden;
       position: relative;
       background: #fff;
       box-sizing: border-box;
-      page-break-after: always;
-      break-after: page;
+      page-break-after: always !important;
+      break-after: page !important;
       page-break-inside: avoid;
       break-inside: avoid;
     }
@@ -70,6 +73,9 @@ function injectPrintStyles(targetDoc) {
       body {
         margin: 0;
         background: #fff;
+        width: 210mm;
+        height: auto;
+        overflow: visible;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
@@ -148,14 +154,17 @@ function openPrintDialog(content) {
     iframe.id = PRINT_IFRAME_ID
     iframe.setAttribute('aria-hidden', 'true')
     // 离屏放置，避免闪烁
+    const pageCount = Math.max(1, content?.pages?.length || content?.pageCount || 1)
     Object.assign(iframe.style, {
-      position: 'fixed',
-      left: '-9999px',
+      position: 'absolute',
+      left: '-10000px',
       top: '0',
-      width: '0',
-      height: '0',
+      width: '794px',
+      height: `${pageCount * 1123}px`,
       border: 'none',
-      visibility: 'hidden',
+      opacity: '0',
+      pointerEvents: 'none',
+      overflow: 'visible',
     })
     document.body.appendChild(iframe)
 

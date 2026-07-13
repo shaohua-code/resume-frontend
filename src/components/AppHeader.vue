@@ -6,7 +6,7 @@
     <div class="flex items-center w-full h-full px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
       <div class="flex items-center gap-2 mr-4 transition-opacity cursor-pointer hover:opacity-80 lg:mr-8"
         @click="navTo('/')">
-        <img src="/vite.svg" alt="AI简历助手" class="w-8 h-8" />
+        <img src="/brand-mark.svg" alt="AI简历助手" class="w-8 h-8" />
         <span class="text-base font-bold text-brand-dark sm:text-lg">AI 简历助手</span>
       </div>
 
@@ -129,7 +129,7 @@ function navTo(path) {
   const publicPaths = ['/', '/templates']
   const pathname = path.split('?')[0]
   if (!userStore.isLoggedIn && !publicPaths.includes(pathname)) {
-    router.push('/login')
+    router.push({ name: 'Login', query: { redirect: path } })
   } else {
     router.push(path)
   }

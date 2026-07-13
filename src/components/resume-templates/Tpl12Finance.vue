@@ -6,7 +6,7 @@
 <script setup>
 import { computed } from 'vue'
 import { GraduationCap, Briefcase, Wrench, Award, User } from 'lucide-vue-next'
-import { useResumeFields, skillProgress, skillLevel } from './shared/useResumeFields.js'
+import { useResumeFields } from './shared/useResumeFields.js'
 import { formatEducationDateRange } from '@/constants/resumeFieldSchema'
 
 const props = defineProps({
@@ -52,6 +52,13 @@ const timelineModules = computed(() => [
     data: 'education',
   },
   {
+    key: 'work_experience',
+    title: '工作经历',
+    icon: Briefcase,
+    show: showModule('work_experience') && f.value.workExperiences.length,
+    data: 'work_experience',
+  },
+  {
     key: 'internships',
     title: '实习经历',
     icon: Briefcase,
@@ -91,7 +98,7 @@ const timelineModules = computed(() => [
 
 <template>
   <div
-    class="resume-template rt-custom-12 relative flex min-h-full w-full flex-col overflow-hidden bg-white"
+    class="resume-template rt-custom-12 relative flex min-h-full w-full flex-col bg-white"
     :style="{
       fontFamily: 'var(--font-family, \'Microsoft YaHei\', sans-serif)',
       fontSize: 'var(--font-size, 13px)',
@@ -134,7 +141,7 @@ const timelineModules = computed(() => [
         :key="mod.key"
         v-show="mod.show"
         :data-resume-module="mod.key === 'education' ? 'educations' : mod.key === 'summary' ? 'basic' : mod.key"
-        class="relative flex gap-4 pb-5"
+        class="rt-section relative flex gap-4 pb-5"
       >
         <!-- 左侧时间轴：图标 + 竖线 -->
         <div class="relative flex flex-col items-center">
@@ -162,7 +169,7 @@ const timelineModules = computed(() => [
 
           <!-- 教育背景 -->
           <template v-if="mod.key === 'education'">
-            <div v-for="(edu, idx) in f.educations" :key="idx" class="mb-3">
+            <div v-for="(edu, idx) in f.educations" :key="idx" class="rt-item mb-3">
               <div class="flex items-start justify-between gap-4 text-sm">
                 <div class="font-bold text-slate-800">{{ edu.school }}</div>
                 <div v-if="formatEducationDateRange(edu)" class="text-nowrap text-slate-500">{{ formatEducationDateRange(edu) }}</div>
@@ -173,7 +180,7 @@ const timelineModules = computed(() => [
 
           <!-- 实习经历 -->
           <template v-else-if="mod.key === 'internships'">
-            <div v-for="item in f.internships" :key="item.company + item.start_date" class="mb-3">
+            <div v-for="item in f.internships" :key="item.company + item.start_date" class="rt-item mb-3">
               <div class="flex items-start justify-between gap-4 text-sm">
                 <div class="font-bold text-slate-800">{{ item.company }}</div>
                 <div class="text-nowrap text-slate-500">{{ item.start_date }} ~ {{ item.end_date }}</div>
@@ -183,9 +190,23 @@ const timelineModules = computed(() => [
             </div>
           </template>
 
+          <!-- 正式工作经历 -->
+          <template v-else-if="mod.key === 'work_experience'">
+            <div v-for="(item, idx) in f.workExperiences" :key="idx + (item.company || '')" class="rt-item mb-3">
+              <div class="flex items-start justify-between gap-4 text-sm">
+                <div class="font-bold text-slate-800">{{ item.company }}</div>
+                <div class="text-nowrap text-slate-500">{{ item.start_date }} ~ {{ item.end_date }}</div>
+              </div>
+              <div v-if="item.position || item.department" class="mt-0.5 text-sm font-medium text-slate-600">
+                {{ item.position }}<template v-if="item.department"> · {{ item.department }}</template>
+              </div>
+              <p v-if="item.description" class="rt-desc rt-preserve-text mt-1 break-all text-sm leading-relaxed text-slate-700">{{ item.description }}</p>
+            </div>
+          </template>
+
           <!-- 项目经历 -->
           <template v-else-if="mod.key === 'projects'">
-            <div v-for="item in f.projects" :key="item.name" class="mb-3">
+            <div v-for="item in f.projects" :key="item.name" class="rt-item mb-3">
               <div class="flex items-start justify-between gap-4 text-sm">
                 <div class="font-bold text-slate-800">{{ item.name }}</div>
                 <div class="text-nowrap text-slate-500">{{ item.start_date }} ~ {{ item.end_date }}</div>
@@ -199,25 +220,16 @@ const timelineModules = computed(() => [
 
           <!-- 技能特长 -->
           <template v-else-if="mod.key === 'skills'">
-            <div class="grid grid-cols-2 gap-x-4 gap-y-3">
-              <div v-for="(skill, idx) in f.skills" :key="skill" class="flex flex-col gap-1">
-                <div class="flex justify-between text-xs text-slate-700">
-                  <span>{{ skill }}</span>
-                  <span class="text-slate-500">{{ skillLevel(idx) }}</span>
-                </div>
-                <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    class="h-full rounded-full"
-                    :style="{ width: skillProgress(idx) + '%', background: 'var(--skin-title-color, #5b9bd5)' }"
-                  />
-                </div>
-              </div>
+            <div class="flex flex-wrap gap-2">
+              <span v-for="skill in f.skills" :key="skill" class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700">
+                {{ skill }}
+              </span>
             </div>
           </template>
 
           <!-- 荣誉证书 -->
           <template v-else-if="mod.key === 'awards'">
-            <ul class="list-disc pl-5 text-sm leading-relaxed text-slate-700">
+            <ul class="rt-list list-disc pl-5 text-sm leading-relaxed text-slate-700">
               <li v-for="item in f.honorList" :key="item" class="rt-preserve-text break-all">{{ item }}</li>
             </ul>
           </template>

@@ -75,7 +75,11 @@ function removeCustomField(index) {
       </a-col>
       <a-col :xs="24" :sm="8">
         <a-form-item label="意向岗位" name="target_position" :required="requiredBasic">
-          <a-input v-model:value="resume.target_position" placeholder="如：前端开发工程师" class="input-field" />
+          <a-input
+            v-model:value="resume.target_position"
+            placeholder="如：财务分析师 / 机械工程师 / 运营经理"
+            class="input-field"
+          />
         </a-form-item>
       </a-col>
       <a-col :xs="24" :sm="8">

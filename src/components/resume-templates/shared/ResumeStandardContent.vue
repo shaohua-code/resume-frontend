@@ -3,7 +3,7 @@
 -->
 <script setup>
 import { computed } from 'vue'
-import { useResumeFields, skillProgress, skillLevel } from './useResumeFields.js'
+import { useResumeFields } from './useResumeFields.js'
 import { formatEducationDateRange } from '@/constants/resumeFieldSchema'
 
 const props = defineProps({
@@ -13,7 +13,6 @@ const props = defineProps({
 })
 
 const f = computed(() => useResumeFields(props.resume))
-const showProgress = computed(() => props.variant === 17)
 const moduleVisibleMap = computed(() => {
   return props.visibleModules.reduce((map, item) => {
     map[item.key] = item.visible !== false
@@ -34,7 +33,7 @@ function isBasicRowWide(index) {
 </script>
 
 <template>
-  <div class="rt-body">
+  <div class="rt-body p-[20px]">
     <header data-resume-module="basic" class="rt-header">
       <div class="rt-banner">
         <img
@@ -126,20 +125,9 @@ function isBasicRowWide(index) {
 
     <section v-if="showModule('skills') && f.skills.length" data-resume-module="skills" class="rt-section">
       <h2 class="rt-title"><span>技能特长</span></h2>
-      <template v-if="showProgress">
-        <div v-for="(skill, idx) in f.skills" :key="skill" class="rt-skill-bar-item">
-          <div class="rt-skill-bar-head">
-            <span>{{ skill }}</span>
-            <span>{{ skillProgress(idx) }}% · {{ skillLevel(idx) }}</span>
-          </div>
-          <div class="rt-skill-bar-track"><div class="rt-skill-bar-fill" :style="{ width: skillProgress(idx) + '%' }" /></div>
-        </div>
-      </template>
-      <template v-else>
-        <div class="rt-skills">
-          <span v-for="skill in f.skills" :key="skill" class="rt-skill">{{ skill }}</span>
-        </div>
-      </template>
+      <div class="rt-skills" :class="{ 'rt-skill-matrix': variant === 17 }">
+        <span v-for="skill in f.skills" :key="skill" class="rt-skill">{{ skill }}</span>
+      </div>
     </section>
 
     <section v-if="showModule('awards') && f.honorList.length" data-resume-module="awards" class="rt-section">

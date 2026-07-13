@@ -22,14 +22,16 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, defineAsyncComponent, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
 import { antdToken } from '@/constants/theme'
 import { useTheme } from '@/composables/useTheme'
 import AppHeader from '@/components/AppHeader.vue'
-import FeedbackFloatingButton from '@/components/FeedbackFloatingButton.vue'
 import { useVisitTracker } from '@/composables/useVisitTracker'
+
+// 反馈组件包含富文本编辑器，仅在用户端需要时异步加载，降低首屏负担
+const FeedbackFloatingButton = defineAsyncComponent(() => import('@/components/FeedbackFloatingButton.vue'))
 
 const route = useRoute()
 const { applyCssVariables } = useTheme()
@@ -45,7 +47,6 @@ const showFeedback = computed(() => {
 
 // 挂载时将 theme.js 变量注入 :root，并初始化访客追踪
 onMounted(() => {
-  console.log('App.vue onMounted')
   applyCssVariables()
   initVisitTracker()
 })

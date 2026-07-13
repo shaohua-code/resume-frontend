@@ -4,7 +4,7 @@
 -->
 <script setup>
 import { computed } from 'vue'
-import { useResumeFields, skillProgress, skillLevel } from './shared/useResumeFields.js'
+import { useResumeFields } from './shared/useResumeFields.js'
 import { formatEducationDateRange } from '@/constants/resumeFieldSchema'
 
 const props = defineProps({
@@ -42,7 +42,7 @@ function showModule(key) {
 
 // 顶栏已单独展示电话/邮箱，此处过滤避免重复
 const extendedBasicItems = computed(() =>
-  f.value.basicInfoItems.filter((item) => !['phone', 'email', 'age', ,].includes(item.key)),
+  f.value.basicInfoItems.filter((item) => !['phone', 'email', 'age'].includes(item.key)),
 )
 </script>
 
@@ -52,7 +52,7 @@ const extendedBasicItems = computed(() =>
       <div class="min-w-0 flex-1">
         <h1 class="rt-name mb-3 text-3xl font-bold tracking-widest">{{ f.name }}</h1>
 
-        <p v-if="metaLine" class="rt-value mb-4 text-sm mb-2">{{ metaLine }}</p>
+        <p v-if="metaLine" class="rt-value mb-4 text-sm">{{ metaLine }}</p>
 
         <div v-if="extendedBasicItems.length" class="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
           <div v-for="item in extendedBasicItems" :key="item.key" class="flex gap-1">
@@ -126,19 +126,8 @@ const extendedBasicItems = computed(() =>
 
       <section v-if="showModule('skills') && f.skills.length" data-resume-module="skills" class="rt-section mb-5">
         <h2 class="rt-title"><span>技能特长</span></h2>
-        <ul class="rt-list mb-3 list-disc space-y-1 pl-5 text-sm leading-relaxed">
-          <li v-for="skill in f.skills" :key="skill">{{ skill }}</li>
-        </ul>
-        <div class="mt-3 grid grid-cols-2 gap-4">
-          <div v-for="(skill, idx) in f.skills.slice(0, 2)" :key="skill" class="text-sm">
-            <div class="mb-1 flex justify-between">
-              <span class="font-medium">{{ skill }}</span>
-              <span class="rt-sub">{{ skillLevel(idx) }}</span>
-            </div>
-            <div class="h-2 overflow-hidden rounded-full bg-slate-200">
-              <div class="rt-skill-bar-fill h-full rounded-full" :style="{ width: skillProgress(idx) + '%' }" />
-            </div>
-          </div>
+        <div class="rt-skills">
+          <span v-for="skill in f.skills" :key="skill" class="rt-skill">{{ skill }}</span>
         </div>
       </section>
 

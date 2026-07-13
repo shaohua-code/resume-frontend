@@ -211,12 +211,12 @@ const educationsModel = computed({
           <button class="text-sm font-medium text-danger transition-colors hover:text-red-500" @click="removeProject(i)">删除</button>
         </div>
         <a-form layout="vertical" size="small">
-          <a-row :gutter="12">
-            <a-col :span="8"><a-form-item label="项目名"><a-input v-model:value="proj.name" class="input-field" /></a-form-item></a-col>
-            <a-col :span="8"><a-form-item label="角色"><a-input v-model:value="proj.role" class="input-field" /></a-form-item></a-col>
-            <a-col :span="8"><a-form-item label="技术栈"><a-input v-model:value="proj.tech_stack" class="input-field" /></a-form-item></a-col>
-            <a-col :span="12"><a-form-item label="开始"><a-input v-model:value="proj.start_date" placeholder="如 2023-01" class="input-field" /></a-form-item></a-col>
-            <a-col :span="12"><a-form-item label="结束"><a-input v-model:value="proj.end_date" placeholder="如 2024-06" class="input-field" /></a-form-item></a-col>
+          <a-row :gutter="[12, 0]">
+            <a-col :xs="24" :sm="8"><a-form-item label="项目名"><a-input v-model:value="proj.name" class="input-field" /></a-form-item></a-col>
+            <a-col :xs="24" :sm="8"><a-form-item label="角色"><a-input v-model:value="proj.role" class="input-field" /></a-form-item></a-col>
+            <a-col :xs="24" :sm="8"><a-form-item label="专业技能 / 工具"><a-input v-model:value="proj.tech_stack" class="input-field" /></a-form-item></a-col>
+            <a-col :xs="24" :sm="12"><a-form-item label="开始"><a-input v-model:value="proj.start_date" placeholder="如 2023.01" class="input-field" /></a-form-item></a-col>
+            <a-col :xs="24" :sm="12"><a-form-item label="结束"><a-input v-model:value="proj.end_date" placeholder="如 2024.06" class="input-field" /></a-form-item></a-col>
             <a-col :span="24"><a-form-item label="描述"><a-textarea v-model:value="proj.description" :rows="3" class="input-field" /></a-form-item></a-col>
           </a-row>
         </a-form>
@@ -240,11 +240,11 @@ const educationsModel = computed({
           <button class="text-sm font-medium text-danger transition-colors hover:text-red-500" @click="removeInternship(i)">删除</button>
         </div>
         <a-form layout="vertical" size="small">
-          <a-row :gutter="12">
-            <a-col :span="8"><a-form-item label="公司"><a-input v-model:value="intern.company" class="input-field" /></a-form-item></a-col>
-            <a-col :span="8"><a-form-item label="岗位"><a-input v-model:value="intern.position" class="input-field" /></a-form-item></a-col>
-            <a-col :span="4"><a-form-item label="开始"><a-input v-model:value="intern.start_date" class="input-field" /></a-form-item></a-col>
-            <a-col :span="4"><a-form-item label="结束"><a-input v-model:value="intern.end_date" class="input-field" /></a-form-item></a-col>
+          <a-row :gutter="[12, 0]">
+            <a-col :xs="24" :sm="8"><a-form-item label="公司 / 机构"><a-input v-model:value="intern.company" class="input-field" /></a-form-item></a-col>
+            <a-col :xs="24" :sm="8"><a-form-item label="岗位"><a-input v-model:value="intern.position" class="input-field" /></a-form-item></a-col>
+            <a-col :xs="24" :sm="4"><a-form-item label="开始"><a-input v-model:value="intern.start_date" class="input-field" /></a-form-item></a-col>
+            <a-col :xs="24" :sm="4"><a-form-item label="结束"><a-input v-model:value="intern.end_date" class="input-field" /></a-form-item></a-col>
             <a-col :span="24"><a-form-item label="描述"><a-textarea v-model:value="intern.description" :rows="3" class="input-field" /></a-form-item></a-col>
           </a-row>
         </a-form>
@@ -272,17 +272,17 @@ const educationsModel = computed({
           <a-row :gutter="[16, 0]">
             <a-col :xs="24" :sm="12">
               <a-form-item label="公司名称">
-                <a-input v-model:value="exp.company" placeholder="如：某科技有限公司" class="input-field" />
+                <a-input v-model:value="exp.company" placeholder="如：某公司 / 医院 / 学校 / 机构" class="input-field" />
               </a-form-item>
             </a-col>
             <a-col :xs="24" :sm="12">
               <a-form-item label="岗位">
-                <a-input v-model:value="exp.position" placeholder="如：前端开发工程师" class="input-field" />
+                <a-input v-model:value="exp.position" placeholder="如：运营专员 / 会计 / 工程师" class="input-field" />
               </a-form-item>
             </a-col>
             <a-col :xs="24" :sm="12">
               <a-form-item label="部门（选填）">
-                <a-input v-model:value="exp.department" placeholder="如：技术研发部" class="input-field" />
+                <a-input v-model:value="exp.department" placeholder="如：市场部 / 财务部 / 研发部" class="input-field" />
               </a-form-item>
             </a-col>
             <a-col :xs="24" :sm="12">

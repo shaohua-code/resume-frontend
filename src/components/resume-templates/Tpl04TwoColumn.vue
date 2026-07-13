@@ -4,7 +4,7 @@
 -->
 <script setup>
 import { computed } from 'vue'
-import { useResumeFields, skillProgress, skillLevel } from './shared/useResumeFields.js'
+import { useResumeFields } from './shared/useResumeFields.js'
 import { formatEducationDateRange } from '@/constants/resumeFieldSchema'
 
 const props = defineProps({
@@ -159,19 +159,8 @@ const sectionIcons = {
           {{ sectionIcons.skills }}
         </div>
         <h2 class="rt-title"><span>技能特长</span></h2>
-        <ul class="rt-list mb-3 list-disc space-y-1 pl-5 text-sm leading-relaxed">
-          <li v-for="skill in f.skills" :key="skill">{{ skill }}</li>
-        </ul>
-        <div class="grid grid-cols-2 gap-4">
-          <div v-for="(skill, idx) in f.skills.slice(0, 2)" :key="skill" class="text-sm">
-            <div class="mb-1 flex justify-between">
-              <span class="font-medium">{{ skill }}</span>
-              <span class="rt-sub">{{ skillLevel(idx) }}</span>
-            </div>
-            <div class="h-2 overflow-hidden rounded-full bg-slate-200">
-              <div class="rt-skill-bar-fill h-full rounded-full" :style="{ width: skillProgress(idx) + '%' }" />
-            </div>
-          </div>
+        <div class="rt-skills">
+          <span v-for="skill in f.skills" :key="skill" class="rt-skill">{{ skill }}</span>
         </div>
       </section>
 

@@ -130,7 +130,7 @@ export const TEMPLATE_SKIN_PRESETS = {
     topBandBg: '#111827',
   },
 
-  // 8. 互联网扁平：左侧 slate 蓝灰边栏 + 右侧蓝色标题条
+  // 8. 现代扁平：左侧 slate 蓝灰边栏 + 右侧蓝色标题条
   8: {
     titleColor: '#5b6b7c',
     dividerColor: '#e2e8f0',

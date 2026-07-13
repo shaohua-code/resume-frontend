@@ -97,6 +97,22 @@
           :stroke-color="matchProgressColor"
           class="mb-3"
         />
+        <!-- 匹配优势 -->
+        <div v-if="matchResult.match_advantages?.length" class="mb-2">
+          <p><strong>匹配优势：</strong></p>
+          <ul class="pl-5 text-sm list-disc text-emerald-600">
+            <li v-for="(adv, i) in matchResult.match_advantages" :key="'adv-' + i">{{ adv }}</li>
+          </ul>
+        </div>
+        <!-- 岗位不足 -->
+        <div v-if="matchResult.position_gaps?.length" class="mb-2">
+          <p><strong>岗位不足：</strong></p>
+          <ul class="pl-5 text-sm list-disc text-orange-500">
+            <li v-for="(gap, i) in matchResult.position_gaps" :key="'gap-' + i">{{ gap }}</li>
+          </ul>
+        </div>
+        <!-- 经验差距 -->
+        <p v-if="matchResult.experience_gap" class="mb-2"><strong>经验差距：</strong>{{ matchResult.experience_gap }}</p>
         <p><strong>岗位关键词：</strong>{{ matchResult.keywords?.join('、') }}</p>
         <p><strong>缺失技能：</strong>{{ matchResult.missing_skills?.join('、') || '无' }}</p>
         <p><strong>优化建议：</strong></p>
@@ -483,7 +499,7 @@ function buildMarkdownList(title, items = []) {
 function buildMarkdownResume() {
   const projectText = (resume.projects || []).map((item) => {
     const techStack = Array.isArray(item.tech_stack) ? item.tech_stack.join('、') : item.tech_stack || ''
-    return `### ${item.name || '项目经历'}\n- 角色：${item.role || ''}\n- 时间：${item.start_date || ''} - ${item.end_date || ''}\n- 技术栈：${techStack}\n- 描述：${item.description || ''}`
+    return `### ${item.name || '项目经历'}\n- 角色：${item.role || ''}\n- 时间：${item.start_date || ''} - ${item.end_date || ''}\n- 专业技能 / 工具：${techStack}\n- 描述：${item.description || ''}`
   }).join('\n\n')
   const internshipText = (resume.internships || []).map((item) => {
     return `### ${item.company || '实习经历'}\n- 岗位：${item.position || ''}\n- 时间：${item.start_date || ''} - ${item.end_date || ''}\n- 描述：${item.description || ''}`
@@ -534,12 +550,12 @@ onMounted(async () => {
 
 /* 主内容区：留出顶部工具栏 + 底部编辑面板空间，移动端缩减间距 */
 .editor-main {
-  @apply flex min-h-screen max-w-full flex-col overflow-x-hidden pt-[56px] pb-[200px] lg:pt-[70px] lg:pb-[340px];
+  @apply flex min-h-screen max-w-full flex-col overflow-x-hidden pt-[56px] pb-[calc(40vh+64px)] lg:pt-[70px] lg:pb-[340px];
 }
 
 /* 底部面板折叠时减少留白，扩大预览可视区 */
 .editor-main--panel-collapsed {
-  @apply max-lg:pb-[120px];
+  @apply max-lg:pb-[calc(64px+env(safe-area-inset-bottom,0px))];
 }
 
 /* 预览区居中，移动端限定高度使预览区内部可滚动 */

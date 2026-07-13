@@ -13,7 +13,7 @@
     class="resume-preview-panel"
     :class="editPanelCollapsed ? 'resume-preview-panel--mobile-collapsed' : 'resume-preview-panel--mobile-expanded'"
   >
-    <!-- 页面导航栏：多页时展示，移动端 sticky 固定在预览区顶部 -->
+    <!-- 页面导航栏：多页时桌面端展示；移动端直接纵向滚动多张 A4 -->
     <div v-if="pageCount > 1" class="page-nav-bar">
       <div class="page-nav-info">
         <span class="page-nav-label">共 {{ pageCount }} 页</span>
@@ -172,19 +172,12 @@ const pageScalerStyle = computed(() => {
 })
 
 // 外层容器尺寸跟随缩放比例，避免横向溢出
-function getPreviewPageOuterHeight(n) {
-  const contentH = getPageContentHeight(n)
-  // 内容填满一页时使用标准 A4 高度
-  if (contentH >= effectivePageHeight.value - 1) {
-    return pageHeightPx.value
-  }
-  const bottomGap = n === pageCount.value ? pageBottomGap.value : 0
-  // 未满一页时纸张高度跟随实际内容，避免页内大块空白
-  return Math.min(pageHeightPx.value, pageTopGap.value + contentH + bottomGap)
+function getPreviewPageOuterHeight() {
+  return pageHeightPx.value
 }
 
 function getPageOuterStyle(n) {
-  const pageHeight = getPreviewPageOuterHeight(n)
+  const pageHeight = getPreviewPageOuterHeight()
   if (!needsScale.value) {
     return { width: `${A4_WIDTH_PX}px`, height: `${pageHeight}px` }
   }
@@ -212,6 +205,7 @@ function resolveFontSize(size) {
 
 const ITEM_SELECTOR = '[class*="-item"]'
 const PARA_SELECTOR = 'p, [class*="-text"], [class*="-desc"]'
+const MODULE_SELECTOR = '[data-resume-module]'
 const MIN_PAGE_CONTENT = 24
 
 // A4 高度：210×297mm，96dpi 下 297mm ≈ 1123px
@@ -307,27 +301,21 @@ function buildPrintPageElements() {
   const pageH = pageHeightPx.value
   const pages = []
 
-  // 优先克隆屏幕上已渲染的 preview-page（打印仍用标准 A4 高度）
+  // 优先克隆屏幕上已完整渲染的 preview-page（打印仍用标准 A4 高度）
   const visiblePages = stage?.querySelectorAll('.preview-page')
-  if (visiblePages?.length) {
+  if (visiblePages?.length === pageCount.value) {
     visiblePages.forEach((pageEl, index) => {
       const viewport = pageEl.querySelector('.page-viewport')
       if (!viewport) return
-
-      const pageNum = index + 1
-      const contentH = getPageContentHeight(pageNum)
-      const isFullPage = contentH >= effectivePageHeight.value - 1
 
       const pageWrapper = document.createElement('div')
       pageWrapper.className = 'print-page'
       pageWrapper.style.cssText = `width:794px;height:${pageH}px;overflow:hidden;background:#fff;box-sizing:border-box;position:relative;`
 
       const viewportClone = viewport.cloneNode(true)
-      // 满页时使用标准 A4 内容区高度，保证 PDF 分页正确
-      if (isFullPage) {
-        viewportClone.style.height = `${effectivePageHeight.value}px`
-        viewportClone.style.maxHeight = `${effectivePageHeight.value}px`
-      }
+      const pageContentHeight = getPageContentHeight(index + 1)
+      viewportClone.style.height = `${Math.min(pageContentHeight, effectivePageHeight.value)}px`
+      viewportClone.style.maxHeight = `${effectivePageHeight.value}px`
       viewportClone.querySelectorAll('.resume-preview').forEach((el) => {
         el.style.visibility = 'visible'
         el.style.opacity = '1'
@@ -337,10 +325,12 @@ function buildPrintPageElements() {
       pageWrapper.appendChild(viewportClone)
       pages.push(pageWrapper)
     })
-    return pages
+    if (pages.length === pageCount.value) {
+      return pages
+    }
   }
 
-  // 兜底：测量层切片（preview-page 未就绪时）
+  // 兜底：测量层切片（preview-page 未就绪或数量不完整时）
   const el = contentRef.value
   if (!el) return []
   const breaks = pageBreaks.value
@@ -476,7 +466,9 @@ function collectPageSegments(content, contentRect) {
 
   content.querySelectorAll('header').forEach((h) => pushBlock(h, 'header'))
 
-  content.querySelectorAll('section').forEach((section) => {
+  content.querySelectorAll(MODULE_SELECTOR).forEach((section) => {
+    if (section.matches('header')) return
+    if (section.parentElement?.closest(MODULE_SELECTOR)) return
     const title = section.querySelector('[class*="-title"], h2, h3')
     const items = [...section.querySelectorAll(ITEM_SELECTOR)]
     const paragraphs = [...section.querySelectorAll(PARA_SELECTOR)].filter(
@@ -730,22 +722,22 @@ defineExpose({
 <style scoped>
 /* 预览面板：深色背景，突出 A4 白纸；移动端限定高度以启用内部滚动与 sticky 导航 */
 .resume-preview-panel {
-  @apply relative flex w-full max-w-full flex-1 flex-col items-center overflow-x-hidden overflow-y-auto px-4 py-6 pb-10 max-lg:min-h-0 max-lg:w-full;
+  @apply relative flex w-full max-w-full flex-1 flex-col items-center overflow-x-hidden overflow-y-visible px-4 py-6 pb-10 max-lg:min-h-0 max-lg:w-full lg:overflow-y-auto;
 }
 
-/* 移动端：底部编辑栏收起时的预览可视高度 */
+/* 移动端：底部编辑栏收起时让页面自然滚动多张 A4 */
 .resume-preview-panel--mobile-collapsed {
-  @apply max-lg:max-h-[calc(100dvh-56px-72px-env(safe-area-inset-bottom,0px))];
+  @apply max-lg:max-h-none;
 }
 
-/* 移动端：底部编辑栏展开时缩小预览区，保留分页导航可见 */
+/* 移动端：底部编辑栏展开时同样不制造内部长滚动 */
 .resume-preview-panel--mobile-expanded {
-  @apply max-lg:max-h-[calc(60dvh-56px-env(safe-area-inset-bottom,0px))];
+  @apply max-lg:max-h-none;
 }
 
-/* 页面导航栏：sticky 固定在预览滚动区顶部 */
+/* 页面导航栏：sticky 固定在桌面预览滚动区顶部 */
 .page-nav-bar {
-  @apply sticky top-0 z-30 mb-4 flex w-full max-w-[210mm] shrink-0 items-center justify-between gap-2 rounded-card border border-line/60 bg-white/95 px-3 py-2 shadow-card backdrop-blur-md max-lg:max-w-full max-lg:flex-wrap;
+  @apply sticky top-0 z-30 mb-4 flex w-full max-w-[210mm] shrink-0 items-center justify-between gap-2 rounded-card border border-line/60 bg-white/95 px-3 py-2 shadow-card backdrop-blur-md max-lg:hidden;
 }
 
 .page-nav-info {
@@ -811,7 +803,7 @@ defineExpose({
 
 /* 简历预览基础样式 - 使用 CSS 变量支持间距/字号/字体/皮肤动态设置 */
 .resume-preview {
-  @apply w-[210mm] cursor-pointer bg-white px-[var(--preview-padding,40px)] py-[var(--preview-padding,40px)] text-[var(--font-size,13px)] leading-[var(--line-height,1.6)] text-[#2c3e50];
+  @apply w-[210mm] cursor-pointer bg-white px-[var(--preview-padding,40px)] py-0 text-[var(--font-size,13px)] leading-[var(--line-height,1.6)] text-[#2c3e50];
   font-family: var(--font-family, 'Microsoft YaHei', sans-serif);
 }
 

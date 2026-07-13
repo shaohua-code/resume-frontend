@@ -1,6 +1,6 @@
 # AI 简历助手 · 前端项目
 
-Glassmorphism 浅色科技风前端，面向校园招聘与年轻求职者，提供 AI 生成简历、在线编辑、上传优化、JD 匹配、AI 评分、多格式导出等完整能力。
+面向全行业、全职业阶段求职者的响应式 AI 简历前端，提供 AI 生成简历、在线编辑、上传优化、JD 匹配、AI 评分、多格式导出与 20 套分类模板等完整能力。
 
 ## 一、技术栈
 
@@ -147,7 +147,7 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 | 自定义字段 | `custom_fields: [{ label, value }]` | 放在基本信息内展示 |
 | 教育背景 | `educations: [{ school, major, degree, start_date, end_date }]` | 独立模块，可 0~N 条 |
 | 兼容 | `school`, `major`, `education` | 与 `educations[0]` 双向同步 |
-| 其他 | `skills`, `projects`, `internships`, `awards`, `certificates`, `_editorSettings` | 与改造前一致 |
+| 其他 | `skills`, `projects`, `internships`, `work_experiences`, `awards`, `certificates`, `_editorSettings` | 全行业经历模块 |
 
 归一化工具：`src/constants/resumeFieldSchema.js`；模板读取：`useResumeFields.js`。
 
@@ -174,7 +174,7 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 
 ## 九、简历编辑器 AI 优化
 
-编辑器（`views/editor/`）支持对简历四个模块进行 AI 流式优化，基于「意向岗位 + 完整简历内容」生成更专业的描述。
+编辑器（`views/editor/`）支持对简历五类模块进行 AI 流式优化，基于「意向岗位 + 完整简历内容」生成更专业的描述。
 
 | 模块 | 类型 | 入口 |
 | --- | --- | --- |
@@ -182,9 +182,10 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 | 技能特长 | `skills` | `ResumeEditorForm.vue` 技能标签区下方按钮 |
 | 项目经历 | `project` | `ResumeEditorForm.vue` 每个项目卡片底部按钮 |
 | 实习经历 | `internship` | `ResumeEditorForm.vue` 每个实习卡片底部按钮 |
+| 工作经历 | `work_experience` | `ResumeEditorForm.vue` 每个正式工作卡片底部按钮 |
 
 - **调用方式**：`useResumeOptimizer({ resume })` 返回 `{ optimize, isOptimizing, streamingText, streamingSkillsText }`
-- **接口**：`POST /api/ai/optimize/:type/stream`，`type ∈ summary|skills|project|internship`
+- **接口**：`POST /api/ai/optimize/:type/stream`，`type ∈ summary|skills|project|internship|work_experience`
 - **流式回填**：文本类字段实时回填到对应输入框；技能类先在临时输入框展示打印机效果，完成后解析为数组
 - **前置校验**：若 `resume.target_position` 为空会提示「请先填写意向岗位」
 

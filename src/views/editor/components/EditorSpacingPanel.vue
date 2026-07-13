@@ -1,5 +1,5 @@
-<!--
-  间距设置面板：模块间距 / 行间距 / 页面边距
+﻿<!--
+  间距设置面板：模块间距 / 行间距 / 左右边距
 -->
 <script setup>
 import { DEFAULT_SPACING, SPACING_RANGES } from '@/constants/editorSettings'
@@ -60,7 +60,7 @@ function resetKey(key) {
 
     <div class="mb-4">
       <h5 class="mb-2 text-sm font-medium text-ink">
-        页面边距：<b class="font-bold text-brand-dark">{{ spacing.padding }}</b>
+        左右边距：<b class="font-bold text-brand-dark">{{ spacing.padding }}</b>
       </h5>
       <div class="flex items-center gap-3">
         <a-slider

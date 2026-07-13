@@ -11,12 +11,14 @@ import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import { useUserStore } from '@/stores/user'
 import { submitFeedback } from '@/api/feedback'
 import { uploadFile, resolveUploadUrl } from '@/api/upload'
+import { useMediaQuery } from '@/composables/useMediaQuery'
 
 const open = defineModel({ type: Boolean, default: false })
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const isMobile = useMediaQuery('(max-width: 640px)')
 
 const contentHtml = ref('')
 const submitting = ref(false)
@@ -104,7 +106,7 @@ async function handleSubmit() {
     :confirm-loading="submitting"
     ok-text="提交反馈"
     cancel-text="取消"
-    width="640px"
+    :width="isMobile ? 'calc(100vw - 24px)' : 640"
     destroy-on-close
     @ok="handleSubmit"
   >
@@ -127,5 +129,18 @@ async function handleSubmit() {
 }
 .feedback-quill-editor :deep(.ql-editor) {
   min-height: 180px;
+}
+
+@media (max-width: 640px) {
+  .feedback-quill-editor :deep(.ql-toolbar) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .feedback-quill-editor :deep(.ql-container),
+  .feedback-quill-editor :deep(.ql-editor) {
+    min-height: 140px;
+  }
 }
 </style>

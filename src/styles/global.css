@@ -36,6 +36,13 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#app {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   color: var(--color-ink);
@@ -416,5 +423,52 @@ input.ant-input.input-field:not(textarea) {
   /* 移动端 date-picker 输入字体 ≥16px 防止 iOS Safari 自动放大 */
   .ant-picker.input-field .ant-picker-input > input {
     font-size: 16px !important;
+  }
+
+  /* 小屏触控目标统一不小于 44px，并兼容底部安全区 */
+  .btn-primary,
+  .btn-primary-sm,
+  .btn-ghost,
+  .btn-ghost-sm,
+  .btn-ghost-dashed,
+  .btn-mint,
+  .btn-danger,
+  .ant-btn:not(.ant-btn-link):not(.ant-btn-text) {
+    min-height: 44px !important;
+  }
+
+  input.ant-input.input-field:not(textarea),
+  .ant-select.input-field .ant-select-selector,
+  .ant-picker.input-field,
+  .ant-input-affix-wrapper.input-field {
+    min-height: 44px !important;
+    height: 44px !important;
+  }
+
+  /* Ant Design 弹窗在窄屏留出安全边距，长内容在弹窗内滚动 */
+  .ant-modal {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+    margin: 12px auto;
+    top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .ant-modal-body {
+    max-height: calc(100dvh - 156px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .ant-modal-content {
+    border-radius: 18px;
+  }
+
+  .ant-result {
+    padding: 20px 8px;
+  }
+
+  .ant-drawer-content-wrapper {
+    max-width: 100vw !important;
   }
 }

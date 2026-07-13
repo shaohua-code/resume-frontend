@@ -6,7 +6,7 @@ export const HOME_FEATURES = [
     icon: '🤖',
     title: 'AI 生成简历',
     path: '/generate',
-    desc: '填写信息后 AI 自动生成专业校招简历，STAR 法则优化',
+    desc: '按目标行业与岗位生成专业简历，自动强化匹配优势',
     iconBg: 'bg-brand-lighter/60',
   },
   {

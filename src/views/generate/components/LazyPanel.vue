@@ -42,7 +42,7 @@
             <a-form-item label="求职方向" name="target_position" required>
               <a-input
                 v-model:value="lazyForm.target_position"
-                placeholder="如：会计，运营，前端开发工程师 / 产品经理 / 数据分析"
+                placeholder="如：财务分析师 / 机械工程师 / 门店经理 / 新媒体运营"
                 size="large"
                 allow-clear
                 class="input-field"
@@ -153,7 +153,7 @@
           <a-result
             status="success"
             title="🎉 简历生成成功！"
-            sub-title="AI 已根据你的自由文本生成专业校招简历，前往编辑器进行预览、修改和导出"
+            sub-title="AI 已根据你的自由文本和目标岗位生成专业求职简历，前往编辑器进行预览、修改和导出"
           >
             <template #extra>
               <div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -222,38 +222,30 @@ const streamPreviewAnchorRef = ref(null)
 const { scrollToStreamPreview } = useScrollToStreamPreview(streamPreviewAnchorRef)
 
 // 智能识别示例模板（键值对格式）
-const EXAMPLE_TEMPLATE = `姓名：张三
-求职方向：前端开发工程师
-工作年限：应届
-婚姻状况：未婚
-身高：175cm
-体重：65kg
-民族：汉族
-籍贯：江苏南京
-政治面貌：共青团员
-期望薪资：12K-18K
-驾驶证：C1
+const EXAMPLE_TEMPLATE = `姓名：林悦
+求职方向：品牌运营经理
+工作年限：5年
+籍贯：浙江杭州
+期望薪资：面议
+到岗时间：一个月内
 手机：13800138000
-邮箱：zhang@example.com
+邮箱：candidate@example.com
 
 教育背景：
-1. 清华大学 | 计算机科学与技术 | 本科 | 2018.09 - 2022.06
-2. 某某大学 | 软件工程 | 硕士 | 2022.09 - 2025.06
+示例财经大学 | 市场营销 | 本科 | 2015.09 - 2019.06
 
-技能：Vue3, JavaScript, TypeScript, Node.js
+专业技能：品牌策略、内容运营、用户洞察、活动策划、数据复盘、Excel、PowerPoint
 
 项目经历：
-1. 电商后台管理系统 - 前端负责人
-   技术栈：Vue3, Element Plus, Pinia
-   2023.09 - 2024.06
-   负责商品管理模块，优化列表渲染性能提升 40%
+年度品牌焕新项目 - 项目负责人 | 2023.02 - 2023.10
+围绕品牌认知分散问题组织用户访谈与竞品研究，重构核心价值主张和内容规范；统筹设计、渠道与供应商按阶段交付，推动官网、物料及重点活动统一升级。
 
-实习经历：
-字节跳动 - 前端实习 - 2024.07 至 2024.12
-参与组件库维护，封装 5+ 业务组件
+工作经历：
+示例消费品有限公司 - 品牌运营经理 - 市场中心 | 2022.03 至今
+负责年度品牌传播与重点营销项目，统筹内容、渠道、预算和合作伙伴，建立季度品牌指标复盘机制。
 
-获奖：2024 校级一等奖学金
-证书：CET-6 550 分`
+获奖：年度优秀项目奖
+证书：PMP 项目管理专业人士认证`
 
 const currentStep = ref(0)
 const formRef = ref(null)
@@ -432,10 +424,10 @@ function progressClass(idx) {
 function fillExample() {
   lazyForm.raw_text = EXAMPLE_TEMPLATE
   if (!lazyForm.name) {
-    lazyForm.name = '张三'
+    lazyForm.name = '林悦'
   }
   if (!lazyForm.target_position) {
-    lazyForm.target_position = '前端开发工程师'
+    lazyForm.target_position = '品牌运营经理'
   }
   message.success('已填入示例，可直接生成或修改后生成')
 }

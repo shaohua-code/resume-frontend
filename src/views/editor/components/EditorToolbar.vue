@@ -156,7 +156,7 @@ const skinTheme = defineModel('skinTheme', { type: Object, required: true })
 
 defineProps({
   templateId: { type: Number, default: 1 },
-  currentTemplateName: { type: String, default: '极简校招版' },
+  currentTemplateName: { type: String, default: '全职业通用' },
   pageCount: { type: Number, default: 1 },
   saving: { type: Boolean, default: false },
   exporting: { type: Boolean, default: false },

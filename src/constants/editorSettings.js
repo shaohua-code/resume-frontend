@@ -8,15 +8,15 @@ import { getTemplateFontColorDefaults } from '@/constants/templateFontColors'
 export const DEFAULT_SPACING = {
   sectionGap: 5,
   lineHeight: 1.6,
-  padding: 10,
-  pageTopGap: 16,
+  padding: 0,
+  pageTopGap: 0,
   pageBottomGap: 24,
 }
 
 export const SPACING_RANGES = {
   sectionGap: { min: 5, max: 50, step: 1 },
   lineHeight: { min: 1.3, max: 2.2, step: 0.05 },
-  padding: { min: 10, max: 50, step: 1 },
+  padding: { min: 0, max: 50, step: 1 },
   pageTopGap: { min: 0, max: 80, step: 2 },
   pageBottomGap: { min: 0, max: 80, step: 2 },
 }

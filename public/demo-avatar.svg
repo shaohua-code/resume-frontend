@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 320" role="img" aria-labelledby="title">
+  <title id="title">职业头像示例</title>
+  <defs>
+    <linearGradient id="bg" x1="24" y1="16" x2="216" y2="304" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DDF4FF"/>
+      <stop offset="1" stop-color="#E9E1FF"/>
+    </linearGradient>
+    <linearGradient id="coat" x1="70" y1="190" x2="180" y2="312" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#334155"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="320" fill="url(#bg)"/>
+  <circle cx="120" cy="112" r="54" fill="#F0C7A5"/>
+  <path d="M70 104c1-44 24-69 54-69 35 0 57 28 51 77-8-22-25-39-51-43-17 18-36 28-54 35Z" fill="#26364B"/>
+  <path d="M86 153c9 18 21 27 35 27s27-9 35-27v42H86v-42Z" fill="#E9B78F"/>
+  <path d="M36 320c2-72 32-123 84-123s82 51 84 123H36Z" fill="url(#coat)"/>
+  <path d="m87 190 33 39 34-39 19 18-24 112H91L67 208l20-18Z" fill="#fff"/>
+  <path d="m120 229-13 20 13 54 13-54-13-20Z" fill="#4F46E5"/>
+</svg>

@@ -16,7 +16,7 @@ export const TEMPLATE_FONT_COLOR_PRESETS = {
   // 2. 简约商务（左红条）：降低红色的刺眼感，正文采用高级深灰
   2: { label: '#FFFFFF', basicValue: '#ffffff', name: '#FFFFFF', content: '#374151' },
 
-  // 3. 应届校招（蓝色标题线+居中）：使用经典的互联网大厂深蓝/墨黑搭配
+  // 3. 应届校招（蓝色标题线+居中）：使用正式稳妥的深蓝/墨黑搭配
   3: { label: '#1d4ed8', basicValue: '#1f2937', name: '#1e3a8a', content: '#374151' },
 
   // 4. 左右分栏：若左侧有深色背景，姓名/基本信息用白色或浅灰，右侧正文保持深灰
@@ -31,7 +31,7 @@ export const TEMPLATE_FONT_COLOR_PRESETS = {
   // 7. 经典黑白（打印优先）：极简高对比度，适合HR直接打印
   7: { label: '#000000', basicValue: '#000000', name: '#000000', content: '#111827' },
 
-  // 8. 互联网扁平：左侧深色边栏用白字，右侧正文用深灰
+  // 8. 现代扁平：左侧深色边栏用白字，右侧正文用深灰
   8: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#334155' },
 
   // 9 - 20. 其他通用/极简模板演变（引入合理的冷暖色调过渡，拒绝纯白纯红文本）

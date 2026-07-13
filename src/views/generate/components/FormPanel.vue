@@ -90,11 +90,11 @@
         </div>
       </div>
 
-      <!-- Step2: 项目经历（选填） -->
+      <!-- Step2: 项目、实习与正式工作经历（选填） -->
       <div v-show="currentStep === 2">
         <a-alert
-          message="项目经历为选填，填写越详细 AI 生成质量越高"
-          description="建议每个项目都填写：项目名、角色、技术栈、时间和 2-3 句简单描述。AI 会自动用 STAR 法则美化你的描述。"
+          message="经历信息均为选填，填写越详细 AI 生成质量越高"
+          description="可填写项目、实习或正式工作经历。AI 会结合目标岗位和真实信息，用 STAR 法则优化表达。"
           type="success"
           show-icon
           closable
@@ -140,7 +140,7 @@
                   </a-form-item>
                 </a-col>
                 <a-col :xs="24" :sm="24">
-                  <a-form-item label="技术栈">
+                  <a-form-item label="专业技能 / 工具">
                     <a-input :value="project.tech_stack" placeholder="如：Vue3,Pinia,Ant Design Vue" class="input-field" @update:value="project.tech_stack = $event" />
                   </a-form-item>
                 </a-col>
@@ -187,12 +187,12 @@
               <a-row :gutter="[16, 0]">
                 <a-col :xs="24" :sm="12">
                   <a-form-item label="公司名称">
-                    <a-input :value="intern.company" placeholder="如：某互联网公司" class="input-field" @update:value="intern.company = $event" />
+                    <a-input :value="intern.company" placeholder="如：某公司 / 医院 / 学校 / 机构" class="input-field" @update:value="intern.company = $event" />
                   </a-form-item>
                 </a-col>
                 <a-col :xs="24" :sm="12">
                   <a-form-item label="岗位">
-                    <a-input :value="intern.position" placeholder="如：前端开发实习生" class="input-field" @update:value="intern.position = $event" />
+                    <a-input :value="intern.position" placeholder="如：运营实习生 / 助教 / 工程实习生" class="input-field" @update:value="intern.position = $event" />
                   </a-form-item>
                 </a-col>
                 <a-col :xs="24" :sm="12">
@@ -246,7 +246,7 @@
                 </a-col>
                 <a-col :xs="24" :sm="12">
                   <a-form-item label="岗位">
-                    <a-input :value="exp.position" placeholder="如：前端开发工程师" class="input-field" @update:value="exp.position = $event" />
+                    <a-input :value="exp.position" placeholder="如：销售顾问 / 会计 / 工程师" class="input-field" @update:value="exp.position = $event" />
                   </a-form-item>
                 </a-col>
                 <a-col :xs="24" :sm="12">
@@ -319,7 +319,7 @@
               {{ isJdOptimizing ? 'AI 正在根据岗位 JD 优化你的简历...' : 'AI 正在为你生成专业简历...' }}
             </h2>
             <p class="mb-2 text-sm text-muted">
-              {{ isJdOptimizing ? '结合岗位 JD 与表单内容，针对性优化简历' : '使用 STAR 法则优化项目描述，突出技术亮点' }}
+              {{ isJdOptimizing ? '结合岗位 JD 与表单内容，针对性优化简历' : '结合目标行业优化经历描述，突出岗位优势' }}
             </p>
             <div class="mb-6 flex items-center justify-center gap-1.5">
               <span class="h-2 w-2 animate-bounce rounded-full bg-brand" style="animation-delay: 0ms" />
@@ -362,7 +362,7 @@
       <!-- Step4: 生成成功 -->
       <div v-show="currentStep === 4">
         <a-card class="card-base mb-4 py-8" :bordered="false">
-          <a-result status="success" title="🎉 简历生成成功！" sub-title="AI 已根据你的信息生成专业校招简历，前往编辑器进行预览、修改和导出">
+          <a-result status="success" title="🎉 简历生成成功！" sub-title="AI 已根据目标岗位生成专业求职简历，前往编辑器进行预览、修改和导出">
             <template #extra>
               <div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <GradientButton class="inline-flex h-10 items-center" @click="goToEditor">

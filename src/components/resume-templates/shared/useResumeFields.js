@@ -53,15 +53,3 @@ export function useResumeFields(resume) {
   fields.basicInfoItems = buildBasicInfoDisplayItems(fields)
   return fields
 }
-
-/** 技能进度条宽度 */
-export function skillProgress(index) {
-  const levels = [95, 85, 75, 65, 55, 45]
-  return levels[index % levels.length]
-}
-
-/** 技能熟练度文字 */
-export function skillLevel(index) {
-  const labels = ['精通', '熟练', '良好', '一般']
-  return labels[index % labels.length]
-}
