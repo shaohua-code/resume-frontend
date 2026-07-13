@@ -10,25 +10,40 @@
         <a-avatar :size="64" class="text-lg font-bold text-white shrink-0 bg-brand-dark">
           {{ userStore.userInfo.nickname?.[0] || 'U' }}
         </a-avatar>
-        <div class="flex-1 min-w-0">
-          <a-descriptions :column="{ xs: 1, sm: 2 }" size="small">
-            <a-descriptions-item label="昵称">{{ userStore.userInfo.nickname }}</a-descriptions-item>
-            <a-descriptions-item label="邮箱">{{ userStore.userInfo.email }}</a-descriptions-item>
-            <a-descriptions-item label="角色">
-              <span class="badge">{{ getRoleLabel(userStore.role) }}</span>
-            </a-descriptions-item>
-            <a-descriptions-item label="状态">
-              <span :class="userStore.userInfo.status === 'BANNED' ? 'bg-red-50 text-red-600' : 'bg-mint text-emerald-700'" class="inline-flex items-center rounded-pill px-2.5 py-0.5 text-xs font-medium">
-                {{ getStatusLabel(userStore.userInfo.status) }}
-              </span>
-            </a-descriptions-item>
-            <a-descriptions-item label="账户余额" :span="2">
-              <span class="inline-flex flex-wrap items-center gap-2">
-                <span class="text-danger">{{ balanceText }}</span>
+        <!-- 用户信息网格 - 移动端单列/桌面端双列 -->
+        <div class="flex-1 min-w-0 grid grid-cols-1 gap-x-6 gap-y-0 sm:grid-cols-2">
+          <!-- 昵称 -->
+          <div class="flex items-center gap-2 min-h-[44px]">
+            <span class="shrink-0 w-14 text-sm text-ink-secondary">昵称</span>
+            <span class="truncate text-sm font-medium text-ink">{{ userStore.userInfo.nickname }}</span>
+          </div>
+          <!-- 邮箱 -->
+          <div class="flex items-center gap-2 min-h-[44px]">
+            <span class="shrink-0 w-14 text-sm text-ink-secondary">邮箱</span>
+            <span class="truncate text-sm text-ink">{{ userStore.userInfo.email }}</span>
+          </div>
+          <!-- 角色 -->
+          <div class="flex items-center gap-2 min-h-[44px]">
+            <span class="shrink-0 w-14 text-sm text-ink-secondary">角色</span>
+            <span class="badge">{{ getRoleLabel(userStore.role) }}</span>
+          </div>
+          <!-- 状态 -->
+          <div class="flex items-center gap-2 min-h-[44px]">
+            <span class="shrink-0 w-14 text-sm text-ink-secondary">状态</span>
+            <span :class="userStore.userInfo.status === 'BANNED' ? 'bg-red-50 text-red-600' : 'bg-mint text-emerald-700'" class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
+              {{ getStatusLabel(userStore.userInfo.status) }}
+            </span>
+          </div>
+          <!-- 账户余额 - 占满整行 -->
+          <div class="col-span-1 flex flex-col gap-2 sm:col-span-2">
+            <div class="flex items-center gap-2 min-h-[44px]">
+              <span class="shrink-0 w-14 text-sm text-ink-secondary">余额</span>
+              <div class="inline-flex flex-wrap items-center gap-2">
+                <span class="text-base font-semibold text-danger">{{ balanceText }}</span>
                 <GradientButton size="small" @click="rechargeOpen = true">充值</GradientButton>
-              </span>
-            </a-descriptions-item>
-          </a-descriptions>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="flex flex-wrap items-center gap-3 shrink-0">
           <GradientButton ghost size="small" class="!border-danger/30 !text-danger hover:!bg-red-50" @click="handleLogout">退出登录</GradientButton>
