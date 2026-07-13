@@ -251,19 +251,53 @@ input.ant-input.input-field:not(textarea) {
   padding-bottom: 0 !important;
 }
 
+/* ====== 日期选择器（DatePicker）完整样式 ====== */
+/* class="input-field" 直接在 .ant-picker 上，必须用 .ant-picker.input-field 选择器 */
+
+/* 基础：picker 完整外观（边框、圆角、背景、高度） */
 .ant-picker.input-field {
-  @apply flex items-center py-0;
+  @apply flex h-10 items-center rounded-button border border-line bg-white/80 px-3 py-0 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
+  min-height: 2.5rem;
 }
 
-/* Ant Design 组件外层去掉 input-field 边框，内层保留单层 border */
+/* 覆盖 small 表单尺寸下的 picker 高度（form size="small" 时默认太矮） */
+.ant-form-small .ant-picker.input-field,
+.ant-picker-sm.input-field {
+  min-height: 2.5rem !important;
+  height: 2.5rem !important;
+}
+
+/* picker 内部输入区域：flex 布局让文字和图标水平排列 */
+.ant-picker.input-field .ant-picker-input {
+  @apply flex flex-1 items-center;
+}
+
+.ant-picker.input-field .ant-picker-input > input {
+  @apply bg-transparent text-sm leading-normal;
+  padding: 0 !important;
+}
+
+/* picker 后缀图标（日历图标）：固定在右侧不溢出 */
+.ant-picker.input-field .ant-picker-suffix {
+  @apply flex items-center justify-center ml-1 shrink-0;
+  color: rgba(0, 0, 0, 0.25);
+}
+
+/* picker 聚焦态：品牌色边框 + 光晕 */
+.ant-picker.input-field.ant-picker-focused {
+  @apply border-brand ring-2 ring-brand/15;
+}
+
+/* ====== Select / Textarea：外层去边框，内层保留 ====== */
 .ant-select.input-field,
-.ant-picker.input-field,
 .ant-input-textarea.input-field {
   border: 0;
   padding: 0;
   background: transparent;
   box-shadow: none;
 }
+
+/* ====== 选择器（Select）样式 ====== */
 
 .input-field .ant-select-selector {
   @apply rounded-button border border-line bg-white/80 px-4 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
@@ -273,15 +307,6 @@ input.ant-input.input-field:not(textarea) {
 .input-field .ant-select-selector:focus,
 .input-field .ant-select-selector:focus-within,
 .ant-select.input-field.ant-select-focused .ant-select-selector {
-  @apply border-brand ring-2 ring-brand/15;
-}
-
-.input-field .ant-picker {
-  @apply flex h-10 items-center rounded-button border border-line bg-white/80 px-4 py-0 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
-}
-
-.input-field .ant-picker-focused,
-.ant-picker.input-field.ant-picker-focused {
   @apply border-brand ring-2 ring-brand/15;
 }
 
@@ -378,7 +403,7 @@ input.ant-input.input-field:not(textarea) {
   }
 }
 
-/* 额外安全措施：针对 Ant Design 组件的输入框 */
+/* 额外安全措施：针对 Ant Design 组件的输入框（含日期选择器） */
 @media (max-width: 768px) {
   .input-field .ant-input,
   .input-field .ant-input-affix-wrapper,
@@ -387,5 +412,9 @@ input.ant-input.input-field:not(textarea) {
     font-size: 16px !important;
     -webkit-transform: translateZ(0); /* 触发 GPU 加速，提升渲染性能 */
     transform: translateZ(0);
+  }
+  /* 移动端 date-picker 输入字体 ≥16px 防止 iOS Safari 自动放大 */
+  .ant-picker.input-field .ant-picker-input > input {
+    font-size: 16px !important;
   }
 }
