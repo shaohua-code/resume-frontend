@@ -145,6 +145,18 @@ export function normalizeResumeFields(resume = {}) {
   r.educations = educations
   r.custom_fields = customFields
 
+  // target_position 多源归一化：兼容 AI 返回的多种岗位字段命名
+  r.target_position = (
+    r.target_position ||
+    r.targetPosition ||
+    r['意向岗位'] ||
+    r['求职岗位'] ||
+    r['面试岗位'] ||
+    r['应聘岗位'] ||
+    r.position ||
+    ''
+  )
+
   if (educations.length) {
     r.school = educations[0].school || r.school || ''
     r.major = educations[0].major || r.major || ''

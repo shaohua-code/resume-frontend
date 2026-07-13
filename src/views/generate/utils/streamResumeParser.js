@@ -3,12 +3,37 @@
  */
 import { normalizeResumeFields, normalizeEducationItem, normalizeCustomField } from '@/constants/resumeFieldSchema'
 
+// 流式解析需要提取的字符串字段（包含岗位相关的中文变体）
 const STRING_FIELDS = [
   'name', 'school', 'major', 'education', 'phone', 'email',
   'summary', 'target_position', 'targetPosition',
   'work_years', 'marital_status', 'height', 'weight',
   'ethnicity', 'native_place', 'political_status', 'expected_salary',
+  // 岗位相关字段（AI 可能返回的中文/英文变体）
+  '意向岗位', '求职岗位', '面试岗位', '应聘岗位',
 ]
+
+/** 岗位字段的别名列表（流式增量解析时统一映射到 target_position）*/
+const POSITION_ALIAS_FIELDS = ['targetPosition', '意向岗位', '求职岗位', '面试岗位', '应聘岗位']
+
+/**
+ * 从 AI 返回数据中提取目标岗位（兼容多种字段命名）
+ * 与后端 ai.service.js 的 extractTargetPosition 保持一致
+ * @param {Object} source AI 原始返回数据
+ * @returns {string} 目标岗位字符串
+ */
+function extractTargetPosition(source) {
+  return (
+    source.target_position ||
+    source.targetPosition ||
+    source['意向岗位'] ||
+    source['求职岗位'] ||
+    source['面试岗位'] ||
+    source['应聘岗位'] ||
+    source.position ||
+    ''
+  )
+}
 
 function unescapeJsonString(str) {
   return str.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\')
@@ -29,9 +54,10 @@ function extractStringArray(slice, field) {
 
 function normalizeResume(data) {
   const source = data?.resume && typeof data.resume === 'object' ? data.resume : (data || {})
+  // 使用统一提取函数兼容多种岗位字段命名
   const base = {
     name: source.name || '',
-    target_position: source.target_position || source.targetPosition || '',
+    target_position: extractTargetPosition(source),
     school: source.school || '',
     major: source.major || '',
     education: source.education || source.degree || '',
@@ -87,8 +113,12 @@ export function parsePartialResumeJson(text) {
   for (const field of STRING_FIELDS) {
     const val = extractStringField(slice, field)
     if (val) {
-      if (field === 'targetPosition') partial.target_position = val
-      else partial[field] = val
+      // 所有岗位变体字段统一归入 target_position
+      if (POSITION_ALIAS_FIELDS.includes(field)) {
+        partial.target_position = val
+      } else {
+        partial[field] = val
+      }
     }
   }
 

@@ -161,7 +161,7 @@
             </a-form>
           </div>
           </div>
-          <button class="btn-ghost-dashed mt-4" @click="addProject">
+          <button class="btn-ghost mt-4 w-full border-dashed py-2.5" @click="addProject">
             <PlusOutlined /> 添加项目
           </button>
         </a-card>
@@ -214,7 +214,7 @@
             </a-form>
           </div>
           </div>
-          <button class="btn-ghost-dashed mt-4" @click="addInternship">
+          <button class="btn-ghost mt-4 w-full border-dashed py-2.5" @click="addInternship">
             <PlusOutlined /> 添加实习
           </button>
         </a-card>
@@ -240,30 +240,27 @@
 
       <!-- Step3: AI生成中 -->
       <div v-show="currentStep === 3">
-        <a-card class="card-base mb-4 py-4 text-center lg:py-12" :bordered="false">
+        <a-card class="card-base mb-4 py-12 text-center" :bordered="false">
           <div class="mx-auto max-w-2xl">
-            <div class="relative mx-auto mb-3 flex h-12 w-12 items-center justify-center lg:mb-6 lg:h-16 lg:w-16">
+            <div class="relative mx-auto mb-6 flex h-16 w-16 items-center justify-center">
               <div class="absolute inset-0 animate-pulse rounded-full bg-brand/20 blur-xl" />
-              <div class="relative flex h-12 w-12 items-center justify-center rounded-full bg-brand-lighter lg:h-16 lg:w-16">
+              <div class="relative flex h-16 w-16 items-center justify-center rounded-full bg-brand-lighter">
                 <a-spin size="large" class="text-brand-dark" />
               </div>
             </div>
-            <h2 class="mb-2 text-lg font-semibold text-brand-dark lg:text-xl">
+            <h2 class="mb-2 text-xl font-semibold text-brand-dark">
               {{ isJdOptimizing ? 'AI 正在根据岗位 JD 优化你的简历...' : 'AI 正在为你生成专业简历...' }}
             </h2>
             <p class="mb-2 text-sm text-muted">
               {{ isJdOptimizing ? '结合岗位 JD 与表单内容，针对性优化简历' : '使用 STAR 法则优化项目描述，突出技术亮点' }}
             </p>
-            <div class="mb-4 flex items-center justify-center gap-1.5 lg:mb-6">
+            <div class="mb-6 flex items-center justify-center gap-1.5">
               <span class="h-2 w-2 animate-bounce rounded-full bg-brand" style="animation-delay: 0ms" />
               <span class="h-2 w-2 animate-bounce rounded-full bg-brand-light" style="animation-delay: 150ms" />
               <span class="h-2 w-2 animate-bounce rounded-full bg-accent" style="animation-delay: 300ms" />
             </div>
 
-            <div
-              ref="streamPreviewAnchorRef"
-              class="animate-fade-in rounded-card border border-line/50 bg-cream p-2 text-left sm:p-5"
-            >
+            <div class="animate-fade-in rounded-card border border-line/50 bg-cream p-4 text-left sm:p-5">
               <StreamResumePreview
                 :stream-text="isJdOptimizing ? jdStreamText : resumeStore.streamText"
                 :loading="isJdOptimizing ? jdLoading : resumeStore.generating"
@@ -272,7 +269,7 @@
               />
             </div>
 
-            <div v-if="!isJdOptimizing" class="mt-4 rounded-card bg-cream p-3 text-left lg:mt-6 lg:p-5">
+            <div v-if="!isJdOptimizing" class="mt-6 rounded-card bg-cream p-5 text-left">
               <div
                 v-for="(step, idx) in progressSteps"
                 :key="idx"
@@ -356,7 +353,6 @@ import GradientButton from '@/components/GradientButton.vue'
 import JdResumeOptimizeModal from '@/components/JdResumeOptimizeModal.vue'
 import StreamResumePreview from './StreamResumePreview.vue'
 import { useJdResumeOptimize } from '@/composables/useJdResumeOptimize'
-import { useScrollToStreamPreview } from '@/composables/useScrollToStreamPreview'
 import ResumeBasicFieldsSection from './ResumeBasicFieldsSection.vue'
 import ResumeEducationListSection from './ResumeEducationListSection.vue'
 import { createEmptyBasicForm, syncFlatEducationFields, validateRequiredBasicFields, mergeOptimizedResume, normalizeResumeFields } from '@/constants/resumeFieldSchema'
@@ -364,8 +360,6 @@ import { createEmptyBasicForm, syncFlatEducationFields, validateRequiredBasicFie
 const router = useRouter()
 const resumeStore = useResumeStore()
 const basicFieldsRef = ref(null)
-const streamPreviewAnchorRef = ref(null)
-const { scrollToStreamPreview } = useScrollToStreamPreview(streamPreviewAnchorRef)
 
 // 读取首页 JD 输入模块暂存的内容
 onMounted(() => {
@@ -433,7 +427,6 @@ async function runJdOptimize(jdText) {
   const snapshot = getResumeSnapshot()
   isJdOptimizing.value = true
   currentStep.value = 3
-  await scrollToStreamPreview()
 
   const ok = await startJdOptimize(snapshot, {
     jdText,
@@ -560,7 +553,6 @@ async function handleGenerate() {
   }
 
   currentStep.value = 3
-  await scrollToStreamPreview()
   const payload = {
     ...basicForm,
     educations: educations.filter((e) => e.school || e.major || e.degree || e.start_date || e.end_date),

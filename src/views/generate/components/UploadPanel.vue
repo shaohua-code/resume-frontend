@@ -370,6 +370,14 @@ async function handleOptimizeSuccess(resultData) {
 async function persistOptimizeResult(resultData) {
   optimizeResult.value = resultData
   resumeStore.currentResume = resultData.resume
+
+  // 若 AI 未从 PDF 解析出岗位信息，强制使用用户填写的优化方向作为兜底
+  if (resultData.resume && !resultData.resume.target_position && targetPosition.value?.trim()) {
+    console.warn('[UploadPanel] PDF 未解析到岗位信息，已使用优化方向:', targetPosition.value)
+    resultData.resume.target_position = targetPosition.value.trim()
+    resumeStore.currentResume.target_position = targetPosition.value.trim()
+  }
+
   try {
     const createRes = await createApi({
       title: resultData.resume?.name ? `${resultData.resume.name}的简历` : '未命名简历',
