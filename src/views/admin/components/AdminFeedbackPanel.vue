@@ -1,11 +1,13 @@
 <script setup>
 import { onMounted, reactive, ref, computed } from 'vue'
 import MarkdownIt from 'markdown-it'
+import DOMPurify from 'dompurify'
 import { getAdminFeedbacks, getAdminFeedbackDetail } from '@/api/admin'
 import { resolveUploadUrl } from '@/api/upload'
 import AdminUserInfoCell from './AdminUserInfoCell.vue'
 import { formatDateTime } from '@/utils/date'
 
+// 配置 markdown-it：禁止解析 HTML 标签（防止 XSS）
 const md = new MarkdownIt({ html: false, linkify: true, breaks: true })
 
 const loading = ref(false)
@@ -24,12 +26,13 @@ const columns = [
   { title: '操作', key: 'action', width: 100 },
 ]
 
-// Markdown 预览 HTML（图片 URL 补全）
+// Markdown 预览 HTML（图片 URL 补全 + XSS 消毒）
 const previewHtml = computed(() => {
   if (!detail.value?.content_md) return ''
   let html = md.render(detail.value.content_md)
   html = html.replace(/src="(\/uploads\/[^"]+)"/g, (_, path) => `src="${resolveUploadUrl(path)}"`)
-  return html
+  // 使用 DOMPurify 消毒 HTML，防止存储型 XSS 攻击
+  return DOMPurify.sanitize(html)
 })
 
 async function loadFeedbacks() {

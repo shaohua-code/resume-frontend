@@ -4,6 +4,7 @@
  */
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { message } from 'ant-design-vue'
+import DOMPurify from 'dompurify'
 import {
   getAdminRechargeRequests,
   getAdminRechargeRequestDetail,
@@ -97,7 +98,8 @@ async function openPreview(record) {
   try {
     const res = await previewRechargeEmail(record.id, 'admin_notify')
     previewSubject.value = res.data?.subject || '邮件预览'
-    previewHtml.value = res.data?.html || ''
+    // 使用 DOMPurify 消毒 HTML，防止存储型 XSS 攻击
+    previewHtml.value = DOMPurify.sanitize(res.data?.html || '')
   } catch {
     message.error('预览加载失败')
   } finally {
@@ -114,7 +116,8 @@ async function loadUserConfirmPreview(id, grantAmount) {
   userConfirmPreviewLoading.value = true
   try {
     const res = await previewRechargeEmail(id, 'user_confirm', { grant_amount: grantAmount })
-    userConfirmHtml.value = res.data?.html || ''
+    // 使用 DOMPurify 消毒 HTML，防止存储型 XSS 攻击
+    userConfirmHtml.value = DOMPurify.sanitize(res.data?.html || '')
   } catch {
     userConfirmHtml.value = ''
   } finally {
