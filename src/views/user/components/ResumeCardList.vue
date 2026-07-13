@@ -58,6 +58,7 @@ function handleEdit(id) {
 
 <template>
   <div class="space-y-3">
+    
     <div
       v-for="record in list"
       :key="record.id"

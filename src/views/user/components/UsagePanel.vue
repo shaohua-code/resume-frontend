@@ -17,7 +17,7 @@
       </a-card>
     </div>
 
-    <a-card class="card-base" :bordered="false">
+    <a-card class="card-base px-0" :bordered="false">
       <template #title>
         <span class="text-base font-semibold text-ink">额度变动记录</span>
       </template>

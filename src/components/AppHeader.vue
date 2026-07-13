@@ -58,7 +58,7 @@
         </div>
 
         <!-- 移动端汉堡菜单 -->
-        <a-button type="text" class="text-ink lg:hidden" aria-label="打开菜单" @click="drawerOpen = true">
+        <a-button type="text" class="text-ink lg:hidden flex justify-center items-center" aria-label="打开菜单" @click="drawerOpen = true">   
           <MenuOutlined class="text-lg" />
         </a-button>
       </div>

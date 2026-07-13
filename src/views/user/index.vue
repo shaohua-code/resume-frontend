@@ -54,7 +54,7 @@
     <a-tabs v-model:activeKey="activeTab" class="user-center-tabs">
       <a-tab-pane key="resumes" tab="我的简历">
         <!-- 使用 v-if 确保切换时重新创建组件，获取最新数据 -->
-        <a-card v-if="activeTab === 'resumes'" class="card-base" :bordered="false">
+        <a-card v-if="activeTab === 'resumes'" class="card-base px-0" :bordered="false">
           <template #title>
             <span class="text-base font-semibold text-ink">我的简历</span>
           </template>
