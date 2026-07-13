@@ -46,7 +46,7 @@
           :edit-panel-collapsed="editPanelCollapsed"
           @section-click="handleSectionClick"
         />
-        <a-dropdown :disabled="exporting">
+        <a-dropdown :disabled="exporting"  v-if="!isMobile">
           <button
             type="button"
             class="down-big"
@@ -55,11 +55,11 @@
           >
             <DownloadOutlined />
             <span class="hidden sm:inline">下载/导出简历</span>
-            <span class="sm:hidden">导出</span>
+            <span class="sm:hidden" >导出</span>
           </button>
           <template #overlay>
             <a-menu>
-              <a-menu-item key="pdf" @click="handleExportPDF">导出 PDF</a-menu-item>
+              <a-menu-item key="pdf"  @click="handleExportPDF">导出 PDF</a-menu-item>
               <a-menu-item key="word" @click="handleExportWord">导出 Word</a-menu-item>
               <a-menu-item key="markdown" @click="handleExportMarkdown">导出 Markdown</a-menu-item>
             </a-menu>
@@ -107,7 +107,7 @@
         <!-- 岗位不足 -->
         <div v-if="matchResult.position_gaps?.length" class="mb-2">
           <p><strong>岗位不足：</strong></p>
-          <ul class="pl-5 text-sm list-disc text-orange-500">
+          <ul class="pl-5 text-sm text-orange-500 list-disc">
             <li v-for="(gap, i) in matchResult.position_gaps" :key="'gap-' + i">{{ gap }}</li>
           </ul>
         </div>

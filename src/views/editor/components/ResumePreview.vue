@@ -83,7 +83,7 @@
               class="page-viewport"
               :style="{
                 marginTop: pageTopGap + 'px',
-                height: getPageContentHeight(n) + 'px',
+                height: getPageViewportHeight(n) + 'px',
                 maxHeight: effectivePageHeight + 'px',
               }"
             >
@@ -295,6 +295,14 @@ function getPageContentHeight(n) {
   return Math.max(0, end - start)
 }
 
+// 模板 8 左侧为整页色块，最后一页内容不足时也需要铺满 A4 可用高度
+function getPageViewportHeight(n) {
+  if (Number(props.templateId) === 8) {
+    return effectivePageHeight.value
+  }
+  return getPageContentHeight(n)
+}
+
 // 按屏幕可见预览页克隆 DOM，保证打印分页与页面预览完全一致
 function buildPrintPageElements() {
   const stage = stageRef.value
@@ -313,8 +321,8 @@ function buildPrintPageElements() {
       pageWrapper.style.cssText = `width:794px;height:${pageH}px;overflow:hidden;background:#fff;box-sizing:border-box;position:relative;`
 
       const viewportClone = viewport.cloneNode(true)
-      const pageContentHeight = getPageContentHeight(index + 1)
-      viewportClone.style.height = `${Math.min(pageContentHeight, effectivePageHeight.value)}px`
+      const pageViewportHeight = getPageViewportHeight(index + 1)
+      viewportClone.style.height = `${Math.min(pageViewportHeight, effectivePageHeight.value)}px`
       viewportClone.style.maxHeight = `${effectivePageHeight.value}px`
       viewportClone.querySelectorAll('.resume-preview').forEach((el) => {
         el.style.visibility = 'visible'
@@ -339,7 +347,9 @@ function buildPrintPageElements() {
   for (let n = 1; n <= count; n++) {
     const start = breaks[n - 1] ?? 0
     const end = n < count ? breaks[n] : totalHeight.value
-    const viewportH = Math.max(0, end - start)
+    const viewportH = Number(props.templateId) === 8
+      ? effectivePageHeight.value
+      : Math.max(0, end - start)
 
     const pageWrapper = document.createElement('div')
     pageWrapper.className = 'print-page'

@@ -92,8 +92,8 @@
               <a-menu-item @click="emit('jd-optimize')">JD 优化简历</a-menu-item>
               <a-menu-item :disabled="scoring" @click="emit('score')">AI 评分</a-menu-item>
               <a-menu-divider />
-              <a-menu-item @click="emit('export-pdf')">导出 PDF</a-menu-item>
-              <a-menu-item @click="emit('export-word')">导出 Word</a-menu-item>
+              <a-menu-item v-if="!isMobile" @click="emit('export-pdf')">导出 PDF</a-menu-item>
+              <a-menu-item v-if="!isMobile" @click="emit('export-word')">导出 Word</a-menu-item>
             </a-menu>
           </template>
         </a-dropdown>

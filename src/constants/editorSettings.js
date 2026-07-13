@@ -10,7 +10,7 @@ export const DEFAULT_SPACING = {
   lineHeight: 1.6,
   padding: 0,
   pageTopGap: 0,
-  pageBottomGap: 24,
+  pageBottomGap: 0,
 }
 
 export const SPACING_RANGES = {
