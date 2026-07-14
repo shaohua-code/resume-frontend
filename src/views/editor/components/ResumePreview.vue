@@ -4,8 +4,8 @@
   核心设计：
   1. 使用浏览器打印 API + CSS page-break 导出矢量 PDF
   2. 屏幕预览：每页 overflow 窗口 + 负 marginTop 切片，与 PDF 分页对齐
-  3. 分页线尽量落在 section/item/title 之间的空白处，避免文字被截断
-  4. 大模块跨页时，优先保持标题完整，项目条目在合适位置拆分
+  3. 分页线严格按 A4 可用高度直接切片，不因标题或条目提前换页
+  4. 模块和条目允许跨页，版面密度由字体与间距设置控制
 -->
 <template>
   <div
@@ -118,6 +118,7 @@ import {
 } from '@/constants/editorSettings'
 import ResumeTemplate from '@/components/ResumeTemplate.vue'
 import { usePreviewScale } from '@/composables/usePreviewScale'
+import { calculateResumePageBreaks } from '@/utils/resumePagination'
 
 const A4_WIDTH_PX = 794
 
@@ -203,9 +204,12 @@ function resolveFontSize(size) {
   return fontSizeMap[size] || fontSizeMap.medium
 }
 
-const ITEM_SELECTOR = '[class*="-item"]'
-const PARA_SELECTOR = 'p, [class*="-text"], [class*="-desc"]'
 const MODULE_SELECTOR = '[data-resume-module]'
+const PAGE_ITEM_SELECTOR = '.rt-item, [data-page-item]'
+const PAGE_TITLE_SELECTOR = '.rt-title, [data-page-title], h2, h3'
+const PAGE_TEXT_SELECTOR = 'p, li, .rt-text, .rt-desc, [data-page-text], [class*="-text"], [class*="-desc"]'
+const PAGE_DESC_SELECTOR = '.rt-desc, [class*="-desc"], [data-page-text]'
+const PAGE_KEEP_SELECTOR = '.no-break, .rt-keep-together, [data-page-keep="always"]'
 const MIN_PAGE_CONTENT = 24
 
 // A4 高度：210×297mm，96dpi 下 297mm ≈ 1123px
@@ -306,74 +310,20 @@ function getPageViewportHeight(n) {
 // 按屏幕可见预览页克隆 DOM，保证打印分页与页面预览完全一致
 function buildPrintPageElements() {
   const stage = stageRef.value
-  const pageH = pageHeightPx.value
-  const pages = []
+  const visiblePages = [...(stage?.querySelectorAll('.preview-page') || [])]
+  if (visiblePages.length !== pageCount.value) return []
 
-  // 优先克隆屏幕上已完整渲染的 preview-page（打印仍用标准 A4 高度）
-  const visiblePages = stage?.querySelectorAll('.preview-page')
-  if (visiblePages?.length === pageCount.value) {
-    visiblePages.forEach((pageEl, index) => {
-      const viewport = pageEl.querySelector('.page-viewport')
-      if (!viewport) return
-
-      const pageWrapper = document.createElement('div')
-      pageWrapper.className = 'print-page'
-      pageWrapper.style.cssText = `width:794px;height:${pageH}px;overflow:hidden;background:#fff;box-sizing:border-box;position:relative;`
-
-      const viewportClone = viewport.cloneNode(true)
-      const pageViewportHeight = getPageViewportHeight(index + 1)
-      viewportClone.style.height = `${Math.min(pageViewportHeight, effectivePageHeight.value)}px`
-      viewportClone.style.maxHeight = `${effectivePageHeight.value}px`
-      viewportClone.querySelectorAll('.resume-preview').forEach((el) => {
-        el.style.visibility = 'visible'
-        el.style.opacity = '1'
-        el.style.cursor = 'default'
-      })
-
-      pageWrapper.appendChild(viewportClone)
-      pages.push(pageWrapper)
+  return visiblePages.map((pageEl) => {
+    // 整页原样克隆：不重新拼 DOM，不重新计算断点，PDF 与屏幕共用同一裁切窗口。
+    const pageClone = pageEl.cloneNode(true)
+    pageClone.classList.add('print-page')
+    pageClone.querySelectorAll('.resume-preview').forEach((element) => {
+      element.style.visibility = 'visible'
+      element.style.opacity = '1'
+      element.style.cursor = 'default'
     })
-    if (pages.length === pageCount.value) {
-      return pages
-    }
-  }
-
-  // 兜底：测量层切片（preview-page 未就绪或数量不完整时）
-  const el = contentRef.value
-  if (!el) return []
-  const breaks = pageBreaks.value
-  const count = pageCount.value
-
-  for (let n = 1; n <= count; n++) {
-    const start = breaks[n - 1] ?? 0
-    const end = n < count ? breaks[n] : totalHeight.value
-    const viewportH = Number(props.templateId) === 8
-      ? effectivePageHeight.value
-      : Math.max(0, end - start)
-
-    const pageWrapper = document.createElement('div')
-    pageWrapper.className = 'print-page'
-    pageWrapper.style.cssText = `width:794px;height:${pageH}px;overflow:hidden;background:#fff;box-sizing:border-box;position:relative;`
-
-    const viewport = document.createElement('div')
-    viewport.className = 'page-viewport print-page-viewport'
-    viewport.style.cssText = `width:794px;height:${viewportH}px;overflow:hidden;margin-top:${pageTopGap.value}px;max-height:${effectivePageHeight.value}px;position:relative;`
-
-    const clone = el.cloneNode(true)
-    clone.classList.add('resume-preview', `template-${props.templateId}`)
-    Object.assign(clone.style, previewStyle.value, {
-      visibility: 'visible',
-      opacity: '1',
-      width: '210mm',
-      background: '#fff',
-      margin: `-${start}px 0 0 0`,
-    })
-
-    viewport.appendChild(clone)
-    pageWrapper.appendChild(viewport)
-    pages.push(pageWrapper)
-  }
-  return pages
+    return pageClone
+  })
 }
 
 // 获取浏览器打印导出所需内容（逐页 DOM，与屏幕预览分页对齐）
@@ -403,224 +353,181 @@ function measureEl(el, contentRect) {
   return { el, top, bottom: top + height, height }
 }
 
-/** 收集元素内每一行的 top/bottom（用于长段落行级分页） */
-function collectLineRects(el, contentRect) {
-  const lines = []
-  if (!el || !el.textContent?.trim()) return lines
-  const range = document.createRange()
-  range.selectNodeContents(el)
-  Array.from(range.getClientRects()).forEach((r) => {
-    const top = r.top - contentRect.top
-    const bottom = r.bottom - contentRect.top
-    if (bottom - top > 0.5) lines.push({ top, bottom })
+function topLevelModuleElements(content) {
+  return [...content.querySelectorAll(MODULE_SELECTOR)].filter((module) => (
+    !module.parentElement?.closest(MODULE_SELECTOR)
+  ))
+}
+
+function elementsOwnedByModule(module, selector) {
+  return [...module.querySelectorAll(selector)].filter((element) => (
+    element.closest(MODULE_SELECTOR) === module
+  ))
+}
+
+function collectPageBlocks(content, contentRect) {
+  const blocks = []
+  const itemIdByElement = new WeakMap()
+  let blockId = 0
+
+  function pushBlock(element, type, id = `${type}-${blockId += 1}`) {
+    if (!element) return null
+    const box = measureEl(element, contentRect)
+    if (box.height <= 0.5) return null
+    blocks.push({ id, type, top: box.top, bottom: box.bottom, height: box.height })
+    return id
+  }
+
+  content.querySelectorAll('header').forEach((header) => pushBlock(header, 'header'))
+
+  topLevelModuleElements(content).forEach((module) => {
+    if (module.matches('header')) return
+    pushBlock(module, 'module')
+
+    elementsOwnedByModule(module, PAGE_TITLE_SELECTOR).forEach((title) => {
+      pushBlock(title, 'title')
+    })
+
+    const explicitItems = elementsOwnedByModule(module, PAGE_ITEM_SELECTOR).filter((item) => {
+      const parentItem = item.parentElement?.closest(PAGE_ITEM_SELECTOR)
+      return !parentItem || parentItem.closest(MODULE_SELECTOR) !== module
+    })
+
+    const inferredItems = elementsOwnedByModule(module, PAGE_DESC_SELECTOR)
+      .filter((description) => !description.closest(PAGE_ITEM_SELECTOR))
+      .map((description) => description.parentElement)
+      .filter(Boolean)
+
+    ;[...new Set([...explicitItems, ...inferredItems])].forEach((item) => {
+      const id = pushBlock(item, 'item')
+      if (id) itemIdByElement.set(item, id)
+    })
+
+    elementsOwnedByModule(module, PAGE_KEEP_SELECTOR).forEach((element) => {
+      pushBlock(element, 'keep')
+    })
   })
-  return lines
+
+  return { blocks, itemIdByElement }
 }
 
-/** 合并相邻重复行矩形 */
-function mergeLineRects(lines) {
-  if (!lines.length) return lines
-  const merged = [lines[0]]
-  for (let i = 1; i < lines.length; i++) {
-    const prev = merged[merged.length - 1]
-    const cur = lines[i]
-    if (Math.abs(cur.top - prev.top) < 2) {
-      prev.bottom = Math.max(prev.bottom, cur.bottom)
-    } else {
-      merged.push({ ...cur })
-    }
+function closestMappedItemId(element, content, itemIdByElement) {
+  let current = element
+  while (current && current !== content) {
+    const id = itemIdByElement.get(current)
+    if (id) return id
+    current = current.parentElement
   }
-  return merged.map((l) => ({ ...l, height: l.bottom - l.top }))
-}
-
-/** 跨页时在行边界或块顶寻找安全断点，禁止半行截断 */
-function findSafeBreakBefore(crossing, pos, target, contentRect) {
-  if (!crossing) return null
-  const lineSource = crossing.el?.querySelector?.('.rt-desc, [class*="-desc"], [class*="-text"]') || crossing.el
-  const lines = mergeLineRects(collectLineRects(lineSource, contentRect))
-
-  if (lines.length) {
-    const fitting = lines.filter((l) => l.bottom <= target + 0.5 && l.bottom > pos)
-    if (fitting.length) return fitting[fitting.length - 1].bottom
-    const nextLine = lines.find((l) => l.top >= pos && l.top < target)
-    if (nextLine && nextLine.top > pos) return nextLine.top
-  }
-
-  if (crossing.type === 'line' && crossing.top > pos) return crossing.top
-  if (crossing.top > pos) return crossing.top
   return null
 }
 
-/** 将元素内文本按行注册为分页候选段 */
-function pushLineSegments(el, contentRect, segments) {
-  mergeLineRects(collectLineRects(el, contentRect)).forEach((line) => {
-    segments.push({ ...line, el, height: line.bottom - line.top, type: 'line' })
-  })
-}
-
-/** 收集分页候选段（header / title / item / 行） */
-function collectPageSegments(content, contentRect) {
-  const segments = []
-  const pageHeight = effectivePageHeight.value
-
-  function pushBlock(el, type) {
-    if (!el) return
-    const box = measureEl(el, contentRect)
-    if (box.height <= 0) return
-    if (box.height > pageHeight && (type === 'paragraph' || type === 'text')) {
-      pushLineSegments(el, contentRect, segments)
-    } else {
-      segments.push({ ...box, type })
-    }
-  }
-
-  content.querySelectorAll('header').forEach((h) => pushBlock(h, 'header'))
-
-  content.querySelectorAll(MODULE_SELECTOR).forEach((section) => {
-    if (section.matches('header')) return
-    if (section.parentElement?.closest(MODULE_SELECTOR)) return
-    const title = section.querySelector('[class*="-title"], h2, h3')
-    const items = [...section.querySelectorAll(ITEM_SELECTOR)]
-    const paragraphs = [...section.querySelectorAll(PARA_SELECTOR)].filter(
-      (p) => !p.closest(ITEM_SELECTOR),
-    )
-
-    if (title) pushBlock(title, 'title')
-    items.forEach((item) => {
-      pushBlock(item, 'item')
-      // 项目/实习描述按行参与分页，避免整块 rt-item 跨页时被拦腰截断
-      const desc = item.querySelector('.rt-desc, [class*="-desc"], [class*="-text"]')
-      if (desc) pushLineSegments(desc, contentRect, segments)
-    })
-    paragraphs.forEach((p) => pushBlock(p, 'paragraph'))
-
-    // 技能/荣誉等 ul 列表（Tpl04 等无 rt-item 的模块）
-    section.querySelectorAll('ul.rt-list').forEach((list) => {
-      pushBlock(list, 'list')
-      list.querySelectorAll('li').forEach((li) => pushLineSegments(li, contentRect, segments))
-    })
-    // 技能进度条等 grid 区块
-    section.querySelectorAll(':scope > .grid').forEach((grid) => pushBlock(grid, 'block'))
-
-    if (!title && items.length === 0 && paragraphs.length === 0) {
-      pushBlock(section, 'section')
-    }
-  })
-
-  return segments.sort((a, b) => a.top - b.top)
-}
-
-/** 收集所有可放置分页线的 Y 坐标 */
-function collectBreakBoundaries(segments) {
-  const set = new Set([0])
-  segments.forEach((s) => {
-    set.add(Math.round(s.top))
-    set.add(Math.round(s.bottom))
-  })
-  return [...set].sort((a, b) => a - b)
-}
-
-/** 判断页段内是否存在真实可见内容，避免只切到 margin/padding 空白 */
-function hasVisibleContent(start, end, segments) {
-  const visibleHeight = segments.reduce((sum, s) => {
-    const visibleTop = Math.max(s.top, start)
-    const visibleBottom = Math.min(s.bottom, end)
-    return sum + Math.max(0, visibleBottom - visibleTop)
-  }, 0)
-  return visibleHeight >= 2
-}
-
-/** 过滤幽灵页：去掉过短页段、重复断点与无可见内容的页段 */
-function filterGhostPages(breaks, total, segments) {
-  const filtered = [0]
-  for (let i = 1; i < breaks.length; i++) {
-    const b = breaks[i]
-    const prev = filtered[filtered.length - 1]
-    if (
-      b > prev &&
-      b - prev >= MIN_PAGE_CONTENT &&
-      b < total &&
-      hasVisibleContent(prev, b, segments)
-    ) {
-      filtered.push(b)
-    }
-  }
-  const last = filtered[filtered.length - 1]
-  if (!hasVisibleContent(last, total, segments) && filtered.length > 1) {
-    filtered.pop()
-  }
-  return filtered
-}
-
 /**
- * 智能分页：行级断点 + 原子块边界，过滤幽灵页
+ * 逐个文本节点读取浏览器真实行矩形，不再依赖某个模板的首个 rt-desc。
+ * 同一视觉行上的多个 span/网格列会合并为一个横向分页边界。
  */
+function collectTextLines(content, contentRect, itemIdByElement) {
+  const fragments = []
+  const groupIdByElement = new WeakMap()
+  let groupId = 0
+  const showText = window.NodeFilter?.SHOW_TEXT ?? 4
+  const walker = document.createTreeWalker(content, showText)
+
+  let textNode = walker.nextNode()
+  while (textNode) {
+    const parent = textNode.parentElement
+    const text = textNode.nodeValue?.trim()
+    if (parent && text && !parent.closest('[aria-hidden="true"]')) {
+      const groupElement = parent.closest(PAGE_TEXT_SELECTOR)
+      let currentGroupId = null
+      if (groupElement) {
+        currentGroupId = groupIdByElement.get(groupElement)
+        if (!currentGroupId) {
+          currentGroupId = `text-${groupId += 1}`
+          groupIdByElement.set(groupElement, currentGroupId)
+        }
+      }
+
+      const itemId = closestMappedItemId(parent, content, itemIdByElement)
+      const range = document.createRange()
+      range.selectNodeContents(textNode)
+      Array.from(range.getClientRects()).forEach((rect) => {
+        const top = rect.top - contentRect.top
+        const bottom = rect.bottom - contentRect.top
+        if (rect.width > 0.25 && bottom - top > 0.5) {
+          fragments.push({
+            top,
+            bottom,
+            left: rect.left - contentRect.left,
+            groupId: currentGroupId,
+            itemId,
+          })
+        }
+      })
+    }
+    textNode = walker.nextNode()
+  }
+
+  fragments.sort((a, b) => a.top - b.top || a.left - b.left)
+  const merged = []
+  fragments.forEach((fragment) => {
+    const current = merged[merged.length - 1]
+    if (current && Math.abs(current.top - fragment.top) < 1.5) {
+      current.top = Math.min(current.top, fragment.top)
+      current.bottom = Math.max(current.bottom, fragment.bottom)
+      if (fragment.groupId) current.groupIds.add(fragment.groupId)
+      if (fragment.itemId) current.itemIds.add(fragment.itemId)
+      return
+    }
+    merged.push({
+      top: fragment.top,
+      bottom: fragment.bottom,
+      groupIds: new Set(fragment.groupId ? [fragment.groupId] : []),
+      itemIds: new Set(fragment.itemId ? [fragment.itemId] : []),
+    })
+  })
+
+  const lines = merged.map((line) => ({
+    top: line.top,
+    bottom: line.bottom,
+    groupId: line.groupIds.size === 1 ? [...line.groupIds][0] : null,
+    itemIds: [...line.itemIds],
+  }))
+
+  const linesByGroup = new Map()
+  lines.forEach((line) => {
+    if (!line.groupId) return
+    const groupLines = linesByGroup.get(line.groupId) || []
+    groupLines.push(line)
+    linesByGroup.set(line.groupId, groupLines)
+  })
+  linesByGroup.forEach((groupLines) => {
+    groupLines.forEach((line, index) => {
+      line.lineIndex = index
+      line.lineCount = groupLines.length
+    })
+  })
+
+  return lines
+}
+
 function calcSmartPageBreaks() {
   const content = contentRef.value
   if (!content) return [0]
 
   const contentRect = content.getBoundingClientRect()
-  const chunkHeight = effectivePageHeight.value
   totalHeight.value = contentRect.height
+  if (totalHeight.value <= effectivePageHeight.value) return [0]
 
-  if (totalHeight.value <= chunkHeight) return [0]
+  const { blocks, itemIdByElement } = collectPageBlocks(content, contentRect)
+  const lines = collectTextLines(content, contentRect, itemIdByElement)
 
-  const segments = collectPageSegments(content, contentRect)
-  const boundaries = collectBreakBoundaries(segments)
-  const starts = [0]
-  let pos = 0
-
-  while (pos + MIN_PAGE_CONTENT < totalHeight.value) {
-    let target = Math.min(pos + chunkHeight, totalHeight.value)
-    if (target >= totalHeight.value) break
-
-    let nextBreak = target
-
-    const crossing = segments.find(
-      (s) => s.bottom > pos && s.top < target && s.bottom > target + 1,
-    )
-
-    if (crossing) {
-      const safeBreak = findSafeBreakBefore(crossing, pos, target, contentRect)
-      if (safeBreak !== null && safeBreak > pos) {
-        nextBreak = safeBreak
-      } else if (crossing.type === 'title') {
-        // 标题后剩余空间不足时，整段移到下一页，避免标题孤立在页底
-        const sectionEl = crossing.el?.closest?.('section')
-        if (sectionEl) {
-          const sectionBox = measureEl(sectionEl, contentRect)
-          const remaining = sectionBox.bottom - crossing.top
-          if (remaining > 0 && remaining < chunkHeight * 0.6 && crossing.top > pos) {
-            nextBreak = crossing.top
-          } else if (crossing.top > pos) {
-            nextBreak = crossing.top
-          }
-        } else if (crossing.top > pos) {
-          nextBreak = crossing.top
-        }
-      } else if (crossing.height > chunkHeight) {
-        const lineBefore = boundaries.filter((b) => b > pos && b <= target).pop()
-        nextBreak = lineBefore && lineBefore > pos ? lineBefore : target
-      } else if (crossing.top > pos) {
-        nextBreak = crossing.top
-      }
-    } else {
-      const snap = boundaries.filter((b) => b > pos && b <= target).pop()
-      if (snap && target - snap > 80 && snap > pos) {
-        nextBreak = snap
-      }
-    }
-
-    if (nextBreak <= pos) {
-      nextBreak = Math.min(pos + chunkHeight, totalHeight.value)
-    }
-    if (nextBreak >= totalHeight.value) break
-
-    starts.push(nextBreak)
-    pos = nextBreak
-  }
-
-  return filterGhostPages(starts, totalHeight.value, segments)
+  return calculateResumePageBreaks({
+    totalHeight: totalHeight.value,
+    pageHeight: effectivePageHeight.value,
+    blocks,
+    lines,
+    minPageContent: MIN_PAGE_CONTENT,
+  })
 }
 
 const contentRef = ref(null)
@@ -630,11 +537,20 @@ const pageBreaks = ref([0])
 const totalHeight = ref(0)
 let resizeObserver = null
 let scrollHandler = null
+let recalcFrame = null
 
 function recalcPageCount() {
   const breaks = calcSmartPageBreaks()
   pageBreaks.value = breaks
   pageCount.value = Math.max(1, breaks.length)
+}
+
+function schedulePageRecalc() {
+  if (recalcFrame !== null) window.cancelAnimationFrame(recalcFrame)
+  recalcFrame = window.requestAnimationFrame(() => {
+    recalcFrame = null
+    recalcPageCount()
+  })
 }
 
 function scrollToPage(page) {
@@ -671,10 +587,16 @@ onMounted(async () => {
   await nextTick()
   recalcPageCount()
 
-  window.addEventListener('resize', recalcPageCount)
+  window.addEventListener('resize', schedulePageRecalc)
+
+  // Web 字体和头像完成后尺寸可能变化，再测一次避免屏幕页与打印页错位。
+  document.fonts?.ready?.then(schedulePageRecalc)
+  contentRef.value?.querySelectorAll('img').forEach((image) => {
+    if (!image.complete) image.addEventListener('load', schedulePageRecalc, { once: true })
+  })
 
   if (contentRef.value && typeof ResizeObserver !== 'undefined') {
-    resizeObserver = new ResizeObserver(() => recalcPageCount())
+    resizeObserver = new ResizeObserver(schedulePageRecalc)
     resizeObserver.observe(contentRef.value)
   }
 
@@ -683,7 +605,8 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', recalcPageCount)
+  window.removeEventListener('resize', schedulePageRecalc)
+  if (recalcFrame !== null) window.cancelAnimationFrame(recalcFrame)
   if (resizeObserver) resizeObserver.disconnect()
   if (panelRef.value && scrollHandler) {
     panelRef.value.removeEventListener('scroll', scrollHandler)
@@ -706,7 +629,7 @@ watch(
   ],
   async () => {
     await nextTick()
-    recalcPageCount()
+    schedulePageRecalc()
   },
   { deep: true }
 )
@@ -829,22 +752,5 @@ defineExpose({
   margin-bottom: var(--section-gap, 12px);
 }
 
-/* 仅 item 级避免截断，section 整体允许跨页 */
-.resume-preview :deep([class*="-item"]),
-.resume-preview :deep(.no-break) {
-  break-inside: avoid;
-  page-break-inside: avoid;
-}
-
-.resume-preview :deep(h1),
-.resume-preview :deep(h2),
-.resume-preview :deep(h3) {
-  break-after: avoid;
-  page-break-after: avoid;
-}
-
-.resume-preview :deep(p) {
-  orphans: 3;
-  widows: 3;
-}
+/* 页面按固定高度直接裁切；模板内部不声明分页保持规则，避免制造大面积留白。 */
 </style>

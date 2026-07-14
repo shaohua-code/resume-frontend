@@ -14,9 +14,7 @@ function copyDocumentStyles(targetDoc) {
   })
 }
 
-/**
- * 注入固定页盒打印 CSS：像素与 A4 对齐，禁止页内二次分页导致文字截断
- */
+/** 注入固定页盒打印 CSS：只分页外层 A4，内部完全沿用屏幕裁切。 */
 function injectPrintStyles(targetDoc) {
   const printStyle = targetDoc.createElement('style')
   printStyle.setAttribute('data-resume-print', 'true')
@@ -44,6 +42,9 @@ function injectPrintStyles(targetDoc) {
       break-after: page !important;
       page-break-inside: avoid;
       break-inside: avoid;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      cursor: default !important;
     }
     .print-page:last-child {
       page-break-after: auto;
@@ -58,6 +59,17 @@ function injectPrintStyles(targetDoc) {
       width: 794px;
       box-sizing: border-box;
       background: #fff;
+    }
+    /* 内部内容禁止触发浏览器自己的分页重排，断点只由屏幕 page-viewport 决定。 */
+    .print-page .resume-preview * {
+      page-break-before: auto !important;
+      page-break-after: auto !important;
+      page-break-inside: auto !important;
+      break-before: auto !important;
+      break-after: auto !important;
+      break-inside: auto !important;
+      orphans: initial !important;
+      widows: initial !important;
     }
     /* 打印时与屏幕预览一致：保留换行并强制长串断行 */
     .rt-preserve-text {
@@ -143,6 +155,48 @@ function waitForImages(doc) {
   )
 }
 
+function nextPaint() {
+  return new Promise((resolve) => window.requestAnimationFrame(resolve))
+}
+
+function getPrintLayoutSignature(content) {
+  return (content?.pages || []).map((page) => {
+    const viewport = page.querySelector('.page-viewport')
+    const resume = viewport?.querySelector('.resume-preview')
+    return [
+      page.style.height,
+      viewport?.style.marginTop,
+      viewport?.style.height,
+      viewport?.style.maxHeight,
+      resume?.style.marginTop,
+    ].join('|')
+  }).join('||')
+}
+
+/** 连续三帧分页布局完全相同才允许导出，避免字体/ResizeObserver 尚未稳定。 */
+async function getStablePrintContent(getPrintContent) {
+  await nextTick()
+  if (document.fonts?.ready) await document.fonts.ready
+
+  let previousSignature = ''
+  let stableFrames = 0
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    await nextPaint()
+    const content = await getPrintContent?.()
+    if (!content?.pages?.length) {
+      previousSignature = ''
+      stableFrames = 0
+      continue
+    }
+
+    const signature = getPrintLayoutSignature(content)
+    stableFrames = signature === previousSignature ? stableFrames + 1 : 0
+    previousSignature = signature
+    if (stableFrames >= 2) return content
+  }
+  return null
+}
+
 /**
  * 打开浏览器打印对话框（用户需选择「另存为 PDF」）
  */
@@ -226,11 +280,10 @@ export function useResumeExportPrint({
         if (!canExport) return
       }
 
-      // 等待预览页 DOM 渲染完成后再克隆
-      await nextTick()
-      const content = getPrintContent?.()
+      // 连续三帧读取到相同屏幕分页后才导出，PDF 只使用这批可见页克隆。
+      const content = await getStablePrintContent(getPrintContent)
       if (!content?.pages?.length) {
-        message.error('未找到简历内容')
+        message.error('预览分页尚未稳定，请稍后重试')
         return
       }
 
