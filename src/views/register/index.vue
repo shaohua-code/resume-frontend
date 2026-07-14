@@ -41,9 +41,11 @@ function validateConfirmPassword(_rule, value) {
 const rules = {
   email: [{ required: true, type: 'email', message: '请输入有效的邮箱地址' }],
   code: [{ required: true, message: '请输入邮箱验证码' }],
+
   username: [
     { required: true, message: '请输入用户名' },
     { min: 2, max: 32, message: '用户名长度需在 2-32 位之间' },
+    { pattern: /^[a-zA-Z0-9_\-\u4e00-\u9fa5]+$/, message: '用户名仅支持中英文/数字/下划线/中划线' },
   ],
   password: [
     { required: true, message: '请输入密码' },
@@ -72,6 +74,7 @@ async function handleSendCode() {
 
 // 提交注册
 async function handleRegister() {
+  formRef.value.validateFields().then(async () => {
   submitting.value = true
   try {
     const res = await userStore.register({
@@ -87,9 +90,10 @@ async function handleRegister() {
     } else {
       router.push('/generate')
     }
-  } finally {
-    submitting.value = false
-  }
+    } finally {
+      submitting.value = false
+    }
+  })
 }
 
 onUnmounted(() => countdown.stop())
@@ -98,7 +102,7 @@ onUnmounted(() => countdown.stop())
 <template>
   <!-- 外层容器：添加安全区域适配和触摸优化 -->
   <div
-    class="register-wrapper relative flex min-h-screen items-start justify-center overflow-hidden overflow-y-auto p-3 sm:p-6"
+    class="relative flex items-start justify-center min-h-screen p-3 overflow-hidden overflow-y-auto register-wrapper sm:p-6"
     style="background: var(--gradient-hero)"
     :style="{
       paddingTop: 'calc(1.5rem + env(safe-area-inset-top, 0))',
@@ -106,8 +110,8 @@ onUnmounted(() => countdown.stop())
     }"
   >
     <!-- 背景装饰光效：移动端缩小尺寸 -->
-    <div class="pointer-events-none absolute left-5 top-16 h-56 w-56 rounded-full bg-white/20 blur-3xl sm:left-10 sm:top-20 sm:h-72 sm:w-72" />
-    <div class="pointer-events-none absolute bottom-10 right-5 h-64 w-64 rounded-full bg-white/15 blur-3xl sm:bottom-20 sm:right-10 sm:h-96 sm:w-96" />
+    <div class="absolute w-56 h-56 rounded-full pointer-events-none left-5 top-16 bg-white/20 blur-3xl sm:left-10 sm:top-20 sm:h-72 sm:w-72" />
+    <div class="absolute w-64 h-64 rounded-full pointer-events-none bottom-10 right-5 bg-white/15 blur-3xl sm:bottom-20 sm:right-10 sm:h-96 sm:w-96" />
 
     <!-- 卡片主体：移动端优化宽度和内边距 -->
     <GlassCard glow class="relative w-full max-w-[460px] animate-scale-in max-sm:max-w-[100%]">
@@ -130,7 +134,7 @@ onUnmounted(() => countdown.stop())
             <template #suffix>
               <button
                 type="button"
-                class="code-button link-text text-xs disabled:text-muted"
+                class="text-xs code-button link-text disabled:text-muted"
                 :disabled="codeCountdown > 0 || sending"
                 @click="handleSendCode"
               >
@@ -159,8 +163,8 @@ onUnmounted(() => countdown.stop())
       </a-form>
 
       <!-- 底部链接 -->
-      <div class="mt-3 text-center text-xs text-ink-secondary sm:mt-4 sm:text-sm">
-        已有账号？<router-link to="/login" class="link-text px-2 py-1">立即登录</router-link>
+      <div class="mt-3 text-xs text-center text-ink-secondary sm:mt-4 sm:text-sm">
+        已有账号？<router-link to="/login" class="px-2 py-1 link-text">立即登录</router-link>
       </div>
     </GlassCard>
   </div>

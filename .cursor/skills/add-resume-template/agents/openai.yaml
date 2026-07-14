@@ -1,0 +1,4 @@
+interface:
+  display_name: "新增简历模板"
+  short_description: "按现有字段、预览、分页、字体、间距与定位契约安全新增简历模板"
+  default_prompt: "使用 $add-resume-template 新增一套简历模板，仅修改模板 DOM、样式和必要注册配置。"
