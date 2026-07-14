@@ -7,7 +7,7 @@
 import { computed } from 'vue'
 import { GraduationCap, Briefcase, Wrench, Award, User } from 'lucide-vue-next'
 import { useResumeFields } from './shared/useResumeFields.js'
-import { formatEducationDateRange } from '@/constants/resumeFieldSchema'
+import { formatEducationDateRange, formatEducationDetail } from '@/constants/resumeFieldSchema'
 
 const props = defineProps({
   resume: { type: Object, default: () => ({}) },
@@ -174,7 +174,7 @@ const timelineModules = computed(() => [
                 <div class="font-bold text-slate-800">{{ edu.school }}</div>
                 <div v-if="formatEducationDateRange(edu)" class="text-nowrap text-slate-500">{{ formatEducationDateRange(edu) }}</div>
               </div>
-              <div v-if="edu.degree || edu.major" class="mt-0.5 text-sm text-slate-600">{{ [edu.degree, edu.major].filter(Boolean).join(' · ') }}</div>
+              <div v-if="formatEducationDetail(edu)" class="mt-0.5 text-sm text-slate-600">{{ formatEducationDetail(edu) }}</div>
             </div>
           </template>
 

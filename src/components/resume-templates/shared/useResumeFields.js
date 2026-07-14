@@ -20,6 +20,7 @@ export function useResumeFields(resume) {
     targetPosition: r.target_position || '',
     school: r.school || educations[0]?.school || '',
     major: r.major || educations[0]?.major || '',
+    mainCourse: r.main_course || r.mainCourse || educations[0]?.main_course || '',
     education: r.education || educations[0]?.degree || '',
     summary: r.summary || '',
     skills: r.skills || [],

@@ -639,7 +639,7 @@ async function handleGenerate() {
   currentStep.value = 3  // 跳转到 Step3（AI生成页）
   const payload = {
     ...basicForm,
-    educations: educations.filter((e) => e.school || e.major || e.degree || e.start_date || e.end_date),
+    educations: educations.filter((e) => e.school || e.major || e.main_course || e.degree || e.start_date || e.end_date),
     projects: projects.filter((p) => p.name || p.description),
     internships: internships.filter((i) => i.company || i.description),
     // 新增：工作经历（正式全职工作）
@@ -688,7 +688,7 @@ function getResumeSnapshot() {
       : [],
     awards: basicForm.awards ? basicForm.awards.split('\n').map((s) => s.trim()).filter(Boolean) : [],
     certificates: basicForm.certificates ? basicForm.certificates.split('\n').map((s) => s.trim()).filter(Boolean) : [],
-    educations: educations.filter((e) => e.school || e.major || e.degree || e.start_date || e.end_date),
+    educations: educations.filter((e) => e.school || e.major || e.main_course || e.degree || e.start_date || e.end_date),
     projects: projects
       .filter((p) => p.name || p.description)
       .map((p) => ({
@@ -732,7 +732,7 @@ function applyOptimizedResume(optimized) {
   })
   // 回填教育、项目、实习
   educations.splice(0, educations.length, ...(merged.educations || []))
-  if (!educations.length) educations.push({ school: '', major: '', degree: '', start_date: '', end_date: '' })
+  if (!educations.length) educations.push({ school: '', major: '', main_course: '', degree: '', start_date: '', end_date: '' })
   projects.splice(0, projects.length, ...(merged.projects || []).map((p) => ({
     name: p.name || '',
     role: p.role || '',

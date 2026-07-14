@@ -69,7 +69,7 @@ SUPER_ADMIN, ADMIN, USER（`constants/roles.js`，已移除 VIP 文案）
 
 基本信息扩展：`work_years`, `marital_status`, `height`, `weight`, `ethnicity`, `native_place`, `political_status`, `expected_salary`, `custom_fields[]`
 
-教育背景：`educations[]`（`school`, `major`, `degree`, `start_date`, `end_date`），编辑器模块 key 为 `educations`
+教育背景：`educations[]`（`school`, `major`, `main_course`, `degree`, `start_date`, `end_date`），编辑器模块 key 为 `educations`；`major` 为专业，`main_course` 为主修
 
 经历模块：
 
@@ -79,7 +79,9 @@ SUPER_ADMIN, ADMIN, USER（`constants/roles.js`，已移除 VIP 文案）
 
 编辑器 AI 优化类型：`summary | skills | project | internship | work_experience`。
 
-兼容扁平：`school`, `major`, `education` ↔ `educations[0]`
+兼容扁平：`school`, `major`, `main_course`, `education` ↔ `educations[0]`
+
+时间字段：教育、项目、实习、工作经历的 `start_date` / `end_date` 在编辑器中使用月份选择器，保存格式为 `YYYY.MM`。
 
 工具：`constants/resumeFieldSchema.js`、`useResumeFields.js`；共享表单：`ResumeBasicFieldsSection.vue`、`ResumeEducationListSection.vue`
 
@@ -98,6 +100,7 @@ SUPER_ADMIN, ADMIN, USER（`constants/roles.js`，已移除 VIP 文案）
 - A4 简历只缩放预览，保持打印/导出尺寸。
 - 移动端编辑器不显示分页控制器，但继续纵向滚动展示多张 A4。
 - 编辑器每一页（含最后一页）都显示完整 A4 纸张，内容不足时留白，不按内容高度缩短。
+- 编辑器内容、模板、字体、颜色、皮肤、模块显示与间距变更后会防抖自动保存；手动保存仍保留完整必填校验与提示。
 - 间距面板的“左右边距”仅控制 A4 左右内边距，范围 0-50；上下留白使用页眉/页脚安全边距。
 - 模板分页依赖 `data-resume-module`、`rt-section`、`rt-item`、`rt-desc` 等标记；金融会计等非标准时间轴模板必须补齐标记，模板根节点不得裁切分页内容。
 

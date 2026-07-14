@@ -215,8 +215,8 @@ const educationsModel = computed({
             <a-col :xs="24" :sm="8"><a-form-item label="项目名"><a-input v-model:value="proj.name" class="input-field" /></a-form-item></a-col>
             <a-col :xs="24" :sm="8"><a-form-item label="角色"><a-input v-model:value="proj.role" class="input-field" /></a-form-item></a-col>
             <a-col :xs="24" :sm="8"><a-form-item label="专业技能 / 工具"><a-input v-model:value="proj.tech_stack" class="input-field" /></a-form-item></a-col>
-            <a-col :xs="24" :sm="12"><a-form-item label="开始"><a-input v-model:value="proj.start_date" placeholder="如 2023.01" class="input-field" /></a-form-item></a-col>
-            <a-col :xs="24" :sm="12"><a-form-item label="结束"><a-input v-model:value="proj.end_date" placeholder="如 2024.06" class="input-field" /></a-form-item></a-col>
+            <a-col :xs="24" :sm="12"><a-form-item label="开始"><a-date-picker v-model:value="proj.start_date" picker="month" value-format="YYYY.MM" format="YYYY.MM" placeholder="请选择" class="input-field w-full" /></a-form-item></a-col>
+            <a-col :xs="24" :sm="12"><a-form-item label="结束"><a-date-picker v-model:value="proj.end_date" picker="month" value-format="YYYY.MM" format="YYYY.MM" placeholder="请选择" class="input-field w-full" /></a-form-item></a-col>
             <a-col :span="24"><a-form-item label="描述"><a-textarea v-model:value="proj.description" :rows="3" class="input-field" /></a-form-item></a-col>
           </a-row>
         </a-form>
@@ -243,8 +243,8 @@ const educationsModel = computed({
           <a-row :gutter="[12, 0]">
             <a-col :xs="24" :sm="8"><a-form-item label="公司 / 机构"><a-input v-model:value="intern.company" class="input-field" /></a-form-item></a-col>
             <a-col :xs="24" :sm="8"><a-form-item label="岗位"><a-input v-model:value="intern.position" class="input-field" /></a-form-item></a-col>
-            <a-col :xs="24" :sm="4"><a-form-item label="开始"><a-input v-model:value="intern.start_date" class="input-field" /></a-form-item></a-col>
-            <a-col :xs="24" :sm="4"><a-form-item label="结束"><a-input v-model:value="intern.end_date" class="input-field" /></a-form-item></a-col>
+            <a-col :xs="24" :sm="4"><a-form-item label="开始"><a-date-picker v-model:value="intern.start_date" picker="month" value-format="YYYY.MM" format="YYYY.MM" placeholder="请选择" class="input-field w-full" /></a-form-item></a-col>
+            <a-col :xs="24" :sm="4"><a-form-item label="结束"><a-date-picker v-model:value="intern.end_date" picker="month" value-format="YYYY.MM" format="YYYY.MM" placeholder="请选择" class="input-field w-full" /></a-form-item></a-col>
             <a-col :span="24"><a-form-item label="描述"><a-textarea v-model:value="intern.description" :rows="3" class="input-field" /></a-form-item></a-col>
           </a-row>
         </a-form>
@@ -287,12 +287,26 @@ const educationsModel = computed({
             </a-col>
             <a-col :xs="24" :sm="12">
               <a-form-item label="开始时间">
-                <a-input v-model:value="exp.start_date" placeholder="如 2023-01" class="input-field" />
+                <a-date-picker
+                  v-model:value="exp.start_date"
+                  picker="month"
+                  value-format="YYYY.MM"
+                  format="YYYY.MM"
+                  placeholder="请选择"
+                  class="input-field w-full"
+                />
               </a-form-item>
             </a-col>
             <a-col :xs="24" :sm="12">
               <a-form-item label="结束时间">
-                <a-input v-model:value="exp.end_date" placeholder="如 2024-06 或 至今" class="input-field" />
+                <a-date-picker
+                  v-model:value="exp.end_date"
+                  picker="month"
+                  value-format="YYYY.MM"
+                  format="YYYY.MM"
+                  placeholder="请选择"
+                  class="input-field w-full"
+                />
               </a-form-item>
             </a-col>
             <a-col :span="24">

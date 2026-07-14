@@ -193,7 +193,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { DownloadOutlined, CheckOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
@@ -235,6 +235,10 @@ const editPanelRef = ref(null)
 
 const saving = ref(false)
 const exporting = ref(false)
+const autoSaveReady = ref(false)
+const autoSaving = ref(false)
+let autoSaveDebounceTimer = null
+let lastSavedSnapshot = ''
 
 const activeModule = ref('basic')
 const highlightModule = ref('')
@@ -373,7 +377,7 @@ async function handleScore() {
 // 统一的保存方法
 // 始终走 update 路径，依赖 currentResumeId（已由 store 或 onMounted 写入）
 // options.silent = true 时不弹 toast（用于自动保存、评分/JD 预保存）
-async function saveResumeData({ silent = false } = {}) {
+async function saveResumeData({ silent = false, skipValidation = false } = {}) {
   // 兜底同步：每次保存前把 store 中的 ID 同步到本地 ref
   if (resumeStore.currentResumeId && resumeStore.currentResumeId !== currentResumeId.value) {
     currentResumeId.value = resumeStore.currentResumeId
@@ -381,19 +385,23 @@ async function saveResumeData({ silent = false } = {}) {
   if (!currentResumeId.value) {
     const msg = '当前简历尚未落库，无法保存。请先经过 AI 生成或从列表选择已有简历进入编辑。'
     if (!silent) message.error(msg)
+    if (silent) return null
     throw new Error(msg)
   }
   // 保存前校验姓名与意向岗位
-  const formValid = await editPanelRef.value?.validateBasic?.()
-  if (formValid === false) {
-    activeModule.value = 'basic'
-    if (!silent) message.warning('请完善基本信息：姓名与意向岗位为必填项')
-    throw new Error('基本信息校验未通过')
+  if (!skipValidation) {
+    const formValid = await editPanelRef.value?.validateBasic?.()
+    if (formValid === false) {
+      activeModule.value = 'basic'
+      if (!silent) message.warning('请完善基本信息：姓名与意向岗位为必填项')
+      throw new Error('基本信息校验未通过')
+    }
   }
   const basicCheck = validateRequiredBasicFields(resume)
   if (!basicCheck.ok) {
     activeModule.value = 'basic'
     if (!silent) message.warning(basicCheck.message)
+    if (silent) return null
     throw new Error(basicCheck.message)
   }
   resume.name = basicCheck.name
@@ -427,10 +435,49 @@ async function saveResumeData({ silent = false } = {}) {
 async function handleSave() {
   saving.value = true
   try {
-    await saveResumeData()
+    const saved = await saveResumeData()
+    if (saved) {
+      lastSavedSnapshot = getAutoSaveSnapshot()
+    }
   } finally {
     saving.value = false
   }
+}
+
+function getAutoSaveSnapshot() {
+  return JSON.stringify({
+    resume,
+    templateId: templateId.value,
+    spacing,
+    fontSize: fontSize.value,
+    fontFamily: fontFamily.value,
+    labelColor: labelColor.value,
+    basicContentColor: basicContentColor.value,
+    nameColor: nameColor.value,
+    contentColor: contentColor.value,
+    skinTheme: skinTheme.value,
+    modules: modules.value,
+  })
+}
+
+function queueAutoSaveAfterChange(snapshot) {
+  if (!autoSaveReady.value) return
+  if (!snapshot || snapshot === lastSavedSnapshot) return
+  if (autoSaveDebounceTimer) window.clearTimeout(autoSaveDebounceTimer)
+  autoSaveDebounceTimer = window.setTimeout(async () => {
+    if (autoSaving.value || saving.value || exporting.value) return
+    autoSaving.value = true
+    try {
+      const saved = await saveResumeData({ silent: true, skipValidation: true })
+      if (saved) {
+        lastSavedSnapshot = getAutoSaveSnapshot()
+      }
+    } catch (e) {
+      console.warn('[自动保存跳过]', e)
+    } finally {
+      autoSaving.value = false
+    }
+  }, 1200)
 }
 
 async function ensureCanExport() {
@@ -539,7 +586,18 @@ onMounted(async () => {
   if (resumeStore.currentResumeId) {
     currentResumeId.value = resumeStore.currentResumeId
   }
+  lastSavedSnapshot = getAutoSaveSnapshot()
+  autoSaveReady.value = true
 })
+
+onBeforeUnmount(() => {
+  if (autoSaveDebounceTimer) window.clearTimeout(autoSaveDebounceTimer)
+})
+
+watch(
+  getAutoSaveSnapshot,
+  queueAutoSaveAfterChange,
+)
 </script>
 
 <style scoped>

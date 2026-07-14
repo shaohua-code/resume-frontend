@@ -5,7 +5,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useResumeFields } from './shared/useResumeFields.js'
-import { formatEducationDateRange } from '@/constants/resumeFieldSchema'
+import { formatEducationDateRange, formatEducationDetail } from '@/constants/resumeFieldSchema'
 
 const props = defineProps({
   resume: { type: Object, default: () => ({}) },
@@ -75,7 +75,7 @@ const extendedBasicItems = computed(() =>
             <strong>{{ edu.school }}</strong>
             <span v-if="formatEducationDateRange(edu)">{{ formatEducationDateRange(edu) }}</span>
           </div>
-          <p v-if="edu.degree || edu.major" class="rt-text">{{ [edu.degree, edu.major].filter(Boolean).join(' · ') }}
+          <p v-if="formatEducationDetail(edu)" class="rt-text">{{ formatEducationDetail(edu) }}
           </p>
         </div>
       </section>

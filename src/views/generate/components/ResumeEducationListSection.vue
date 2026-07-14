@@ -37,12 +37,26 @@ function removeEducation(index) {
         <a-row :gutter="12">
           <a-col :xs="24" :sm="12">
             <a-form-item label="就读开始时间">
-              <a-input v-model:value="edu.start_date" placeholder="如：2018-09" class="input-field" />
+              <a-date-picker
+                v-model:value="edu.start_date"
+                picker="month"
+                value-format="YYYY.MM"
+                format="YYYY.MM"
+                placeholder="请选择"
+                class="input-field w-full"
+              />
             </a-form-item>
           </a-col>
           <a-col :xs="24" :sm="12">
             <a-form-item label="毕业时间">
-              <a-input v-model:value="edu.end_date" placeholder="如：2022-06" class="input-field" />
+              <a-date-picker
+                v-model:value="edu.end_date"
+                picker="month"
+                value-format="YYYY.MM"
+                format="YYYY.MM"
+                placeholder="请选择"
+                class="input-field w-full"
+              />
             </a-form-item>
           </a-col>
           <a-col :xs="24" :sm="12">
@@ -59,9 +73,14 @@ function removeEducation(index) {
               </a-select>
             </a-form-item>
           </a-col>
-          <a-col :span="24">
+          <a-col :xs="24" :sm="12">
             <a-form-item label="专业">
               <a-input v-model:value="edu.major" placeholder="如：计算机科学与技术" class="input-field" />
+            </a-form-item>
+          </a-col>
+          <a-col :xs="24" :sm="12">
+            <a-form-item label="主修">
+              <a-input v-model:value="edu.main_course" placeholder="如：财务管理 / 前端开发 / 机械设计" class="input-field" />
             </a-form-item>
           </a-col>
         </a-row>

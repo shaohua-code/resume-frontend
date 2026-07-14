@@ -5,7 +5,7 @@ import { normalizeResumeFields, normalizeEducationItem, normalizeCustomField } f
 
 // 流式解析需要提取的字符串字段（包含岗位相关的中文变体）
 const STRING_FIELDS = [
-  'name', 'school', 'major', 'education', 'phone', 'email',
+  'name', 'school', 'major', 'main_course', 'education', 'phone', 'email',
   'summary', 'target_position', 'targetPosition',
   'work_years', 'marital_status', 'height', 'weight',
   'ethnicity', 'native_place', 'political_status', 'expected_salary',
@@ -60,6 +60,7 @@ function normalizeResume(data) {
     target_position: extractTargetPosition(source),
     school: source.school || '',
     major: source.major || '',
+    main_course: source.main_course || source.mainCourse || '',
     education: source.education || source.degree || '',
     phone: source.phone || '',
     email: source.email || '',

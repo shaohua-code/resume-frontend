@@ -46,6 +46,7 @@ export function createEmptyEducation() {
   return {
     school: '',
     major: '',
+    main_course: '',
     degree: '',
     start_date: '',
     end_date: '',
@@ -62,6 +63,7 @@ export function normalizeEducationItem(item = {}) {
   return {
     school: item.school || '',
     major: item.major || '',
+    main_course: item.main_course || item.mainCourse || '',
     degree: item.degree || item.education || '',
     start_date: item.start_date || '',
     end_date: item.end_date || '',
@@ -86,7 +88,7 @@ export function normalizeEducations(resume = {}) {
 
   if (Array.isArray(list) && list.length) {
     return list.map(normalizeEducationItem).filter((item) =>
-      item.school || item.major || item.degree || item.start_date || item.end_date,
+      item.school || item.major || item.main_course || item.degree || item.start_date || item.end_date,
     )
   }
 
@@ -95,6 +97,7 @@ export function normalizeEducations(resume = {}) {
     return [normalizeEducationItem({
       school: r.school,
       major: r.major,
+      main_course: r.main_course || r.mainCourse,
       degree: r.education,
     })]
   }
@@ -120,6 +123,7 @@ export function syncFlatEducationFields(resume = {}) {
     const first = educations[0]
     resume.school = first.school || ''
     resume.major = first.major || ''
+    resume.main_course = first.main_course || ''
     resume.education = first.degree || ''
   }
   resume.educations = educations
@@ -160,6 +164,7 @@ export function normalizeResumeFields(resume = {}) {
   if (educations.length) {
     r.school = educations[0].school || r.school || ''
     r.major = educations[0].major || r.major || ''
+    r.main_course = educations[0].main_course || r.main_course || r.mainCourse || ''
     r.education = educations[0].degree || r.education || ''
   }
 
@@ -200,6 +205,11 @@ export function formatEducationDateRange(edu = {}) {
   const end = edu.end_date || ''
   if (start && end) return `${start} ~ ${end}`
   return start || end || ''
+}
+
+/** 格式化教育详情：学历 · 专业 · 主修 */
+export function formatEducationDetail(edu = {}) {
+  return [edu.degree, edu.major, edu.main_course].filter(Boolean).join(' · ')
 }
 
 /** 创建空基本信息表单（生成页用） */

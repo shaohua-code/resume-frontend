@@ -4,7 +4,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useResumeFields } from './useResumeFields.js'
-import { formatEducationDateRange } from '@/constants/resumeFieldSchema'
+import { formatEducationDateRange, formatEducationDetail } from '@/constants/resumeFieldSchema'
 
 const props = defineProps({
   resume: { type: Object, default: () => ({}) },
@@ -74,11 +74,7 @@ function isBasicRowWide(index) {
           <strong>{{ edu.school || '学校' }}</strong>
           <span v-if="formatEducationDateRange(edu)" class="rt-edu-dates">{{ formatEducationDateRange(edu) }}</span>
         </div>
-        <p v-if="edu.degree || edu.major" class="rt-sub">
-          <template v-if="edu.degree">{{ edu.degree }}</template>
-          <template v-if="edu.degree && edu.major"> · </template>
-          <template v-if="edu.major">{{ edu.major }}</template>
-        </p>
+        <p v-if="formatEducationDetail(edu)" class="rt-sub">{{ formatEducationDetail(edu) }}</p>
       </div>
     </section>
 
