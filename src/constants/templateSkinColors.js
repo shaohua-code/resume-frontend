@@ -73,6 +73,17 @@ export const TEMPLATE_SKIN_PRESETS = {
   // 3. 应届校招：清爽蓝白 + 浅蓝顶栏边框
   3: {
     ...BLUE_SKIN,
+    titleColor: '#437482',
+    dividerColor: '#e5e7eb',
+    headerBg: 'transparent',
+    headerBorder: '#1f2937',
+    itemBg: '#ffffff',
+    itemBorder: '#edf0f5',
+    basicRowBg: '#ffffff',
+    basicRowBorder: '#e5e7eb',
+    skillBg: '#ffffff',
+    skillBorder: '#ffffff',
+    topBandBg: '#437482',
     headerBorder: '#bfdbfe',
     itemBorder: '#dbeafe',
     basicRowBorder: '#bfdbfe',

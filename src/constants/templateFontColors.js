@@ -17,10 +17,10 @@ export const TEMPLATE_FONT_COLOR_PRESETS = {
   2: { label: '#FFFFFF', basicValue: '#ffffff', name: '#FFFFFF', content: '#374151' },
 
   // 3. 应届校招（蓝色标题线+居中）：使用正式稳妥的深蓝/墨黑搭配
-  3: { label: '#1d4ed8', basicValue: '#1f2937', name: '#1e3a8a', content: '#374151' },
+  3: { label: '#1f2937', basicValue: '#1f2937', name: '#437482', content: '#374151' },
 
   // 4. 左右分栏：若左侧有深色背景，姓名/基本信息用白色或浅灰，右侧正文保持深灰
-  4: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#000000' },
+  4: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#1f2937' },
 
   // 5. 顶部色带（全宽蓝Header）：Header内文字（姓名）用纯白，下方正文用深灰
   5: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#374151' },
