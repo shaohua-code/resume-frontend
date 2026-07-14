@@ -37,7 +37,7 @@ export const TEMPLATE_FONT_COLOR_PRESETS = {
   // 9 - 20. 其他通用/极简模板演变（引入合理的冷暖色调过渡，拒绝纯白纯红文本）
   9: { label: '#4f46e5', basicValue: '#1f2937', name: '#312e81', content: '#374151' },
   10: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#334155' },
-  11: { label: '#78716c', basicValue: '#292524', name: '#1c1917', content: '#44403c' },
+  11: { label: '#f0c86e', basicValue: '#f8fafc', name: '#ffffff', content: '#304257' },
   12: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#1f2937' },
   13: { label: '#b45309', basicValue: '#1f2937', name: '#78350f', content: '#374151' },
   14: { label: '#1677ff', basicValue: '#1f2937', name: '#ffffff', content: '#374151' },

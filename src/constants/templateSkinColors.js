@@ -178,19 +178,19 @@ export const TEMPLATE_SKIN_PRESETS = {
     topBandBg: '#7c3aed',
   },
 
-  // 11. 教育培训：衬线暖棕
+  // 11. 教育培训：现代学院蓝金
   11: {
-    titleColor: '#81a1c1',
-    dividerColor: '#81a1c1',
-    headerBg: 'transparent',
-    headerBorder: '#81a1c1',
-    itemBg: '#ffffff',
-    itemBorder: '#81a1c1',
-    basicRowBg: '#81a1c5',
-    basicRowBorder: '#81a1c1',
-    skillBg: '#81a1c1',
-    skillBorder: '#81a1c1',
-    topBandBg: '#81a1c1',
+    titleColor: '#183153',
+    dividerColor: '#c8d5e2',
+    headerBg: '#183153',
+    headerBorder: '#d8a33f',
+    itemBg: '#f8fafc',
+    itemBorder: '#d8e1ea',
+    basicRowBg: '#294663',
+    basicRowBorder: '#536f89',
+    skillBg: '#edf3f7',
+    skillBorder: '#c8d7e3',
+    topBandBg: '#d8a33f',
   },
 
   // 12. 金融会计：顶部蓝色头部 + 时间轴内容区
