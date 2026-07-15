@@ -9,7 +9,9 @@ import { message } from 'ant-design-vue'
 import {
   BulbOutlined,
   CheckCircleFilled,
+  DeleteOutlined,
   PictureOutlined,
+  ThunderboltOutlined,
   UploadOutlined,
 } from '@ant-design/icons-vue'
 import GradientButton from '@/components/GradientButton.vue'
@@ -55,6 +57,12 @@ const jdText = ref('')
 const jdImageFile = ref(null)
 const jdImageName = ref('')
 const extracting = ref(false)
+
+// 图片预览 URL（使用 ObjectURL 避免内存泄漏）
+const jdImageUrl = computed(() => {
+  if (!jdImageFile.value) return ''
+  return URL.createObjectURL(jdImageFile.value)
+})
 
 const {
   streamText,
@@ -113,8 +121,9 @@ function handleImageBeforeUpload(file) {
   return false
 }
 
-/** 清除已选图片 */
+/** 清除已选图片，释放 ObjectURL 防止内存泄漏 */
 function clearJdImage() {
+  if (jdImageUrl.value) URL.revokeObjectURL(jdImageUrl.value)
   jdImageFile.value = null
   jdImageName.value = ''
 }
@@ -207,34 +216,64 @@ function handleCancel() {
           />
         </a-form-item>
 
-        <a-form-item class="mb-0" v-if="false">
+        <a-form-item class="mb-0">
           <template #label>
-            <span class="inline-flex items-center gap-1.5 text-sm text-ink-secondary">
+            <span class="inline-flex items-center gap-1.5 text-sm font-medium text-ink">
               <PictureOutlined /> 或上传 JD 图片
             </span>
           </template>
-          <a-upload
-            accept="image/*"
-            :show-upload-list="false"
-            :before-upload="handleImageBeforeUpload"
+
+          <!-- 图片上传区域：支持点击和拖拽 -->
+          <div
+            class="group relative flex cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-all duration-300"
+            :class="jdImageFile ? 'border-success/50 bg-emerald-50/30' : 'border-line/60 bg-gradient-to-b from-brand-lighter/20 to-cream/50 hover:border-brand/60 hover:from-brand-lighter/40'"
           >
-            <button
-              type="button"
-              class="flex items-center justify-center w-full h-10 gap-2 text-sm transition-colors border border-dashed rounded-button border-line/60 bg-cream/50 text-ink-secondary hover:border-brand/40 hover:bg-brand-lighter/30"
+            <!-- 未选图片：上传入口 -->
+            <div v-if="!jdImageFile" class="flex w-full flex-col items-center gap-2 py-6 sm:py-8">
+              <div class="flex h-12 w-12 items-center justify-center rounded-full bg-brand/10 text-brand transition-colors group-hover:bg-brand/15 group-hover:scale-110">
+                <UploadOutlined class="text-xl" />
+              </div>
+              <div class="text-center">
+                <p class="text-sm font-medium text-ink">点击或拖拽上传 JD 截图</p>
+                <p class="mt-1 text-xs text-muted">支持 JPG、PNG、WebP，最大 10MB</p>
+              </div>
+              <span class="inline-flex items-center gap-1 rounded-full bg-brand/10 px-3 py-1 text-xs text-brand">
+                <ThunderboltOutlined /> AI 智能识别
+              </span>
+            </div>
+
+            <!-- 已选图片：预览 + 信息 -->
+            <div v-else class="flex w-full items-center gap-4 p-4">
+              <img
+                :src="jdImageUrl"
+                alt="JD 预览"
+                class="h-16 w-16 shrink-0 rounded-lg object-cover ring-1 ring-black/5"
+              />
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-medium text-ink">{{ jdImageName }}</p>
+                <p class="mt-0.5 text-xs text-success">已选择，点击可重新选择</p>
+              </div>
+              <button
+                type="button"
+                class="shrink-0 rounded-lg p-2 text-muted transition-colors hover:bg-red-50 hover:text-danger"
+                @click.stop="clearJdImage"
+              >
+                <DeleteOutlined />
+              </button>
+            </div>
+
+            <!-- 隐藏的上传触发器，覆盖整个区域 -->
+            <a-upload
+              accept="image/*"
+              :show-upload-list="false"
+              :before-upload="handleImageBeforeUpload"
+              class="absolute inset-0 [&_.ant-upload]:h-full [&_.ant-upload]:w-full [&_.ant-upload]:cursor-pointer"
             >
-              <UploadOutlined />
-              {{ jdImageName || '点击上传 JD 截图/图片（支持 OCR 识别）' }}
-            </button>
-          </a-upload>
-          <button
-            v-if="jdImageName"
-            type="button"
-            class="mt-2 text-xs underline text-muted hover:text-danger"
-            @click="clearJdImage"
-          >
-            清除已选图片
-          </button>
-          <p class="mt-2 text-xs text-muted">文本与图片二选一必填，仅上传图片时将自动识别内容</p>
+              <div class="h-full w-full"></div>
+            </a-upload>
+          </div>
+
+          <p class="mt-2 text-xs text-muted">文本与图片二选一必填，仅上传图片时将自动 OCR 识别内容</p>
         </a-form-item>
       </a-form>
 
