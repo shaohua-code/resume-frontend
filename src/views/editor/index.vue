@@ -174,6 +174,13 @@
       :width="isMobile ? '95vw' : '500px'"
       class="editor-modal"
     >
+      <div class="score-stream">
+        <p class="mb-3 text-sm font-semibold text-ink">模型评分内容</p>
+        <div class="score-stream-body">
+          <pre v-if="scoreStreamingText">{{ scoreStreamingText }}</pre>
+          <span v-else class="text-sm text-muted">正在等待模型输出...</span>
+        </div>
+      </div>
       <div v-if="scoreResult" class="score-result">
         <div class="score-total">
           <a-progress type="circle" :percent="scoreResult.total" :size="120" :stroke-color="scoreColor" />
@@ -354,6 +361,7 @@ async function handleMatch() {
 
 const showScoreModal = ref(false)
 const scoreResult = ref(null)
+const scoreStreamingText = ref('')
 const scoreItems = [
   { key: 'content_completeness', label: '内容完整度', max: 20 },
   { key: 'skill_match', label: '技能匹配度', max: 20 },
@@ -363,14 +371,28 @@ const scoreItems = [
 ]
 
 async function handleScore() {
-  // 预保存静默执行，避免与评分结果的提示混淆
-  const saved = await saveResumeData({ silent: true })
-  if (saved?.id) {
-    const result = await resumeStore.scoreResume(saved.id)
+  scoreResult.value = null
+  scoreStreamingText.value = ''
+  showScoreModal.value = true
+  try {
+    // 预保存静默执行，避免与评分结果的提示混淆
+    const saved = await saveResumeData({ silent: true })
+    if (!saved?.id) {
+      scoreStreamingText.value = '当前简历未保存成功，无法继续评分。'
+      return
+    }
+    const result = await resumeStore.scoreResumeStream(saved.id, {
+      onChunk: (chunk) => {
+        scoreStreamingText.value += chunk
+      },
+    })
     if (result?.success) {
       scoreResult.value = result.data
-      showScoreModal.value = true
+    } else if (!scoreStreamingText.value) {
+      scoreStreamingText.value = result?.error || '评分失败，请检查模型配置或稍后重试。'
     }
+  } catch (e) {
+    scoreStreamingText.value = e?.message || '评分失败，请稍后重试。'
   }
 }
 
@@ -643,6 +665,19 @@ watch(
 
 .match-result p {
   @apply mb-2;
+}
+
+/* 评分模型流式输出区 */
+.score-stream {
+  @apply mb-5 rounded-card border border-line/60 bg-canvas p-4;
+}
+
+.score-stream-body {
+  @apply max-h-72 overflow-y-auto whitespace-pre-wrap text-left text-sm leading-6 text-ink-secondary;
+}
+
+.score-stream-body pre {
+  @apply m-0 whitespace-pre-wrap break-words font-sans;
 }
 
 /* 评分结果区 */

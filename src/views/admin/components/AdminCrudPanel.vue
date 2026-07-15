@@ -46,6 +46,7 @@ const crudConfig = {
       input_price_per_million: 0,
       cached_input_price_per_million: 0,
       output_price_per_million: 0,
+      thinking_enabled: null,
       enabled: true,
     }),
     columns: [
@@ -56,6 +57,7 @@ const crudConfig = {
       { title: '输入单价', dataIndex: 'input_price_per_million', key: 'input_price_per_million', width: 110 },
       { title: '缓存输入', dataIndex: 'cached_input_price_per_million', key: 'cached_input_price_per_million', width: 110 },
       { title: '输出单价', dataIndex: 'output_price_per_million', key: 'output_price_per_million', width: 110 },
+      { title: '深度思考', dataIndex: 'thinking_enabled', key: 'thinking_enabled', width: 110 },
       { title: '启用', dataIndex: 'enabled', key: 'enabled', width: 100 },
       { title: '操作', key: 'action', width: 150 },
     ],
@@ -138,6 +140,11 @@ onMounted(loadItems)
           </template>
           <template v-if="column.key === 'output_price_per_million'">
             <span class="text-sm text-muted">¥{{ record.output_price_per_million ?? 0 }}/M</span>
+          </template>
+          <template v-if="column.key === 'thinking_enabled'">
+            <span :class="record.thinking_enabled ? 'badge-success' : 'tag-soft'">
+              {{ record.thinking_enabled === null || record.thinking_enabled === undefined ? '默认' : (record.thinking_enabled ? '开启' : '关闭') }}
+            </span>
           </template>
           <template v-if="column.key === 'update_time'">
             {{ formatDateTime(record.update_time) }}

@@ -306,6 +306,34 @@ export function scoreResume(resumeId, model = '') {
   return request.post('/ai/score', { model }, { params: { resume_id: resumeId } })
 }
 
+/** AI简历评分（SSE 流式输出中文评分报告） */
+export async function scoreResumeStream(resumeId, handlers = {}, model = '') {
+  const { useUserStore } = await import('@/stores/user')
+  const userStore = useUserStore()
+  const token = await userStore.getValidToken()
+  const response = await fetch(`${API_BASE}/api/ai/score/stream?resume_id=${encodeURIComponent(resumeId)}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(model ? { model } : {}),
+  })
+
+  if (!response.ok) {
+    let detail = '评分失败，请重试'
+    try {
+      const errJson = await response.json()
+      detail = errJson.detail || detail
+    } catch (e) {
+      /* ignore */
+    }
+    throw new Error(detail)
+  }
+
+  return readSSEStream(response, handlers)
+}
+
 /** 创建简历（仅做 insert，由 AI 生成 / 上传优化 / 首次保存触发） */
 export function createResume(data) {
   return request.post('/resume/create', data)

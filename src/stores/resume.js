@@ -9,6 +9,7 @@ import {
   generateResumeStream as generateStreamApi,
   matchJd as matchApi,
   scoreResume as scoreApi,
+  scoreResumeStream as scoreStreamApi,
   saveResume as saveApi,
   createResume as createApi,
   getResumeList as getListApi,
@@ -159,6 +160,25 @@ export const useResumeStore = defineStore('resume', () => {
     }
   }
 
+  async function scoreResumeStream(resumeId, handlers = {}) {
+    scoring.value = true
+    try {
+      const data = await scoreStreamApi(resumeId, handlers)
+      if (data) {
+        await refreshWalletBalance()
+        return { success: true, data }
+      }
+    } catch (e) {
+      const msg = e?.response?.data?.detail || e?.message || '评分失败'
+      if (!e?.response?.data?.detail) {
+        message.error(msg)
+      }
+      return { success: false, error: msg }
+    } finally {
+      scoring.value = false
+    }
+  }
+
   // 保存简历：始终走 update 路径
   // 要求调用前已存在 currentResumeId（由 AI 生成 / 详情加载 / 列表点编辑 写入）
   // options.silent = true 时不弹 toast（用于自动保存、评分/JD 预保存等场景）
@@ -237,6 +257,7 @@ export const useResumeStore = defineStore('resume', () => {
     generateResume,
     matchJd,
     scoreResume,
+    scoreResumeStream,
     saveResume,
     fetchResumeList,
     fetchResumeCount,

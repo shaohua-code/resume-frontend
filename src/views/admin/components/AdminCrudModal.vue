@@ -27,6 +27,23 @@ const modelTypeOptions = [
   { value: 'text', label: '文本模型' },
   { value: 'vision', label: '视觉模型' },
 ]
+const thinkingOptions = [
+  { value: 'default', label: '默认（使用供应商默认）' },
+  { value: 'true', label: '开启深度思考' },
+  { value: 'false', label: '关闭深度思考' },
+]
+
+function toThinkingOption(value) {
+  if (value === true) return 'true'
+  if (value === false) return 'false'
+  return 'default'
+}
+
+function updateThinking(value) {
+  // null means do not send enable_thinking, so models without this parameter stay compatible.
+  const mapped = value === 'default' ? null : value === 'true'
+  updateField('thinking_enabled', mapped)
+}
 
 function updateField(key, value) {
   emit('update:form', { ...props.form, [key]: value })
@@ -86,6 +103,14 @@ function updateField(key, value) {
         </a-form-item>
         <a-form-item label="输出单价（元/百万 token）">
           <a-input-number :value="form.output_price_per_million" :min="0" :step="0.1" class="input-field w-full" @update:value="updateField('output_price_per_million', $event)" />
+        </a-form-item>
+        <a-form-item label="是否开启深度思考">
+          <a-select
+            :value="toThinkingOption(form.thinking_enabled)"
+            :options="thinkingOptions"
+            class="input-field w-full"
+            @update:value="updateThinking"
+          />
         </a-form-item>
         <a-form-item label="是否启用">
           <a-switch :checked="form.enabled" @update:checked="updateField('enabled', $event)" />
