@@ -1,5 +1,5 @@
 /**
- * 20 套模板皮肤默认预设（唯一配置源）
+ * 25 套模板皮肤默认预设（唯一配置源）
  * - 11 项字段对应 EditorSkinPanel 自定义颜色
  * - 用户未覆盖（null）时由 mergeSkinThemeWithTemplate + skinThemeToCssVars 注入
  */
@@ -50,43 +50,51 @@ const GRAY_SKIN = {
   topBandBg: '#374151',
 }
 
-/** 20 套模板皮肤独立默认色（含中文注释说明视觉意图） */
+/** 25 套模板皮肤独立默认色（含中文注释说明视觉意图） */
 export const TEMPLATE_SKIN_PRESETS = {
-  // 1. 全职业通用：标准蓝强调 + 浅灰条目
-  1: { ...BLUE_SKIN },
-
-  // 2. 简约商务：深蓝顶栏色带 + 左色条技能边框
-  2: {
-    titleColor: '#1e40af',
-    dividerColor: '#dbeafe',
-    headerBg: 'transparent',
-    headerBorder: '#1e40af',
-    itemBg: '#ffffff',
-    itemBorder: '#edf0f5',
-    basicRowBg: '#f8fafc',
-    basicRowBorder: '#e5e7eb',
-    skillBg: '#eff6ff',
-    skillBorder: '#dbeafe',
-    topBandBg: '#1e40af',
+  // 1. 全职业通用：深靛蓝、朱砂橙与薄荷灰编辑杂志
+  1: {
+    titleColor: '#263a78',
+    dividerColor: '#c9d2e3',
+    headerBg: '#eef3f0',
+    headerBorder: '#263a78',
+    itemBg: '#fffdf8',
+    itemBorder: '#d8dde8',
+    basicRowBg: '#263a78',
+    basicRowBorder: '#53679c',
+    skillBg: '#dfeee8',
+    skillBorder: '#73a895',
+    topBandBg: '#ed6a4c',
   },
 
-  // 3. 应届校招：清爽蓝白 + 浅蓝顶栏边框
+  // 2. 简约商务：深海军蓝、铜橙与雾蓝轻时间线
+  2: {
+    titleColor: '#284b7a',
+    dividerColor: '#7186a1',
+    headerBg: '#172a46',
+    headerBorder: '#314966',
+    itemBg: '#fffaf5',
+    itemBorder: '#d9e1e8',
+    basicRowBg: '#243b5c',
+    basicRowBorder: '#46617f',
+    skillBg: '#e6f0f5',
+    skillBorder: '#83a9bd',
+    topBandBg: '#c97954',
+  },
+
+  // 3. 新锐校招：深紫、酸橙与珊瑚海报
   3: {
-    ...BLUE_SKIN,
-    titleColor: '#437482',
-    dividerColor: '#e5e7eb',
-    headerBg: 'transparent',
-    headerBorder: '#1f2937',
-    itemBg: '#ffffff',
-    itemBorder: '#edf0f5',
-    basicRowBg: '#ffffff',
-    basicRowBorder: '#e5e7eb',
-    skillBg: '#ffffff',
-    skillBorder: '#ffffff',
-    topBandBg: '#437482',
-    headerBorder: '#bfdbfe',
-    itemBorder: '#dbeafe',
-    basicRowBorder: '#bfdbfe',
+    titleColor: '#30255a',
+    dividerColor: '#cfc7e3',
+    headerBg: '#282050',
+    headerBorder: '#65578a',
+    itemBg: '#fffaf4',
+    itemBorder: '#e9d9cc',
+    basicRowBg: '#3a3064',
+    basicRowBorder: '#665a8c',
+    skillBg: '#eefacb',
+    skillBorder: '#ed725d',
+    topBandBg: '#c7f35b',
   },
 
   // 4. 左右分栏：深色顶栏分栏区
@@ -104,41 +112,49 @@ export const TEMPLATE_SKIN_PRESETS = {
     topBandBg: '#1f2937',
   },
 
-  // 5. 顶部色带：全宽蓝色 header
+  // 5. 品牌色带：深海蓝头部 + 香槟金细节
   5: {
-    titleColor: '#ffffff',
-    dividerColor: 'rgba(255,255,255,0.3)',
-    headerBg: '#1677ff',
-    headerBorder: '#0958d9',
-    itemBg: '#ffffff',
-    itemBorder: '#edf0f5',
-    basicRowBg: 'rgba(255,255,255,0.16)',
-    basicRowBorder: 'rgba(255,255,255,0.24)',
-    skillBg: '#eef4ff',
-    skillBorder: '#cfe0ff',
-    topBandBg: '#1677ff',
+    titleColor: '#173f5f',
+    dividerColor: '#7891a5',
+    headerBg: '#173f5f',
+    headerBorder: '#d1a33b',
+    itemBg: '#fafcfd',
+    itemBorder: '#d9e3e9',
+    basicRowBg: '#274e6d',
+    basicRowBorder: '#486b84',
+    skillBg: '#edf3f6',
+    skillBorder: '#b8ccd7',
+    topBandBg: '#d1a33b',
   },
 
   // 6. 表格信息：严谨灰黑表格风
   6: {
-    ...GRAY_SKIN,
-    titleColor: '#374151',
-    basicRowBorder: '#d1d5db',
+    titleColor: '#334155',
+    dividerColor: '#cbd5e1',
+    headerBg: '#f8fafc',
+    headerBorder: '#64748b',
+    itemBg: '#ffffff',
+    itemBorder: '#d5dde5',
+    basicRowBg: '#eef2f5',
+    basicRowBorder: '#cbd5e1',
+    skillBg: '#f8edd5',
+    skillBorder: '#d7ad5d',
+    topBandBg: '#d59b2d',
   },
 
-  // 7. 经典黑白：打印友好高对比
+  // 7. 墨印排版：象牙纸、黑墨与钴蓝印记
   7: {
-    titleColor: '#000000',
-    dividerColor: '#000000',
-    headerBg: 'transparent',
-    headerBorder: '#000000',
-    itemBg: '#ffffff',
-    itemBorder: '#d1d5db',
-    basicRowBg: '#ffffff',
-    basicRowBorder: '#d1d5db',
-    skillBg: '#f9fafb',
-    skillBorder: '#6b7280',
-    topBandBg: '#111827',
+    titleColor: '#171717',
+    dividerColor: '#383838',
+    headerBg: '#fffdf7',
+    headerBorder: '#171717',
+    itemBg: '#fffdf7',
+    itemBorder: '#b8b6ae',
+    basicRowBg: '#f4f0e7',
+    basicRowBorder: '#343434',
+    skillBg: '#e8edff',
+    skillBorder: '#2f57d9',
+    topBandBg: '#2f57d9',
   },
 
   // 8. 现代扁平：左侧 slate 蓝灰边栏 + 右侧蓝色标题条
@@ -156,11 +172,19 @@ export const TEMPLATE_SKIN_PRESETS = {
     topBandBg: '#5b6b7c',
   },
 
-  // 9. 行政文职：正式列表灰系
+  // 9. 行政文职：暖灰纸张 + 酒红档案线
   9: {
-    ...GRAY_SKIN,
-    titleColor: '#374151',
-    itemBorder: '#e5e7eb',
+    titleColor: '#6d2735',
+    dividerColor: '#cdb8bc',
+    headerBg: '#fbfaf8',
+    headerBorder: '#6d2735',
+    itemBg: '#ffffff',
+    itemBorder: '#ded7d3',
+    basicRowBg: '#f4f1ed',
+    basicRowBorder: '#d8cec7',
+    skillBg: '#eee7e3',
+    skillBorder: '#cdb8af',
+    topBandBg: '#6d2735',
   },
 
   // 10. 销售市场：红色强调 + 浅红技能
@@ -202,104 +226,187 @@ export const TEMPLATE_SKIN_PRESETS = {
     itemBorder: '#d1d5db',
   },
 
-  // 13. 设计创意：暖色浅块顶栏
+  // 13. 设计创意：紫罗兰、珊瑚、松石与向日葵黄
   13: {
-    titleColor: '#ea580c',
-    dividerColor: '#fed7aa',
-    headerBg: '#fff7ed',
-    headerBorder: '#fed7aa',
+    titleColor: '#5b3f8c',
+    dividerColor: '#d8cfea',
+    headerBg: '#fff7f1',
+    headerBorder: '#ee6c5d',
     itemBg: '#ffffff',
-    itemBorder: '#ffedd5',
-    basicRowBg: '#fff7ed',
-    basicRowBorder: '#fdba74',
-    skillBg: '#ffedd5',
-    skillBorder: '#fdba74',
-    topBandBg: '#fff7ed',
+    itemBorder: '#eadfd7',
+    basicRowBg: '#f4ebfa',
+    basicRowBorder: '#d7c0e5',
+    skillBg: '#dff2ee',
+    skillBorder: '#3b9b8f',
+    topBandBg: '#f2b84b',
   },
 
-  // 14. 程序员：深色 slate 顶栏 + 蓝绿点缀
+  // 14. 极夜技术：午夜蓝、荧光青与柔紫蓝图
   14: {
-    titleColor: '#1677ff',
-    dividerColor: '#334155',
-    headerBg: '#0f172a',
-    headerBorder: '#1e293b',
-    itemBg: '#ffffff',
-    itemBorder: '#e2e8f0',
-    basicRowBg: '#f1f5f9',
-    basicRowBorder: '#cbd5e1',
-    skillBg: '#1e293b',
-    skillBorder: '#4ade80',
-    topBandBg: '#0f172a',
+    titleColor: '#126f83',
+    dividerColor: '#b9d7dc',
+    headerBg: '#0b1324',
+    headerBorder: '#29405b',
+    itemBg: '#f7fbfc',
+    itemBorder: '#cddfe3',
+    basicRowBg: '#14243a',
+    basicRowBorder: '#31516b',
+    skillBg: '#eeeafe',
+    skillBorder: '#a68de0',
+    topBandBg: '#00c9b7',
   },
 
-  // 15. 中英文双语：石板灰专业
+  // 15. 跨境名片：航空海军蓝、邮戳红与亚麻白
   15: {
-    titleColor: '#1e293b',
-    dividerColor: '#cbd5e1',
-    headerBg: 'transparent',
-    headerBorder: '#475569',
-    itemBg: '#ffffff',
-    itemBorder: '#e2e8f0',
-    basicRowBg: '#f8fafc',
-    basicRowBorder: '#cbd5e1',
-    skillBg: '#f1f5f9',
-    skillBorder: '#94a3b8',
-    topBandBg: '#334155',
+    titleColor: '#17324d',
+    dividerColor: '#c9d5dc',
+    headerBg: '#f7f1e8',
+    headerBorder: '#17324d',
+    itemBg: '#fffdf9',
+    itemBorder: '#d9d2c7',
+    basicRowBg: '#edf3f5',
+    basicRowBorder: '#8ba7b8',
+    skillBg: '#e8f0f1',
+    skillBorder: '#5e9094',
+    topBandBg: '#d94b50',
   },
 
   // 16. 时间轴：蓝色竖线时间轴
   16: { ...BLUE_SKIN },
 
-  // 17. 技能进度：蓝绿渐变进度条
+  // 17. 能力矩阵：松石绿信息卡 + 暖铜编号
   17: {
-    ...BLUE_SKIN,
-    skillBg: '#e6f4ff',
-    skillBorder: '#36cfc9',
+    titleColor: '#245b54',
+    dividerColor: '#c5d8d4',
+    headerBg: '#f1f6f4',
+    headerBorder: '#9bbdb5',
+    itemBg: '#fbfdfc',
+    itemBorder: '#dbe7e3',
+    basicRowBg: '#e6f0ed',
+    basicRowBorder: '#c4d9d3',
+    skillBg: '#dfeeea',
+    skillBorder: '#87b3a9',
+    topBandBg: '#c98b5b',
   },
 
-  // 18. 极简线条：透明底 + 线条分隔
+  // 18. 极简线条：墨蓝、杏色与克制钴蓝线条
   18: {
-    titleColor: '#111827',
-    dividerColor: '#e5e7eb',
+    titleColor: '#1d3557',
+    dividerColor: '#cad3df',
     headerBg: 'transparent',
-    headerBorder: '#111827',
+    headerBorder: '#5b7fb5',
     itemBg: 'transparent',
-    itemBorder: '#e5e7eb',
-    basicRowBg: 'transparent',
-    basicRowBorder: '#e5e7eb',
-    skillBg: 'transparent',
-    skillBorder: '#9ca3af',
-    topBandBg: 'transparent',
+    itemBorder: '#d9dfe7',
+    basicRowBg: '#f7f8fa',
+    basicRowBorder: '#d6dce4',
+    skillBg: '#eaf0fa',
+    skillBorder: '#5b7fb5',
+    topBandBg: '#e07a5f',
   },
 
-  // 19. 信封封面：大边框封面感
+  // 19. 个人品牌：梅子紫、陶土橙与鼠尾草绿杂志封面
   19: {
-    titleColor: '#374151',
-    dividerColor: '#d1d5db',
-    headerBg: 'transparent',
-    headerBorder: '#1f2937',
-    itemBg: '#ffffff',
-    itemBorder: '#e5e7eb',
-    basicRowBg: '#f9fafb',
-    basicRowBorder: '#d1d5db',
-    skillBg: '#f3f4f6',
-    skillBorder: '#9ca3af',
-    topBandBg: 'transparent',
+    titleColor: '#4b3355',
+    dividerColor: '#d9ccd9',
+    headerBg: '#f7f1f5',
+    headerBorder: '#4b3355',
+    itemBg: '#fffaf7',
+    itemBorder: '#eadcd4',
+    basicRowBg: '#f1e9ef',
+    basicRowBorder: '#d8c7d5',
+    skillBg: '#e5eee8',
+    skillBorder: '#83a58e',
+    topBandBg: '#c76d4f',
   },
 
-  // 20. Executive：高端留白灰
+  // 20. Executive：石墨、香槟金与钢蓝管理层次
   20: {
-    titleColor: '#7c3aed',
-    dividerColor: '#d1d5db',
-    headerBg: 'transparent',
-    headerBorder: '#9ca3af',
+    titleColor: '#2f3b46',
+    dividerColor: '#c7d0d7',
+    headerBg: '#f8f7f4',
+    headerBorder: '#b28a45',
     itemBg: '#ffffff',
-    itemBorder: '#f1f5f9',
-    basicRowBg: '#f9fafb',
-    basicRowBorder: '#e5e7eb',
-    skillBg: '#f3f4f6',
-    skillBorder: '#d1d5db',
-    topBandBg: '#ffffff',
+    itemBorder: '#dce1e4',
+    basicRowBg: '#eef1f3',
+    basicRowBorder: '#d2d9de',
+    skillBg: '#e7edf1',
+    skillBorder: '#7892a6',
+    topBandBg: '#b28a45',
+  },
+
+  // 21. 野兽派档案：太阳黄、珊瑚红与电光青
+  21: {
+    titleColor: '#171717',
+    dividerColor: '#171717',
+    headerBg: '#f4d738',
+    headerBorder: '#171717',
+    itemBg: '#fffdf2',
+    itemBorder: '#171717',
+    basicRowBg: '#ffffff',
+    basicRowBorder: '#171717',
+    skillBg: '#9ef0e9',
+    skillBorder: '#171717',
+    topBandBg: '#ff5c52',
+  },
+
+  // 22. 植物编辑：森林绿、陶粉与燕麦纸
+  22: {
+    titleColor: '#245544',
+    dividerColor: '#b9c9bd',
+    headerBg: '#f6efe2',
+    headerBorder: '#6f927e',
+    itemBg: '#fffdf8',
+    itemBorder: '#d9d5c8',
+    basicRowBg: '#e9f0e9',
+    basicRowBorder: '#9bb4a3',
+    skillBg: '#e4eee5',
+    skillBorder: '#7b9f87',
+    topBandBg: '#e48673',
+  },
+
+  // 23. 信息面板：靛青底、青绿状态与紫罗兰标识
+  23: {
+    titleColor: '#5066a5',
+    dividerColor: '#d4dcef',
+    headerBg: '#1d2747',
+    headerBorder: '#405179',
+    itemBg: '#ffffff',
+    itemBorder: '#d9e0ee',
+    basicRowBg: '#293658',
+    basicRowBorder: '#50628d',
+    skillBg: '#e9f8f7',
+    skillBorder: '#3ad5d0',
+    topBandBg: '#7158cc',
+  },
+
+  // 24. 构成主义：群青、砖红与芥末黄几何构成
+  24: {
+    titleColor: '#2846a2',
+    dividerColor: '#b9c5e5',
+    headerBg: '#2846a2',
+    headerBorder: '#1c2f70',
+    itemBg: '#fffaf0',
+    itemBorder: '#d9cbb3',
+    basicRowBg: '#3856ad',
+    basicRowBorder: '#7890d0',
+    skillBg: '#f8e8c3',
+    skillBorder: '#c54535',
+    topBandBg: '#e7aa32',
+  },
+
+  // 25. 策展画廊：午夜紫、朱红与薄荷绿拼贴
+  25: {
+    titleColor: '#3e3564',
+    dividerColor: '#d8d1e8',
+    headerBg: '#24213e',
+    headerBorder: '#5b527e',
+    itemBg: '#fffdf9',
+    itemBorder: '#ddd6ca',
+    basicRowBg: '#efeaf8',
+    basicRowBorder: '#8c7eb7',
+    skillBg: '#ddf1e9',
+    skillBorder: '#6ec3a5',
+    topBandBg: '#e65057',
   },
 }
 

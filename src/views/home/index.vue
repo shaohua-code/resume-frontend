@@ -47,7 +47,7 @@ function handleFeatureClick(item) {
         <a-steps :current="0" class="flow-steps" direction="vertical" responsive>
           <a-step title="选择方式" description="上传 PDF 或文本填写" />
           <a-step title="AI 生成优化" description="AI 自动生成或优化简历" />
-          <a-step title="在线编辑" description="20 套模板自由调整" />
+          <a-step title="在线编辑" description="25 套模板自由调整" />
           <a-step title="导出投递" description="PDF / Word 一键导出" />
         </a-steps>
       </GlassCard>

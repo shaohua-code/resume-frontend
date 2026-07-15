@@ -1,5 +1,5 @@
 /**
- * 20 套模板字体颜色独立默认预设
+ * 25 套模板字体颜色独立默认预设
  * - label / basicValue / name / content 对应编辑器四项颜色
  * - 用户未自定义（null）时由 CSS fallback 与本表 picker 展示值共同决定
  */
@@ -10,43 +10,48 @@ const FALLBACK_CONTENT_COLOR = '#000000'
 /** 单套模板字体色预设 */
 /** 单套模板字体色预设（优化版） */
 export const TEMPLATE_FONT_COLOR_PRESETS = {
-  // 1. 全职业通用：蓝顶栏 + 经典深灰文字，层次分明
-  1: { label: '#0c418c', basicValue: '#1f2937', name: '#111827', content: '#374151' },
+  // 1. 全职业通用：朱砂标签、白色联系信息与深靛正文
+  1: { label: '#ffb199', basicValue: '#ffffff', name: '#17224b', content: '#33394a' },
 
-  // 2. 简约商务（左红条）：降低红色的刺眼感，正文采用高级深灰
-  2: { label: '#FFFFFF', basicValue: '#ffffff', name: '#FFFFFF', content: '#374151' },
+  // 2. 简约商务：雾蓝标签、白色头部信息与蓝灰正文
+  2: { label: '#bcd9e8', basicValue: '#ffffff', name: '#ffffff', content: '#344454' },
 
-  // 3. 应届校招（蓝色标题线+居中）：使用正式稳妥的深蓝/墨黑搭配
-  3: { label: '#1f2937', basicValue: '#1f2937', name: '#437482', content: '#374151' },
+  // 3. 新锐校招：酸橙标签、白色头部与深紫正文
+  3: { label: '#c7f35b', basicValue: '#ffffff', name: '#ffffff', content: '#3b3450' },
 
   // 4. 左右分栏：若左侧有深色背景，姓名/基本信息用白色或浅灰，右侧正文保持深灰
   4: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#1f2937' },
 
-  // 5. 顶部色带（全宽蓝Header）：Header内文字（姓名）用纯白，下方正文用深灰
-  5: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#374151' },
+  // 5. 品牌色带：香槟金标签、白色头部信息与深蓝灰正文
+  5: { label: '#f2d58a', basicValue: '#ffffff', name: '#ffffff', content: '#2d4050' },
 
   // 6. 表格信息：强调严谨性，使用标准的石墨黑与深灰
-  6: { label: '#4b5563', basicValue: '#1f2937', name: '#111827', content: '#374151' },
+  6: { label: '#8a621b', basicValue: '#24303c', name: '#1e293b', content: '#3b4652' },
 
-  // 7. 经典黑白（打印优先）：极简高对比度，适合HR直接打印
-  7: { label: '#000000', basicValue: '#000000', name: '#000000', content: '#111827' },
+  // 7. 墨印排版：黑墨正文与钴蓝标签
+  7: { label: '#2f57d9', basicValue: '#171717', name: '#171717', content: '#242424' },
 
   // 8. 现代扁平：左侧深色边栏用白字，右侧正文用深灰
   8: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#334155' },
 
   // 9 - 20. 其他通用/极简模板演变（引入合理的冷暖色调过渡，拒绝纯白纯红文本）
-  9: { label: '#4f46e5', basicValue: '#1f2937', name: '#312e81', content: '#374151' },
+  9: { label: '#6d2735', basicValue: '#292524', name: '#3f1d26', content: '#413b38' },
   10: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#334155' },
   11: { label: '#f0c86e', basicValue: '#f8fafc', name: '#ffffff', content: '#304257' },
   12: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#1f2937' },
-  13: { label: '#b45309', basicValue: '#1f2937', name: '#78350f', content: '#374151' },
-  14: { label: '#1677ff', basicValue: '#1f2937', name: '#ffffff', content: '#374151' },
-  15: { label: '#2563eb', basicValue: '#1f2937', name: '#111827', content: '#374151' },
+  13: { label: '#9a4e43', basicValue: '#332942', name: '#4a2e6d', content: '#3e3a48' },
+  14: { label: '#7de8df', basicValue: '#eefafa', name: '#ffffff', content: '#263a48' },
+  15: { label: '#d94b50', basicValue: '#253b4e', name: '#17324d', content: '#354653' },
   16: { label: '#1677ff', basicValue: '#1f2937', name: '#14532d', content: '#374151' },
-  17: { label: '#57534e', basicValue: '#1f2937', name: '#1c1917', content: '#374151' },
-  18: { label: '#374151', basicValue: '#1f2937', name: '#111827', content: '#1f2937' },
-  19: { label: '#000000', basicValue: '#1f2937', name: '#000000', content: '#374151' },
-  20: { label: '#7c3aed', basicValue: '#1f2937', name: '#4c1d95', content: '#374151' },
+  17: { label: '#3f766e', basicValue: '#213b37', name: '#183d38', content: '#334e49' },
+  18: { label: '#5b7fb5', basicValue: '#27364a', name: '#15243a', content: '#384454' },
+  19: { label: '#f3d4ca', basicValue: '#ffffff', name: '#3b2445', content: '#453c49' },
+  20: { label: '#8a6b35', basicValue: '#27333d', name: '#1f2933', content: '#35424b' },
+  21: { label: '#171717', basicValue: '#171717', name: '#171717', content: '#242424' },
+  22: { label: '#a55347', basicValue: '#314b40', name: '#245544', content: '#3f4d46' },
+  23: { label: '#7ee9e5', basicValue: '#ffffff', name: '#ffffff', content: '#33405a' },
+  24: { label: '#f4c45c', basicValue: '#ffffff', name: '#ffffff', content: '#343c55' },
+  25: { label: '#e65057', basicValue: '#3d3656', name: '#302947', content: '#403a4d' },
 }
 
 /** 获取指定模板的字体色默认值（供颜色选择器展示） */
