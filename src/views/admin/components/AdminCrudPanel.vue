@@ -4,6 +4,7 @@ import { message } from 'ant-design-vue'
 import { aiModelApi, announcementApi } from '@/api/admin'
 import AdminCrudModal from './AdminCrudModal.vue'
 import { formatDateTime } from '@/utils/date'
+import { getAiModelTypeLabel } from '@/constants/aiTasks'
 
 const props = defineProps({
   type: {
@@ -38,16 +39,22 @@ const crudConfig = {
     defaultForm: () => ({
       name: '',
       model_key: '',
-      task_type: 'all',
+      provider: 'deepseek',
+      model_type: 'text',
+      api_url: '',
+      api_key_env: 'DEEPSEEK_API_KEY',
       input_price_per_million: 0,
+      cached_input_price_per_million: 0,
       output_price_per_million: 0,
       enabled: true,
     }),
     columns: [
       { title: '名称', dataIndex: 'name', key: 'name' },
       { title: '模型Key', dataIndex: 'model_key', key: 'model_key' },
-      { title: '任务类型', dataIndex: 'task_type', key: 'task_type', width: 140 },
+      { title: '供应商', dataIndex: 'provider', key: 'provider', width: 120 },
+      { title: '模型类型', dataIndex: 'model_type', key: 'model_type', width: 120 },
       { title: '输入单价', dataIndex: 'input_price_per_million', key: 'input_price_per_million', width: 110 },
+      { title: '缓存输入', dataIndex: 'cached_input_price_per_million', key: 'cached_input_price_per_million', width: 110 },
       { title: '输出单价', dataIndex: 'output_price_per_million', key: 'output_price_per_million', width: 110 },
       { title: '启用', dataIndex: 'enabled', key: 'enabled', width: 100 },
       { title: '操作', key: 'action', width: 150 },
@@ -100,7 +107,7 @@ onMounted(loadItems)
       <div class="flex items-center justify-between">
         <div>
           <p class="text-base font-semibold text-ink">{{ currentConfig.title }}</p>
-          <p class="mt-1 text-xs text-muted">统一维护后台基础资源配置</p>
+          <p class="mt-1 text-xs text-muted">{{ type === 'models' ? '维护模型类型、供应商、调用入口与 Token 单价' : '统一维护后台基础资源配置' }}</p>
         </div>
         <button class="btn-primary" @click="openModal()">{{ currentConfig.addText }}</button>
       </div>
@@ -120,6 +127,14 @@ onMounted(loadItems)
           </template>
           <template v-if="column.key === 'input_price_per_million'">
             <span class="text-sm text-muted">¥{{ record.input_price_per_million ?? 0 }}/M</span>
+          </template>
+          <template v-if="column.key === 'cached_input_price_per_million'">
+            <span class="text-sm text-muted">¥{{ record.cached_input_price_per_million ?? 0 }}/M</span>
+          </template>
+          <template v-if="column.key === 'model_type'">
+            <span :class="record.model_type === 'vision' ? 'badge-success' : 'tag-soft'">
+              {{ getAiModelTypeLabel(record.model_type) }}
+            </span>
           </template>
           <template v-if="column.key === 'output_price_per_million'">
             <span class="text-sm text-muted">¥{{ record.output_price_per_million ?? 0 }}/M</span>

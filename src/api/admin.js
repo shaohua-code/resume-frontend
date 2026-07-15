@@ -172,3 +172,13 @@ export function createCrudApi(path) {
 
 export const announcementApi = createCrudApi('announcements')
 export const aiModelApi = createCrudApi('models')
+
+/** 读取所有 AI 任务及其当前模型分配（仅超级管理员） */
+export function getAiTaskModels() {
+  return request.get('/admin/task-models')
+}
+
+/** 为单个 AI 任务切换模型，后端会再次校验模型类型 */
+export function saveAiTaskModel(taskType, modelId) {
+  return request.put(`/admin/task-models/${taskType}`, { model_id: modelId })
+}

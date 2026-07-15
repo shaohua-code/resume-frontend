@@ -15,6 +15,7 @@ AI 简历助手全行业响应式前端，支持校招、社招、转岗和技�
 
 - 修改 `views/`、`stores/`、`api/`、`router/`
 - 用户中心、管理端额度、余额展示
+- 管理端 AI 模型、模型类型和任务模型映射
 - 对接 wallet API
 - 修改简历模板、编辑器字段、生成示例或移动端交互
 
@@ -27,6 +28,8 @@ api/           auth | resume | wallet | admin | upload | feedback
 stores/        user.js | wallet.js | resume.js
 views/user/    index.vue + components/UsagePanel.vue
 views/admin/   AdminWalletPanel.vue（用户额度）
+               AdminCrudPanel.vue（模型管理）
+               AdminTaskModelsPanel.vue（任务模型配置）
 composables/   useResumeExportPrint.js（PDF 打印导出）
 ```
 
@@ -45,6 +48,13 @@ composables/   useResumeExportPrint.js（PDF 打印导出）
 
 - 菜单：`/admin/wallets`，permission `admin:wallet`
 - `AdminWalletPanel.vue`：列表 + 调额弹窗（管理员不可填负数）
+
+## Admin AI 模型
+
+- `/admin/models`：维护供应商、模型 Key、`text`/`vision` 模型类型、API 地址、密钥环境变量名与 Token 单价。
+- `/admin/task-models`：每个任务选择一个已启用且类型匹配的模型。
+- 两页均使用 `admin:ai_model`，当前只有 SUPER_ADMIN 可见；后端负责最终权限和类型校验。
+- 模型类型显示使用 `constants/aiTasks.js`，未知类型回退显示原值，便于后续扩展。
 
 ## 导出
 

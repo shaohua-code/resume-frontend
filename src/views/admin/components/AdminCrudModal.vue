@@ -18,6 +18,16 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'update:form'])
 
+// 预置常用值，同时允许直接输入新供应商或新模型类型，为后续扩展保留入口。
+const providerOptions = [
+  { value: 'deepseek' },
+  { value: 'dashscope' },
+]
+const modelTypeOptions = [
+  { value: 'text', label: '文本模型' },
+  { value: 'vision', label: '视觉模型' },
+]
+
 function updateField(key, value) {
   emit('update:form', { ...props.form, [key]: value })
 }
@@ -44,11 +54,35 @@ function updateField(key, value) {
         <a-form-item label="模型Key">
           <a-input :value="form.model_key" class="input-field" @update:value="updateField('model_key', $event)" />
         </a-form-item>
-        <a-form-item label="任务类型">
-          <a-input :value="form.task_type" class="input-field" @update:value="updateField('task_type', $event)" />
+        <a-form-item label="供应商标识">
+          <a-auto-complete
+            :value="form.provider"
+            :options="providerOptions"
+            class="input-field w-full"
+            placeholder="deepseek / dashscope / 其他"
+            @update:value="updateField('provider', $event)"
+          />
+        </a-form-item>
+        <a-form-item label="模型类型">
+          <a-auto-complete
+            :value="form.model_type"
+            :options="modelTypeOptions"
+            class="input-field w-full"
+            placeholder="text / vision / 其他"
+            @update:value="updateField('model_type', $event)"
+          />
+        </a-form-item>
+        <a-form-item label="API 地址（留空使用供应商默认地址）">
+          <a-input :value="form.api_url" class="input-field" placeholder="https://.../chat/completions" @update:value="updateField('api_url', $event)" />
+        </a-form-item>
+        <a-form-item label="API 密钥环境变量名">
+          <a-input :value="form.api_key_env" class="input-field" placeholder="DEEPSEEK_API_KEY" @update:value="updateField('api_key_env', $event)" />
         </a-form-item>
         <a-form-item label="输入单价（元/百万 token）">
           <a-input-number :value="form.input_price_per_million" :min="0" :step="0.1" class="input-field w-full" @update:value="updateField('input_price_per_million', $event)" />
+        </a-form-item>
+        <a-form-item label="缓存输入单价（元/百万 token）">
+          <a-input-number :value="form.cached_input_price_per_million" :min="0" :step="0.01" class="input-field w-full" @update:value="updateField('cached_input_price_per_million', $event)" />
         </a-form-item>
         <a-form-item label="输出单价（元/百万 token）">
           <a-input-number :value="form.output_price_per_million" :min="0" :step="0.1" class="input-field w-full" @update:value="updateField('output_price_per_million', $event)" />

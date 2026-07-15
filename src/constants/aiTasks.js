@@ -13,6 +13,7 @@ export const AI_TASK_TYPES = {
   SUMMARY_OPTIMIZE: 'summary_optimize',
   SKILLS_OPTIMIZE: 'skills_optimize',
   INTERNSHIP_OPTIMIZE: 'internship_optimize',
+  WORK_EXPERIENCE_OPTIMIZE: 'work_experience_optimize',
   JD_MATCH: 'jd_match',
   SCORE: 'score',
   PDF_OPTIMIZE: 'pdf_optimize',
@@ -30,12 +31,31 @@ export const AI_TASK_TYPE_LABEL_MAP = {
   [AI_TASK_TYPES.SUMMARY_OPTIMIZE]: '个人评价优化',
   [AI_TASK_TYPES.SKILLS_OPTIMIZE]: '技能特长优化',
   [AI_TASK_TYPES.INTERNSHIP_OPTIMIZE]: '实习经验优化',
+  [AI_TASK_TYPES.WORK_EXPERIENCE_OPTIMIZE]: '工作经历优化',
   [AI_TASK_TYPES.JD_MATCH]: '岗位匹配度分析',
   [AI_TASK_TYPES.SCORE]: '简历评分',
   [AI_TASK_TYPES.PDF_OPTIMIZE]: 'PDF优化',
   [AI_TASK_TYPES.JD_RESUME_OPTIMIZE]: 'JD简历优化',
   [AI_TASK_TYPES.PDF_JD_OPTIMIZE]: 'PDF+JD优化',
   [AI_TASK_TYPES.JD_IMAGE_EXTRACT]: 'JD图片提取',
+}
+
+/**
+ * 模型能力类型。模型与任务分开管理，后续可继续增加 audio、image 等类型。
+ */
+export const AI_MODEL_TYPES = {
+  TEXT: 'text',
+  VISION: 'vision',
+}
+
+export const AI_MODEL_TYPE_LABEL_MAP = {
+  [AI_MODEL_TYPES.TEXT]: '文本模型',
+  [AI_MODEL_TYPES.VISION]: '视觉模型',
+}
+
+/** 把后端可扩展的模型类型转换为中文；未知类型直接展示原值 */
+export function getAiModelTypeLabel(modelType) {
+  return AI_MODEL_TYPE_LABEL_MAP[modelType] || modelType || '-'
 }
 
 /**

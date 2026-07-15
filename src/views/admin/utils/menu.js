@@ -18,7 +18,8 @@ export const ADMIN_MENU_ITEMS = [
   { key: 'resumes', path: '/admin/resumes', label: '简历资源', desc: '只读查看简历', group: '业务管理', permission: 'admin:view_resumes', icon: FileText },
   { key: 'feedbacks', path: '/admin/feedbacks', label: '用户反馈', desc: '用户意见与建议', group: '业务管理', permission: 'admin:view_feedback', icon: MessageSquare },
   { key: 'announcements', path: '/admin/announcements', label: '公告管理', desc: '运营通知内容', group: '业务管理', permission: 'admin:announcement', icon: Megaphone },
-  { key: 'models', path: '/admin/models', label: 'AI模型管理', desc: '模型与单价配置', group: 'AI模型管理', permission: 'admin:ai_model', icon: Cpu },
+  { key: 'models', path: '/admin/models', label: 'AI模型管理', desc: '模型、类型与单价', group: 'AI模型管理', permission: 'admin:ai_model', icon: Cpu },
+  { key: 'task-models', path: '/admin/task-models', label: '任务模型配置', desc: '每个任务选择一个模型', group: 'AI模型管理', permission: 'admin:ai_model', icon: Cpu },
   { key: 'configs', path: '/admin/configs', label: '系统配置', desc: '平台运行参数', group: '系统管理', permission: 'admin:system_config', icon: Settings },
   { key: 'visits', path: '/admin/visits', label: '访客记录', desc: '近30天访问日志', group: '系统管理', permission: 'admin:view_visits', icon: Eye },
 ]

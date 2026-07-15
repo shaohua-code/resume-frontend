@@ -19,7 +19,8 @@
 | `/admin/resumes` | AdminResumes | admin:view_resumes | |
 | `/admin/feedbacks` | AdminFeedbacks | admin:view_feedback | 仅 SUPER_ADMIN |
 | `/admin/announcements` | AdminAnnouncements | admin:announcement | |
-| `/admin/models` | AdminModels | admin:ai_model | 模型单价 |
+| `/admin/models` | AdminModels | admin:ai_model | 模型、类型、供应商与 Token 单价 |
+| `/admin/task-models` | AdminTaskModels | admin:ai_model | 每个任务选择模型 |
 | `/admin/configs` | AdminConfigs | admin:system_config | |
 
 **已删除路由：** `/admin/orders`, `/admin/plans`
@@ -38,6 +39,14 @@
 | getAdminWallets | GET /admin/wallets |
 | adjustUserBalance | POST /admin/users/:id/balance |
 | announcementApi / aiModelApi | CRUD |
+| getAiTaskModels | GET /admin/task-models |
+| saveAiTaskModel | PUT /admin/task-models/:taskType |
+
+## AI 模型管理
+
+- 模型类型：`text`（DeepSeek 文本模型）、`vision`（Qwen3.6 Flash 视觉模型），可扩展其他小写类型。
+- 模型页维护 `provider`、`model_key`、`model_type`、`api_url`、`api_key_env` 与输入/缓存输入/输出 Token 单价。
+- 任务模型页按 `required_model_type` 过滤可选项；后端再次校验，不能跨类型绑定。
 
 ## Pinia
 
