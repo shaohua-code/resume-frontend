@@ -50,10 +50,7 @@
         </div>
       </div>
 
-      <button type="button" class="logout-button" @click="handleLogout">
-        <LogoutOutlined />
-        <span>退出登录</span>
-      </button>
+    
     </section>
 
     <div class="workspace-layout">
