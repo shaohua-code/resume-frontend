@@ -1,15 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
   <title id="title">AI 简历助手</title>
+  <desc id="desc">简历纸张与智能星光组成的极简品牌标志</desc>
   <defs>
-    <linearGradient id="brand" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#06C8E8"/>
-      <stop offset="0.52" stop-color="#3B82F6"/>
-      <stop offset="1" stop-color="#8B5CF6"/>
+    <linearGradient id="brand" x1="14" y1="10" x2="52" y2="54" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00D4FF"/>
+      <stop offset=".52" stop-color="#4FACFE"/>
+      <stop offset="1" stop-color="#A855F7"/>
     </linearGradient>
   </defs>
-  <rect x="3" y="3" width="58" height="58" rx="18" fill="url(#brand)"/>
-  <path d="M20 16h18l8 8v24H20a4 4 0 0 1-4-4V20a4 4 0 0 1 4-4Z" fill="#fff" fill-opacity=".96"/>
-  <path d="M38 16v8h8" fill="none" stroke="#B6D8FF" stroke-width="3" stroke-linejoin="round"/>
-  <path d="M24 31h14M24 38h11" stroke="#3578E5" stroke-width="3" stroke-linecap="round"/>
-  <path d="m45 37 1.5 3.5L50 42l-3.5 1.5L45 47l-1.5-3.5L40 42l3.5-1.5L45 37Z" fill="#8B5CF6"/>
+  <path d="M18 8h23l9 9v33a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6V14a6 6 0 0 1 6-6Z" fill="none" stroke="url(#brand)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M41 9v9h9" fill="none" stroke="url(#brand)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M22 31h18M22 40h12" fill="none" stroke="url(#brand)" stroke-width="4" stroke-linecap="round"/>
+  <path d="m49 29 1.4 3.6L54 34l-3.6 1.4L49 39l-1.4-3.6L44 34l3.6-1.4L49 29Z" fill="#A855F7" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
 </svg>

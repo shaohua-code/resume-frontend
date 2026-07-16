@@ -177,4 +177,4 @@ export function getDemoResume(templateId) {
 }
 
 /** 首页轮播精选，覆盖通用、职场、销售、教育、财务与工程场景 */
-export const FEATURED_TEMPLATE_IDS = [1, 2, 10, 11, 12, 14]
+export const FEATURED_TEMPLATE_IDS = [1, 3, 11, 19, 23, 25]

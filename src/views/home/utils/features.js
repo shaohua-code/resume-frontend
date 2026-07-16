@@ -3,51 +3,51 @@
  */
 export const HOME_FEATURES = [
   {
-    icon: '🤖',
-    title: 'AI 生成简历',
+    icon: '✨',
+    title: 'AI 定制简历',
     path: '/generate',
-    desc: '按目标行业与岗位生成专业简历，自动强化匹配优势',
+    desc: '围绕目标行业与岗位智能生成，让每段经历更专业、更有竞争力',
     iconBg: 'bg-brand-lighter/60',
   },
   {
     icon: '⚡',
-    title: '智能识别',
+    title: '三种方式快速创建',
     path: '/generate?mode=lazy',
-    desc: '自由文本键值对填写，AI 智能解析生成专业简历',
+    desc: '支持表单填写、自由文本识别和 PDF 上传，已有信息也能快速成稿',
     iconBg: 'bg-accent-lighter/60',
-  },
-  {
-    icon: '📄',
-    title: '上传优化',
-    path: '/generate?mode=upload',
-    desc: '上传现有 PDF 简历，AI 自动提取并整体优化重写',
-    iconBg: 'bg-mint/60',
   },
   {
     icon: '🎯',
-    title: 'JD 岗位匹配',
+    title: '岗位定向优化',
     path: '/generate',
-    desc: '分析简历与岗位 JD 的匹配度，给出优化建议',
-    iconBg: 'bg-brand-lighter/60',
-  },
-  {
-    icon: '⭐',
-    title: 'AI 评分',
-    path: '/generate',
-    desc: '智能评估简历质量，100 分制量化你的竞争力',
+    desc: '粘贴文字或上传岗位截图，AI 针对岗位要求重写整份简历',
     iconBg: 'bg-mint/60',
   },
   {
-    icon: '📤',
-    title: '导出中心',
-    path: '/user',
-    desc: '支持 PDF、Word、Markdown 多格式一键导出投递',
+    icon: '📊',
+    title: 'AI 评分与匹配',
+    path: '/generate',
+    desc: '100 分制评估简历质量与岗位匹配度，精准发现可提升空间',
+    iconBg: 'bg-brand-lighter/60',
+  },
+  {
+    icon: '🎨',
+    title: '20+ 套专业模板',
+    path: '/templates',
+    desc: '覆盖校招、社招与多行业场景，字体、间距均可自由调整',
     iconBg: 'bg-accent-lighter/60',
+  },
+  {
+    icon: '📤',
+    title: '多格式免费导出',
+    path: '/user',
+    desc: '支持 PDF、Word、Markdown 免费导出，完成后即可直接投递',
+    iconBg: 'bg-mint/60',
   },
 ]
 
 export const HOME_STATS = [
   { value: 'AI极速生成', label: '30秒完成简历' },
-  { value: 'JD定向优化', label: '提升面试邀约率' },
+  { value: '岗位定向优化', label: '提升面试邀约率' },
   { value: 'AI测评', label: '自动诊断短板' },
 ]

@@ -1,22 +1,24 @@
 <!--
-  顶部导航栏
-  统一品牌入口、桌面胶囊导航、账户菜单与移动端抽屉
+  全站顶部导航
+  品牌入口、桌面导航、账户菜单与移动端抽屉
 -->
 <template>
   <a-layout-header class="app-header">
-    <div class="justify-between header-inner">
+    <div class="header-glow" aria-hidden="true" />
+
+    <div class="header-inner">
       <button
         type="button"
         class="brand-entry"
         aria-label="返回首页"
         @click="navTo('/')"
       >
-        <span class="brand-mark-wrap">
-          <img src="/brand-mark.svg" alt="" class="brand-mark" />
+        <span class="brand-logo-shell">
+          <img src="/brand-mark.svg" alt="" class="brand-logo" />
         </span>
         <span class="brand-copy">
-          <b>AI 简历助手</b>
-          <small>AI RESUME STUDIO</small>
+          <span class="brand-name"><em>AI</em> 简历助手</span>
+          <span class="brand-slogan">AI RESUME STUDIO</span>
         </span>
       </button>
 
@@ -28,45 +30,44 @@
           class="desktop-nav-item"
           :class="{
             'desktop-nav-item--active': selectedKeys.includes(item.key),
+            'desktop-nav-item--primary': item.primary,
           }"
+          :aria-current="selectedKeys.includes(item.key) ? 'page' : undefined"
           @click="navTo(item.path)"
         >
-          <component :is="item.icon" />
+          <span class="nav-icon"><component :is="item.icon" /></span>
           <span>{{ item.label }}</span>
+          <span v-if="item.primary" class="nav-spark" aria-hidden="true" />
         </button>
       </nav>
 
       <div class="header-actions">
         <template v-if="userStore.isLoggedIn">
           <a-dropdown trigger="click" placement="bottomRight">
-            <button type="button" class="account-trigger">
+            <button type="button" class="account-trigger" aria-label="打开账户菜单">
               <span class="account-avatar">{{ accountInitial }}</span>
               <span class="account-trigger-copy">
                 <b>{{ userStore.userInfo.nickname || "用户" }}</b>
-                <!-- <small>{{ balanceText }}</small> -->
+                <small>{{ balanceText }}</small>
               </span>
               <DownOutlined class="account-chevron" />
             </button>
+
             <template #overlay>
               <div class="account-dropdown">
                 <div class="dropdown-profile">
-                  <a-image
-                    src="../../public/demo-avatar.svg"
-                    alt=""
-                    width="40px"
-                    height="40px"
-                    class="inline-block"
-                    style="border-radius: 40px"
-                  />  
+                  <span class="dropdown-avatar">{{ accountInitial }}</span>
                   <div>
                     <b>{{ userStore.userInfo.nickname || "用户" }}</b>
                     <span>{{ getRoleLabel(userStore.role) }}</span>
                   </div>
                 </div>
+
                 <div class="dropdown-balance">
                   <span><WalletOutlined /> 账户余额</span>
                   <strong>{{ balanceText }}</strong>
                 </div>
+
                 <button
                   type="button"
                   class="dropdown-action"
@@ -87,19 +88,16 @@
         </template>
 
         <template v-else>
+          <button type="button" class="login-link" @click="router.push('/login')">
+            登录
+          </button>
           <button
             type="button"
-            class="register-link"
+            class="register-button"
             @click="router.push('/register')"
           >
-            免费开户
+            免费体验 <ArrowRightOutlined />
           </button>
-          <GradientButton
-            ghost
-            class="login-button"
-            @click="router.push('/login')"
-            >登录</GradientButton
-          >
         </template>
 
         <button
@@ -116,28 +114,21 @@
     <a-drawer
       v-model:open="drawerOpen"
       placement="right"
-      :width="300"
+      :width="drawerWidth"
       class="mobile-nav-drawer"
     >
       <template #title>
         <div class="drawer-brand">
-          <span class="brand-mark-wrap brand-mark-wrap--small">
-            <img src="/brand-mark.svg" alt="" class="brand-mark" />
+          <span class="brand-logo-shell brand-logo-shell--small">
+            <img src="/brand-mark.svg" alt="" class="brand-logo" />
           </span>
-          <div><b>AI 简历助手</b><small>导航与账户</small></div>
+          <div><b>AI 简历助手</b><small>AI RESUME STUDIO</small></div>
         </div>
       </template>
 
       <div v-if="userStore.isLoggedIn" class="drawer-account-card">
         <div class="drawer-account-head">
-          <a-image
-            src="../../public/demo-avatar.svg"
-            alt=""
-            width="40px"
-            height="40px"
-            class="inline-block"
-            style="border-radius: 40px"
-          />
+          <span class="drawer-avatar">{{ accountInitial }}</span>
           <div>
             <b>{{ userStore.userInfo.nickname || "用户" }}</b>
             <span>{{ getRoleLabel(userStore.role) }}</span>
@@ -148,7 +139,7 @@
         </div>
       </div>
 
-      <p class="drawer-section-label">页面导航</p>
+      <p class="drawer-section-label">探索职简</p>
       <nav class="mobile-nav-list" aria-label="移动端主导航">
         <button
           v-for="item in visibleNavItems"
@@ -157,39 +148,36 @@
           class="mobile-nav-item"
           :class="{
             'mobile-nav-item--active': selectedKeys.includes(item.key),
+            'mobile-nav-item--primary': item.primary,
           }"
+          :aria-current="selectedKeys.includes(item.key) ? 'page' : undefined"
           @click="navToMobile(item.path)"
         >
-          <span><component :is="item.icon" /></span>
-          <b>{{ item.label }}</b>
-          <RightOutlined />
+          <span class="mobile-nav-icon"><component :is="item.icon" /></span>
+          <span class="mobile-nav-copy">
+            <b>{{ item.label }}</b>
+            <small>{{ item.description }}</small>
+          </span>
+          <RightOutlined class="mobile-nav-arrow" />
         </button>
       </nav>
 
       <div v-if="userStore.isLoggedIn" class="drawer-account-actions">
-        <button
-          type="button"
-          class="drawer-center-button"
-          @click="navToMobile('/user')"
-        >
+        <button type="button" class="drawer-center-button" @click="navToMobile('/user')">
           <UserOutlined /> 用户中心
         </button>
-        <button
-          type="button"
-          class="drawer-logout-button"
-          @click="handleLogout"
-        >
+        <button type="button" class="drawer-logout-button" @click="handleLogout">
           <LogoutOutlined /> 退出登录
         </button>
       </div>
 
       <div v-else class="drawer-auth-actions">
-        <GradientButton @click="navToMobile('/register')"
-          >免费开户</GradientButton
-        >
-        <GradientButton ghost @click="navToMobile('/login')"
-          >登录</GradientButton
-        >
+        <button type="button" class="drawer-register-button" @click="navToMobile('/register')">
+          免费开始创作 <ArrowRightOutlined />
+        </button>
+        <button type="button" class="drawer-login-button" @click="navToMobile('/login')">
+          已有账号，立即登录
+        </button>
       </div>
     </a-drawer>
   </a-layout-header>
@@ -199,21 +187,21 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
-  HomeOutlined,
   AppstoreOutlined,
+  ArrowRightOutlined,
+  DownOutlined,
   FileAddOutlined,
-  UserOutlined,
+  HomeOutlined,
   LogoutOutlined,
   MenuOutlined,
-  SettingOutlined,
-  WalletOutlined,
-  DownOutlined,
   RightOutlined,
+  SettingOutlined,
+  UserOutlined,
+  WalletOutlined,
 } from "@ant-design/icons-vue";
 import { useUserStore } from "@/stores/user";
 import { useWalletStore } from "@/stores/wallet";
-import { getRoleLabel, formatBalanceText } from "@/constants/roles";
-import GradientButton from "@/components/GradientButton.vue";
+import { formatBalanceText, getRoleLabel } from "@/constants/roles";
 
 const route = useRoute();
 const router = useRouter();
@@ -221,25 +209,38 @@ const userStore = useUserStore();
 const walletStore = useWalletStore();
 const drawerOpen = ref(false);
 
+const drawerWidth = computed(() =>
+  typeof window === "undefined" ? 320 : Math.min(340, window.innerWidth),
+);
+
 const navItems = [
-  { key: "home", label: "首页", path: "/", icon: HomeOutlined },
+  { key: "home", label: "首页", description: "发现简历新灵感", path: "/", icon: HomeOutlined },
   {
     key: "templates",
-    label: "模板预览",
+    label: "模板中心",
+    description: "精选多行业模板",
     path: "/templates",
     icon: AppstoreOutlined,
   },
   {
     key: "generate",
-    label: "生成简历",
+    label: "AI 创作",
+    description: "智能生成专业简历",
     path: "/generate",
     icon: FileAddOutlined,
     primary: true,
   },
-  { key: "user", label: "用户中心", path: "/user", icon: UserOutlined },
+  {
+    key: "user",
+    label: "我的简历",
+    description: "管理简历与用量",
+    path: "/user",
+    icon: UserOutlined,
+  },
   {
     key: "admin",
     label: "管理后台",
+    description: "系统管理与配置",
     path: "/admin",
     icon: SettingOutlined,
     adminOnly: true,
@@ -251,16 +252,25 @@ const visibleNavItems = computed(() =>
 );
 const balanceText = computed(() => formatBalanceText(walletStore.balance));
 const accountInitial = computed(
-  () =>
-    (userStore.userInfo.nickname || "U").trim().charAt(0).toUpperCase() || "U",
+  () => (userStore.userInfo.nickname || "U").trim().charAt(0).toUpperCase() || "U",
 );
+
+const selectedKeys = computed(() => {
+  const path = route.path;
+  if (path === "/") return ["home"];
+  if (path.startsWith("/templates")) return ["templates"];
+  if (path.startsWith("/generate") || path.startsWith("/editor")) return ["generate"];
+  if (path.startsWith("/user")) return ["user"];
+  if (path.startsWith("/admin")) return ["admin"];
+  return [];
+});
 
 async function refreshBalance() {
   if (!userStore.isLoggedIn) return;
   try {
     await walletStore.fetchBalance();
   } catch {
-    // 忽略未登录或网络错误
+    // 顶栏余额失败不阻断页面加载，后续进入用户中心仍可重新获取。
   }
 }
 
@@ -275,25 +285,14 @@ watch(
 
 onMounted(refreshBalance);
 
-const selectedKeys = computed(() => {
-  const path = route.path;
-  if (path === "/") return ["home"];
-  if (path.startsWith("/templates")) return ["templates"];
-  if (path.startsWith("/generate") || path.startsWith("/editor"))
-    return ["generate"];
-  if (path.startsWith("/user")) return ["user"];
-  if (path.startsWith("/admin")) return ["admin"];
-  return ["home"];
-});
-
 function navTo(path) {
   const publicPaths = ["/", "/templates"];
   const pathname = path.split("?")[0];
   if (!userStore.isLoggedIn && !publicPaths.includes(pathname)) {
     router.push({ name: "Login", query: { redirect: path } });
-  } else {
-    router.push(path);
+    return;
   }
+  router.push(path);
 }
 
 function navToMobile(path) {
@@ -319,40 +318,36 @@ function handleLogout() {
   height: 64px;
   align-items: center;
   padding: 0;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.76);
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.055);
+  border-bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 20px rgba(79, 172, 254, 0.08);
   line-height: 1;
-  backdrop-filter: blur(18px) saturate(1.3);
+  backdrop-filter: blur(22px) saturate(1.35);
 }
 
-.header-accent {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #06b6d4, #4f46e5 52%, #a855f7);
-  opacity: 0.88;
-  pointer-events: none;
+.header-glow {
+  display: none;
 }
 
 .header-inner {
-  display: flex;
+  position: relative;
+  display: grid;
   width: 100%;
-  max-width: 1280px;
+  max-width: 1400px;
   height: 100%;
+  grid-template-columns: minmax(230px, 1fr) auto minmax(230px, 1fr);
   align-items: center;
-  gap: 22px;
+  gap: 24px;
   margin: 0 auto;
   padding: 0 24px;
 }
 
 .brand-entry {
   display: inline-flex;
-  flex: 0 0 auto;
+  min-width: 0;
   align-items: center;
-  gap: 10px;
+  justify-self: start;
+  gap: 11px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -360,149 +355,150 @@ function handleLogout() {
   text-align: left;
 }
 
-.brand-mark-wrap {
+.brand-logo-shell {
   position: relative;
   display: inline-flex;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(186, 230, 253, 0.9);
-  border-radius: 12px;
-  background: linear-gradient(135deg, #ecfeff, #eef2ff);
-  box-shadow: 0 6px 18px rgba(8, 145, 178, 0.12);
-}
-
-.brand-mark-wrap::after {
-  content: "";
-  position: absolute;
-  right: 3px;
-  bottom: 3px;
-  width: 6px;
-  height: 6px;
-  border: 1px solid white;
-  border-radius: 50%;
-  background: #22c55e;
-}
-
-.brand-mark-wrap--small {
-  width: 34px;
-  height: 34px;
+  border: 0;
   border-radius: 10px;
+  background: transparent;
+  box-shadow: none;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.brand-mark {
-  width: 25px;
-  height: 25px;
+.brand-entry:hover .brand-logo-shell {
+  transform: translateY(-1px);
+  box-shadow: none;
 }
 
-.brand-copy b,
-.brand-copy small {
+.brand-logo-shell--small {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+}
+
+.brand-logo {
+  width: 40px;
+  height: 40px;
+}
+
+.brand-copy,
+.brand-name,
+.brand-slogan {
   display: block;
   white-space: nowrap;
 }
 
-.brand-copy b {
-  color: #143248;
-  font-size: 16px;
-  font-weight: 850;
-  letter-spacing: -0.02em;
+.brand-name {
+  color: #172033;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
 }
 
-.brand-copy small {
+.brand-name em {
+  margin-right: 3px;
+  background: var(--gradient-primary);
+  background-clip: text;
+  color: transparent;
+  font-style: normal;
+}
+
+.brand-slogan {
   margin-top: 4px;
   color: #94a3b8;
   font-size: 8px;
-  font-weight: 800;
-  letter-spacing: 0.17em;
+  font-weight: 700;
+  letter-spacing: 0.14em;
 }
 
 .desktop-nav {
   display: flex;
-  min-width: 0;
-  flex: 1;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 4px;
-  border: 1px solid rgba(226, 232, 240, 0.75);
-  border-radius: 13px;
-  background: rgba(248, 250, 252, 0.72);
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .desktop-nav-item {
   position: relative;
   display: inline-flex;
-  height: 36px;
+  height: 44px;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 0 13px;
+  gap: 8px;
+  padding: 0 16px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 12px;
   background: transparent;
-  color: #64748b;
+  color: #667085;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 650;
-  transition: 0.2s ease;
+  font-size: 15px;
+  font-weight: 600;
   white-space: nowrap;
+  transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.nav-icon {
+  display: inline-flex;
+  font-size: 16px;
 }
 
 .desktop-nav-item:hover {
-  background: white;
-  color: #0e7490;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  background: linear-gradient(110deg, rgba(0, 212, 255, 0.09), rgba(168, 85, 247, 0.08));
+  color: var(--color-brand-dark);
 }
 
 .desktop-nav-item--active {
-  background: white;
-  color: #0e7490;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
+  background: linear-gradient(110deg, rgba(0, 212, 255, 0.15), rgba(79, 172, 254, 0.13) 52%, rgba(168, 85, 247, 0.13));
+  color: #2563eb;
+  box-shadow: inset 0 0 0 1px rgba(79, 172, 254, 0.09);
 }
 
 .desktop-nav-item--active::after {
-  content: "";
-  position: absolute;
-  right: 13px;
-  bottom: 3px;
-  left: 13px;
-  height: 2px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, #06b6d4, #6366f1);
+  display: none;
 }
 
 .desktop-nav-item--primary {
-  background: linear-gradient(135deg, #ecfeff, #eef2ff);
-  color: #0e7490;
+  margin-left: 0;
+  background: transparent;
+  color: #667085;
 }
 
-.desktop-nav-item--primary i {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #8b5cf6;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+.desktop-nav-item--primary:hover,
+.desktop-nav-item--primary.desktop-nav-item--active {
+  background: linear-gradient(110deg, rgba(0, 212, 255, 0.15), rgba(79, 172, 254, 0.13) 52%, rgba(168, 85, 247, 0.13));
+  color: #2563eb;
+}
+
+.nav-spark {
+  display: none;
 }
 
 .header-actions {
   display: flex;
-  flex: 0 0 auto;
+  min-width: 0;
   align-items: center;
+  justify-self: end;
   gap: 8px;
 }
 
 .account-trigger {
   display: grid;
+  min-width: 164px;
+  height: 46px;
   grid-template-columns: 34px minmax(0, 1fr) auto;
-  min-width: 150px;
-  height: 44px;
   align-items: center;
   gap: 8px;
-  padding: 4px 9px 4px 5px;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  padding: 5px 10px 5px 6px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.72);
   color: #334155;
   cursor: pointer;
@@ -511,20 +507,22 @@ function handleLogout() {
 }
 
 .account-trigger:hover {
-  border-color: #bae6fd;
-  background: white;
-  box-shadow: 0 7px 20px rgba(14, 116, 144, 0.1);
+  border-color: rgba(79, 172, 254, 0.42);
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(79, 172, 254, 0.14);
 }
 
 .account-avatar,
-.dropdown-avatar {
+.dropdown-avatar,
+.drawer-avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #0891b2, #4f46e5 58%, #a855f7);
-  color: white;
+  border-radius: 11px;
+  background: var(--gradient-hero);
+  color: #fff;
   font-weight: 800;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .account-avatar {
@@ -540,21 +538,21 @@ function handleLogout() {
 .account-trigger-copy b,
 .account-trigger-copy small {
   display: block;
+  max-width: 92px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .account-trigger-copy b {
-  max-width: 82px;
-  font-size: 12px;
-  font-weight: 750;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .account-trigger-copy small {
-  margin-top: 3px;
-  color: #0e7490;
-  font-size: 10px;
+  margin-top: 4px;
+  color: #3b82f6;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -563,9 +561,10 @@ function handleLogout() {
   font-size: 10px;
 }
 
-.register-link {
-  height: 40px;
-  padding: 0 10px;
+.login-link {
+  min-width: 54px;
+  height: 44px;
+  padding: 0 12px;
   border: 0;
   background: transparent;
   color: #475569;
@@ -574,129 +573,160 @@ function handleLogout() {
   font-weight: 700;
 }
 
-.register-link:hover {
-  color: #0e7490;
+.login-link:hover {
+  color: #4f46e5;
 }
-.login-button {
-  min-width: 72px;
+
+.register-button,
+.drawer-register-button {
+  display: inline-flex;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 17px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 13px;
+  background: var(--gradient-primary);
+  box-shadow: 0 9px 22px rgba(79, 172, 254, 0.24);
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 750;
+  transition: 0.2s ease;
+}
+
+.register-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(79, 172, 254, 0.32);
 }
 
 .mobile-menu-button {
   display: none;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   align-items: center;
   justify-content: center;
   border: 1px solid #e2e8f0;
-  border-radius: 11px;
-  background: rgba(255, 255, 255, 0.72);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.78);
   color: #334155;
   cursor: pointer;
   font-size: 18px;
 }
 
 .account-dropdown {
-  width: 260px;
-  padding: 10px;
-  border: 1px solid rgba(226, 232, 240, 0.88);
-  border-radius: 16px;
+  width: 300px;
+  padding: 14px;
+  border: 1px solid rgba(226, 232, 240, 0.92);
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.97);
-  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.16);
-  backdrop-filter: blur(18px);
+  box-shadow: 0 22px 54px rgba(15, 23, 42, 0.17);
+  backdrop-filter: blur(20px);
 }
 
 .dropdown-profile,
 .drawer-account-head {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px;
+  gap: 12px;
+  padding: 8px 6px 12px;
 }
 
-.dropdown-avatar {
-  width: 42px;
-  height: 42px;
+.dropdown-avatar,
+.drawer-avatar {
+  width: 48px;
+  height: 48px;
   flex: 0 0 auto;
+  margin: 0;
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  text-align: center;
 }
 
 .dropdown-profile b,
-.dropdown-profile span,
+.dropdown-profile > div > span,
 .drawer-account-head b,
-.drawer-account-head span {
+.drawer-account-head > div > span {
   display: block;
 }
 
 .dropdown-profile b,
 .drawer-account-head b {
   color: #1e293b;
-  font-size: 13px;
+  font-size: 15px;
+  line-height: 1.4;
 }
 
-.dropdown-profile span,
-.drawer-account-head span {
+.dropdown-profile > div > span,
+.drawer-account-head > div > span {
   margin-top: 4px;
   color: #64748b;
-  font-size: 10px;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .dropdown-balance {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 4px 0 8px;
-  padding: 10px 11px;
-  border: 1px solid #bae6fd;
-  border-radius: 11px;
-  background: linear-gradient(135deg, #ecfeff, #eef2ff);
+  margin: 5px 0 9px;
+  padding: 12px;
+  border: 1px solid rgba(79, 172, 254, 0.25);
+  border-radius: 12px;
+  background: linear-gradient(110deg, rgba(0, 212, 255, 0.1), rgba(79, 172, 254, 0.08) 52%, rgba(168, 85, 247, 0.08));
 }
 
 .dropdown-balance span {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   color: #64748b;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .dropdown-balance strong {
-  color: #0e7490;
-  font-size: 14px;
+  color: #2563eb;
+  font-size: 16px;
 }
 
 .dropdown-action {
   display: grid;
-  grid-template-columns: 20px 1fr auto;
   width: 100%;
-  min-height: 40px;
+  min-height: 48px;
+  grid-template-columns: 20px 1fr auto;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   padding: 0 10px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 10px;
   background: transparent;
   color: #475569;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
   text-align: left;
 }
 
 .dropdown-action:hover {
   background: #f8fafc;
-  color: #0e7490;
+  color: #2563eb;
 }
+
 .dropdown-action--danger {
   grid-template-columns: 20px 1fr;
   color: #dc2626;
 }
+
 .dropdown-action--danger:hover {
-  background: #fef2f2;
+  background: #fff1f2;
   color: #dc2626;
 }
 
 .drawer-brand {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
 }
 
 .drawer-brand b,
@@ -705,22 +735,23 @@ function handleLogout() {
 }
 
 .drawer-brand b {
-  color: #143248;
-  font-size: 14px;
+  color: #172033;
+  font-size: 15px;
 }
+
 .drawer-brand small {
-  margin-top: 3px;
+  margin-top: 4px;
   color: #94a3b8;
   font-size: 9px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
 }
 
 .drawer-account-card {
-  margin-bottom: 22px;
+  margin-bottom: 24px;
   padding: 12px;
-  border: 1px solid #dbeafe;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #ecfeff, #eef2ff);
+  border: 1px solid rgba(79, 172, 254, 0.25);
+  border-radius: 16px;
+  background: linear-gradient(120deg, rgba(0, 212, 255, 0.11), rgba(79, 172, 254, 0.09) 52%, rgba(168, 85, 247, 0.09));
 }
 
 .drawer-account-balance {
@@ -728,8 +759,8 @@ function handleLogout() {
   align-items: center;
   justify-content: space-between;
   margin-top: 8px;
-  padding: 9px 10px;
-  border-radius: 9px;
+  padding: 11px;
+  border-radius: 11px;
   background: rgba(255, 255, 255, 0.76);
 }
 
@@ -737,335 +768,232 @@ function handleLogout() {
   color: #64748b;
   font-size: 11px;
 }
+
 .drawer-account-balance strong {
-  color: #0e7490;
+  color: #2563eb;
   font-size: 14px;
 }
 
 .drawer-section-label {
-  margin: 0 4px 8px;
+  margin: 0 4px 10px;
   color: #94a3b8;
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
 }
 
 .mobile-nav-list {
   display: grid;
-  gap: 7px;
+  gap: 8px;
 }
 
 .mobile-nav-item {
   display: grid;
-  grid-template-columns: 38px 1fr auto;
-  min-height: 52px;
+  width: 100%;
+  min-height: 58px;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
-  padding: 6px 10px 6px 7px;
+  padding: 7px 11px 7px 7px;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: 14px;
   background: transparent;
   color: #475569;
   cursor: pointer;
   text-align: left;
 }
 
-.mobile-nav-item > span {
+.mobile-nav-icon {
   display: inline-flex;
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   align-items: center;
   justify-content: center;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  background: white;
+  border-radius: 12px;
+  background: #fff;
+  color: #64748b;
 }
 
-.mobile-nav-item b {
+.mobile-nav-copy,
+.mobile-nav-copy b,
+.mobile-nav-copy small {
+  display: block;
+  min-width: 0;
+}
+
+.mobile-nav-copy b {
+  color: #334155;
   font-size: 13px;
 }
-.mobile-nav-item > :last-child {
+
+.mobile-nav-copy small {
+  margin-top: 5px;
+  overflow: hidden;
   color: #94a3b8;
   font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.mobile-nav-item--active {
-  border-color: #bae6fd;
-  background: #ecfeff;
-  color: #0e7490;
+
+.mobile-nav-arrow {
+  color: #cbd5e1;
+  font-size: 10px;
 }
-.mobile-nav-item--primary:not(.mobile-nav-item--active) {
-  background: #f8fafc;
+
+.mobile-nav-item--active,
+.mobile-nav-item--primary {
+  border-color: rgba(79, 172, 254, 0.24);
+  background: linear-gradient(110deg, rgba(0, 212, 255, 0.1), rgba(79, 172, 254, 0.08) 55%, rgba(168, 85, 247, 0.08));
+}
+
+.mobile-nav-item--active .mobile-nav-icon,
+.mobile-nav-item--primary .mobile-nav-icon {
+  border-color: rgba(79, 172, 254, 0.24);
+  background: #fff;
+  color: #2563eb;
+  box-shadow: 0 5px 14px rgba(79, 172, 254, 0.12);
 }
 
 .drawer-account-actions,
 .drawer-auth-actions {
   display: grid;
   gap: 9px;
-  margin-top: 22px;
+  margin-top: 24px;
   padding-top: 18px;
   border-top: 1px solid #e2e8f0;
 }
 
 .drawer-center-button,
-.drawer-logout-button {
+.drawer-logout-button,
+.drawer-login-button {
   display: inline-flex;
-  min-height: 42px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  border-radius: 10px;
+  border-radius: 11px;
   cursor: pointer;
   font-size: 12px;
   font-weight: 700;
 }
 
 .drawer-center-button {
-  border: 1px solid #bae6fd;
-  background: #ecfeff;
-  color: #0e7490;
+  border: 1px solid #dbeafe;
+  background: #eef2ff;
+  color: #4f46e5;
 }
+
 .drawer-logout-button {
-  border: 1px solid #fecaca;
+  border: 1px solid #fecdd3;
   background: #fff;
   color: #dc2626;
 }
 
-/* Minimal header theme */
-.app-header {
-  height: 60px;
-  opacity: 0.8;
-  border-bottom-color: #e8edf3;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: none;
-  backdrop-filter: blur(12px);
+.drawer-register-button {
+  width: 100%;
 }
 
-.header-inner {
-  max-width: 1200px;
-  gap: 28px;
-  padding: 0 28px;
-}
-
-.brand-entry {
-  gap: 9px;
-}
-
-.brand-mark-wrap {
-  width: 34px;
-  height: 34px;
-  border: 0;
-  border-radius: 9px;
-  background: #f1f5f9;
-  box-shadow: none;
-}
-
-.brand-mark-wrap::after {
-  display: none;
-}
-
-.brand-mark {
-  width: 22px;
-  height: 22px;
-}
-
-.brand-copy b {
-  color: #172033;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0;
-}
-
-.brand-copy small {
-  display: none;
-}
-
-.desktop-nav {
-  gap: 8px;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-
-.desktop-nav-item {
-  height: 34px;
-  gap: 5px;
-  padding: 0 11px;
-  border-radius: 7px;
-  color: #667085;
-  font-weight: 500;
-}
-
-.desktop-nav-item:hover {
-  background: #f6f8fa;
-  color: #1d2939;
-  box-shadow: none;
-}
-
-.desktop-nav-item--active,
-.desktop-nav-item--primary {
-  background: #f1f5f9;
-  color: #2563eb;
-  box-shadow: none;
-}
-
-.desktop-nav-item--active::after,
-.desktop-nav-item--primary i {
-  display: none;
-}
-
-.header-actions {
-  gap: 6px;
-}
-
-.account-trigger {
-  min-width: 138px;
-  height: 38px;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
-  gap: 7px;
-  padding: 4px 9px 4px 5px;
-  border-color: transparent;
-  border-radius: 8px;
-  background: transparent;
-}
-
-.account-trigger:hover {
-  border-color: transparent;
-  background: #f6f8fa;
-  box-shadow: none;
-}
-
-.account-avatar,
-.dropdown-avatar {
-  border-radius: 50%;
-  background: #2563eb;
-}
-
-.account-avatar {
-  width: 28px;
-  height: 28px;
-  font-size: 12px;
-}
-
-.account-trigger-copy b {
-  font-weight: 600;
-}
-
-.account-trigger-copy small {
-  color: #667085;
-  font-weight: 500;
-}
-
-.register-link {
-  color: #667085;
-  font-weight: 500;
-}
-
-.register-link:hover {
-  color: #2563eb;
-}
-
-.mobile-menu-button {
-  width: 38px;
-  height: 38px;
-  border-color: transparent;
-  border-radius: 8px;
-  background: transparent;
-}
-
-.mobile-menu-button:hover {
-  background: #f6f8fa;
-}
-
-.account-dropdown {
-  border-color: #e8edf3;
-  border-radius: 12px;
+.drawer-login-button {
+  border: 1px solid #e2e8f0;
   background: #fff;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.1);
-  backdrop-filter: none;
+  color: #475569;
 }
 
-.dropdown-balance,
-.drawer-account-card {
-  border-color: #e8edf3;
-  background: #f8fafc;
-}
+@media (max-width: 1180px) {
+  .header-inner {
+    grid-template-columns: auto 1fr auto;
+    gap: 16px;
+  }
 
-.dropdown-balance strong,
-.drawer-account-balance strong {
-  color: #2563eb;
-}
-
-.mobile-nav-item--active {
-  border-color: #e2e8f0;
-  background: #f1f5f9;
-  color: #2563eb;
-}
-
-@media (max-width: 1120px) {
   .desktop-nav-item {
-    padding: 0 9px;
+    padding: 0 11px;
   }
-  .desktop-nav-item svg {
-    display: none;
-  }
-  .brand-copy small {
+
+  .brand-slogan {
     display: none;
   }
 }
 
-@media (max-width: 960px) {
+@media (max-width: 980px) {
   .desktop-nav {
     display: none;
   }
+
   .mobile-menu-button {
     display: inline-flex;
   }
+
   .header-inner {
-    gap: 14px;
+    display: flex;
+    justify-content: space-between;
   }
 }
 
 @media (max-width: 640px) {
   .header-inner {
+    gap: 10px;
     padding: 0 14px;
   }
+
   .brand-entry {
     gap: 8px;
   }
-  .brand-mark-wrap {
-    width: 36px;
-    height: 36px;
+
+  .brand-logo-shell {
+    width: 40px;
+    height: 40px;
+    border-radius: 13px;
   }
-  .brand-copy b {
-    font-size: 14px;
-  }
-  .account-trigger {
-    min-width: 42px;
-    width: 42px;
-    height: 42px;
-    grid-template-columns: 32px;
-    padding: 4px;
-  }
-  .account-avatar {
+
+  .brand-logo {
     width: 32px;
     height: 32px;
   }
+
+  .brand-name {
+    font-size: 16px;
+  }
+
+  .account-trigger {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    grid-template-columns: 34px;
+    padding: 4px;
+  }
+
   .account-trigger-copy,
-  .account-chevron {
+  .account-chevron,
+  .login-link {
     display: none;
   }
-  .register-link {
-    display: none;
+
+  .register-button {
+    width: 44px;
+    padding: 0;
+    overflow: hidden;
+    color: transparent;
+    font-size: 0;
   }
-  .login-button {
-    min-width: 64px;
+
+  .register-button :deep(svg) {
+    color: #fff;
+    font-size: 15px;
   }
 }
 
 @media (max-width: 390px) {
   .brand-copy {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo-shell,
+  .desktop-nav-item,
+  .register-button {
+    transition: none;
   }
 }
 </style>

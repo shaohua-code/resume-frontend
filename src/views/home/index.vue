@@ -2,52 +2,52 @@
 /**
  * 首页 - Hero + 使用流程 + 功能卡 + 模板预览 + 信任背书
  */
-import { useRouter } from 'vue-router'
+import { useRouter } from "vue-router";
 import {
   CloudUploadOutlined,
   EditOutlined,
   FileDoneOutlined,
   ThunderboltOutlined,
-} from '@ant-design/icons-vue'
-import { useUserStore } from '@/stores/user'
-import PageHero from '@/components/PageHero.vue'
-import GlassCard from '@/components/GlassCard.vue'
-import HeroActions from './components/HeroActions.vue'
-import FeatureGrid from './components/FeatureGrid.vue'
-import TemplatePreview from './components/TemplatePreview.vue'
-import TrustOfferWall from './components/TrustOfferWall.vue'
-import { HOME_FEATURES, HOME_STATS } from './utils/features'
-import { createHomeNavigator } from './utils/navigate'
+} from "@ant-design/icons-vue";
+import { useUserStore } from "@/stores/user";
+import PageHero from "@/components/PageHero.vue";
+import GlassCard from "@/components/GlassCard.vue";
+import HeroActions from "./components/HeroActions.vue";
+import FeatureGrid from "./components/FeatureGrid.vue";
+import TemplatePreview from "./components/TemplatePreview.vue";
+import TrustOfferWall from "./components/TrustOfferWall.vue";
+import { HOME_FEATURES, HOME_STATS } from "./utils/features";
+import { createHomeNavigator } from "./utils/navigate";
 
-const router = useRouter()
-const userStore = useUserStore()
-const navTo = createHomeNavigator(router, userStore)
+const router = useRouter();
+const userStore = useUserStore();
+const navTo = createHomeNavigator(router, userStore);
 
 const HOME_FLOW = [
   {
     icon: CloudUploadOutlined,
-    title: '选择创建方式',
-    description: '上传旧简历，或从零填写信息',
+    title: "选择创建方式",
+    description: "上传旧简历，或从零填写信息",
   },
   {
     icon: ThunderboltOutlined,
-    title: 'AI 生成优化',
-    description: '提炼亮点，自动优化专业表达',
+    title: "AI 生成优化",
+    description: "提炼亮点，自动优化专业表达",
   },
   {
     icon: EditOutlined,
-    title: '在线编辑排版',
-    description: '25 套模板，内容与样式随心调整',
+    title: "在线编辑排版",
+    description: "25 套模板，内容与样式随心调整",
   },
   {
     icon: FileDoneOutlined,
-    title: '导出开始投递',
-    description: '支持 PDF / Word，一键保存使用',
+    title: "导出开始投递",
+    description: "支持 PDF / Word，一键保存使用",
   },
-]
+];
 
 function handleFeatureClick(item) {
-  navTo(item.path)
+  navTo(item.path);
 }
 </script>
 
@@ -67,7 +67,25 @@ function handleFeatureClick(item) {
       </template>
     </PageHero>
 
-    <section class="relative mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+    <section class="feature-section">
+      <div class="page-container !py-8 sm:!py-12">
+        <div class="mb-5 text-center sm:mb-8">
+          <span class="section-kicker">AI TOOLKIT</span>
+          <h2 class="section-title">核心功能</h2>
+          <p class="mt-2 section-subtitle">
+            从生成、优化到导出，把复杂的简历工作变简单
+          </p>
+        </div>
+        <FeatureGrid :features="HOME_FEATURES" @click="handleFeatureClick" />
+      </div>
+    </section>
+
+    <TemplatePreview />
+
+    <TrustOfferWall />
+    <section
+      class="relative w-full px-4 py-8 pt-0 mx-auto max-w-7xl sm:px-6 sm:py-12 sm:pt-0 lg:px-8"
+    >
       <div class="mb-5 text-center sm:mb-8">
         <span class="section-kicker">HOW IT WORKS</span>
         <h2 class="section-title">使用流程</h2>
@@ -83,12 +101,16 @@ function handleFeatureClick(item) {
             <div class="flow-icon-wrap">
               <component :is="step.icon" />
             </div>
-            <div class="min-w-0 flex-1 lg:text-center">
+            <div class="flex-1 min-w-0 lg:text-center">
               <div class="flex items-center gap-2 lg:justify-center">
                 <span class="flow-number">0{{ index + 1 }}</span>
-                <h3 class="text-sm font-semibold text-ink sm:text-base">{{ step.title }}</h3>
+                <h3 class="text-sm font-semibold text-ink sm:text-base">
+                  {{ step.title }}
+                </h3>
               </div>
-              <p class="mt-1 text-xs leading-relaxed text-ink-secondary sm:text-sm">
+              <p
+                class="mt-1 text-xs leading-relaxed text-ink-secondary sm:text-sm"
+              >
                 {{ step.description }}
               </p>
             </div>
@@ -96,29 +118,22 @@ function handleFeatureClick(item) {
         </div>
       </GlassCard>
     </section>
-
-    <section class="feature-section">
-      <div class="page-container !py-8 sm:!py-12">
-        <div class="mb-5 text-center sm:mb-8">
-          <span class="section-kicker">AI TOOLKIT</span>
-          <h2 class="section-title">核心功能</h2>
-          <p class="mt-2 section-subtitle">从生成、优化到导出，把复杂的简历工作变简单</p>
-        </div>
-        <FeatureGrid :features="HOME_FEATURES" @click="handleFeatureClick" />
-      </div>
-    </section>
-
-    <TemplatePreview />
-
-    <TrustOfferWall />
   </div>
 </template>
 
 <style scoped>
 .home-page {
   background:
-    radial-gradient(circle at 8% 28%, rgba(0, 212, 255, 0.08), transparent 22rem),
-    radial-gradient(circle at 92% 62%, rgba(168, 85, 247, 0.07), transparent 24rem);
+    radial-gradient(
+      circle at 8% 28%,
+      rgba(0, 212, 255, 0.08),
+      transparent 22rem
+    ),
+    radial-gradient(
+      circle at 92% 62%,
+      rgba(168, 85, 247, 0.07),
+      transparent 24rem
+    );
 }
 
 .section-kicker {
@@ -130,7 +145,7 @@ function handleFeatureClick(item) {
 }
 
 .flow-panel::before {
-  content: '';
+  content: "";
   @apply pointer-events-none absolute inset-x-0 top-0 h-1;
   background: var(--gradient-primary);
 }
@@ -153,7 +168,7 @@ function handleFeatureClick(item) {
 
 @media (min-width: 1024px) {
   .flow-card:not(:last-child)::after {
-    content: '';
+    content: "";
     @apply absolute -right-3 top-1/2 z-10 h-px w-5 bg-brand/40;
   }
 }
