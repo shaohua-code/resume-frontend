@@ -7,35 +7,32 @@
     <div class="header-glow" aria-hidden="true" />
 
     <div class="header-inner">
-      <button
-        type="button"
-        class="brand-entry"
-        aria-label="返回首页"
-        @click="navTo('/')"
-      >
-        <span class="brand-logo-shell">
+      <button type="button" class="brand-entry" aria-label="返回首页" @click="navTo('/')">
+        <!-- <span class="brand-logo-shell">
           <img src="/brand-mark.svg" alt="" class="brand-logo" />
-        </span>
+        </span> -->
+        <!-- background: var(--gradient-primary);
+  background-clip: text;
+  color: transparent;
+  font-style: normal; -->
+        <div
+          class="rounded-full  h-[40px]  w-[40px] flex items-center justify-center text-xs text-brand-dark logoText text-[20px] font-bold">
+          AI
+        </div>
         <span class="brand-copy">
-          <span class="brand-name"><em>AI</em> 简历助手</span>
-          <span class="brand-slogan">AI RESUME STUDIO</span>
+          <span class="brand-name"> AI 简历</span>
+          <!-- <span class="brand-slogan">AI RESUME STUDIO</span> -->
         </span>
       </button>
 
       <nav class="desktop-nav" aria-label="主导航">
-        <button
-          v-for="item in visibleNavItems"
-          :key="item.key"
-          type="button"
-          class="desktop-nav-item"
-          :class="{
-            'desktop-nav-item--active': selectedKeys.includes(item.key),
-            'desktop-nav-item--primary': item.primary,
-          }"
-          :aria-current="selectedKeys.includes(item.key) ? 'page' : undefined"
-          @click="navTo(item.path)"
-        >
-          <span class="nav-icon"><component :is="item.icon" /></span>
+        <button v-for="item in visibleNavItems" :key="item.key" type="button" class="desktop-nav-item" :class="{
+          'desktop-nav-item--active': selectedKeys.includes(item.key),
+          'desktop-nav-item--primary': item.primary,
+        }" :aria-current="selectedKeys.includes(item.key) ? 'page' : undefined" @click="navTo(item.path)">
+          <span class="nav-icon">
+            <component :is="item.icon" />
+          </span>
           <span>{{ item.label }}</span>
           <span v-if="item.primary" class="nav-spark" aria-hidden="true" />
         </button>
@@ -43,10 +40,12 @@
 
       <div class="header-actions">
         <template v-if="userStore.isLoggedIn">
-          <a-dropdown trigger="click" placement="bottomRight">
+          <a-dropdown trigger="click" placement="bottomRight" v-if="!isMobile">
             <button type="button" class="account-trigger" aria-label="打开账户菜单">
               <span class="account-avatar">{{ accountInitial }}</span>
-              <span class="account-trigger-copy">
+              <!-- 移动端不显示账户姓名 -->
+
+              <span class="account-trigger-copy" v-if="!isMobile">
                 <b>{{ userStore.userInfo.nickname || "用户" }}</b>
                 <small>{{ balanceText }}</small>
               </span>
@@ -64,22 +63,17 @@
                 </div>
 
                 <div class="dropdown-balance">
-                  <span><WalletOutlined /> 账户余额</span>
+                  <span>
+                    <WalletOutlined /> 账户余额
+                  </span>
                   <strong>{{ balanceText }}</strong>
                 </div>
 
-                <button
-                  type="button"
-                  class="dropdown-action"
-                  @click="router.push('/user')"
-                >
-                  <UserOutlined /><span>进入用户中心</span><RightOutlined />
+                <button type="button" class="dropdown-action" @click="router.push('/user')">
+                  <UserOutlined /><span>进入用户中心</span>
+                  <RightOutlined />
                 </button>
-                <button
-                  type="button"
-                  class="dropdown-action dropdown-action--danger"
-                  @click="handleLogout"
-                >
+                <button type="button" class="dropdown-action dropdown-action--danger" @click="handleLogout">
                   <LogoutOutlined /><span>退出登录</span>
                 </button>
               </div>
@@ -91,38 +85,29 @@
           <button type="button" class="login-link" @click="router.push('/login')">
             登录
           </button>
-          <button
-            type="button"
-            class="register-button"
-            @click="router.push('/register')"
-          >
-            免费体验 <ArrowRightOutlined />
+          <button type="button" class="register-button" @click="router.push('/register')">
+            免费体验
+            <ArrowRightOutlined />
           </button>
         </template>
 
-        <button
-          type="button"
-          class="mobile-menu-button"
-          aria-label="打开导航菜单"
-          @click="drawerOpen = true"
-        >
+        <button type="button" class="mobile-menu-button" aria-label="打开导航菜单" @click="drawerOpen = true">
           <MenuOutlined />
         </button>
       </div>
     </div>
 
-    <a-drawer
-      v-model:open="drawerOpen"
-      placement="right"
-      :width="drawerWidth"
-      class="mobile-nav-drawer"
-    >
+    <a-drawer v-model:open="drawerOpen" placement="right" :width="drawerWidth" class="mobile-nav-drawer">
       <template #title>
         <div class="drawer-brand">
-          <span class="brand-logo-shell brand-logo-shell--small">
+          <!-- <span class="brand-logo-shell brand-logo-shell--small">
             <img src="/brand-mark.svg" alt="" class="brand-logo" />
-          </span>
-          <div><b>AI 简历助手</b><small>AI RESUME STUDIO</small></div>
+          </span> -->
+          <div
+            class="rounded-full  h-[40px]  w-[40px] flex items-center justify-center text-xs text-brand-dark logoText text-[20px] font-bold">
+            AI
+          </div>
+          <div><b>AI 简历</b></div>
         </div>
       </template>
 
@@ -141,19 +126,13 @@
 
       <p class="drawer-section-label">探索职简</p>
       <nav class="mobile-nav-list" aria-label="移动端主导航">
-        <button
-          v-for="item in visibleNavItems"
-          :key="item.key"
-          type="button"
-          class="mobile-nav-item"
-          :class="{
-            'mobile-nav-item--active': selectedKeys.includes(item.key),
-            'mobile-nav-item--primary': item.primary,
-          }"
-          :aria-current="selectedKeys.includes(item.key) ? 'page' : undefined"
-          @click="navToMobile(item.path)"
-        >
-          <span class="mobile-nav-icon"><component :is="item.icon" /></span>
+        <button v-for="item in visibleNavItems" :key="item.key" type="button" class="mobile-nav-item" :class="{
+          'mobile-nav-item--active': selectedKeys.includes(item.key),
+          'mobile-nav-item--primary': item.primary,
+        }" :aria-current="selectedKeys.includes(item.key) ? 'page' : undefined" @click="navToMobile(item.path)">
+          <span class="mobile-nav-icon">
+            <component :is="item.icon" />
+          </span>
           <span class="mobile-nav-copy">
             <b>{{ item.label }}</b>
             <small>{{ item.description }}</small>
@@ -173,7 +152,8 @@
 
       <div v-else class="drawer-auth-actions">
         <button type="button" class="drawer-register-button" @click="navToMobile('/register')">
-          免费开始创作 <ArrowRightOutlined />
+          免费开始创作
+          <ArrowRightOutlined />
         </button>
         <button type="button" class="drawer-login-button" @click="navToMobile('/login')">
           已有账号，立即登录
@@ -202,7 +182,7 @@ import {
 import { useUserStore } from "@/stores/user";
 import { useWalletStore } from "@/stores/wallet";
 import { formatBalanceText, getRoleLabel } from "@/constants/roles";
-
+import { useMediaQuery } from '@/composables/useMediaQuery'
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
@@ -212,6 +192,9 @@ const drawerOpen = ref(false);
 const drawerWidth = computed(() =>
   typeof window === "undefined" ? 320 : Math.min(340, window.innerWidth),
 );
+const isMobile = useMediaQuery()
+
+
 
 const navItems = [
   { key: "home", label: "首页", description: "发现简历新灵感", path: "/", icon: HomeOutlined },
@@ -333,7 +316,7 @@ function handleLogout() {
   position: relative;
   display: grid;
   width: 100%;
-  max-width: 1400px;
+  /* max-width: 1400px; */
   height: 100%;
   grid-template-columns: minmax(230px, 1fr) auto minmax(230px, 1fr);
   align-items: center;
@@ -398,6 +381,14 @@ function handleLogout() {
   font-size: 19px;
   font-weight: 800;
   letter-spacing: -0.025em;
+}
+
+.logoText {
+  margin-right: 3px;
+  background: var(--gradient-primary);
+
+  color: #ffffff;
+  font-style: normal;
 }
 
 .brand-name em {
@@ -497,7 +488,7 @@ function handleLogout() {
   align-items: center;
   gap: 8px;
   padding: 5px 10px 5px 6px;
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  /* border: 1px solid rgba(226, 232, 240, 0.9); */
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.72);
   color: #334155;
@@ -646,9 +637,9 @@ function handleLogout() {
 }
 
 .dropdown-profile b,
-.dropdown-profile > div > span,
+.dropdown-profile>div>span,
 .drawer-account-head b,
-.drawer-account-head > div > span {
+.drawer-account-head>div>span {
   display: block;
 }
 
@@ -659,8 +650,8 @@ function handleLogout() {
   line-height: 1.4;
 }
 
-.dropdown-profile > div > span,
-.drawer-account-head > div > span {
+.dropdown-profile>div>span,
+.drawer-account-head>div>span {
   margin-top: 4px;
   color: #64748b;
   font-size: 12px;
@@ -990,6 +981,7 @@ function handleLogout() {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .brand-logo-shell,
   .desktop-nav-item,
   .register-button {
