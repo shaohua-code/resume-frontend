@@ -98,13 +98,13 @@ function updateField(key, value) {
         <a-form-item label="API 密钥环境变量名">
           <a-input :value="form.api_key_env" class="input-field" placeholder="DEEPSEEK_API_KEY" @update:value="updateField('api_key_env', $event)" />
         </a-form-item>
-        <a-form-item label="输入单价（元/百万 token）">
+        <a-form-item label="官方输入基准价（元/百万 token）">
           <a-input-number :value="form.input_price_per_million" :min="0" :step="0.1" class="input-field w-full" @update:value="updateField('input_price_per_million', $event)" />
         </a-form-item>
-        <a-form-item label="缓存输入单价（元/百万 token）">
+        <a-form-item label="官方缓存输入基准价（元/百万 token）">
           <a-input-number :value="form.cached_input_price_per_million" :min="0" :step="0.01" class="input-field w-full" @update:value="updateField('cached_input_price_per_million', $event)" />
         </a-form-item>
-        <a-form-item label="输出单价（元/百万 token）">
+        <a-form-item label="官方输出基准价（元/百万 token）">
           <a-input-number :value="form.output_price_per_million" :min="0" :step="0.1" class="input-field w-full" @update:value="updateField('output_price_per_million', $event)" />
         </a-form-item>
         <a-form-item label="是否开启深度思考">

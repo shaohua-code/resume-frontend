@@ -70,6 +70,7 @@ const crudConfig = {
       { title: '输入单价', dataIndex: 'input_price_per_million', key: 'input_price_per_million', width: 110 },
       { title: '缓存输入', dataIndex: 'cached_input_price_per_million', key: 'cached_input_price_per_million', width: 110 },
       { title: '输出单价', dataIndex: 'output_price_per_million', key: 'output_price_per_million', width: 110 },
+      { title: '官方基准价', key: 'official_prices', width: 170 },
       { title: '深度思考', dataIndex: 'thinking_enabled', key: 'thinking_enabled', width: 110 },
       { title: '启用', dataIndex: 'enabled', key: 'enabled', width: 100 },
       { title: '操作', key: 'action', width: 150 },
@@ -112,7 +113,16 @@ function resetModelFilters() {
 
 function openModal(record = null) {
   modalId.value = record?.id || null
-  modalForm.value = record ? { ...record } : currentConfig.value.defaultForm()
+  if (record && props.type === 'models') {
+    modalForm.value = {
+      ...record,
+      input_price_per_million: record.official_input_price_per_million ?? record.input_price_per_million,
+      cached_input_price_per_million: record.official_cached_input_price_per_million ?? record.cached_input_price_per_million,
+      output_price_per_million: record.official_output_price_per_million ?? record.output_price_per_million,
+    }
+  } else {
+    modalForm.value = record ? { ...record } : currentConfig.value.defaultForm()
+  }
   modalOpen.value = true
 }
 
@@ -142,7 +152,7 @@ async function submitRateAdjustment() {
   rateSubmitting.value = true
   try {
     await aiModelApi.adjustRate(multiplier)
-    message.success(`已按 ${multiplier} 倍调整所有模型单价`)
+    message.success(`已按官方基准价的 ${multiplier} 倍重算所有模型单价`)
     rateModalOpen.value = false
     rateMultiplier.value = 1
     await loadItems()
@@ -217,6 +227,15 @@ onMounted(loadItems)
           <template v-if="column.key === 'output_price_per_million'">
             <span class="text-sm text-muted">¥{{ record.output_price_per_million ?? 0 }}/M</span>
           </template>
+          <template v-if="column.key === 'official_prices'">
+            <a-tooltip title="输入 / 缓存输入 / 输出，单位：元/百万 token">
+              <span class="text-xs text-muted">
+                ¥{{ record.official_input_price_per_million ?? record.input_price_per_million ?? 0 }} /
+                {{ record.official_cached_input_price_per_million ?? record.cached_input_price_per_million ?? 0 }} /
+                {{ record.official_output_price_per_million ?? record.output_price_per_million ?? 0 }}
+              </span>
+            </a-tooltip>
+          </template>
           <template v-if="column.key === 'thinking_enabled'">
             <span :class="record.thinking_enabled ? 'badge-success' : 'tag-soft'">
               {{ record.thinking_enabled === null || record.thinking_enabled === undefined ? '默认' : (record.thinking_enabled ? '开启' : '关闭') }}
@@ -252,11 +271,11 @@ onMounted(loadItems)
             :min="0.0001"
             :step="0.1"
             class="input-field w-full"
-            placeholder="例如 1.2 表示所有单价上调 20%"
+            placeholder="例如 2 表示官方基准价的 2 倍"
           />
         </a-form-item>
       </a-form>
-      <p class="text-xs text-muted">确定后会同时调整所有模型的输入、缓存输入和输出单价。</p>
+      <p class="text-xs text-muted">每次都按官方基准价 × 本次倍率重新计算，不会在当前价格上重复叠加。</p>
     </a-modal>
 
     <AdminCrudModal
