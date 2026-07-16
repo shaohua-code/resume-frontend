@@ -122,7 +122,7 @@
       </div>
     </a-modal>
 
-    <!-- JD 优化简历弹窗：流式预览，用户手动应用替换 -->
+    <!-- 岗位优化简历弹窗：流式预览，用户手动应用替换 -->
     <JdResumeOptimizeModal
       v-model:open="showJdOptimizeModal"
       :resume="resume"
@@ -308,16 +308,16 @@ const showMatchModal = ref(false)
 const jdText = ref('')
 const matchResult = ref(null)
 
-// JD 优化简历弹窗显隐
+// 岗位优化简历弹窗显隐
 const showJdOptimizeModal = ref(false)
 
-/** 打开 JD 优化弹窗 */
+/** 打开 岗位优化弹窗 */
 function openJdOptimizeModal() {
   showJdOptimizeModal.value = true
 }
 
 /**
- * 用户确认应用 JD 优化结果后，合并到编辑器 resume
+ * 用户确认应用 岗位优化结果后，合并到编辑器 resume
  * 保留编辑器样式设置，不自动保存
  */
 function handleJdOptimizeApply(optimized) {
@@ -325,7 +325,7 @@ function handleJdOptimizeApply(optimized) {
   Object.keys(resume).forEach((key) => delete resume[key])
   Object.assign(resume, merged)
   resumeStore.currentResume = { ...merged }
-  message.success('已应用 JD 优化结果，记得保存简历')
+  message.success('已应用 岗位优化结果，记得保存简历')
 }
 
 // 根据匹配分数返回进度条颜色
@@ -349,7 +349,7 @@ async function handleMatch() {
     message.warning('请输入岗位JD')
     return
   }
-  // 预保存静默执行，避免与 JD 匹配结果的提示混淆
+  // 预保存静默执行，避免与 岗位匹配分析结果的提示混淆
   const saved = await saveResumeData({ silent: true })
   if (saved?.id) {
     const result = await resumeStore.matchJd(saved.id, jdText.value)
@@ -658,7 +658,7 @@ watch(
   @apply max-lg:bottom-[calc(40vh+56px+env(safe-area-inset-bottom,0px))] max-lg:right-4 max-lg:px-4;
 }
 
-/* JD 匹配结果展示 */
+/* 岗位匹配分析结果展示 */
 .match-result {
   @apply mt-4 rounded-card bg-canvas p-4 text-sm text-ink-secondary;
 }

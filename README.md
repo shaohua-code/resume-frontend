@@ -1,6 +1,6 @@
 # AI 简历助手 · 前端项目
 
-面向全行业、全职业阶段求职者的响应式 AI 简历前端，提供 AI 生成简历、在线编辑、上传优化、JD 匹配、AI 评分、多格式导出与 20 套分类模板等完整能力。
+面向全行业、全职业阶段求职者的响应式 AI 简历前端，提供 AI 生成简历、在线编辑、上传优化、岗位匹配分析、AI 评分、多格式导出与 20 套分类模板等完整能力。
 
 ## 一、技术栈
 
@@ -165,7 +165,7 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 | 前缀 | 前端文件 | 后端路由 | 职责 |
 | --- | --- | --- | --- |
 | `/api/auth` | `api/auth.js` | `routers/auth.js` | 登录、验证码、密码重置 |
-| `/api/ai` | `api/resume.js` | `routers/ai.js` | AI 生成、分模块优化、JD 匹配、评分 |
+| `/api/ai` | `api/resume.js` | `routers/ai.js` | AI 生成、分模块优化、岗位匹配分析、评分 |
 | `/api/pdf` | `api/resume.js` | `routers/pdf.js` | PDF 上传、解析、优化 |
 | `/api/wallet` | `api/wallet.js` | `routers/wallet.js` | 余额、流水 |
 | `/api/admin` | `api/admin.js` | `routers/admin.js` | 管理后台 |

@@ -258,7 +258,7 @@ export function validateRequiredBasicFields(data = {}) {
 }
 
 /**
- * 将 JD 优化后的简历合并到目标对象（用户点击「应用替换」时调用）
+ * 将 岗位优化后的简历合并到目标对象（用户点击「应用替换」时调用）
  * 保留目标对象中编辑器样式等未在 AI 结果中出现的字段
  * @param {object} target 待写入的简历对象
  * @param {object} optimized AI 优化后的简历

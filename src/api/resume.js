@@ -202,7 +202,7 @@ export async function optimizeResumeByJdStream(resume, jdText, handlers = {}, mo
   })
 
   if (!response.ok) {
-    let detail = 'JD 优化失败，请重试'
+    let detail = '岗位优化失败，请重试'
     try {
       const errJson = await response.json()
       detail = errJson.detail || detail
@@ -285,7 +285,7 @@ export async function uploadOptimizeByJdStream(file, jdText, handlers = {}, mode
   })
 
   if (!response.ok) {
-    let detail = 'JD 优化失败，请重试'
+    let detail = '岗位优化失败，请重试'
     try {
       const errJson = await response.json()
       detail = errJson.detail || detail
@@ -321,7 +321,7 @@ export async function uploadOptimizeByJdExistingStream(jdText, handlers = {}, mo
   })
 
   if (!response.ok) {
-    let detail = 'JD 优化失败，请重试'
+    let detail = '岗位优化失败，请重试'
     try {
       const errJson = await response.json()
       detail = errJson.detail || detail

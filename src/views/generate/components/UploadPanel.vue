@@ -55,7 +55,7 @@
           class="btn-ghost inline-flex h-10 min-w-[160px] items-center justify-center gap-1.5 rounded-button px-5 text-sm"
           @click="openJdOptimize"
         >
-          <AimOutlined /> 按 JD 优化简历
+          <AimOutlined /> 按岗位优化简历
         </button>
       </div>
     </a-card>
@@ -102,7 +102,7 @@
               :stream-text="streamText"
               :loading="uploading"
               :template-id="resumeStore.currentTemplateId"
-              :loading-hint="isJdOptimize ? 'AI 正在根据岗位 JD 优化你的简历...' : undefined"
+              :loading-hint="isJdOptimize ? 'AI 正在根据岗位 岗位优化你的简历...' : undefined"
             />
           </div>
         </div>
@@ -122,7 +122,7 @@
             :disabled="uploading"
             @click="openJdOptimize"
           >
-            <AimOutlined /> 按 JD 优化简历
+            <AimOutlined /> 按岗位优化简历
           </button>
         </div>
       </a-form>
@@ -161,7 +161,7 @@
           class="btn-ghost inline-flex h-10 items-center gap-1.5 rounded-button px-5 text-sm"
           @click="openJdOptimize"
         >
-          <AimOutlined /> 按 JD 优化简历
+          <AimOutlined /> 按岗位优化简历
         </button>
       </div>
     </a-card>
@@ -237,7 +237,7 @@ const uploadPercent = ref(0)
 const optimizeResult = ref(null)
 const streamText = ref('')
 const useExistingFile = ref(false)
-// 是否为 JD 优化流程（复用同一预览区，文案略有不同）
+// 是否为 岗位优化流程（复用同一预览区，文案略有不同）
 const isJdOptimize = ref(false)
 
 const existingFile = ref(null)
@@ -252,10 +252,10 @@ const pendingResult = ref(null)
 // 标记是否已确认超限，避免重复弹窗
 const overLimitConfirmed = ref(false)
 
-// JD 优化弹窗
+// 岗位优化弹窗
 const jdOptimizeOpen = ref(false)
 
-// 有 PDF（已上传或已选择）即可 JD 优化，无需先完成 PDF 优化
+// 有 PDF（已上传或已选择）即可 岗位优化，无需先完成 PDF 优化
 const canShowJdOptimize = computed(() => !!(existingFile.value || fileList.value.length))
 
 /** 打开 JD 输入弹窗 */
@@ -513,7 +513,7 @@ function formatTime(ts) {
 onMounted(fetchExisting)
 
 /**
- * 构建当前简历快照，供 JD 优化弹窗使用
+ * 构建当前简历快照，供 岗位优化弹窗使用
  */
 function getResumeSnapshot() {
   if (optimizeResult.value?.resume && Object.keys(optimizeResult.value.resume).length) {

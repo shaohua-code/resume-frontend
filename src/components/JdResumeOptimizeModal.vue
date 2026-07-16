@@ -1,5 +1,5 @@
 <!--
-  基于岗位 JD 优化简历 — 共享弹窗组件
+  基于岗位 岗位优化简历 — 共享弹窗组件
   inputOnly=true（默认）：纯输入弹窗，图片/文本二选一，确定后 emit confirm-start
   inputOnly=false（编辑器）：输入 → 弹窗内流式预览 → 应用替换
 -->
@@ -88,7 +88,7 @@ const previewTemplateId = computed(() => clampTemplateId(props.templateId))
 
 // 弹窗标题随阶段变化
 const modalTitle = computed(() => (
-  phase.value === 'input' ? '按岗位 JD 优化简历' : 'JD 优化预览'
+  phase.value === 'input' ? '按岗位 岗位优化简历' : '岗位优化预览'
 ))
 
 // 弹窗宽度：移动端预览阶段 95vw
@@ -337,7 +337,7 @@ function handleCancel() {
             :loading="loading"
             :template-id="previewTemplateId"
             :scale="0.6"
-            loading-hint="AI 正在根据岗位 JD 优化你的简历..."
+            loading-hint="AI 正在根据岗位 岗位优化你的简历..."
           />
         </div>
 

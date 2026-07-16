@@ -73,11 +73,11 @@ export function useJdResumeOptimize() {
       }
 
       const successMsg = options.successMessage
-        || (options.inputOnly === false ? 'JD 优化完成，请预览后点击「应用替换」' : 'JD 优化完成')
+        || (options.inputOnly === false ? '岗位优化完成，请预览后点击「应用替换」' : '岗位优化完成')
       message.success(successMsg)
       return true
     } catch (e) {
-      errorMsg.value = e.message || 'JD 优化失败，请重试'
+      errorMsg.value = e.message || '岗位优化失败，请重试'
       message.error(errorMsg.value)
       return false
     } finally {

@@ -300,7 +300,7 @@
             class="btn-ghost inline-flex h-10 min-w-[160px] items-center justify-center gap-1.5"
             @click="openJdOptimize"
           >
-            <AimOutlined /> 按 JD 优化简历
+            <AimOutlined /> 按岗位优化简历
           </button>
         </div>
       </div>
@@ -316,7 +316,7 @@
               </div>
             </div>
             <h2 class="mb-2 text-xl font-semibold text-brand-dark">
-              {{ isJdOptimizing ? 'AI 正在根据岗位 JD 优化你的简历...' : 'AI 正在为你生成专业简历...' }}
+              {{ isJdOptimizing ? 'AI 正在根据岗位 岗位优化你的简历...' : 'AI 正在为你生成专业简历...' }}
             </h2>
             <p class="mb-2 text-sm text-muted">
               {{ isJdOptimizing ? '结合岗位 JD 与表单内容，针对性优化简历' : '结合目标行业优化经历描述，突出岗位优势' }}
@@ -332,7 +332,7 @@
                 :stream-text="isJdOptimizing ? jdStreamText : resumeStore.streamText"
                 :loading="isJdOptimizing ? jdLoading : resumeStore.generating"
                 :template-id="resumeStore.currentTemplateId"
-                :loading-hint="isJdOptimizing ? 'AI 正在根据岗位 JD 优化你的简历...' : undefined"
+                :loading-hint="isJdOptimizing ? 'AI 正在根据岗位 岗位优化你的简历...' : undefined"
               />
             </div>
 
@@ -353,7 +353,7 @@
               </div>
             </div>
             <p class="mt-6 text-xs text-warning">
-              {{ isJdOptimizing ? 'JD 优化流式输出中，请耐心等待完成' : '流式生成中，请耐心等待完成' }}
+              {{ isJdOptimizing ? '岗位优化流式输出中，请耐心等待完成' : '流式生成中，请耐心等待完成' }}
             </p>
           </div>
         </a-card>
@@ -394,7 +394,7 @@
       </div>
     </a-modal>
 
-    <!-- JD 优化弹窗：确定后跳转 Step3 页内流式预览 -->
+    <!-- 岗位优化弹窗：确定后跳转 Step3 页内流式预览 -->
     <JdResumeOptimizeModal
       v-model:open="jdOptimizeOpen"
       :resume="jdOptimizeResume"
@@ -466,7 +466,7 @@ const workExperiences = reactive([
   { company: '', position: '', department: '', start_date: '', end_date: '', description: '' },
 ])
 
-// JD 优化弹窗与页内流式状态
+// 岗位优化弹窗与页内流式状态
 const jdOptimizeOpen = ref(false)
 const jdOptimizeResume = ref({})
 const isJdOptimizing = ref(false)
@@ -478,13 +478,13 @@ const {
   startOptimize: startJdOptimize,
 } = useJdResumeOptimize()
 
-// Step2 且已填姓名即可 JD 优化（不要求意向岗位）
+// Step2 且已填姓名即可 岗位优化（不要求意向岗位）
 const canShowJdOptimize = computed(() => {
   if (currentStep.value !== 2) return false
   return !!basicForm.name?.trim()
 })
 
-/** 打开 JD 优化输入弹窗 */
+/** 打开 岗位优化输入弹窗 */
 function openJdOptimize() {
   if (!basicForm.name?.trim()) {
     message.warning('请先填写姓名')
@@ -503,7 +503,7 @@ async function runJdOptimize(jdText) {
   const ok = await startJdOptimize(snapshot, {
     jdText,
     skipBasicCheck: true,
-    successMessage: 'JD 优化完成',
+    successMessage: '岗位优化完成',
   })
 
   if (ok && jdOptimizeResult.value?.resume) {
@@ -521,7 +521,7 @@ async function runJdOptimize(jdText) {
         resumeStore.currentResumeId = createRes.data.id
       }
     } catch (createErr) {
-      console.warn('[FormPanel] JD 优化后自动创建简历失败:', createErr)
+      console.warn('[FormPanel] 岗位优化后自动创建简历失败:', createErr)
     }
     currentStep.value = 4
     overLimitConfirmed.value = false
@@ -656,7 +656,7 @@ async function handleGenerate() {
   }
 }
 
-// 确认超限后继续生成或 JD 优化
+// 确认超限后继续生成或 岗位优化
 async function confirmOverLimit() {
   overLimitVisible.value = false
   overLimitConfirmed.value = true
@@ -674,7 +674,7 @@ function goToEditor() {
 }
 
 /**
- * 构建当前表单简历快照，供 JD 优化弹窗使用
+ * 构建当前表单简历快照，供 岗位优化弹窗使用
  */
 function getResumeSnapshot() {
   // 若已 AI 生成完成，优先使用 store 中的完整简历
@@ -698,7 +698,7 @@ function getResumeSnapshot() {
           : [],
       })),
     internships: internships.filter((i) => i.company || i.description),
-    // 工作经历（供 JD 优化使用）
+    // 工作经历（供 岗位优化使用）
     work_experiences: workExperiences.filter((w) => w.company || w.description),
   }
   syncFlatEducationFields(payload)
@@ -706,7 +706,7 @@ function getResumeSnapshot() {
 }
 
 /**
- * 用户确认应用 JD 优化结果后，合并到表单与 store
+ * 用户确认应用 岗位优化结果后，合并到表单与 store
  */
 function applyOptimizedResume(optimized) {
   const merged = mergeOptimizedResume(getResumeSnapshot(), optimized)
@@ -745,7 +745,7 @@ function applyOptimizedResume(optimized) {
   internships.splice(0, internships.length, ...(merged.internships || []))
   if (!internships.length) internships.push({ company: '', position: '', description: '', start_date: '', end_date: '' })
   resumeStore.currentResume = merged
-  message.success('已应用 JD 优化结果')
+  message.success('已应用 岗位优化结果')
 }
 
 defineExpose({ getResumeSnapshot, applyOptimizedResume })

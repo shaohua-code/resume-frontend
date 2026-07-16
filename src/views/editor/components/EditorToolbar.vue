@@ -53,7 +53,7 @@
       <!-- 桌面端：右侧操作 -->
       <div class="items-center hidden gap-2 shrink-0 lg:flex">
         <button class="px-3 text-xs btn-ghost" @click="emit('match')"><AimOutlined /> JD匹配</button>
-        <button class="px-3 text-xs btn-ghost" @click="emit('jd-optimize')"><ThunderboltOutlined /> JD优化</button>
+        <button class="px-3 text-xs btn-ghost" @click="emit('jd-optimize')"><ThunderboltOutlined /> 基于岗位优化</button>
         <button class="px-3 text-xs btn-ghost" :disabled="scoring" @click="emit('score')">
           <a-spin v-if="scoring" size="small" class="mr-1" />
           <BarChartOutlined v-else class="mr-1" /> 评分
@@ -88,8 +88,8 @@
               <!-- <a-menu-item @click="openMobilePanel('skin')">皮肤设置</a-menu-item> -->
               <a-menu-divider />
               
-              <a-menu-item @click="emit('match')">JD 匹配</a-menu-item>
-              <a-menu-item @click="emit('jd-optimize')">JD 优化简历</a-menu-item>
+              <a-menu-item @click="emit('match')">岗位匹配分析</a-menu-item>
+              <a-menu-item @click="emit('jd-optimize')">岗位优化简历</a-menu-item>
               <a-menu-item :disabled="scoring" @click="emit('score')">AI 评分</a-menu-item>
               <a-menu-divider />
               <a-menu-item v-if="!isMobile" @click="emit('export-pdf')">导出 PDF</a-menu-item>

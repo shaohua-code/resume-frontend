@@ -85,7 +85,7 @@
             class="btn-ghost inline-flex h-10 min-w-[160px] items-center justify-center gap-1.5"
             @click="openJdOptimize"
           >
-            <AimOutlined /> 按 JD 优化简历
+            <AimOutlined /> 按岗位优化简历
           </button>
         </div>
       </div>
@@ -101,7 +101,7 @@
               </div>
             </div>
             <h2 class="mb-2 text-lg font-semibold text-brand-dark lg:text-xl">
-              {{ isJdOptimizing ? 'AI 正在根据岗位 JD 优化你的简历...' : 'AI 正在解析并生成专业简历...' }}
+              {{ isJdOptimizing ? 'AI 正在根据岗位 岗位优化你的简历...' : 'AI 正在解析并生成专业简历...' }}
             </h2>
             <p class="mb-2 text-sm text-muted">
               {{ isJdOptimizing ? '结合岗位 JD 与自由文本，针对性优化简历' : '智能提取你的信息，用 STAR 法则优化项目描述' }}
@@ -120,7 +120,7 @@
                 :stream-text="isJdOptimizing ? jdStreamText : resumeStore.streamText"
                 :loading="isJdOptimizing ? jdLoading : resumeStore.generating"
                 :template-id="resumeStore.currentTemplateId"
-                :loading-hint="isJdOptimizing ? 'AI 正在根据岗位 JD 优化你的简历...' : undefined"
+                :loading-hint="isJdOptimizing ? 'AI 正在根据岗位 岗位优化你的简历...' : undefined"
               />
             </div>
 
@@ -141,7 +141,7 @@
               </div>
             </div>
             <p class="mt-6 text-xs text-warning">
-              {{ isJdOptimizing ? 'JD 优化流式输出中，请耐心等待完成' : '流式生成中，请耐心等待完成' }}
+              {{ isJdOptimizing ? '岗位优化流式输出中，请耐心等待完成' : '流式生成中，请耐心等待完成' }}
             </p>
           </div>
         </a-card>
@@ -186,7 +186,7 @@
       </div>
     </a-modal>
 
-    <!-- JD 优化弹窗：确定后跳转 Step1 页内流式预览 -->
+    <!-- 岗位优化弹窗：确定后跳转 Step1 页内流式预览 -->
     <JdResumeOptimizeModal
       v-model:open="jdOptimizeOpen"
       :resume="jdOptimizeResume"
@@ -279,7 +279,7 @@ const overLimitVisible = ref(false)
 // 标记是否已确认超限，避免重复弹窗
 const overLimitConfirmed = ref(false)
 
-// JD 优化弹窗与页内流式状态
+// 岗位优化弹窗与页内流式状态
 const jdOptimizeOpen = ref(false)
 const jdOptimizeResume = ref({})
 const isJdOptimizing = ref(false)
@@ -291,7 +291,7 @@ const {
   startOptimize: startJdOptimize,
 } = useJdResumeOptimize()
 
-// Step0 且姓名+原始文本已填即可 JD 优化（不要求意向岗位）
+// Step0 且姓名+原始文本已填即可 岗位优化（不要求意向岗位）
 const canShowJdOptimize = computed(() => {
   if (currentStep.value !== 0) return false
   const name = lazyForm.name?.trim()
@@ -299,7 +299,7 @@ const canShowJdOptimize = computed(() => {
   return !!(name && text)
 })
 
-/** 打开 JD 优化输入弹窗 */
+/** 打开 岗位优化输入弹窗 */
 function openJdOptimize() {
   if (!lazyForm.name?.trim() || !lazyForm.raw_text?.trim()) {
     message.warning('请先填写姓名和简历内容')
@@ -341,7 +341,7 @@ async function runJdOptimize(jdText) {
   const ok = await startJdOptimize(snapshot, {
     jdText,
     skipBasicCheck: true,
-    successMessage: 'JD 优化完成',
+    successMessage: '岗位优化完成',
   })
 
   if (ok && jdOptimizeResult.value?.resume) {
@@ -359,7 +359,7 @@ async function runJdOptimize(jdText) {
         resumeStore.currentResumeId = createRes.data.id
       }
     } catch (createErr) {
-      console.warn('[LazyPanel] JD 优化后自动创建简历失败:', createErr)
+      console.warn('[LazyPanel] 岗位优化后自动创建简历失败:', createErr)
     }
     currentStep.value = 2
     overLimitConfirmed.value = false
@@ -472,7 +472,7 @@ async function handleGenerate() {
   }
 }
 
-// 确认超限后继续生成或 JD 优化
+// 确认超限后继续生成或 岗位优化
 async function confirmOverLimit() {
   overLimitVisible.value = false
   overLimitConfirmed.value = true
@@ -490,12 +490,12 @@ function goToEditor() {
 }
 
 /**
- * 用户确认应用 JD 优化结果后，合并到 store（编辑器等场景复用）
+ * 用户确认应用 岗位优化结果后，合并到 store（编辑器等场景复用）
  */
 function applyOptimizedResume(optimized) {
   const merged = mergeOptimizedResume(getResumeSnapshot(), optimized)
   resumeStore.currentResume = merged
-  message.success('已应用 JD 优化结果')
+  message.success('已应用 岗位优化结果')
 }
 
 defineExpose({ getResumeSnapshot, applyOptimizedResume })
