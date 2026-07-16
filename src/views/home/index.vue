@@ -3,6 +3,12 @@
  * 首页 - Hero + 使用流程 + 功能卡 + 模板预览 + 信任背书
  */
 import { useRouter } from 'vue-router'
+import {
+  CloudUploadOutlined,
+  EditOutlined,
+  FileDoneOutlined,
+  ThunderboltOutlined,
+} from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 import PageHero from '@/components/PageHero.vue'
 import GlassCard from '@/components/GlassCard.vue'
@@ -17,17 +23,40 @@ const router = useRouter()
 const userStore = useUserStore()
 const navTo = createHomeNavigator(router, userStore)
 
+const HOME_FLOW = [
+  {
+    icon: CloudUploadOutlined,
+    title: '选择创建方式',
+    description: '上传旧简历，或从零填写信息',
+  },
+  {
+    icon: ThunderboltOutlined,
+    title: 'AI 生成优化',
+    description: '提炼亮点，自动优化专业表达',
+  },
+  {
+    icon: EditOutlined,
+    title: '在线编辑排版',
+    description: '25 套模板，内容与样式随心调整',
+  },
+  {
+    icon: FileDoneOutlined,
+    title: '导出开始投递',
+    description: '支持 PDF / Word，一键保存使用',
+  },
+]
+
 function handleFeatureClick(item) {
   navTo(item.path)
 }
 </script>
 
 <template>
-  <div class="animate-fade-in">
+  <div class="home-page animate-fade-in">
     <PageHero
       compact
-      title="AI简历助手"
-      subtitle="零基础写简历，快速收获专业求职简历"
+      title="让每一段经历，都成为你的求职优势"
+      subtitle="AI 帮你梳理经历、匹配岗位、优化表达，零基础也能快速完成专业简历"
       :stats="HOME_STATS"
     >
       <template #actions>
@@ -38,27 +67,45 @@ function handleFeatureClick(item) {
       </template>
     </PageHero>
 
-    <section class="w-full max-w-5xl px-4 py-6 mx-auto sm:px-6 sm:py-8 lg:px-8">
-      <div class="mb-4 text-center">
+    <section class="relative mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+      <div class="mb-5 text-center sm:mb-8">
+        <span class="section-kicker">HOW IT WORKS</span>
         <h2 class="section-title">使用流程</h2>
-        <p class="mt-1 section-subtitle">四步完成专业简历</p>
+        <p class="mt-2 section-subtitle">清晰四步，从经历素材到可投递简历</p>
       </div>
-      <GlassCard>
-        <a-steps :current="0" class="flow-steps" direction="vertical" responsive>
-          <a-step title="选择方式" description="上传 PDF 或文本填写" />
-          <a-step title="AI 生成优化" description="AI 自动生成或优化简历" />
-          <a-step title="在线编辑" description="25 套模板自由调整" />
-          <a-step title="导出投递" description="PDF / Word 一键导出" />
-        </a-steps>
+      <GlassCard class="flow-panel">
+        <div class="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+          <article
+            v-for="(step, index) in HOME_FLOW"
+            :key="step.title"
+            class="flow-card"
+          >
+            <div class="flow-icon-wrap">
+              <component :is="step.icon" />
+            </div>
+            <div class="min-w-0 flex-1 lg:text-center">
+              <div class="flex items-center gap-2 lg:justify-center">
+                <span class="flow-number">0{{ index + 1 }}</span>
+                <h3 class="text-sm font-semibold text-ink sm:text-base">{{ step.title }}</h3>
+              </div>
+              <p class="mt-1 text-xs leading-relaxed text-ink-secondary sm:text-sm">
+                {{ step.description }}
+              </p>
+            </div>
+          </article>
+        </div>
       </GlassCard>
     </section>
 
-    <section class="py-6 page-container sm:py-8">
-      <div class="mb-4 text-center sm:mb-6">
-        <h2 class="section-title">核心功能</h2>
-        <p class="mt-1 section-subtitle">从生成到优化，全流程 AI 辅助</p>
+    <section class="feature-section">
+      <div class="page-container !py-8 sm:!py-12">
+        <div class="mb-5 text-center sm:mb-8">
+          <span class="section-kicker">AI TOOLKIT</span>
+          <h2 class="section-title">核心功能</h2>
+          <p class="mt-2 section-subtitle">从生成、优化到导出，把复杂的简历工作变简单</p>
+        </div>
+        <FeatureGrid :features="HOME_FEATURES" @click="handleFeatureClick" />
       </div>
-      <FeatureGrid :features="HOME_FEATURES" @click="handleFeatureClick" />
     </section>
 
     <TemplatePreview />
@@ -68,29 +115,46 @@ function handleFeatureClick(item) {
 </template>
 
 <style scoped>
-:deep(.flow-steps .ant-steps-item-process .ant-steps-item-icon) {
-  @apply border-brand-dark bg-brand-dark;
+.home-page {
+  background:
+    radial-gradient(circle at 8% 28%, rgba(0, 212, 255, 0.08), transparent 22rem),
+    radial-gradient(circle at 92% 62%, rgba(168, 85, 247, 0.07), transparent 24rem);
 }
 
-:deep(.flow-steps .ant-steps-item-finish .ant-steps-item-icon) {
-  @apply border-brand-dark text-brand-dark;
+.section-kicker {
+  @apply mb-2 inline-block text-[10px] font-bold tracking-[0.22em] text-brand-dark sm:text-xs;
 }
 
-:deep(.flow-steps .ant-steps-item-finish .ant-steps-item-tail::after) {
-  @apply bg-brand;
+.flow-panel {
+  @apply relative overflow-hidden;
 }
 
-:deep(.flow-steps .ant-steps-item-title) {
-  @apply text-sm font-medium text-ink;
+.flow-panel::before {
+  content: '';
+  @apply pointer-events-none absolute inset-x-0 top-0 h-1;
+  background: var(--gradient-primary);
 }
 
-:deep(.flow-steps .ant-steps-item-description) {
-  @apply text-xs text-muted;
+.flow-card {
+  @apply relative flex items-center gap-3 rounded-card border border-line/50 bg-white/60 p-3.5 sm:p-4 lg:flex-col lg:items-center lg:px-3 lg:py-5;
 }
 
-@media (min-width: 768px) {
-  :deep(.flow-steps) {
-    flex-direction: row !important;
+.flow-icon-wrap {
+  @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-lighter text-lg text-brand-dark shadow-sm sm:h-12 sm:w-12 sm:text-xl;
+}
+
+.flow-number {
+  @apply text-[10px] font-bold tracking-wider text-brand-dark/70;
+}
+
+.feature-section {
+  @apply border-y border-line/40 bg-white/35;
+}
+
+@media (min-width: 1024px) {
+  .flow-card:not(:last-child)::after {
+    content: '';
+    @apply absolute -right-3 top-1/2 z-10 h-px w-5 bg-brand/40;
   }
 }
 </style>

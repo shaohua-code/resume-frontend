@@ -9,8 +9,14 @@ export const TRUST_OFFER_HEADLINE = '已帮助 12,000+ 位求职者优化简历�
 /** 背书区 mini stats - 与 Hero 能力数据互补 */
 export const TRUST_MINI_STATS = [
   { value: '12,000+', label: '求职者使用' },
-  { value: '20+', label: '专业模板' },
+  { value: '25 套', label: '专业模板' },
   { value: '98%', label: '用户满意' },
+]
+
+export const TRUST_GUARANTEES = [
+  { icon: 'shield', title: '隐私安全', desc: '简历内容仅用于你的生成与编辑' },
+  { icon: 'edit', title: '全程可控', desc: 'AI 生成内容支持逐项修改' },
+  { icon: 'export', title: '放心导出', desc: '导出前可完整预览最终效果' },
 ]
 
 export const TRUST_INDUSTRIES = [

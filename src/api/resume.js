@@ -230,6 +230,40 @@ export function extractJdFromImage(file) {
 }
 
 /**
+ * 从 JD 图片流式提取岗位描述文本
+ * @param {File} file 图片文件
+ * @param {object} handlers 流式回调 { onChunk, onDone, onError, onStatus }
+ */
+export async function extractJdFromImageStream(file, handlers = {}, model = '') {
+  const { useUserStore } = await import('@/stores/user')
+  const userStore = useUserStore()
+  const token = await userStore.getValidToken()
+
+  const formData = new FormData()
+  formData.append('file', file)
+  if (model) formData.append('model', model)
+
+  const response = await fetch(`${API_BASE}/api/ai/extract-jd-image/stream`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  })
+
+  if (!response.ok) {
+    let detail = '图片识别失败，请重试'
+    try {
+      const errJson = await response.json()
+      detail = errJson.detail || detail
+    } catch (e) {
+      /* ignore */
+    }
+    throw new Error(detail)
+  }
+
+  return readSSEStream(response, handlers)
+}
+
+/**
  * 上传 PDF 并根据岗位 JD 流式优化（SSE）
  * @param {File} file PDF 文件
  * @param {string} jdText 岗位 JD 文本

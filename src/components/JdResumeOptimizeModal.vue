@@ -4,7 +4,7 @@
   inputOnly=false（编辑器）：输入 → 弹窗内流式预览 → 应用替换
 -->
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onBeforeUnmount } from 'vue'
 import { message } from 'ant-design-vue'
 import {
   BulbOutlined,
@@ -17,7 +17,7 @@ import {
 import GradientButton from '@/components/GradientButton.vue'
 import StreamResumePreview from '@/views/generate/components/StreamResumePreview.vue'
 import { useJdResumeOptimize } from '@/composables/useJdResumeOptimize'
-import { extractJdFromImage } from '@/api/resume'
+import { extractJdFromImageStream } from '@/api/resume'
 import { clampTemplateId } from '@/constants/templateRegistry'
 import { useMediaQuery } from '@/composables/useMediaQuery'
 import { useScrollToStreamPreview } from '@/composables/useScrollToStreamPreview'
@@ -57,12 +57,22 @@ const jdText = ref('')
 const jdImageFile = ref(null)
 const jdImageName = ref('')
 const extracting = ref(false)
+const jdImageUrl = ref('')
 
-// 图片预览 URL（使用 ObjectURL 避免内存泄漏）
-const jdImageUrl = computed(() => {
-  if (!jdImageFile.value) return ''
-  return URL.createObjectURL(jdImageFile.value)
+function revokeJdImageUrl() {
+  if (jdImageUrl.value) {
+    URL.revokeObjectURL(jdImageUrl.value)
+    jdImageUrl.value = ''
+  }
+}
+
+// 图片预览 URL（使用稳定 ObjectURL，避免重复创建与内存泄漏）
+watch(jdImageFile, (file) => {
+  revokeJdImageUrl()
+  if (file) jdImageUrl.value = URL.createObjectURL(file)
 })
+
+onBeforeUnmount(revokeJdImageUrl)
 
 const {
   streamText,
@@ -87,6 +97,13 @@ const modalWidth = computed(() => {
   return phase.value === 'preview' ? 860 : 640
 })
 
+const modalBodyStyle = computed(() => ({
+  maxHeight: 'calc(100vh - 120px)',
+  overflow: 'hidden',
+}))
+
+const modalContentClass = 'max-h-[calc(100vh-160px)] overflow-y-auto pr-1'
+
 // 打开/关闭弹窗时重置状态
 watch(open, (val) => {
   if (val) {
@@ -108,6 +125,10 @@ watch(open, (val) => {
 
 /** 选择 JD 图片（仅保留一份） */
 function handleImageBeforeUpload(file) {
+  if (jdImageFile.value) {
+    message.info('已选择图片，请先删除后再重新上传')
+    return false
+  }
   if (!file.type?.startsWith('image/')) {
     message.warning('请上传图片文件')
     return false
@@ -123,7 +144,6 @@ function handleImageBeforeUpload(file) {
 
 /** 清除已选图片，释放 ObjectURL 防止内存泄漏 */
 function clearJdImage() {
-  if (jdImageUrl.value) URL.revokeObjectURL(jdImageUrl.value)
   jdImageFile.value = null
   jdImageName.value = ''
 }
@@ -139,8 +159,13 @@ async function resolveJdText() {
 
   extracting.value = true
   try {
-    const res = await extractJdFromImage(jdImageFile.value)
-    const text = res?.data?.jd_text?.trim() || ''
+    jdText.value = ''
+    const data = await extractJdFromImageStream(jdImageFile.value, {
+      onChunk: (chunk) => {
+        jdText.value += chunk
+      },
+    })
+    const text = (data?.jd_text || jdText.value).trim()
     if (!text) {
       message.warning('未能从图片中识别 JD 内容，请换一张更清晰的图片或改用文本粘贴')
       return null
@@ -200,11 +225,13 @@ function handleCancel() {
     :title="modalTitle"
     :footer="null"
     :width="modalWidth"
+    :body-style="modalBodyStyle"
     class="modal-fresh"
     destroy-on-close
     @cancel="handleCancel"
   >
     <!-- 阶段1：JD 输入（文本与图片二选一） -->
+    <div :class="modalContentClass">
     <template v-if="phase === 'input'">
       <a-form layout="vertical" class="mb-2">
         <a-form-item label="粘贴岗位 JD 内容">
@@ -225,8 +252,8 @@ function handleCancel() {
 
           <!-- 图片上传区域：支持点击和拖拽 -->
           <div
-            class="group relative flex cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-all duration-300"
-            :class="jdImageFile ? 'border-success/50 bg-emerald-50/30' : 'border-line/60 bg-gradient-to-b from-brand-lighter/20 to-cream/50 hover:border-brand/60 hover:from-brand-lighter/40'"
+            class="group relative flex items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-all duration-300"
+            :class="jdImageFile ? 'border-success/50 bg-emerald-50/30' : 'cursor-pointer border-line/60 bg-gradient-to-b from-brand-lighter/20 to-cream/50 hover:border-brand/60 hover:from-brand-lighter/40'"
           >
             <!-- 未选图片：上传入口 -->
             <div v-if="!jdImageFile" class="flex w-full flex-col items-center gap-2 py-6 sm:py-8">
@@ -244,14 +271,16 @@ function handleCancel() {
 
             <!-- 已选图片：预览 + 信息 -->
             <div v-else class="flex w-full items-center gap-4 p-4">
-              <img
+              <a-image
                 :src="jdImageUrl"
                 alt="JD 预览"
-                class="h-16 w-16 shrink-0 rounded-lg object-cover ring-1 ring-black/5"
+                :width="64"
+                :height="64"
+                class="shrink-0 overflow-hidden rounded-lg object-cover ring-1 ring-black/5"
               />
               <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-medium text-ink">{{ jdImageName }}</p>
-                <p class="mt-0.5 text-xs text-success">已选择，点击可重新选择</p>
+                <p class="mt-0.5 text-xs text-success">已选择，可点击图片预览</p>
               </div>
               <button
                 type="button"
@@ -264,6 +293,7 @@ function handleCancel() {
 
             <!-- 隐藏的上传触发器，覆盖整个区域 -->
             <a-upload
+              v-if="!jdImageFile"
               accept="image/*"
               :show-upload-list="false"
               :before-upload="handleImageBeforeUpload"
@@ -290,14 +320,14 @@ function handleCancel() {
           :loading="extracting"
           @click="handleConfirm"
         >
-          确定
+          {{ extracting ? '识别中' : '确定' }}
         </GradientButton>
       </div>
     </template>
 
     <!-- 阶段2：流式预览 + 优化要点（仅编辑器 inputOnly=false） -->
     <template v-else>
-      <div class="max-h-[calc(100vh-120px)] overflow-y-auto">
+      <div>
         <div
           ref="streamPreviewAnchorRef"
           class="p-2 mb-4 border rounded-card border-line/50 bg-cream lg:p-4"
@@ -352,5 +382,6 @@ function handleCancel() {
         </div>
       </div>
     </template>
+    </div>
   </a-modal>
 </template>
