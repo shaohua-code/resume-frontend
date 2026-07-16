@@ -12,7 +12,7 @@ const dateRange = (item) => [item.start_date, item.end_date].filter(Boolean).joi
 </script>
 
 <template>
-  <div class="resume-template rt rt-custom-01 w-full bg-white">
+  <div class="w-full bg-white resume-template rt rt-custom-01">
     <div class="editorial-ribbon" aria-hidden="true"><span></span><span></span><span></span></div>
     <header v-if="showModule('basic')" data-resume-module="basic" class="editorial-header">
       <div class="editorial-issue" aria-hidden="true"><b>PROFILE</b><span>01</span><i>CAREER EDITION</i></div>
@@ -61,7 +61,7 @@ const dateRange = (item) => [item.start_date, item.end_date].filter(Boolean).joi
       </section>
 
       <section v-if="showModule('awards') && f.honorList.length" data-resume-module="awards" class="rt-section editorial-section">
-        <h2 class="rt-title editorial-title"><span>荣誉证书</span><small>RECOGNITION</small></h2><ul class="rt-list editorial-honors"><li v-for="item in f.honorList" :key="item" class="rt-preserve-text">{{ item }}</li></ul>
+        <h2 class="rt-title editorial-title"><span>荣誉证书</span><small>RECOGNITION</small></h2><ul class=" editorial-honors"><li v-for="item in f.honorList" :key="item" class="rt-preserve-text !text-[#ffffff]">{{ item }}</li></ul>
       </section>
     </main>
   </div>
