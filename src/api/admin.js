@@ -163,7 +163,7 @@ export function saveAdminConfig(key, data) {
 
 export function createCrudApi(path) {
   return {
-    list: () => request.get(`/admin/${path}`),
+    list: (params = {}) => request.get(`/admin/${path}`, { params }),
     create: (data) => request.post(`/admin/${path}`, data),
     update: (id, data) => request.patch(`/admin/${path}/${id}`, data),
     remove: (id) => request.delete(`/admin/${path}/${id}`),
@@ -171,7 +171,10 @@ export function createCrudApi(path) {
 }
 
 export const announcementApi = createCrudApi('announcements')
-export const aiModelApi = createCrudApi('models')
+export const aiModelApi = {
+  ...createCrudApi('models'),
+  adjustRate: (multiplier) => request.patch('/admin/models/rate-multiplier', { multiplier }),
+}
 
 /** 读取所有 AI 任务及其当前模型分配（仅超级管理员） */
 export function getAiTaskModels() {

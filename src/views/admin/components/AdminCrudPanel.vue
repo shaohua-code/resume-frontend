@@ -18,6 +18,19 @@ const items = ref([])
 const modalOpen = ref(false)
 const modalId = ref(null)
 const modalForm = ref({})
+const modelKeyword = ref('')
+const activeModelType = ref('all')
+const rateModalOpen = ref(false)
+const rateMultiplier = ref(1)
+const rateSubmitting = ref(false)
+
+const modelTypeTabs = [
+  { key: 'text', label: '文本模型' },
+  { key: 'audio', label: '语音模型' },
+  { key: 'vision', label: '视觉模型' },
+  { key: 'omni', label: '全模态模型' },
+  { key: 'embedding', label: '向量模型' },
+]
 
 const crudConfig = {
   announcements: {
@@ -66,15 +79,35 @@ const crudConfig = {
 
 const currentConfig = computed(() => crudConfig[props.type] || crudConfig.announcements)
 const modalTitle = computed(() => `${modalId.value ? '编辑' : '新增'}${currentConfig.value.title}`)
+const displayItems = computed(() => {
+  if (props.type !== 'models') return items.value
+  const keyword = modelKeyword.value.trim().toLowerCase()
+  return items.value.filter((item) => {
+    const matchesKeyword = !keyword
+      || String(item.name || '').toLowerCase().includes(keyword)
+      || String(item.model_key || '').toLowerCase().includes(keyword)
+    const matchesType = activeModelType.value === 'all' || item.model_type === activeModelType.value
+    return matchesKeyword && matchesType
+  })
+})
 
 async function loadItems() {
   loading.value = true
   try {
-    const res = await currentConfig.value.api.list()
+    const params = props.type === 'models'
+      ? { name: modelKeyword.value.trim(), model_type: activeModelType.value }
+      : {}
+    const res = await currentConfig.value.api.list(params)
     items.value = res.items || []
   } finally {
     loading.value = false
   }
+}
+
+function resetModelFilters() {
+  modelKeyword.value = ''
+  activeModelType.value = 'all'
+  loadItems()
 }
 
 function openModal(record = null) {
@@ -100,6 +133,24 @@ async function removeItem(id) {
   await loadItems()
 }
 
+async function submitRateAdjustment() {
+  const multiplier = Number(rateMultiplier.value)
+  if (!Number.isFinite(multiplier) || multiplier <= 0) {
+    message.warning('请输入大于 0 的倍率')
+    return
+  }
+  rateSubmitting.value = true
+  try {
+    await aiModelApi.adjustRate(multiplier)
+    message.success(`已按 ${multiplier} 倍调整所有模型单价`)
+    rateModalOpen.value = false
+    rateMultiplier.value = 1
+    await loadItems()
+  } finally {
+    rateSubmitting.value = false
+  }
+}
+
 onMounted(loadItems)
 </script>
 
@@ -111,13 +162,38 @@ onMounted(loadItems)
           <p class="text-base font-semibold text-ink">{{ currentConfig.title }}</p>
           <p class="mt-1 text-xs text-muted">{{ type === 'models' ? '维护模型类型、供应商、调用入口与 Token 单价' : '统一维护后台基础资源配置' }}</p>
         </div>
-        <button class="btn-primary" @click="openModal()">{{ currentConfig.addText }}</button>
+        <a-space>
+          <button v-if="type === 'models'" class="btn-ghost" @click="rateModalOpen = true">一键倍率调整</button>
+          <button class="btn-primary" @click="openModal()">{{ currentConfig.addText }}</button>
+        </a-space>
+      </div>
+    </a-card>
+    <a-card v-if="type === 'models'" :bordered="false" class="rounded-card shadow-card">
+      <div class="space-y-4">
+        <a-segmented
+          v-model:value="activeModelType"
+          :options="[{ label: '全部', value: 'all' }, ...modelTypeTabs.map((item) => ({ label: item.label, value: item.key }))]"
+          @change="loadItems"
+        />
+        <div class="flex flex-col gap-3 md:flex-row md:items-center">
+          <a-input
+            v-model:value="modelKeyword"
+            allow-clear
+            class="input-field md:max-w-sm"
+            placeholder="输入模型名称或 Key 查询"
+            @press-enter="loadItems"
+          />
+          <a-space>
+            <button class="btn-primary" @click="loadItems">查询</button>
+            <button class="btn-ghost" @click="resetModelFilters">重置</button>
+          </a-space>
+        </div>
       </div>
     </a-card>
     <a-card :bordered="false" class="rounded-card shadow-card">
       <a-table
         :columns="currentConfig.columns"
-        :data-source="items"
+        :data-source="displayItems"
         :loading="loading"
         :scroll="{ x: 'max-content' }"
         row-key="id"
@@ -160,6 +236,28 @@ onMounted(loadItems)
         </template>
       </a-table>
     </a-card>
+
+    <a-modal
+      v-model:open="rateModalOpen"
+      title="一键倍率调整"
+      ok-text="确定调整"
+      cancel-text="取消"
+      :confirm-loading="rateSubmitting"
+      @ok="submitRateAdjustment"
+    >
+      <a-form layout="vertical">
+        <a-form-item label="倍率">
+          <a-input-number
+            v-model:value="rateMultiplier"
+            :min="0.0001"
+            :step="0.1"
+            class="input-field w-full"
+            placeholder="例如 1.2 表示所有单价上调 20%"
+          />
+        </a-form-item>
+      </a-form>
+      <p class="text-xs text-muted">确定后会同时调整所有模型的输入、缓存输入和输出单价。</p>
+    </a-modal>
 
     <AdminCrudModal
       v-model="modalOpen"

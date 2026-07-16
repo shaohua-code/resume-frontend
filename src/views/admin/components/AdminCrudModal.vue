@@ -25,7 +25,10 @@ const providerOptions = [
 ]
 const modelTypeOptions = [
   { value: 'text', label: '文本模型' },
+  { value: 'audio', label: '语音模型' },
   { value: 'vision', label: '视觉模型' },
+  { value: 'omni', label: '全模态模型' },
+  { value: 'embedding', label: '向量模型' },
 ]
 const thinkingOptions = [
   { value: 'default', label: '默认（使用供应商默认）' },

@@ -45,12 +45,18 @@ export const AI_TASK_TYPE_LABEL_MAP = {
  */
 export const AI_MODEL_TYPES = {
   TEXT: 'text',
+  AUDIO: 'audio',
   VISION: 'vision',
+  OMNI: 'omni',
+  EMBEDDING: 'embedding',
 }
 
 export const AI_MODEL_TYPE_LABEL_MAP = {
   [AI_MODEL_TYPES.TEXT]: '文本模型',
+  [AI_MODEL_TYPES.AUDIO]: '语音模型',
   [AI_MODEL_TYPES.VISION]: '视觉模型',
+  [AI_MODEL_TYPES.OMNI]: '全模态模型',
+  [AI_MODEL_TYPES.EMBEDDING]: '向量模型',
 }
 
 /** 把后端可扩展的模型类型转换为中文；未知类型直接展示原值 */
