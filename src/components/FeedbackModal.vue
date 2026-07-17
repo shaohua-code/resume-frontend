@@ -5,7 +5,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import { useUserStore } from '@/stores/user'
@@ -100,7 +100,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <a-modal
+  <Modal
     v-model:open="open"
     title="意见反馈"
     :confirm-loading="submitting"
@@ -119,7 +119,7 @@ async function handleSubmit() {
       :options="editorOptions"
       class="feedback-quill-editor min-h-[200px] rounded-card border border-line bg-white"
     />
-  </a-modal>
+  </Modal>
 </template>
 
 <style scoped>
