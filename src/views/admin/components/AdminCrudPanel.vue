@@ -5,6 +5,7 @@ import { aiModelApi, announcementApi } from '@/api/admin'
 import AdminCrudModal from './AdminCrudModal.vue'
 import { formatDateTime } from '@/utils/date'
 import { getAiModelTypeLabel } from '@/constants/aiTasks'
+import { useMediaQuery } from '@/composables/useMediaQuery'
 
 const props = defineProps({
   type: {
@@ -23,6 +24,10 @@ const activeModelType = ref('all')
 const rateModalOpen = ref(false)
 const rateMultiplier = ref(1)
 const rateSubmitting = ref(false)
+
+// 与项目统一的 lg 断点保持一致，小屏改用卡片列表以避免管理表格横向撑宽页面。
+const isMobile = useMediaQuery()
+const rateModalWidth = computed(() => (isMobile.value ? 'calc(100vw - 24px)' : 520))
 
 const modelTypeTabs = [
   { key: 'text', label: '文本模型' },
@@ -167,41 +172,109 @@ onMounted(loadItems)
 <template>
   <div class="space-y-4">
     <a-card :bordered="false" class="rounded-card shadow-card">
-      <div class="flex items-center justify-between">
-        <div>
+      <!-- 小屏标题与操作按钮纵向排列，确保两个管理动作都保留足够触控区域。 -->
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div class="min-w-0">
           <p class="text-base font-semibold text-ink">{{ currentConfig.title }}</p>
           <p class="mt-1 text-xs text-muted">{{ type === 'models' ? '维护模型类型、供应商、调用入口与 Token 单价' : '统一维护后台基础资源配置' }}</p>
         </div>
-        <a-space>
-          <button v-if="type === 'models'" class="btn-ghost" @click="rateModalOpen = true">一键倍率调整</button>
-          <button class="btn-primary" @click="openModal()">{{ currentConfig.addText }}</button>
-        </a-space>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:justify-end">
+          <button v-if="type === 'models'" class="btn-ghost min-h-11" @click="rateModalOpen = true">一键倍率调整</button>
+          <button class="btn-primary min-h-11" @click="openModal()">{{ currentConfig.addText }}</button>
+        </div>
       </div>
     </a-card>
     <a-card v-if="type === 'models'" :bordered="false" class="rounded-card shadow-card">
       <div class="space-y-4">
-        <a-segmented
-          v-model:value="activeModelType"
-          :options="[{ label: '全部', value: 'all' }, ...modelTypeTabs.map((item) => ({ label: item.label, value: item.key }))]"
-          @change="loadItems"
-        />
-        <div class="flex flex-col gap-3 md:flex-row md:items-center">
+        <!-- 分类栏只在自身区域横向滚动，不把页面宽度扩展到视口之外。 -->
+        <div class="-mx-1 overflow-x-auto px-1 pb-1">
+          <a-segmented
+            v-model:value="activeModelType"
+            class="min-w-max"
+            :options="[{ label: '全部', value: 'all' }, ...modelTypeTabs.map((item) => ({ label: item.label, value: item.key }))]"
+            @change="loadItems"
+          />
+        </div>
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
           <a-input
             v-model:value="modelKeyword"
             allow-clear
-            class="input-field md:max-w-sm"
+            class="input-field lg:max-w-sm"
             placeholder="输入模型名称或 Key 查询"
             @press-enter="loadItems"
           />
-          <a-space>
-            <button class="btn-primary" @click="loadItems">查询</button>
-            <button class="btn-ghost" @click="resetModelFilters">重置</button>
-          </a-space>
+          <div class="grid grid-cols-2 gap-3 lg:flex">
+            <button class="btn-primary min-h-11" @click="loadItems">查询</button>
+            <button class="btn-ghost min-h-11" @click="resetModelFilters">重置</button>
+          </div>
         </div>
       </div>
     </a-card>
     <a-card :bordered="false" class="rounded-card shadow-card">
+      <!-- 移动端用纵向信息卡片完整呈现字段与操作，桌面端继续保留高密度表格。 -->
+      <a-spin v-if="isMobile" :spinning="loading">
+        <a-empty v-if="!loading && displayItems.length === 0" description="暂无数据" />
+        <div v-else class="space-y-3">
+          <article
+            v-for="record in displayItems"
+            :key="record.id"
+            class="rounded-xl border border-slate-100 bg-white p-4 shadow-sm"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="break-words text-sm font-semibold text-ink">
+                  {{ type === 'models' ? (record.name || '未命名模型') : (record.title || '未命名公告') }}
+                </p>
+                <p v-if="type === 'models'" class="mt-1 break-all text-xs text-muted">{{ record.model_key || '-' }}</p>
+                <p v-else class="mt-1 text-xs text-muted">更新于 {{ formatDateTime(record.update_time) }}</p>
+              </div>
+              <span :class="record.enabled ? 'badge-success' : 'tag-soft'">{{ record.enabled ? '启用' : '停用' }}</span>
+            </div>
+
+            <dl v-if="type === 'models'" class="mt-4 grid grid-cols-2 gap-x-3 gap-y-4 text-sm">
+              <div>
+                <dt class="text-xs text-muted">供应商</dt>
+                <dd class="mt-1 break-words text-ink">{{ record.provider || '-' }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted">模型类型</dt>
+                <dd class="mt-1 text-ink">{{ getAiModelTypeLabel(record.model_type) }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted">输入 / 缓存输入</dt>
+                <dd class="mt-1 text-ink">¥{{ record.input_price_per_million ?? 0 }} / ¥{{ record.cached_input_price_per_million ?? 0 }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted">输出单价</dt>
+                <dd class="mt-1 text-ink">¥{{ record.output_price_per_million ?? 0 }}/M</dd>
+              </div>
+              <div class="col-span-2">
+                <dt class="text-xs text-muted">官方基准价（输入 / 缓存 / 输出）</dt>
+                <dd class="mt-1 break-words text-ink">
+                  ¥{{ record.official_input_price_per_million ?? record.input_price_per_million ?? 0 }} /
+                  {{ record.official_cached_input_price_per_million ?? record.cached_input_price_per_million ?? 0 }} /
+                  {{ record.official_output_price_per_million ?? record.output_price_per_million ?? 0 }}
+                </dd>
+              </div>
+              <div class="col-span-2">
+                <dt class="text-xs text-muted">深度思考</dt>
+                <dd class="mt-1 text-ink">
+                  {{ record.thinking_enabled === null || record.thinking_enabled === undefined ? '默认' : (record.thinking_enabled ? '开启' : '关闭') }}
+                </dd>
+              </div>
+            </dl>
+
+            <div class="mt-4 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4">
+              <button class="btn-ghost min-h-11" @click="openModal(record)">编辑</button>
+              <a-popconfirm title="确定删除？" @confirm="removeItem(record.id)">
+                <button class="min-h-11 w-full rounded-lg border border-red-100 text-sm font-medium text-danger transition-colors hover:bg-red-50">删除</button>
+              </a-popconfirm>
+            </div>
+          </article>
+        </div>
+      </a-spin>
       <a-table
+        v-else
         :columns="currentConfig.columns"
         :data-source="displayItems"
         :loading="loading"
@@ -261,6 +334,7 @@ onMounted(loadItems)
       title="一键倍率调整"
       ok-text="确定调整"
       cancel-text="取消"
+      :width="rateModalWidth"
       :confirm-loading="rateSubmitting"
       @ok="submitRateAdjustment"
     >

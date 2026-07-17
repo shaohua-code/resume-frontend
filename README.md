@@ -21,48 +21,26 @@
 
 ## 二、目录规范
 
-### 页面目录（views）
+### 标准分层
 
-每个页面独立文件夹，`index.vue` 为主入口：
-
-```
-views/
-├── home/index.vue          + components/ + utils/
-├── login/index.vue         + components/ + utils/
-├── register/index.vue
-├── generate/index.vue      + components/（UploadPanel、FormPanel 双模式）
-├── upload-optimize/        （旧路由，已 redirect 至 /generate?mode=upload）
-├── user/index.vue
-├── editor/index.vue        + components/（编辑器子组件）
-├── not-found/index.vue     公开 404 恢复页
-└── admin/index.vue         + components/ + utils/
-```
-
-- **页面组件** → `views/{page}/components/`
-- **页面工具** → `views/{page}/utils/`
-- **全局组件** → `src/components/`（AppHeader、AppFooter、GlassCard、GradientButton、PageHero 等）
-- **全局工具** → `src/utils/`（如 request.js）
-
-### 全局共享
+页面、路由、接口、状态、组件、组合逻辑、常量和工具按职责分层；页面内部的专属组件与工具继续放在对应页面目录，只有跨页面复用的内容进入公共层。
 
 ```
 src/
-├── components/          # 全局 UI 组件（含 LazyRender 视口懒渲染容器）
-├── composables/         # 业务组合式函数
-│   ├── useResumeExportPrint.js  # 浏览器打印 API 导出 PDF
-│   ├── useResumeOptimizer.js    # 简历分模块 AI 优化
-│   ├── useDraggable.js        # 可拖拽元素（反馈悬浮按钮等）
-│   └── useTheme.js            # 主题切换
-├── constants/theme.js   # 唯一配色源
-├── styles/global.css    # 公共类 + CSS 变量
-└── api/                 # 按业务域拆分的接口封装
-    ├── auth.js          # 认证
-    ├── resume.js        # AI / 简历 CRUD
-    ├── wallet.js        # 余额与流水
-    ├── admin.js         # 管理后台
-    ├── upload.js        # 通用文件上传
-    └── feedback.js      # 用户反馈
+├── views/               # 页面；每个页面可自带 components/ 与 utils/
+├── router/              # 路由定义与守卫
+├── api/                 # 按业务域拆分的接口封装
+├── stores/              # Pinia 状态
+├── components/          # 跨页面复用组件与简历模板
+├── composables/         # 跨页面复用组合逻辑
+├── constants/           # 权限、字段、模板与主题常量
+├── utils/               # 请求、日期与分页等通用工具
+├── styles/              # 公共样式
+├── App.vue              # 应用壳
+└── main.js              # Vue 启动入口
 ```
+
+不得把页面、接口、状态和服务揉进同一个目录；页面私有内容就近放在 `views/<page>/`，真正跨页面复用的内容才抽离到公共层。
 
 ## 三、主题配置（改一处全局生效）
 
@@ -71,7 +49,7 @@ src/
 1. **Tailwind** — `tailwind.config.js` 引用 THEME.colors
 2. **CSS 变量** — `global.css :root` + `App.vue` 运行时注入
 3. **Ant Design Vue** — `App.vue` ConfigProvider `antdToken`
-4. **图表** — `views/admin/utils/chartTheme.js`
+4. **图表** — `src/views/admin/utils/chartTheme.js`
 
 主色参考：青 `#00D4FF` → 蓝 `#4FACFE` → 紫 `#A855F7`
 
@@ -92,13 +70,13 @@ src/
 
 | 组件 | 路径 | 用途 |
 | --- | --- | --- |
-| AppHeader | `components/AppHeader.vue` | 磨砂顶栏 + 移动端 Drawer |
-| AppFooter | `components/AppFooter.vue` | 页脚 |
-| GlassCard | `components/GlassCard.vue` | 通用磨砂卡片 |
-| GradientButton | `components/GradientButton.vue` | 渐变主按钮 |
-| PageHero | `components/PageHero.vue` | 页面 Hero 区 |
+| AppHeader | `src/components/AppHeader.vue` | 磨砂顶栏 + 移动端 Drawer |
+| AppFooter | `src/components/AppFooter.vue` | 页脚 |
+| GlassCard | `src/components/GlassCard.vue` | 通用磨砂卡片 |
+| GradientButton | `src/components/GradientButton.vue` | 渐变主按钮 |
+| PageHero | `src/components/PageHero.vue` | 页面 Hero 区 |
 
-首页专用：`views/home/components/` 下：
+首页专用：`src/views/home/components/` 下：
 
 | 组件 | 用途 |
 | --- | --- |
@@ -108,7 +86,7 @@ src/
 | TrustOfferWall | Offer 数量 + 行业标签 + 匿名证言轮播 |
 | JdInputPanel | JD 输入模块 |
 
-模板预览页：`views/templates/index.vue`（`/templates`）展示全部 25 套模板。
+模板预览页：`src/views/templates/index.vue`（`/templates`）展示全部 25 套模板。
 
 首页模块顺序：Hero → 核心功能 → 精选模板预览 → 信任背书 → 使用流程。
 
@@ -157,7 +135,7 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 | 兼容 | `school`, `major`, `education` | 与 `educations[0]` 双向同步 |
 | 其他 | `skills`, `projects`, `internships`, `work_experiences`, `awards`, `certificates`, `_editorSettings` | 全行业经历模块 |
 
-归一化工具：`src/constants/resumeFieldSchema.js`；模板读取：`useResumeFields.js`。
+归一化工具：`src/constants/resumeFieldSchema.js`；模板读取：`src/components/resume-templates/shared/useResumeFields.js`。
 
 ## 八、接口请求约定
 
@@ -182,7 +160,7 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 
 ## 九、简历编辑器 AI 优化
 
-编辑器（`views/editor/`）支持对简历五类模块进行 AI 流式优化，基于「意向岗位 + 完整简历内容」生成更专业的描述。
+编辑器（`src/views/editor/`）支持对简历五类模块进行 AI 流式优化，基于「意向岗位 + 完整简历内容」生成更专业的描述。
 
 | 模块 | 类型 | 入口 |
 | --- | --- | --- |
@@ -209,9 +187,9 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 
 | 模块 | 路径 | 说明 |
 | --- | --- | --- |
-| API | `api/wallet.js` | `GET /wallet/balance`、`GET /wallet/ledger` |
-| Store | `stores/wallet.js` | 余额、流水状态 |
-| 用户中心 | `views/user/components/UsagePanel.vue` | 用量明细 Tab |
+| API | `src/api/wallet.js` | `GET /wallet/balance`、`GET /wallet/ledger` |
+| Store | `src/stores/wallet.js` | 余额、流水状态 |
+| 用户中心 | `src/views/user/components/UsagePanel.vue` | 用量明细 Tab |
 | 顶栏 | `AppHeader.vue` | 显示当前余额 |
 
 AI 调用成功后 `resume` store 自动刷新余额。
@@ -220,15 +198,15 @@ AI 调用成功后 `resume` store 自动刷新余额。
 
 | 端 | 组件 | 说明 |
 | --- | --- | --- |
-| 用户端 | `components/FeedbackFloatingButton.vue` | 右下角可拖拽悬浮按钮 |
-| 用户端 | `components/FeedbackModal.vue` | Quill 富文本弹窗，支持图片上传 |
-| 管理端 | `views/admin/components/AdminFeedbackPanel.vue` | 仅 SUPER_ADMIN 可见，Markdown 预览 |
-| 接口 | `api/feedback.js` | `POST /api/feedback` |
+| 用户端 | `src/components/FeedbackFloatingButton.vue` | 右下角可拖拽悬浮按钮 |
+| 用户端 | `src/components/FeedbackModal.vue` | Quill 富文本弹窗，支持图片上传 |
+| 管理端 | `src/views/admin/components/AdminFeedbackPanel.vue` | 仅 SUPER_ADMIN 可见，Markdown 预览 |
+| 接口 | `src/api/feedback.js` | `POST /api/feedback` |
 
 ## 十三、新页面开发 Checklist
 
-1. 在 `views/{page}/` 创建 `index.vue`
-2. 页面私有组件放 `components/`，工具放 `utils/`
+1. 在 `src/views/{page}/` 创建 `index.vue`
+2. 页面私有组件放该页面的 `components/`，工具放该页面的 `utils/`
 3. 使用 `PageHero` / `GlassCard` / `GradientButton`，禁止硬编码色值
 4. 路由注册到 `router/index.js`
 5. 375px 宽度下验证布局
@@ -247,8 +225,8 @@ npm run preview  # 预览构建
 
 ## 十五、注意事项
 
-1. **简历模板**（`components/resume-templates/`）使用独立 CSS（`rt-*`），保证 PDF/打印友好
-2. **编辑器组件**位于 `views/editor/components/`
+1. **简历模板**（`src/components/resume-templates/`）使用独立 CSS（`rt-*`），保证 PDF/打印友好
+2. **编辑器组件**位于 `src/views/editor/components/`
 3. 环境变量：`.env.development` / `.env.production`；生产通过 `VITE_API_URL` 指定后端
 4. **计费**：AI 按账户余额扣费，余额不足时接口返回 402；导出对登录用户免费
 5. 全功能说明见项目根目录 [`AI简历-项目全功能说明.md`](../AI简历-项目全功能说明.md)

@@ -1,4 +1,7 @@
 <script setup>
+import { computed } from 'vue'
+import { useMediaQuery } from '@/composables/useMediaQuery'
+
 const open = defineModel({ type: Boolean, default: false })
 
 const props = defineProps({
@@ -17,6 +20,15 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['submit', 'update:form'])
+
+// 长表单在小屏使用视口安全宽度和内部滚动，避免按钮或字段被屏幕边缘裁切。
+const isMobile = useMediaQuery()
+const modalWidth = computed(() => (isMobile.value ? 'calc(100vw - 24px)' : 520))
+const modalBodyStyle = computed(() => ({
+  maxHeight: isMobile.value ? 'calc(100vh - 120px)' : '70vh',
+  overflowY: 'auto',
+  padding: isMobile.value ? '16px' : undefined,
+}))
 
 // 预置常用值，同时允许直接输入新供应商或新模型类型，为后续扩展保留入口。
 const providerOptions = [
@@ -54,7 +66,14 @@ function updateField(key, value) {
 </script>
 
 <template>
-  <a-modal :open="open" :title="title" :footer="null" @update:open="open = $event">
+  <a-modal
+    :open="open"
+    :title="title"
+    :footer="null"
+    :width="modalWidth"
+    :body-style="modalBodyStyle"
+    @update:open="open = $event"
+  >
     <a-form layout="vertical">
       <template v-if="type === 'announcements'">
         <a-form-item label="标题">
@@ -121,9 +140,10 @@ function updateField(key, value) {
       </template>
     </a-form>
 
-    <div class="mt-5 flex justify-end gap-3">
-      <button class="btn-ghost" @click="open = false">取消</button>
-      <button class="btn-primary" @click="emit('submit')">确定</button>
+    <!-- 小屏按钮等分占满可用宽度，减少误触并保证 44px 触控高度。 -->
+    <div class="mt-5 grid grid-cols-2 gap-3 sm:flex sm:justify-end">
+      <button class="btn-ghost min-h-11" @click="open = false">取消</button>
+      <button class="btn-primary min-h-11" @click="emit('submit')">确定</button>
     </div>
   </a-modal>
 </template>
