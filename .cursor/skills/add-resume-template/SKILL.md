@@ -111,3 +111,11 @@ description: >-
 ## 交付要求
 
 说明模板 ID、名称、实现文件、注册文件和验证结果。若发现公共逻辑缺陷，不顺手修复；单独列为观察项。
+
+## 维护记录（必须）
+
+完成任何模板代码改动后，更新本 Skill 或相关 reference 中发生变化的事实，并在根目录 `.cursor/skills/maintain-ai-resume/references/change-log.md` 追加任务记录。即使渲染契约未变，也要记录模板 ID、改动文件、契约影响和验证结果。
+
+本 Skill 是项目唯一保持独立的专用 Skill；通用前端和后端知识统一维护在根目录 `$maintain-ai-resume` 中。
+
+当根 Skill 以 `--更新` 调度时，完整读取本文件以及 `references/` 下全部直接引用，校对模板注册、字段、分页、定位和打印契约，并与统一维护 Skill 一起完成同步。
