@@ -4,7 +4,6 @@
  * 需要登录的页面通过 meta.requireAuth 标记，路由守卫自动跳转登录
  */
 import { createRouter, createWebHistory } from 'vue-router'
-import { message } from 'ant-design-vue'
 import { useUserStore } from '@/stores/user'
 
 const routes = [
@@ -12,7 +11,7 @@ const routes = [
     path: '/',
     name: 'Home',
     component: () => import('@/views/home/index.vue'),
-    meta: { title: 'AI简历助手', hideFooter: true },
+    meta: { title: 'AI简历', hideFooter: true, lightweight: true },
   },
   {
     path: '/login',
@@ -163,6 +162,12 @@ const routes = [
       },
     ],
   },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('@/views/not-found/index.vue'),
+    meta: { title: '页面未找到', lightweight: true, hideFeedback: true },
+  },
 ]
 
 const router = createRouter({
@@ -173,7 +178,7 @@ const router = createRouter({
 // 路由守卫：未登录时跳转到登录页
 router.beforeEach((to, from, next) => {
   const titleRoute = [...to.matched].reverse().find((r) => r.meta.title)
-  document.title = titleRoute?.meta.title ? `${titleRoute.meta.title} - AI简历助手` : 'AI简历助手'
+  document.title = titleRoute?.meta.title ? `${titleRoute.meta.title} - AI简历` : 'AI简历'
   const token = localStorage.getItem('token')
   const requireAuth = to.matched.some((r) => r.meta.requireAuth)
   const rolesMeta = to.matched.find((r) => r.meta.roles)?.meta.roles
@@ -182,7 +187,9 @@ router.beforeEach((to, from, next) => {
   } else if (rolesMeta) {
     const userStore = useUserStore()
     if (!rolesMeta.includes(userStore.role)) {
-      message.error('无权访问该页面')
+      void import('ant-design-vue/es/message').then(({ default: message }) => {
+        message.error('无权访问该页面')
+      })
       next('/')
       return
     }

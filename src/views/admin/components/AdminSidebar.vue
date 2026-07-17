@@ -59,7 +59,7 @@ function selectMenu(item) {
         AI
       </div>
       <div class="min-w-0">
-        <h2 class="truncate text-base font-semibold text-ink">AI 简历助手后台</h2>
+        <h2 class="truncate text-base font-semibold text-ink">AI 简历后台</h2>
         <p class="truncate text-xs text-muted">智能运营管理中心</p>
       </div>
     </div>

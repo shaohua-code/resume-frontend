@@ -5,7 +5,7 @@
 defineProps({
   title: {
     type: String,
-    default: 'AI简历助手',
+    default: 'AI简历',
   },
   subtitle: {
     type: String,

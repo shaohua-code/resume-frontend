@@ -3,7 +3,7 @@
   品牌入口、桌面导航、账户菜单与移动端抽屉
 -->
 <template>
-  <a-layout-header class="app-header">
+  <LayoutHeader class="app-header">
     <div class="header-glow" aria-hidden="true" />
 
     <div class="header-inner">
@@ -40,7 +40,7 @@
 
       <div class="header-actions">
         <template v-if="userStore.isLoggedIn">
-          <a-dropdown trigger="click" placement="bottomRight" v-if="!isMobile">
+          <Dropdown trigger="click" placement="bottomRight" v-if="!isMobile">
             <button type="button" class="account-trigger" aria-label="打开账户菜单">
               <span class="account-avatar">{{ accountInitial }}</span>
               <!-- 移动端不显示账户姓名 -->
@@ -78,7 +78,7 @@
                 </button>
               </div>
             </template>
-          </a-dropdown>
+          </Dropdown>
         </template>
 
         <template v-else>
@@ -97,7 +97,7 @@
       </div>
     </div>
 
-    <a-drawer v-model:open="drawerOpen" placement="right" :width="drawerWidth" class="mobile-nav-drawer">
+    <Drawer v-model:open="drawerOpen" placement="right" :width="drawerWidth" class="mobile-nav-drawer">
       <template #title>
         <div class="drawer-brand">
           <!-- <span class="brand-logo-shell brand-logo-shell--small">
@@ -159,13 +159,16 @@
           已有账号，立即登录
         </button>
       </div>
-    </a-drawer>
-  </a-layout-header>
+    </Drawer>
+  </LayoutHeader>
 </template>
 
 <script setup>
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import Dropdown from 'ant-design-vue/es/dropdown'
+import Drawer from 'ant-design-vue/es/drawer'
+import { LayoutHeader } from 'ant-design-vue/es/layout'
 import {
   AppstoreOutlined,
   ArrowRightOutlined,
@@ -955,22 +958,33 @@ function handleLogout() {
   }
 
   .account-trigger-copy,
-  .account-chevron,
-  .login-link {
+  .account-chevron {
     display: none;
   }
 
-  .register-button {
-    width: 44px;
-    padding: 0;
-    overflow: hidden;
-    color: transparent;
-    font-size: 0;
+  .login-link {
+    display: inline-flex;
+    min-width: 64px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 13px;
+    background: var(--gradient-primary);
+    box-shadow: 0 9px 22px rgba(79, 172, 254, 0.24);
+    color: #fff;
+    font-size: 13px;
   }
 
-  .register-button :deep(svg) {
+  .login-link:hover {
     color: #fff;
-    font-size: 15px;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 26px rgba(79, 172, 254, 0.32);
+  }
+
+  .register-button {
+    display: none;
   }
 }
 
@@ -984,6 +998,7 @@ function handleLogout() {
 
   .brand-logo-shell,
   .desktop-nav-item,
+  .login-link,
   .register-button {
     transition: none;
   }

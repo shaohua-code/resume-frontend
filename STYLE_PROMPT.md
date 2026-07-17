@@ -1,4 +1,4 @@
-# AI 简历助手 · Glassmorphism 风格提示词
+# AI 简历 · Glassmorphism 风格提示词
 
 > 本文档供 AI 辅助开发 / 设计师参考，确保新增页面与现有 Glassmorphism 视觉一致。
 > 所有色值以 [`src/constants/theme.js`](src/constants/theme.js) 为唯一来源。
@@ -116,7 +116,7 @@ Ant Design 用法示例：
 复制以下模板，替换 `{页面名称}` 和 `{功能描述}`：
 
 ```
-为全行业 AI 简历助手新增 {页面名称} 页面。
+为全行业 AI 简历新增 {页面名称} 页面。
 
 风格：Glassmorphism UI。浅底 (#F8FAFC) + 青紫径向渐变光斑 + 网格纹理背景。
 组件：半透明磨砂面板 (backdrop-blur-xl, bg-white/70)。主按钮青蓝→紫渐变 + 外发光。

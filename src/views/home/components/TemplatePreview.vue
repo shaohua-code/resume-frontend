@@ -4,6 +4,7 @@
  */
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import Carousel from 'ant-design-vue/es/carousel'
 import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
 import TemplateMiniPreview from './TemplateMiniPreview.vue'
 import { getDemoResume, FEATURED_TEMPLATE_IDS } from '../utils/demoResume'
@@ -55,7 +56,7 @@ function goAllTemplates() {
       </button>
     </div>
 
-    <a-carousel
+    <Carousel
       ref="carouselRef"
       autoplay
       arrows
@@ -92,7 +93,7 @@ function goAllTemplates() {
         />
         <p class="mt-2 text-sm font-medium text-center text-ink">{{ tpl.name }}</p>
       </div>
-    </a-carousel>
+    </Carousel>
   </section>
 </template>
 

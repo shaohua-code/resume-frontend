@@ -3,7 +3,7 @@
   包含页面布局：顶部导航栏 + 主内容区 + 底部 Footer
 -->
 <template>
-  <a-config-provider :locale="zhCN" :theme="{ token: antdToken }">
+  <ConfigProvider :locale="zhCN" :theme="{ token: antdToken }">
     <div class="relative flex flex-col min-h-screen font-sans antialiased bg-cream text-ink">
       <!-- 全页背景装饰层 -->
       <div class="fixed inset-0 z-0 pointer-events-none page-bg" />
@@ -16,38 +16,59 @@
       </main>
 
       <!-- 用户端可拖拽反馈入口 -->
-      <FeedbackFloatingButton v-if="showFeedback" />
+      <FeedbackFloatingButton v-if="showFeedback && deferredReady" />
     </div>
-  </a-config-provider>
+  </ConfigProvider>
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, onMounted } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import ConfigProvider from 'ant-design-vue/es/config-provider'
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
 import { antdToken } from '@/constants/theme'
 import { useTheme } from '@/composables/useTheme'
-import AppHeader from '@/components/AppHeader.vue'
 import { useVisitTracker } from '@/composables/useVisitTracker'
 
-// 反馈组件包含富文本编辑器，仅在用户端需要时异步加载，降低首屏负担
+// 顶栏与反馈均拆出首屏入口；反馈含富文本编辑器，只在浏览器空闲后加载。
+const AppHeader = defineAsyncComponent(() => import('@/components/AppHeader.vue'))
 const FeedbackFloatingButton = defineAsyncComponent(() => import('@/components/FeedbackFloatingButton.vue'))
 
 const route = useRoute()
 const { applyCssVariables } = useTheme()
 const { init: initVisitTracker } = useVisitTracker()
+const deferredReady = ref(false)
+let deferredHandle
+let deferredHandleType
 
 // 隐藏反馈按钮的路径：管理端与认证页
 const HIDDEN_FEEDBACK_PATHS = ['/login', '/register', '/forgot-password']
 const showFeedback = computed(() => {
   const path = route.path
+  if (route.meta.hideFeedback) return false
   if (path.startsWith('/admin')) return false
   return !HIDDEN_FEEDBACK_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
 })
 
-// 挂载时将 theme.js 变量注入 :root，并初始化访客追踪
+function runDeferredTasks() {
+  deferredReady.value = true
+  initVisitTracker()
+}
+
+// 主题立即生效；访客追踪和富文本反馈让出关键渲染阶段。
 onMounted(() => {
   applyCssVariables()
-  initVisitTracker()
+  if ('requestIdleCallback' in window) {
+    deferredHandleType = 'idle'
+    deferredHandle = window.requestIdleCallback(runDeferredTasks, { timeout: 2000 })
+    return
+  }
+  deferredHandleType = 'timeout'
+  deferredHandle = window.setTimeout(runDeferredTasks, 800)
+})
+
+onBeforeUnmount(() => {
+  if (deferredHandleType === 'idle') window.cancelIdleCallback?.(deferredHandle)
+  if (deferredHandleType === 'timeout') window.clearTimeout(deferredHandle)
 })
 </script>

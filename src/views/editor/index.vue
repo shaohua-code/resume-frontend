@@ -550,7 +550,7 @@ async function handleExportWord() {
 </html>`
 
     const blob = new Blob(['\ufeff', docHtml], { type: 'application/msword' })
-    saveAs(blob, `${resume.name || '简历'}_AI简历助手.doc`)
+    saveAs(blob, `${resume.name || '简历'}_AI简历.doc`)
     message.success('Word导出成功，可用 Word/WPS 打开编辑')
   } catch (e) {
     console.error('[导出Word失败]', e)
@@ -584,7 +584,7 @@ async function handleExportMarkdown() {
     if (!canExport) return
     const { saveAs } = await import('file-saver')
     const blob = new Blob([buildMarkdownResume()], { type: 'text/markdown;charset=utf-8' })
-    saveAs(blob, `${resume.name || '简历'}_AI简历助手.md`)
+    saveAs(blob, `${resume.name || '简历'}_AI简历.md`)
     message.success('Markdown导出成功')
   } catch (e) {
     console.error('[导出Markdown失败]', e)

@@ -25,7 +25,7 @@ import GlassCard from '@/components/GlassCard.vue'
       <!-- Logo 和标题区：移动端缩小尺寸 -->
       <div class="mb-5 text-center sm:mb-6">
         <img src="/vite.svg" alt="Logo" class="mx-auto mb-2.5 h-10 w-10 sm:mb-3 sm:h-12 sm:w-12" />
-        <h2 class="mb-0.5 text-xl font-bold text-ink sm:mb-1 sm:text-2xl">AI 简历助手</h2>
+        <h2 class="mb-0.5 text-xl font-bold text-ink sm:mb-1 sm:text-2xl">AI 简历</h2>
         <p class="text-xs text-ink-secondary sm:text-sm">专业简历，让求职更简单</p>
       </div>
 

@@ -2,6 +2,7 @@
 /**
  * 首页 - Hero + 使用流程 + 功能卡 + 模板预览 + 信任背书
  */
+import { defineAsyncComponent } from "vue";
 import { useRouter } from "vue-router";
 import {
   CloudUploadOutlined,
@@ -12,12 +13,15 @@ import {
 import { useUserStore } from "@/stores/user";
 import PageHero from "@/components/PageHero.vue";
 import GlassCard from "@/components/GlassCard.vue";
+import LazyRender from "@/components/LazyRender.vue";
 import HeroActions from "./components/HeroActions.vue";
 import FeatureGrid from "./components/FeatureGrid.vue";
-import TemplatePreview from "./components/TemplatePreview.vue";
-import TrustOfferWall from "./components/TrustOfferWall.vue";
 import { HOME_FEATURES, HOME_STATS } from "./utils/features";
 import { createHomeNavigator } from "./utils/navigate";
+
+// 首屏以下的模板注册表与轮播组件在接近视口时再请求。
+const TemplatePreview = defineAsyncComponent(() => import("./components/TemplatePreview.vue"));
+const TrustOfferWall = defineAsyncComponent(() => import("./components/TrustOfferWall.vue"));
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -80,9 +84,13 @@ function handleFeatureClick(item) {
       </div>
     </section>
 
-    <TemplatePreview />
+    <LazyRender min-height="38rem">
+      <TemplatePreview />
+    </LazyRender>
 
-    <TrustOfferWall />
+    <LazyRender min-height="36rem" root-margin="400px 0px">
+      <TrustOfferWall />
+    </LazyRender>
     <section
       class="relative w-full px-4 py-8 pt-0 mx-auto max-w-7xl sm:px-6 sm:py-12 sm:pt-0 lg:px-8"
     >

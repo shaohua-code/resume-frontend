@@ -4,6 +4,7 @@
  */
 import GlassCard from '@/components/GlassCard.vue'
 import { useRouter } from 'vue-router'
+import Carousel from 'ant-design-vue/es/carousel'
 import {
   CheckCircleFilled,
   EditOutlined,
@@ -87,7 +88,7 @@ const guaranteeIcons = {
 
       <!-- 移动端匿名证言轮播 -->
       <div class="mt-6 sm:hidden">
-        <a-carousel autoplay dots class="trust-carousel">
+        <Carousel autoplay dots class="trust-carousel">
           <div
             v-for="(item, idx) in TRUST_TESTIMONIALS"
             :key="idx"
@@ -108,7 +109,7 @@ const guaranteeIcons = {
               </div>
             </div>
           </div>
-        </a-carousel>
+        </Carousel>
       </div>
 
       <!-- 平板和桌面端展示更多反馈，减少轮播信息隐藏 -->

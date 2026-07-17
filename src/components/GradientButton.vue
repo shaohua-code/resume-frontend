@@ -1,6 +1,6 @@
 <script setup>
 /**
- * 渐变主按钮 - 封装 a-button + Glassmorphism 渐变样式
+ * 渐变主按钮 - 原生按钮 + Glassmorphism 渐变样式
  * 全站统一 40px（h-10）高度
  */
 import { computed } from 'vue'
@@ -51,15 +51,14 @@ const btnClass = computed(() => {
 </script>
 
 <template>
-  <a-button
-    :class="btnClass"
-    size="middle"
-    :loading="loading"
-    :disabled="disabled"
-    :block="block"
-    :html-type="htmlType"
+  <button
+    :class="[btnClass, { 'w-full': block }]"
+    :type="htmlType"
+    :disabled="disabled || loading"
+    :aria-busy="loading"
     @click="emit('click', $event)"
   >
+    <span v-if="loading" class="gradient-button-spinner" aria-hidden="true" />
     <template v-if="variant === 'heroPrimary'">
       <slot name="prefix" />
       <span class="bg-gradient-to-r from-brand via-brand-light to-accent bg-clip-text text-transparent">
@@ -68,5 +67,29 @@ const btnClass = computed(() => {
       <slot name="suffix" />
     </template>
     <slot v-else />
-  </a-button>
+  </button>
 </template>
+
+<style scoped>
+.gradient-button-spinner {
+  width: 1em;
+  height: 1em;
+  flex: 0 0 auto;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  animation: gradient-button-spin 0.75s linear infinite;
+}
+
+@keyframes gradient-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gradient-button-spinner {
+    animation-duration: 1.5s;
+  }
+}
+</style>

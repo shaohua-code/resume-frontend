@@ -431,6 +431,7 @@ input.ant-input.input-field:not(textarea) {
   .btn-ghost,
   .btn-ghost-sm,
   .btn-ghost-dashed,
+  .btn-hero-primary,
   .btn-mint,
   .btn-danger,
   .ant-btn:not(.ant-btn-link):not(.ant-btn-text) {

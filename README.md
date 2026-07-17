@@ -1,4 +1,4 @@
-# AI 简历助手 · 前端项目
+# AI 简历 · 前端项目
 
 面向全行业、全职业阶段求职者的响应式 AI 简历前端，提供 AI 生成简历、在线编辑、上传优化、岗位匹配分析、AI 评分、多格式导出与 25 套分类模板等完整能力。
 
@@ -34,6 +34,7 @@ views/
 ├── upload-optimize/        （旧路由，已 redirect 至 /generate?mode=upload）
 ├── user/index.vue
 ├── editor/index.vue        + components/（编辑器子组件）
+├── not-found/index.vue     公开 404 恢复页
 └── admin/index.vue         + components/ + utils/
 ```
 
@@ -46,7 +47,7 @@ views/
 
 ```
 src/
-├── components/          # 全局 UI 组件
+├── components/          # 全局 UI 组件（含 LazyRender 视口懒渲染容器）
 ├── composables/         # 业务组合式函数
 │   ├── useResumeExportPrint.js  # 浏览器打印 API 导出 PDF
 │   ├── useResumeOptimizer.js    # 简历分模块 AI 优化
@@ -109,7 +110,14 @@ src/
 
 模板预览页：`views/templates/index.vue`（`/templates`）展示全部 25 套模板。
 
-首页模块顺序：Hero → 使用流程 → 核心功能 → 精选模板预览 → 信任背书。
+首页模块顺序：Hero → 核心功能 → 精选模板预览 → 信任背书 → 使用流程。
+
+### 首屏加载策略
+
+- 首页与 404 路由使用 `meta.lightweight`，不等待完整 Ant Design Vue；其他业务页会在路由解析完成前异步注册完整组件库。
+- `AppHeader` 异步加载，用户反馈与访问追踪在浏览器空闲阶段启动。
+- 首页模板预览和信任背书由 `LazyRender` 在接近视口时加载，避免模板注册表和轮播依赖进入首屏入口包。
+- 未知地址统一进入 `/:pathMatch(.*)*`，展示轻量 404 页面并提供首页、上一页、模板库和生成页入口。
 
 ## 六、生成页三模式
 
@@ -130,9 +138,9 @@ Hero 数据背书（stat-glass）：紧凑胶囊 `min-w-[88px] px-4 py-2.5`，�
 | 断点 | 策略 |
 | --- | --- |
 | 默认 | 单列、Drawer 导航 |
-| md (768px) | 功能卡 2 列（`:md="12"`） |
-| lg (1024px) | 功能卡 3 列（`:lg="8"`）、水平菜单 |
-| xl (1280px) | 功能卡 6 列（`:xl="4"`） |
+| md (768px) | 功能卡 CSS Grid 2 列 |
+| lg (1024px) | 功能卡 CSS Grid 3 列、水平菜单 |
+| xl (1280px) | 功能卡 CSS Grid 6 列 |
 
 首页允许自然滚动（已移除 `min-h-[calc(100vh-4rem)]` 一屏限制）。顶栏搜索与「免费开户」间距 `ml-6`（24px）。
 
@@ -235,13 +243,15 @@ npm run build    # 生产构建
 npm run preview  # 预览构建
 ```
 
+提交代码前阅读 [`CONTRIBUTING.md`](CONTRIBUTING.md)。输入 `--提交` 时，项目的 `commit-ai-resume` Skill 会审查当前差异、运行必要验证，并按规范创建本地提交；不会自动推送。
+
 ## 十五、注意事项
 
 1. **简历模板**（`components/resume-templates/`）使用独立 CSS（`rt-*`），保证 PDF/打印友好
 2. **编辑器组件**位于 `views/editor/components/`
 3. 环境变量：`.env.development` / `.env.production`；生产通过 `VITE_API_URL` 指定后端
 4. **计费**：AI 按账户余额扣费，余额不足时接口返回 402；导出对登录用户免费
-5. 全功能说明见项目根目录 [`AI简历助手-项目全功能说明.md`](../AI简历助手-项目全功能说明.md)
+5. 全功能说明见项目根目录 [`AI简历-项目全功能说明.md`](../AI简历-项目全功能说明.md)
 
 ## 十六、风格提示词
 
