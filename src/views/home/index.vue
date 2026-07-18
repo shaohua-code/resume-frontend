@@ -41,7 +41,7 @@ const HOME_FLOW = [
   {
     icon: EditOutlined,
     title: "在线编辑排版",
-    description: "25 套模板，内容与样式随心调整",
+    description: "27 套模板，内容与样式随心调整",
   },
   {
     icon: FileDoneOutlined,
