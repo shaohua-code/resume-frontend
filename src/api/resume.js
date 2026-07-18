@@ -125,6 +125,37 @@ export async function generateResumeStream(data, handlers = {}, model = '') {
 }
 
 /**
+ * 从自由文字中流式提取简历字段。
+ * 该接口只识别原文事实，不生成、润色或补写内容；最终生成仍由用户在表单末尾主动触发。
+ */
+export async function extractResumeTextStream(rawText, handlers = {}, model = '') {
+  const body = { raw_text: rawText }
+  if (model) body.model = model
+
+  const response = await fetchSSEWithEmailGate(() => authorizedSSEFetch(`${API_BASE}/api/ai/extract-resume/stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+    signal: handlers.signal,
+  }), { signal: handlers.signal })
+
+  if (!response.ok) {
+    let detail = '文字识别失败，请重试'
+    try {
+      const errJson = await response.json()
+      detail = errJson.detail || detail
+    } catch (e) {
+      /* ignore */
+    }
+    throw new Error(detail)
+  }
+
+  return readSSEStream(response, handlers)
+}
+
+/**
  * 解析 SSE 行事件（与 generateResumeStream 共用格式）
  */
 async function readSSEStream(response, handlers = {}) {
@@ -196,6 +227,35 @@ async function readSSEStream(response, handlers = {}) {
       // 退出登录或余额刷新失败不覆盖本次 AI 的真实结果。
     }
   }
+}
+
+/**
+ * 上传 PDF 并流式提取其中已有的简历字段。
+ * 与 PDF 优化接口保持独立，避免用户点击“识别”时提前改写原简历内容。
+ */
+export async function uploadRecognizeResumeStream(file, handlers = {}, model = '') {
+  const formData = new FormData()
+  formData.append('file', file)
+  if (model) formData.append('model', model)
+
+  const response = await fetchSSEWithEmailGate(() => authorizedSSEFetch(`${API_BASE}/api/pdf/uploadRecognize/stream`, {
+    method: 'POST',
+    body: formData,
+    signal: handlers.signal,
+  }), { signal: handlers.signal })
+
+  if (!response.ok) {
+    let detail = 'PDF 识别失败，请重试'
+    try {
+      const errJson = await response.json()
+      detail = errJson.detail || detail
+    } catch (e) {
+      /* ignore */
+    }
+    throw new Error(detail)
+  }
+
+  return readSSEStream(response, handlers)
 }
 
 /**

@@ -9,6 +9,8 @@
  */
 export const AI_TASK_TYPES = {
   RESUME_GENERATE: 'resume_generate',
+  // PDF 与文字识别共用纯提取任务，和生成、优化的计费记录明确分开。
+  RESUME_EXTRACT: 'resume_extract',
   PROJECT_OPTIMIZE: 'project_optimize',
   SUMMARY_OPTIMIZE: 'summary_optimize',
   SKILLS_OPTIMIZE: 'skills_optimize',
@@ -27,6 +29,7 @@ export const AI_TASK_TYPES = {
  */
 export const AI_TASK_TYPE_LABEL_MAP = {
   [AI_TASK_TYPES.RESUME_GENERATE]: '简历生成',
+  [AI_TASK_TYPES.RESUME_EXTRACT]: '简历信息识别',
   [AI_TASK_TYPES.PROJECT_OPTIMIZE]: '项目经历优化',
   [AI_TASK_TYPES.SUMMARY_OPTIMIZE]: '个人评价优化',
   [AI_TASK_TYPES.SKILLS_OPTIMIZE]: '技能特长优化',

@@ -15,9 +15,10 @@ import {
   ExclamationCircleOutlined,
 } from '@ant-design/icons-vue'
 import GradientButton from '@/components/GradientButton.vue'
-import { generateResumeStream, uploadOptimizeResumeStream } from '@/api/resume'
+import { extractResumeTextStream, uploadRecognizeResumeStream } from '@/api/resume'
 import { normalizeResumeFields } from '@/constants/resumeFieldSchema'
 import { parsePartialResumeJson } from '../utils/streamResumeParser'
+import { formatRecognitionPreview } from '../utils/recognitionPreview'
 import { useGenerateDraft } from '../composables/useGenerateDraft'
 
 const props = defineProps({
@@ -34,6 +35,7 @@ const { state, clear: clearDraft } = useGenerateDraft('ai-resume-recognition-dra
   phase: 'idle',
   status: '',
   streamText: '',
+  previewResume: {},
   fileName: '',
   error: '',
 })
@@ -47,8 +49,40 @@ if (state.phase === 'running') {
 const pdfFile = ref(null)
 const fileList = ref([])
 let activeRecognitionController = null
+
+// 示例只用于帮助用户理解可识别格式，内容全部是演示数据且不会自动发起 AI 请求。
+const TEXT_RECOGNITION_EXAMPLE = `姓名：张三
+求职意向：Java 开发工程师
+电话：13800000000
+邮箱：zhangsan@example.com
+工作年限：3年
+
+教育经历：
+2018.09—2022.06，广东工业大学，软件工程专业，本科。
+主修课程：Java程序设计、数据库原理、计算机网络。
+
+专业技能：
+Java、Spring Boot、MySQL、Redis、Git。
+
+工作经历：
+2022.07—至今，广州示例科技有限公司，Java开发工程师。
+负责订单系统接口开发、数据库维护及线上问题排查。
+
+项目经历：
+2023.03—2023.12，电商订单管理系统，后端开发。
+使用Spring Boot、MySQL和Redis完成订单创建、查询及状态更新功能。
+
+证书：
+大学英语四级、计算机二级。`
+
 const loading = computed(() => state.phase === 'running')
 const hasRun = computed(() => state.phase !== 'idle' || !!state.streamText)
+const readableStreamText = computed(() => {
+  const completed = state.previewResume && Object.keys(state.previewResume).length
+    ? state.previewResume
+    : parsePartialResumeJson(state.streamText)
+  return formatRecognitionPreview(completed)
+})
 const statusType = computed(() => {
   if (state.phase === 'complete') return 'success'
   if (state.phase === 'error' || state.phase === 'interrupted') return 'warning'
@@ -91,8 +125,9 @@ function finishRecognition(data) {
   const source = data?.resume || data || {}
   const normalized = normalizeResumeFields(source)
   emit('complete', normalized)
+  state.previewResume = normalized
   state.phase = 'complete'
-  state.status = '识别完成，内容已回填到下方表单'
+  state.status = '识别完成，原文事实已回填到下方表单，尚未优化'
   state.error = ''
 }
 
@@ -104,6 +139,7 @@ async function runRecognition(operation, startStatus) {
   state.phase = 'running'
   state.status = startStatus
   state.streamText = ''
+  state.previewResume = {}
   state.error = ''
   let doneHandled = false
 
@@ -111,11 +147,11 @@ async function runRecognition(operation, startStatus) {
     const result = await operation({
       signal: controller.signal,
       onStatus: (status) => {
-        state.status = status || 'AI 正在识别并整理信息...'
+        state.status = status || 'AI 正在识别原文事实...'
       },
       onChunk: (chunk) => {
         state.streamText += chunk
-        state.status = 'AI 正在流式识别，表单将持续回填...'
+        state.status = 'AI 正在流式提取原文事实，表单将持续回填...'
         emitPartialResult()
       },
       onDone: (data) => {
@@ -145,8 +181,8 @@ async function recognizePdf() {
     return
   }
   await runRecognition(
-    (handlers) => uploadOptimizeResumeStream(pdfFile.value, '', handlers),
-    '正在上传并解析 PDF...'
+    (handlers) => uploadRecognizeResumeStream(pdfFile.value, handlers),
+    '正在上传并识别 PDF 原文事实...'
   )
 }
 
@@ -157,14 +193,15 @@ async function recognizeText() {
     return
   }
   await runRecognition(
-    (handlers) => generateResumeStream({
-      input_mode: 'lazy',
-      raw_text: text,
-      name: '',
-      target_position: '',
-    }, handlers),
-    '正在理解文字内容...'
+    (handlers) => extractResumeTextStream(text, handlers),
+    '正在识别文字中的原文事实...'
   )
+}
+
+/** 填入可直接识别的演示简历，但保留用户点击“开始识别”的明确确认步骤。 */
+function fillTextExample() {
+  if (loading.value || props.disabled) return
+  state.rawText = TEXT_RECOGNITION_EXAMPLE
 }
 
 defineExpose({ clearDraft })
@@ -176,7 +213,7 @@ onBeforeUnmount(() => activeRecognitionController?.abort())
     <template #title>
       <div class="flex flex-col gap-1">
         <span class="text-base font-semibold text-ink">辅助识别</span>
-        <span class="text-xs font-normal text-muted">可选用一种方式回填，也可以跳过识别直接填写表单</span>
+        <span class="text-xs font-normal text-muted">只提取原文事实并回填，不生成、不润色；也可以跳过识别直接填写表单</span>
       </div>
     </template>
 
@@ -203,7 +240,7 @@ onBeforeUnmount(() => activeRecognitionController?.abort())
       >
         <p class="ant-upload-drag-icon"><InboxOutlined /></p>
         <p class="ant-upload-text">点击或拖拽 PDF 简历到这里</p>
-        <p class="ant-upload-hint">仅支持 PDF，最大 10MB；识别结果只回填表单</p>
+        <p class="ant-upload-hint">仅支持含可复制文本层的 PDF，最大 10MB；扫描件或图片型 PDF 请先完成 OCR。若可复制文字仍识别失败，可改用「智能文字识别」粘贴后再试</p>
       </a-upload-dragger>
       <div class="flex justify-center sm:justify-end">
         <GradientButton
@@ -224,10 +261,17 @@ onBeforeUnmount(() => activeRecognitionController?.abort())
         :auto-size="{ minRows: 7, maxRows: 14 }"
         :maxlength="8000"
         show-count
-        placeholder="粘贴或自由填写已有简历内容，支持分段描述、键值对等任意格式..."
+        placeholder="粘贴已有简历内容，系统只提取其中明确写出的事实，不会补写或优化..."
         class="input-field"
       />
-      <div class="flex justify-center sm:justify-end">
+      <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <a-button
+          class="min-h-11 w-full sm:w-auto sm:min-w-[120px]"
+          :disabled="loading || disabled"
+          @click="fillTextExample"
+        >
+          填写示例
+        </a-button>
         <GradientButton
           class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[160px]"
           :loading="loading"
@@ -239,7 +283,7 @@ onBeforeUnmount(() => activeRecognitionController?.abort())
       </div>
     </div>
 
-    <!-- 状态与流式原文完成后仍保留，用户可核对识别过程。 -->
+    <!-- 内部仍按 JSON 流解析和回填，但这里只展示中文可读内容。 -->
     <div v-if="hasRun" class="mt-5 overflow-hidden rounded-card border border-line/60 bg-cream/70">
       <div class="flex items-center gap-2 border-b border-line/50 px-4 py-3 text-sm font-medium">
         <a-spin v-if="loading" size="small" />
@@ -249,10 +293,10 @@ onBeforeUnmount(() => activeRecognitionController?.abort())
         <span>{{ state.status || '等待识别' }}</span>
       </div>
       <pre
-        v-if="state.streamText"
-        class="max-h-52 overflow-auto whitespace-pre-wrap break-words px-4 py-3 text-xs leading-6 text-ink-secondary"
-      >{{ state.streamText }}</pre>
-      <p v-else class="px-4 py-3 text-xs text-muted">识别内容将在这里流式显示，并同步写入下方表单。</p>
+        v-if="readableStreamText"
+        class="max-h-64 overflow-auto whitespace-pre-wrap break-words px-4 py-3 text-sm leading-6 text-ink-secondary"
+      >{{ readableStreamText }}</pre>
+      <p v-else class="px-4 py-3 text-xs text-muted">识别到完整内容后会在这里逐步显示中文结果，并同步写入下方表单。</p>
     </div>
   </a-card>
 </template>
