@@ -232,6 +232,7 @@ async function readSSEStream(response, handlers = {}) {
 /**
  * 上传 PDF 并流式提取其中已有的简历字段。
  * 与 PDF 优化接口保持独立，避免用户点击“识别”时提前改写原简历内容。
+ * 上传成功后会覆盖用户名下唯一保留的那份 PDF，供下次直接识别。
  */
 export async function uploadRecognizeResumeStream(file, handlers = {}, model = '') {
   const formData = new FormData()
@@ -241,6 +242,33 @@ export async function uploadRecognizeResumeStream(file, handlers = {}, model = '
   const response = await fetchSSEWithEmailGate(() => authorizedSSEFetch(`${API_BASE}/api/pdf/uploadRecognize/stream`, {
     method: 'POST',
     body: formData,
+    signal: handlers.signal,
+  }), { signal: handlers.signal })
+
+  if (!response.ok) {
+    let detail = 'PDF 识别失败，请重试'
+    try {
+      const errJson = await response.json()
+      detail = errJson.detail || detail
+    } catch (e) {
+      /* ignore */
+    }
+    throw new Error(detail)
+  }
+
+  return readSSEStream(response, handlers)
+}
+
+/**
+ * 使用已上传 PDF 流式纯识别（无需重新选择文件）。
+ */
+export async function uploadRecognizeExistingStream(handlers = {}, model = '') {
+  const response = await fetchSSEWithEmailGate(() => authorizedSSEFetch(`${API_BASE}/api/pdf/uploadRecognize/existing/stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(model ? { model } : {}),
     signal: handlers.signal,
   }), { signal: handlers.signal })
 
