@@ -52,13 +52,10 @@ request.interceptors.request.use(
       }
     } catch (e) {
       if (e?.silent) return Promise.reject(e)
-      // 仅已登录态下 token 失效才清理并跳转；未登录用户继续放行（由业务页自行处理）
-      const hasAuthState = !!localStorage.getItem('token')
-      if (hasAuthState) {
-        localStorage.removeItem('token')
-        localStorage.removeItem('refresh_token')
-        localStorage.removeItem('expires_at')
-        localStorage.removeItem('userInfo')
+      // 仅已登录态下 token 失效才清理并跳转；必须同步清 Pinia，避免指引等组件误判仍登录。
+      const userStore = useUserStore()
+      if (userStore.isLoggedIn || localStorage.getItem('token')) {
+        userStore.clearSession()
         router.push('/login')
       }
     }
@@ -113,10 +110,7 @@ request.interceptors.response.use(
           return Promise.reject(createOperationCancelledError('登录状态已变化，本次请求未继续'))
         }
         if (originalRequest.__authRetried) {
-          localStorage.removeItem('token')
-          localStorage.removeItem('refresh_token')
-          localStorage.removeItem('expires_at')
-          localStorage.removeItem('userInfo')
+          useUserStore().clearSession()
           message.error('登录已过期，请重新登录')
           router.push('/login')
           return Promise.reject(error)
@@ -133,10 +127,7 @@ request.interceptors.response.use(
               ? refreshError
               : createOperationCancelledError('登录状态已变化，本次请求未继续'))
           }
-          localStorage.removeItem('token')
-          localStorage.removeItem('refresh_token')
-          localStorage.removeItem('expires_at')
-          localStorage.removeItem('userInfo')
+          useUserStore().clearSession()
           message.error('登录已过期，请重新登录')
           router.push('/login')
           return Promise.reject(refreshError)

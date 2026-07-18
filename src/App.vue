@@ -21,8 +21,8 @@
       <!-- 服务端命中 AI 邮箱门禁时才按需加载弹窗，绑定成功后自动续接原操作。 -->
       <EmailBindingModal v-if="emailBindingGateOpen" />
 
-      <!-- 注册产生待引导标记后，在首次进入生成页时展示三步新手指引。 -->
-      <NewUserGuide v-if="deferredReady" />
+      <!-- 仅登录后挂载；注册产生 pending 后，首次进入生成页再展示三步指引。 -->
+      <NewUserGuide v-if="deferredReady && userStore.isLoggedIn" />
     </div>
   </ConfigProvider>
 </template>
@@ -35,6 +35,7 @@ import zhCN from 'ant-design-vue/es/locale/zh_CN'
 import { antdToken } from '@/constants/theme'
 import { useTheme } from '@/composables/useTheme'
 import { useVisitTracker } from '@/composables/useVisitTracker'
+import { useUserStore } from '@/stores/user'
 import { emailBindingGateOpen } from '@/utils/emailBindingGate'
 
 // 顶栏、反馈和邮箱绑定弹窗均按需加载，避免非 AI 首屏承担无关组件体积。
@@ -44,6 +45,7 @@ const EmailBindingModal = defineAsyncComponent(() => import('@/components/EmailB
 const NewUserGuide = defineAsyncComponent(() => import('@/components/NewUserGuide.vue'))
 
 const route = useRoute()
+const userStore = useUserStore()
 const { applyCssVariables } = useTheme()
 const { init: initVisitTracker } = useVisitTracker()
 const deferredReady = ref(false)

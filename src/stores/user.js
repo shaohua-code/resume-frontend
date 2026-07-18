@@ -184,7 +184,8 @@ export const useUserStore = defineStore('user', () => {
     return token.value
   }
 
-  function logout() {
+  /** 同步清空内存与本地会话；鉴权失效时静默调用，避免组件误判仍登录。 */
+  function clearSession() {
     token.value = ''
     refreshTokenValue.value = ''
     expiresAt.value = 0
@@ -196,6 +197,10 @@ export const useUserStore = defineStore('user', () => {
     // 退出时终止仍在等待绑定的请求，避免下一位登录用户继承旧操作。
     cancelEmailBinding('登录状态已结束')
     useWalletStore().reset()
+  }
+
+  function logout() {
+    clearSession()
     message.success('已退出登录')
   }
 
@@ -221,6 +226,7 @@ export const useUserStore = defineStore('user', () => {
     hasPermission,
     getValidToken,
     patchUserInfo,
+    clearSession,
     logout,
     triggerDashboardRefresh,
   }
