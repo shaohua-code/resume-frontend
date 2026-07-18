@@ -23,7 +23,7 @@ const routes = [
     path: '/register',
     name: 'Register',
     component: () => import('@/views/register/index.vue'),
-    meta: { title: '注册', hideLayout: true },
+    meta: { title: '注册', hideLayout: true, guestOnly: true },
   },
   {
     path: '/forgot-password',
@@ -181,8 +181,12 @@ router.beforeEach((to, from, next) => {
   document.title = titleRoute?.meta.title ? `${titleRoute.meta.title} - AI简历` : 'AI简历'
   const token = localStorage.getItem('token')
   const requireAuth = to.matched.some((r) => r.meta.requireAuth)
+  const guestOnly = to.matched.some((r) => r.meta.guestOnly)
   const rolesMeta = to.matched.find((r) => r.meta.roles)?.meta.roles
-  if (requireAuth && !token) {
+  // 已登录用户不能直接创建新随机账号并覆盖当前会话。
+  if (guestOnly && token) {
+    next('/')
+  } else if (requireAuth && !token) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
   } else if (rolesMeta) {
     const userStore = useUserStore()

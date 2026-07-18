@@ -1,719 +1,186 @@
 <!--
-  表单填写生成简历面板
-  Step0~4：基本信息 → 教育背景 → 经历信息（项目/实习/工作）→ AI 生成 → 预览编辑
+  统一简历生成面板：顶部辅助识别只回填这一份表单，最后一步再执行 AI 生成或岗位优化。
 -->
-<template>
-  <div class="mx-auto max-w-6xl">
-    <a-card class="card-base mb-4" :bordered="false">
-      <a-steps :current="currentStep" class="gen-steps">
-        <a-step title="基本信息" description="填写个人资料" />
-        <a-step title="教育背景（选填）" description="就读与毕业信息" />
-        <a-step title="经历信息（选填）" description="项目、实习与工作经历" />
-        <a-step title="AI生成" description="智能生成简历" />
-        <a-step title="预览编辑" description="进入编辑器" />
-      </a-steps>
-    </a-card>
-
-    <div class="animate-slide-up">
-      <!-- Step0: 基本信息 -->
-      <div v-show="currentStep === 0">
-        <a-alert
-          message="提示"
-          description="姓名与求职方向为必填项，其余字段选填，填写越完整 AI 生成质量越高。"
-          type="info"
-          show-icon
-          closable
-          class="mb-4"
-        />
-        <a-card class="card-base mb-4" :bordered="false">
-          <template #title>
-            <span class="flex items-center gap-2 text-base font-semibold text-ink">
-              <UserOutlined /> 基本信息
-            </span>
-          </template>
-          <ResumeBasicFieldsSection ref="basicFieldsRef" v-model="basicForm" :show-summary="false" :show-avatar="false" />
-          <a-form layout="vertical" class="mt-4">
-            <a-row :gutter="[16, 0]">
-              <a-col :xs="24" :sm="12">
-                <a-form-item label="技能标签">
-                  <a-input :value="basicForm.skills" placeholder="用逗号分隔，如：Vue3,JavaScript" size="large" class="input-field" @update:value="basicForm.skills = $event" />
-                </a-form-item>
-              </a-col>
-              <a-col :span="24">
-                <a-form-item label="获奖情况">
-                  <a-textarea :value="basicForm.awards" :rows="2" placeholder="每行一条" class="input-field" @update:value="basicForm.awards = $event" />
-                </a-form-item>
-              </a-col>
-              <a-col :span="24">
-                <a-form-item label="证书">
-                  <a-textarea :value="basicForm.certificates" :rows="2" placeholder="每行一条" class="input-field" @update:value="basicForm.certificates = $event" />
-                </a-form-item>
-              </a-col>
-            </a-row>
-          </a-form>
-        </a-card>
-
-        <div class="flex justify-center p-4">
-          <GradientButton class="inline-flex h-10 min-w-[160px] items-center justify-center gap-2" @click="nextFromBasic">
-            下一步：教育背景（选填）
-            <ArrowRightOutlined />
-          </GradientButton>
-        </div>
-      </div>
-
-      <!-- Step1: 教育背景 -->
-      <div v-show="currentStep === 1">
-        <a-alert
-          message="教育背景为选填"
-          description="可添加多条教育经历，包括就读时间与毕业时间。"
-          type="info"
-          show-icon
-          closable
-          class="mb-4"
-        />
-        <a-card class="card-base mb-4" :bordered="false">
-          <template #title>
-            <span class="flex items-center gap-2 text-base font-semibold text-ink">
-              <ReadOutlined /> 教育背景
-            </span>
-          </template>
-          <ResumeEducationListSection v-model="educations" />
-        </a-card>
-        <div class="flex flex-col-reverse items-stretch justify-center gap-3 p-4 sm:flex-row sm:items-center">
-          <button class="btn-ghost inline-flex h-10 min-w-[160px] items-center justify-center" @click="currentStep = 0">
-            <ArrowLeftOutlined /> 上一步
-          </button>
-          <GradientButton class="inline-flex h-10 min-w-[160px] items-center justify-center gap-2" @click="currentStep = 2">
-            下一步：经历信息（选填）
-            <ArrowRightOutlined />
-          </GradientButton>
-        </div>
-      </div>
-
-      <!-- Step2: 项目、实习与正式工作经历（选填） -->
-      <div v-show="currentStep === 2">
-        <a-alert
-          message="经历信息均为选填，填写越详细 AI 生成质量越高"
-          description="可填写项目、实习或正式工作经历。AI 会结合目标岗位和真实信息，用 STAR 法则优化表达。"
-          type="success"
-          show-icon
-          closable
-          class="mb-4"
-        />
-        <a-card class="card-base mb-4" :bordered="false">
-          <template #title>
-            <span class="flex items-center gap-2 text-base font-semibold text-ink">
-              <CodeOutlined /> 项目经历（选填）
-              <span class="badge">{{ projects.filter(p => p.name || p.description).length }} 个项目</span>
-            </span>
-          </template>
-          <div class="space-y-4">
-          <div v-for="(project, index) in projects" :key="index" class="rounded-card border border-line/50 bg-canvas/50 p-4 transition-shadow duration-200 hover:shadow-sm sm:p-5">
-            <div class="mb-4 flex items-center justify-between">
-              <h4 class="flex items-center gap-2 text-base font-semibold text-ink">
-                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-dark text-xs font-semibold text-white">{{ index + 1 }}</span> 项目 {{ index + 1 }}
-              </h4>
-              <button v-if="projects.length > 1" class="link-text text-xs text-danger hover:text-red-500" @click="removeProject(index)">
-                <DeleteOutlined /> 删除
-              </button>
-            </div>
-            <a-form layout="vertical">
-              <a-row :gutter="[16, 0]">
-                <a-col :xs="24" :sm="12">
-                  <a-form-item label="项目名称">
-                    <a-input :value="project.name" placeholder="如：校园二手交易平台" class="input-field" @update:value="project.name = $event" />
-                  </a-form-item>
-                </a-col>
-                <a-col :xs="24" :sm="12">
-                  <a-form-item label="你的角色">
-                    <a-input :value="project.role" placeholder="如：前端负责人" class="input-field" @update:value="project.role = $event" />
-                  </a-form-item>
-                </a-col>
-                <a-col :xs="24" :sm="12">
-                  <a-form-item label="开始时间">
-                    <a-date-picker :value="project.start_date" picker="month" value-format="YYYY.MM" placeholder="2024.03" class="input-field w-full" @update:value="project.start_date = $event" />
-                  </a-form-item>
-                </a-col>
-                <a-col :xs="24" :sm="12">
-                  <a-form-item label="结束时间">
-                    <a-date-picker :value="project.end_date" picker="month" value-format="YYYY.MM" placeholder="2024.06" class="input-field w-full" @update:value="project.end_date = $event" />
-                  </a-form-item>
-                </a-col>
-                <a-col :xs="24" :sm="24">
-                  <a-form-item label="专业技能 / 工具">
-                    <a-input :value="project.tech_stack" placeholder="如：Vue3,Pinia,Ant Design Vue" class="input-field" @update:value="project.tech_stack = $event" />
-                  </a-form-item>
-                </a-col>
-                <a-col :span="24">
-                  <a-form-item label="项目描述（简单描述即可，AI 会自动优化）">
-                    <a-textarea
-                      :value="project.description"
-                      :auto-size="{ minRows: 4, maxRows: 8 }"
-                      :maxlength="500"
-                      show-count
-                      placeholder="例如：基于 Vue3 开发后台管理系统，实现登录和权限管理。AI 会自动用 STAR 法则改写为更专业的描述。"
-                      class="project-desc-field"
-                      @update:value="project.description = $event"
-                    />
-                  </a-form-item>
-                </a-col>
-              </a-row>
-            </a-form>
-          </div>
-          </div>
-          <button class="btn-ghost mt-4 w-full border-dashed py-2.5" @click="addProject">
-            <PlusOutlined /> 添加项目
-          </button>
-        </a-card>
-
-        <a-card class="card-base mb-4" :bordered="false">
-          <template #title>
-            <span class="flex items-center gap-2 text-base font-semibold text-ink">
-              <BankOutlined /> 实习经历（选填）
-              <span class="badge">{{ internships.filter(i => i.company).length }} 段实习</span>
-            </span>
-          </template>
-          <div class="space-y-4">
-          <div v-for="(intern, index) in internships" :key="index" class="rounded-card border border-line/50 bg-canvas/50 p-4 transition-shadow duration-200 hover:shadow-sm sm:p-5">
-            <div class="mb-4 flex items-center justify-between">
-              <h4 class="flex items-center gap-2 text-base font-semibold text-ink">
-                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-warning text-xs font-semibold text-white">{{ index + 1 }}</span> 实习 {{ index + 1 }}
-              </h4>
-              <button v-if="internships.length > 1" class="link-text text-xs text-danger hover:text-red-500" @click="removeInternship(index)">
-                <DeleteOutlined /> 删除
-              </button>
-            </div>
-            <a-form layout="vertical">
-              <a-row :gutter="[16, 0]">
-                <a-col :xs="24" :sm="12">
-                  <a-form-item label="公司名称">
-                    <a-input :value="intern.company" placeholder="如：某公司 / 医院 / 学校 / 机构" class="input-field" @update:value="intern.company = $event" />
-                  </a-form-item>
-                </a-col>
-                <a-col :xs="24" :sm="12">
-                  <a-form-item label="岗位">
-                    <a-input :value="intern.position" placeholder="如：运营实习生 / 助教 / 工程实习生" class="input-field" @update:value="intern.position = $event" />
-                  </a-form-item>
-                </a-col>
-                <a-col :xs="24" :sm="12">
-                  <a-form-item label="开始时间">
-                    <a-date-picker :value="intern.start_date" picker="month" value-format="YYYY.MM" placeholder="2024.06" class="input-field w-full" @update:value="intern.start_date = $event" />
-                  </a-form-item>
-                </a-col>
-                <a-col :xs="24" :sm="12">
-                  <a-form-item label="结束时间">
-                    <a-date-picker :value="intern.end_date" picker="month" value-format="YYYY.MM" placeholder="2024.09" class="input-field w-full" @update:value="intern.end_date = $event" />
-                  </a-form-item>
-                </a-col>
-                <a-col :span="24">
-                  <a-form-item label="工作描述">
-                    <a-textarea :value="intern.description" :rows="2" placeholder="描述你的工作内容和成果" class="input-field" @update:value="intern.description = $event" />
-                  </a-form-item>
-                </a-col>
-              </a-row>
-            </a-form>
-          </div>
-          </div>
-          <button class="btn-ghost mt-4 w-full border-dashed py-2.5" @click="addInternship">
-            <PlusOutlined /> 添加实习
-          </button>
-        </a-card>
-
-        <!-- 工作经历（正式全职工作，选填） -->
-        <a-card class="card-base mb-4" :bordered="false">
-          <template #title>
-            <span class="flex items-center gap-2 text-base font-semibold text-ink">
-              <BankOutlined /> 工作经历（选填）
-              <span class="badge">{{ workExperiences.filter(w => w.company || w.description).length }} 段工作</span>
-            </span>
-          </template>
-          <div class="space-y-4">
-          <div v-for="(exp, index) in workExperiences" :key="index" class="rounded-card border border-line/50 bg-canvas/50 p-4 transition-shadow duration-200 hover:shadow-sm sm:p-5">
-            <div class="mb-4 flex items-center justify-between">
-              <h4 class="flex items-center gap-2 text-base font-semibold text-ink">
-                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-dark text-xs font-semibold text-white">{{ index + 1 }}</span> 工作 {{ index + 1 }}
-              </h4>
-              <button v-if="workExperiences.length > 1" class="link-text text-xs text-danger hover:text-red-500" @click="removeWorkExperience(index)">
-                <DeleteOutlined /> 删除
-              </button>
-            </div>
-            <a-form layout="vertical">
-              <a-row :gutter="[16, 0]">
-                <a-col :xs="24" :sm="12">
-                  <a-form-item label="公司名称">
-                    <a-input :value="exp.company" placeholder="如：某科技有限公司" class="input-field" @update:value="exp.company = $event" />
-                  </a-form-item>
-                </a-col>
-                <a-col :xs="24" :sm="12">
-                  <a-form-item label="岗位">
-                    <a-input :value="exp.position" placeholder="如：销售顾问 / 会计 / 工程师" class="input-field" @update:value="exp.position = $event" />
-                  </a-form-item>
-                </a-col>
-                <a-col :xs="24" :sm="12">
-                  <a-form-item label="部门（选填）">
-                    <a-input :value="exp.department" placeholder="如：技术研发部" class="input-field" @update:value="exp.department = $event" />
-                  </a-form-item>
-                </a-col>
-                <a-col :xs="24" :sm="12">
-                  <a-form-item label="开始时间">
-                    <a-date-picker :value="exp.start_date" picker="month" value-format="YYYY.MM" placeholder="2023.01" class="input-field w-full" @update:value="exp.start_date = $event" />
-                  </a-form-item>
-                </a-col>
-                <a-col :xs="24" :sm="12">
-                  <a-form-item label="结束时间">
-                    <a-date-picker :value="exp.end_date" picker="month" value-format="YYYY.MM" placeholder="2024.06 或 至今" class="input-field w-full" @update:value="exp.end_date = $event" />
-                  </a-form-item>
-                </a-col>
-                <a-col :span="24">
-                  <a-form-item label="工作描述（简单描述即可，AI 会自动优化）">
-                    <a-textarea
-                      :value="exp.description"
-                      :auto-size="{ minRows: 4, maxRows: 8 }"
-                      :maxlength="500"
-                      show-count
-                      placeholder="例如：负责公司前端架构设计与核心业务开发，带领 3 人团队完成后台管理系统重构。AI 会自动用 STAR 法则改写为更专业的描述。"
-                      class="project-desc-field"
-                      @update:value="exp.description = $event"
-                    />
-                  </a-form-item>
-                </a-col>
-              </a-row>
-            </a-form>
-          </div>
-          </div>
-          <button class="btn-ghost mt-4 w-full border-dashed py-2.5" @click="addWorkExperience">
-            <PlusOutlined /> 添加工作经历
-          </button>
-        </a-card>
-
-        <div class="flex flex-col-reverse items-stretch justify-center gap-3 p-4 sm:flex-row sm:items-center">
-          <button class="btn-ghost inline-flex h-10 min-w-[160px] items-center justify-center" @click="currentStep = 1">
-            <ArrowLeftOutlined /> 上一步
-          </button>
-          <GradientButton class="inline-flex h-10 min-w-[160px] items-center justify-center" :loading="resumeStore.generating" @click="handleGenerate">
-            <ThunderboltOutlined v-if="!resumeStore.generating" class="mr-1" />
-            AI 生成简历
-          </GradientButton>
-          <button
-            v-if="canShowJdOptimize"
-            type="button"
-            class="btn-ghost inline-flex h-10 min-w-[160px] items-center justify-center gap-1.5"
-            @click="openJdOptimize"
-          >
-            <AimOutlined /> 按岗位优化简历
-          </button>
-        </div>
-      </div>
-
-      <!-- Step3: AI生成中 -->
-      <div v-show="currentStep === 3">
-        <a-card class="card-base mb-4 py-12 text-center" :bordered="false">
-          <div class="mx-auto max-w-2xl">
-            <div class="relative mx-auto mb-6 flex h-16 w-16 items-center justify-center">
-              <div class="absolute inset-0 animate-pulse rounded-full bg-brand/20 blur-xl" />
-              <div class="relative flex h-16 w-16 items-center justify-center rounded-full bg-brand-lighter">
-                <a-spin size="large" class="text-brand-dark" />
-              </div>
-            </div>
-            <h2 class="mb-2 text-xl font-semibold text-brand-dark">
-              {{ isJdOptimizing ? 'AI 正在根据岗位 岗位优化你的简历...' : 'AI 正在为你生成专业简历...' }}
-            </h2>
-            <p class="mb-2 text-sm text-muted">
-              {{ isJdOptimizing ? '结合岗位 JD 与表单内容，针对性优化简历' : '结合目标行业优化经历描述，突出岗位优势' }}
-            </p>
-            <div class="mb-6 flex items-center justify-center gap-1.5">
-              <span class="h-2 w-2 animate-bounce rounded-full bg-brand" style="animation-delay: 0ms" />
-              <span class="h-2 w-2 animate-bounce rounded-full bg-brand-light" style="animation-delay: 150ms" />
-              <span class="h-2 w-2 animate-bounce rounded-full bg-accent" style="animation-delay: 300ms" />
-            </div>
-
-            <div class="animate-fade-in rounded-card border border-line/50 bg-cream p-4 text-left sm:p-5">
-              <StreamResumePreview
-                :stream-text="isJdOptimizing ? jdStreamText : resumeStore.streamText"
-                :loading="isJdOptimizing ? jdLoading : resumeStore.generating"
-                :template-id="resumeStore.currentTemplateId"
-                :loading-hint="isJdOptimizing ? 'AI 正在根据岗位 岗位优化你的简历...' : undefined"
-              />
-            </div>
-
-            <div v-if="!isJdOptimizing" class="mt-6 rounded-card bg-cream p-5 text-left">
-              <div
-                v-for="(step, idx) in progressSteps"
-                :key="idx"
-                class="flex items-center gap-3 py-2 text-sm"
-                :class="progressClass(idx)"
-              >
-                <span
-                  class="flex h-5 w-5 items-center justify-center rounded-full text-xs"
-                  :class="idx === progressIndex ? 'animate-spin' : ''"
-                >
-                  {{ idx < progressIndex ? '✓' : idx === progressIndex ? '⟳' : '○' }}
-                </span>
-                {{ step }}
-              </div>
-            </div>
-            <p class="mt-6 text-xs text-warning">
-              {{ isJdOptimizing ? '岗位优化流式输出中，请耐心等待完成' : '流式生成中，请耐心等待完成' }}
-            </p>
-          </div>
-        </a-card>
-      </div>
-
-      <!-- Step4: 生成成功 -->
-      <div v-show="currentStep === 4">
-        <a-card class="card-base mb-4 py-8" :bordered="false">
-          <a-result status="success" title="🎉 简历生成成功！" sub-title="AI 已根据目标岗位生成专业求职简历，前往编辑器进行预览、修改和导出">
-            <template #extra>
-              <div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <GradientButton class="inline-flex h-10 items-center" @click="goToEditor">
-                  <EditOutlined /> 进入编辑器
-                </GradientButton>
-                <GradientButton ghost class="inline-flex h-10 items-center" @click="currentStep = 0">
-                  <ReloadOutlined /> 重新生成
-                </GradientButton>
-              </div>
-            </template>
-          </a-result>
-        </a-card>
-      </div>
-    </div>
-
-    <!-- 超过 5 份简历时的二次确认弹窗 -->
-    <a-modal
-      v-model:open="overLimitVisible"
-      title="简历数量超限提醒"
-      ok-text="继续生成（替换最后一份）"
-      cancel-text="取消"
-      @ok="confirmOverLimit"
-    >
-      <div class="py-2 text-sm leading-relaxed text-ink-secondary">
-        每人最多生成 <span class="font-semibold text-danger">5</span> 份简历，继续生成将
-        <span class="font-semibold text-danger">替换最后一份简历</span>，简历将无法找回。
-        <br /><br />
-        是否继续操作？
-      </div>
-    </a-modal>
-
-    <!-- 岗位优化弹窗：确定后跳转 Step3 页内流式预览 -->
-    <JdResumeOptimizeModal
-      v-model:open="jdOptimizeOpen"
-      :resume="jdOptimizeResume"
-      :template-id="resumeStore.currentTemplateId"
-      @confirm-start="handleJdConfirmStart"
-    />
-  </div>
-</template>
-
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
-  DeleteOutlined, PlusOutlined, ThunderboltOutlined,
-  UserOutlined, CodeOutlined, BankOutlined, ReadOutlined,
-  ArrowLeftOutlined, ArrowRightOutlined, EditOutlined, ReloadOutlined,
   AimOutlined,
+  ArrowLeftOutlined,
+  ArrowRightOutlined,
+  BulbOutlined,
+  CheckCircleFilled,
+  EditOutlined,
+  ReadOutlined,
+  ReloadOutlined,
+  ThunderboltOutlined,
+  UserOutlined,
 } from '@ant-design/icons-vue'
-import { useResumeStore } from '@/stores/resume'
-import { createResume as createApi } from '@/api/resume'
 import GradientButton from '@/components/GradientButton.vue'
 import JdResumeOptimizeModal from '@/components/JdResumeOptimizeModal.vue'
-import StreamResumePreview from './StreamResumePreview.vue'
-import { useJdResumeOptimize } from '@/composables/useJdResumeOptimize'
+import { optimizeResumeByJdStream } from '@/api/resume'
+import { useResumeStore } from '@/stores/resume'
+import { getCurrentSessionOwner } from '@/utils/emailBindingGate'
+import {
+  createEmptyBasicForm,
+  mergeRecognizedResume,
+  normalizeResumeFields,
+  syncFlatEducationFields,
+  validateRequiredBasicFields,
+} from '@/constants/resumeFieldSchema'
+import RecognitionPanel from './RecognitionPanel.vue'
 import ResumeBasicFieldsSection from './ResumeBasicFieldsSection.vue'
 import ResumeEducationListSection from './ResumeEducationListSection.vue'
-import { createEmptyBasicForm, syncFlatEducationFields, validateRequiredBasicFields, mergeOptimizedResume, normalizeResumeFields } from '@/constants/resumeFieldSchema'
+import ResumeExperienceSections from './ResumeExperienceSections.vue'
+import StreamResumePreview from './StreamResumePreview.vue'
+import { useGenerateDraft } from '../composables/useGenerateDraft'
 
 const router = useRouter()
 const resumeStore = useResumeStore()
 const basicFieldsRef = ref(null)
-
-// 读取首页 JD 输入模块暂存的内容
-onMounted(() => {
-  const pendingJd = sessionStorage.getItem('pending_jd')
-  if (pendingJd) {
-    basicForm.target_position = pendingJd
-    sessionStorage.removeItem('pending_jd')
-  }
-})
-
-const currentStep = ref(0)
-
-// 超过 5 份简历时的二次确认弹窗状态
+const recognitionRef = ref(null)
+const recognitionLoading = ref(false)
 const overLimitVisible = ref(false)
-// 标记是否已确认超限，避免重复弹窗
-const overLimitConfirmed = ref(false)
-
-const basicForm = reactive({
-  ...createEmptyBasicForm(),
-  skills: '',
-  awards: '',
-  certificates: '',
-})
-
-const educations = reactive([])
-
-const projects = reactive([
-  { name: '', role: '', description: '', tech_stack: '', start_date: '', end_date: '' },
-])
-
-const internships = reactive([
-  { company: '', position: '', description: '', start_date: '', end_date: '' },
-])
-
-// 工作经历列表（正式全职工作，区别于实习）
-const workExperiences = reactive([
-  { company: '', position: '', department: '', start_date: '', end_date: '', description: '' },
-])
-
-// 岗位优化弹窗与页内流式状态
 const jdOptimizeOpen = ref(false)
-const jdOptimizeResume = ref({})
-const isJdOptimizing = ref(false)
-const pendingJdText = ref('')
-const {
-  streamText: jdStreamText,
-  loading: jdLoading,
-  optimizeResult: jdOptimizeResult,
-  startOptimize: startJdOptimize,
-} = useJdResumeOptimize()
+const pendingAction = ref(null)
+const operationStarting = ref(false)
+const pageSessionOwner = getCurrentSessionOwner()
+let activeOperationController = null
 
-// Step2 且已填姓名即可 岗位优化（不要求意向岗位）
-const canShowJdOptimize = computed(() => {
-  if (currentStep.value !== 2) return false
-  return !!basicForm.name?.trim()
+const emptyProject = () => ({ name: '', role: '', description: '', tech_stack: '', start_date: '', end_date: '' })
+const emptyInternship = () => ({ company: '', position: '', description: '', start_date: '', end_date: '' })
+const emptyWorkExperience = () => ({ company: '', position: '', department: '', description: '', start_date: '', end_date: '' })
+const emptyGeneration = () => ({
+  phase: 'idle',
+  kind: 'generate',
+  status: '',
+  streamText: '',
+  result: null,
+  notes: [],
+  resumeId: null,
+  saveRequestId: '',
+  lastJdText: '',
 })
 
-/** 打开 岗位优化输入弹窗 */
-function openJdOptimize() {
-  if (!basicForm.name?.trim()) {
-    message.warning('请先填写姓名')
-    return
-  }
-  jdOptimizeResume.value = getResumeSnapshot()
-  jdOptimizeOpen.value = true
+/** 为一次 AI 结果生成稳定保存键；重试保存复用该键，不会重复创建简历。 */
+function createSaveRequestId() {
+  return globalThis.crypto?.randomUUID?.()
+    || `resume-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`
 }
 
-/** 执行 JD 流式优化并落库 */
-async function runJdOptimize(jdText) {
-  const snapshot = getResumeSnapshot()
-  isJdOptimizing.value = true
-  currentStep.value = 3
+const { state: draft, clear: clearDraft, persist: persistDraft } = useGenerateDraft(
+  'ai-resume-unified-form-draft-v2',
+  {
+    currentStep: 0,
+    basic: { ...createEmptyBasicForm(), skills: '', awards: '', certificates: '' },
+    educations: [],
+    projects: [emptyProject()],
+    internships: [emptyInternship()],
+    workExperiences: [emptyWorkExperience()],
+    generation: emptyGeneration(),
+  },
+)
 
-  const ok = await startJdOptimize(snapshot, {
-    jdText,
-    skipBasicCheck: true,
-    successMessage: '岗位优化完成',
-  })
+// 兼容旧草稿缺失的新字段，防止模板直接读取 undefined。
+draft.basic = { ...createEmptyBasicForm(), skills: '', awards: '', certificates: '', ...(draft.basic || {}) }
+draft.educations = Array.isArray(draft.educations) ? draft.educations : []
+draft.projects = Array.isArray(draft.projects) && draft.projects.length ? draft.projects : [emptyProject()]
+draft.internships = Array.isArray(draft.internships) && draft.internships.length ? draft.internships : [emptyInternship()]
+draft.workExperiences = Array.isArray(draft.workExperiences) && draft.workExperiences.length
+  ? draft.workExperiences
+  : [emptyWorkExperience()]
+draft.generation = { ...emptyGeneration(), ...(draft.generation || {}) }
 
-  if (ok && jdOptimizeResult.value?.resume) {
-    resumeStore.currentResume = jdOptimizeResult.value.resume
-    try {
-      const createRes = await createApi({
-        title: jdOptimizeResult.value.resume?.name
-          ? `${jdOptimizeResult.value.resume.name}的简历`
-          : '未命名简历',
-        resume_json: jdOptimizeResult.value.resume,
-        template_id: resumeStore.currentTemplateId || 1,
-        score: 0,
-      })
-      if (createRes.success && createRes.data?.id) {
-        resumeStore.currentResumeId = createRes.data.id
-      }
-    } catch (createErr) {
-      console.warn('[FormPanel] 岗位优化后自动创建简历失败:', createErr)
-    }
-    currentStep.value = 4
-    overLimitConfirmed.value = false
+// 刷新不自动重放付费请求；若最终结构已收到，则直接进入可重试保存态。
+if (draft.generation.phase === 'streaming') {
+  if (draft.generation.result && Object.keys(draft.generation.result).length) {
+    draft.generation.phase = 'save_error'
+    draft.generation.status = 'AI 结果已保留，请重试保存，无需重新生成'
+    draft.generation.saveRequestId = draft.generation.saveRequestId || createSaveRequestId()
   } else {
-    currentStep.value = 2
+    draft.generation.phase = 'interrupted'
+    draft.generation.status = '页面刷新中断了上次生成，请检查已输出内容后手动重新生成'
   }
-  isJdOptimizing.value = false
+}
+if (draft.generation.phase === 'save_error' && !draft.generation.saveRequestId) {
+  draft.generation.saveRequestId = createSaveRequestId()
 }
 
-/** 弹窗确定：校验超限后进入 Step3 页内预览 */
-async function handleJdConfirmStart({ jdText }) {
-  if (!basicForm.name?.trim()) {
-    message.warning('请先填写姓名')
-    return
+const generationLoading = computed(() => draft.generation.phase === 'streaming')
+const formLocked = computed(() => recognitionLoading.value || generationLoading.value || operationStarting.value)
+const hasGenerationPanel = computed(() => draft.generation.phase !== 'idle' || !!draft.generation.streamText)
+const previewStreamText = computed(() => {
+  // 完成或保存失败后以最终结构为权威预览；原始流仍在下方独立保留供核对。
+  if (draft.generation.result && draft.generation.phase !== 'streaming') {
+    return JSON.stringify(draft.generation.result, null, 2)
   }
+  if (draft.generation.streamText) return draft.generation.streamText
+  return draft.generation.result ? JSON.stringify(draft.generation.result, null, 2) : ''
+})
+const jdOptimizeResume = computed(() => getFormSnapshot())
 
-  if (!overLimitConfirmed.value) {
-    await resumeStore.fetchResumeCount()
-    if (resumeStore.resumeTotal >= resumeStore.resumeMaxCount) {
-      pendingJdText.value = jdText
-      overLimitVisible.value = true
-      return
-    }
+onMounted(() => {
+  const pendingJdKey = pageSessionOwner ? `pending_jd:${pageSessionOwner}` : ''
+  const pendingJd = pendingJdKey ? sessionStorage.getItem(pendingJdKey) : ''
+  if (pendingJd) {
+    // 首页传来的是完整 JD，只预填岗位优化弹窗，绝不能污染“意向岗位”字段。
+    draft.generation.lastJdText = pendingJd
+    sessionStorage.removeItem(pendingJdKey)
   }
+  // 固定旧键无法证明所属账号，升级后只清理不迁移，避免把上一账号的 JD 泄露给当前账号。
+  sessionStorage.removeItem('pending_jd')
 
-  await runJdOptimize(jdText)
-}
-
-const progressSteps = [
-  '分析基本信息',
-  '优化项目描述',
-  '生成个人评价中...',
-  '整理技能标签',
-]
-
-const progressIndex = computed(() => {
-  if (currentStep.value !== 3 || isJdOptimizing.value) return progressSteps.length
-  const len = resumeStore.streamText.length
-  if (len > 800) return 3
-  if (len > 400) return 2
-  if (len > 100) return 1
-  return 0
+  // 只有本页草稿明确保存了 ID 才恢复，否则清除旧编辑器遗留状态。
+  if (draft.generation.resumeId) {
+    resumeStore.currentResumeId = draft.generation.resumeId
+    resumeStore.currentResume = normalizeResumeFields(draft.generation.result || {})
+  } else {
+    resumeStore.resetGenerationContext()
+  }
 })
 
-function progressClass(idx) {
-  if (idx < progressIndex.value) return 'text-success'
-  if (idx === progressIndex.value) return 'font-medium text-brand-dark'
-  return 'text-muted'
+onBeforeUnmount(() => activeOperationController?.abort())
+
+/** 每个付费流式操作只保留一个控制器，离页或新操作开始时可立即终止旧请求。 */
+function createOperationController() {
+  activeOperationController?.abort()
+  activeOperationController = new AbortController()
+  return activeOperationController
 }
 
-function addProject() {
-  projects.push({ name: '', role: '', description: '', tech_stack: '', start_date: '', end_date: '' })
-}
-
-function removeProject(index) {
-  projects.splice(index, 1)
-}
-
-function addInternship() {
-  internships.push({ company: '', position: '', description: '', start_date: '', end_date: '' })
-}
-
-function removeInternship(index) {
-  internships.splice(index, 1)
-}
-
-// ====== 工作经历增删方法 ======
-
-/** 添加一条工作经历（正式全职工作） */
-function addWorkExperience() {
-  workExperiences.push({ company: '', position: '', department: '', start_date: '', end_date: '', description: '' })
-}
-
-/** 删除指定索引的工作经历 */
-function removeWorkExperience(index) {
-  workExperiences.splice(index, 1)
-}
-
-async function nextFromBasic() {
-  const valid = await basicFieldsRef.value?.validate()
-  if (!valid) return
-  const check = validateRequiredBasicFields(basicForm)
-  if (!check.ok) {
-    message.warning(check.message)
-    return
-  }
-  basicForm.name = check.name
-  basicForm.target_position = check.target_position
-  currentStep.value = 1
-}
-
-async function handleGenerate() {
-  const valid = await basicFieldsRef.value?.validate()
-  if (!valid) {
-    currentStep.value = 0
-    return
-  }
-  const check = validateRequiredBasicFields(basicForm)
-  if (!check.ok) {
-    message.warning(check.message)
-    currentStep.value = 0
-    return
-  }
-  basicForm.name = check.name
-  basicForm.target_position = check.target_position
-
-  if (!overLimitConfirmed.value) {
-    await resumeStore.fetchResumeCount()
-    if (resumeStore.resumeTotal >= resumeStore.resumeMaxCount) {
-      overLimitVisible.value = true
-      return
-    }
-  }
-
-  currentStep.value = 3  // 跳转到 Step3（AI生成页）
+/** 将界面字段转换为后端统一简历结构，绝不读取旧 store 简历。 */
+function getFormSnapshot() {
   const payload = {
-    ...basicForm,
-    educations: educations.filter((e) => e.school || e.major || e.main_course || e.degree || e.start_date || e.end_date),
-    projects: projects.filter((p) => p.name || p.description),
-    internships: internships.filter((i) => i.company || i.description),
-    // 新增：工作经历（正式全职工作）
-    work_experiences: workExperiences.filter((w) => w.company || w.description),
-  }
-  syncFlatEducationFields(payload)
-  const result = await resumeStore.generateResume(payload)
-  if (result) {
-    currentStep.value = 4  // 跳转到 Step4（生成成功页）
-    overLimitConfirmed.value = false
-  } else {
-    currentStep.value = 2  // 失败回退到 Step2（经历信息页）
-    overLimitConfirmed.value = false
-  }
-}
-
-// 确认超限后继续生成或 岗位优化
-async function confirmOverLimit() {
-  overLimitVisible.value = false
-  overLimitConfirmed.value = true
-  if (pendingJdText.value) {
-    const jd = pendingJdText.value
-    pendingJdText.value = ''
-    await runJdOptimize(jd)
-    return
-  }
-  await handleGenerate()
-}
-
-function goToEditor() {
-  router.push('/editor')
-}
-
-/**
- * 构建当前表单简历快照，供 岗位优化弹窗使用
- */
-function getResumeSnapshot() {
-  // 若已 AI 生成完成，优先使用 store 中的完整简历
-  if (resumeStore.currentResume && Object.keys(resumeStore.currentResume).length) {
-    return normalizeResumeFields({ ...resumeStore.currentResume })
-  }
-  const payload = {
-    ...basicForm,
-    skills: basicForm.skills
-      ? basicForm.skills.split(/[,，、]/).map((s) => s.trim()).filter(Boolean)
-      : [],
-    awards: basicForm.awards ? basicForm.awards.split('\n').map((s) => s.trim()).filter(Boolean) : [],
-    certificates: basicForm.certificates ? basicForm.certificates.split('\n').map((s) => s.trim()).filter(Boolean) : [],
-    educations: educations.filter((e) => e.school || e.major || e.main_course || e.degree || e.start_date || e.end_date),
-    projects: projects
-      .filter((p) => p.name || p.description)
-      .map((p) => ({
-        ...p,
-        tech_stack: p.tech_stack
-          ? (Array.isArray(p.tech_stack) ? p.tech_stack : p.tech_stack.split(/[,，、]/).map((s) => s.trim()).filter(Boolean))
-          : [],
+    ...draft.basic,
+    skills: String(draft.basic.skills || '').split(/[,，、]/).map((item) => item.trim()).filter(Boolean),
+    awards: String(draft.basic.awards || '').split('\n').map((item) => item.trim()).filter(Boolean),
+    certificates: String(draft.basic.certificates || '').split('\n').map((item) => item.trim()).filter(Boolean),
+    educations: draft.educations.filter((item) => item.school || item.major || item.main_course || item.degree || item.start_date || item.end_date),
+    projects: draft.projects
+      .filter((item) => item.name || item.role || item.description || item.tech_stack || item.start_date || item.end_date)
+      .map((item) => ({
+        ...item,
+        tech_stack: Array.isArray(item.tech_stack)
+          ? item.tech_stack
+          : String(item.tech_stack || '').split(/[,，、]/).map((value) => value.trim()).filter(Boolean),
       })),
-    internships: internships.filter((i) => i.company || i.description),
-    // 工作经历（供 岗位优化使用）
-    work_experiences: workExperiences.filter((w) => w.company || w.description),
+    internships: draft.internships.filter((item) => (
+      item.company || item.position || item.description || item.start_date || item.end_date
+    )),
+    work_experiences: draft.workExperiences.filter((item) => (
+      item.company || item.position || item.department || item.description || item.start_date || item.end_date
+    )),
   }
-  syncFlatEducationFields(payload)
-  return normalizeResumeFields(payload)
+  return normalizeResumeFields(syncFlatEducationFields(payload))
 }
 
-/**
- * 用户确认应用 岗位优化结果后，合并到表单与 store
- */
-function applyOptimizedResume(optimized) {
-  const merged = mergeOptimizedResume(getResumeSnapshot(), optimized)
-  // 回填基本信息
-  Object.assign(basicForm, {
-    name: merged.name || basicForm.name,
-    target_position: merged.target_position || basicForm.target_position,
+/** 把识别结果写回唯一表单；空字段不会覆盖用户已有输入。 */
+function applyRecognizedResume(recognized) {
+  const merged = mergeRecognizedResume(getFormSnapshot(), recognized)
+  Object.assign(draft.basic, {
+    name: merged.name || '',
+    target_position: merged.target_position || '',
     phone: merged.phone || '',
     email: merged.email || '',
     work_years: merged.work_years || '',
@@ -725,75 +192,452 @@ function applyOptimizedResume(optimized) {
     political_status: merged.political_status || undefined,
     expected_salary: merged.expected_salary || '',
     custom_fields: merged.custom_fields || [],
-    skills: Array.isArray(merged.skills) ? merged.skills.join('、') : '',
-    awards: Array.isArray(merged.awards) ? merged.awards.join('\n') : '',
-    certificates: Array.isArray(merged.certificates) ? merged.certificates.join('\n') : '',
-    summary: merged.summary || '',
+    skills: (merged.skills || []).join('、'),
+    awards: (merged.awards || []).join('\n'),
+    certificates: (merged.certificates || []).join('\n'),
   })
-  // 回填教育、项目、实习
-  educations.splice(0, educations.length, ...(merged.educations || []))
-  if (!educations.length) educations.push({ school: '', major: '', main_course: '', degree: '', start_date: '', end_date: '' })
-  projects.splice(0, projects.length, ...(merged.projects || []).map((p) => ({
-    name: p.name || '',
-    role: p.role || '',
-    description: p.description || '',
-    tech_stack: Array.isArray(p.tech_stack) ? p.tech_stack.join('、') : (p.tech_stack || ''),
-    start_date: p.start_date || '',
-    end_date: p.end_date || '',
-  })))
-  if (!projects.length) projects.push({ name: '', role: '', description: '', tech_stack: '', start_date: '', end_date: '' })
-  internships.splice(0, internships.length, ...(merged.internships || []))
-  if (!internships.length) internships.push({ company: '', position: '', description: '', start_date: '', end_date: '' })
-  resumeStore.currentResume = merged
-  message.success('已应用 岗位优化结果')
+
+  if (merged.educations?.length) draft.educations = merged.educations
+  if (merged.projects?.length) {
+    draft.projects = merged.projects.map((item) => ({
+      ...item,
+      tech_stack: Array.isArray(item.tech_stack) ? item.tech_stack.join('、') : (item.tech_stack || ''),
+    }))
+  }
+  if (merged.internships?.length) draft.internships = merged.internships
+  if (merged.work_experiences?.length) draft.workExperiences = merged.work_experiences
 }
 
-defineExpose({ getResumeSnapshot, applyOptimizedResume })
+async function validateBasicAndFocus() {
+  const valid = await basicFieldsRef.value?.validate()
+  const check = validateRequiredBasicFields(draft.basic)
+  if (!valid || !check.ok) {
+    message.warning(check.message || '请填写姓名和意向岗位')
+    draft.currentStep = 0
+    return false
+  }
+  draft.basic.name = check.name
+  draft.basic.target_position = check.target_position
+  return true
+}
+
+async function nextFromBasic() {
+  if (await validateBasicAndFocus()) draft.currentStep = 1
+}
+
+/** 新建达到上限时沿用既有二次确认；同一 ID 重新生成无需再检查数量。 */
+async function runWithLimit(action) {
+  if (resumeStore.currentResumeId) {
+    await action()
+    return
+  }
+  await resumeStore.fetchResumeCount()
+  if (resumeStore.resumeTotal >= resumeStore.resumeMaxCount) {
+    pendingAction.value = action
+    overLimitVisible.value = true
+    return
+  }
+  await action()
+}
+
+async function confirmOverLimit() {
+  await runActionLocked(async () => {
+    overLimitVisible.value = false
+    const action = pendingAction.value
+    pendingAction.value = null
+    await action?.()
+  })
+}
+
+/** 校验、数量查询和请求启动也纳入互斥区，阻止快速双击发起两个付费调用。 */
+async function runActionLocked(action) {
+  if (formLocked.value) return
+  operationStarting.value = true
+  try {
+    return await action()
+  } finally {
+    operationStarting.value = false
+  }
+}
+
+function beginGeneration(kind, status) {
+  draft.generation.phase = 'streaming'
+  draft.generation.kind = kind
+  draft.generation.status = status
+  draft.generation.streamText = ''
+  draft.generation.result = null
+  draft.generation.notes = []
+  draft.generation.saveRequestId = createSaveRequestId()
+  persistDraft()
+}
+
+/** 生成接口没有单独亮点字段时，根据实际输出模块生成可核对的摘要。 */
+function buildHighlights(resume, kind, notes = []) {
+  const provided = (Array.isArray(notes) ? notes : []).map((item) => String(item || '').trim()).filter(Boolean)
+  if (provided.length) return provided
+
+  const result = []
+  if (resume.target_position) result.push(`围绕「${resume.target_position}」强化了岗位匹配表达`)
+  if (resume.projects?.length || resume.internships?.length || resume.work_experiences?.length) {
+    result.push('重组经历描述，突出行动、职责与可验证成果')
+  }
+  if (resume.skills?.length) result.push('整理核心技能关键词，便于招聘方快速定位优势')
+  if (resume.summary) result.push('生成更聚焦的个人评价与职业定位')
+  return result.length ? result : [kind === 'jd' ? '已结合岗位要求完成针对性优化' : '已完成简历结构与表达优化']
+}
+
+function completeGeneration(result, notes = []) {
+  const normalized = normalizeResumeFields(result)
+  draft.generation.result = normalized
+  draft.generation.notes = buildHighlights(normalized, draft.generation.kind, notes)
+  draft.generation.resumeId = resumeStore.currentResumeId
+  draft.generation.phase = 'complete'
+  draft.generation.status = '优化完成'
+  if (!draft.generation.streamText) draft.generation.streamText = JSON.stringify(normalized, null, 2)
+  persistDraft()
+}
+
+/** AI 完成后立即保存权威结构，落库失败时也能直接重试保存而无需再次调用模型。 */
+function preserveGeneratedResult(result, notes = []) {
+  const normalized = normalizeResumeFields(result)
+  draft.generation.result = normalized
+  draft.generation.notes = buildHighlights(normalized, draft.generation.kind, notes)
+  persistDraft()
+  return normalized
+}
+
+async function executeGenerate() {
+  const controller = createOperationController()
+  beginGeneration('generate', 'AI 正在生成并优化简历...')
+  try {
+    const outcome = await resumeStore.generateResume(getFormSnapshot(), {
+      signal: controller.signal,
+      clientRequestId: draft.generation.saveRequestId,
+      onStatus: (status) => {
+        draft.generation.status = status || 'AI 正在生成并优化简历...'
+      },
+      onChunk: (chunk) => {
+        draft.generation.streamText += chunk
+        draft.generation.status = 'AI 正在流式输出简历内容...'
+      },
+      onResult: (result) => preserveGeneratedResult(result),
+    })
+
+    if (outcome?.persisted) {
+      completeGeneration(outcome.resume)
+    } else if (outcome?.resume && outcome?.persistError) {
+      preserveGeneratedResult(outcome.resume)
+      draft.generation.phase = 'save_error'
+      draft.generation.status = 'AI 已生成完成，但保存失败，请直接重试保存'
+    } else if (outcome?.cancelled) {
+      draft.generation.phase = outcome.resume ? 'interrupted' : 'cancelled'
+      draft.generation.status = outcome.resume
+        ? '登录状态已变化，已保留生成结果但未保存'
+        : '已取消邮箱验证，本次生成未执行'
+    } else if (draft.generation.phase === 'streaming') {
+      draft.generation.phase = 'error'
+      draft.generation.status = '生成未完成，请检查已输出内容后重试'
+    }
+  } finally {
+    if (activeOperationController === controller) activeOperationController = null
+  }
+}
+
+async function handleGenerate() {
+  await runActionLocked(async () => {
+    if (!(await validateBasicAndFocus())) return
+    await runWithLimit(executeGenerate)
+  })
+}
+
+async function openJdOptimize() {
+  await runActionLocked(async () => {
+    if (!(await validateBasicAndFocus())) return
+    jdOptimizeOpen.value = true
+  })
+}
+
+async function executeJdOptimize(jdText) {
+  const controller = createOperationController()
+  const sessionOwner = getCurrentSessionOwner()
+  const snapshot = getFormSnapshot()
+  beginGeneration('jd', 'AI 正在结合岗位要求优化简历...')
+  draft.generation.lastJdText = jdText
+  let finalData = null
+
+  try {
+    const returned = await optimizeResumeByJdStream(snapshot, jdText, {
+      signal: controller.signal,
+      onStatus: (status) => {
+        draft.generation.status = status || 'AI 正在结合岗位要求优化简历...'
+      },
+      onChunk: (chunk) => {
+        draft.generation.streamText += chunk
+        draft.generation.status = '岗位优化内容正在流式输出...'
+      },
+      onDone: (data) => {
+        finalData = data
+      },
+    })
+    finalData = finalData || returned
+    const optimizedResume = finalData?.resume || finalData
+    if (!optimizedResume || !Object.keys(optimizedResume).length) throw new Error('AI 未返回有效简历')
+    const normalized = preserveGeneratedResult(optimizedResume, finalData?.optimization_notes || [])
+    if (!sessionOwner || getCurrentSessionOwner() !== sessionOwner) {
+      draft.generation.phase = 'interrupted'
+      draft.generation.status = '登录状态已变化，已保留优化结果但未保存'
+      return
+    }
+    try {
+      const persisted = await resumeStore.persistGeneratedResume(normalized, {
+        clientRequestId: draft.generation.saveRequestId,
+      })
+      completeGeneration(persisted, finalData?.optimization_notes || [])
+      message.success('岗位优化完成')
+    } catch {
+      draft.generation.phase = 'save_error'
+      draft.generation.status = '岗位优化已完成，但保存失败，请直接重试保存'
+      message.error(draft.generation.status)
+    }
+  } catch (error) {
+    if (error?.silent) {
+      draft.generation.phase = 'cancelled'
+      draft.generation.status = '已取消邮箱验证，本次优化未执行'
+      return
+    }
+    draft.generation.phase = 'error'
+    draft.generation.status = error?.message || '岗位优化失败，请重试'
+    message.error(draft.generation.status)
+  } finally {
+    if (activeOperationController === controller) activeOperationController = null
+  }
+}
+
+async function handleJdConfirmStart({ jdText }) {
+  await runActionLocked(async () => {
+    const trimmed = String(jdText || '').trim()
+    if (!trimmed) return
+    await runWithLimit(() => executeJdOptimize(trimmed))
+  })
+}
+
+async function restartGeneration() {
+  await runActionLocked(async () => {
+    if (!(await validateBasicAndFocus())) return
+    if (draft.generation.kind === 'jd') {
+      if (!draft.generation.lastJdText) {
+        jdOptimizeOpen.value = true
+        return
+      }
+      await runWithLimit(() => executeJdOptimize(draft.generation.lastJdText))
+      return
+    }
+    await runWithLimit(executeGenerate)
+  })
+}
+
+/** 只重试数据库保存，不重复调用已计费的 AI。 */
+async function retrySaveResult() {
+  await runActionLocked(async () => {
+    if (!draft.generation.result) return
+    if (!pageSessionOwner || getCurrentSessionOwner() !== pageSessionOwner) {
+      message.warning('登录状态已变化，请重新进入生成页')
+      return
+    }
+    try {
+      const persisted = await resumeStore.persistGeneratedResume(draft.generation.result, {
+        clientRequestId: draft.generation.saveRequestId,
+      })
+      completeGeneration(persisted, draft.generation.notes)
+      message.success('简历保存成功')
+    } catch {
+      draft.generation.phase = 'save_error'
+      draft.generation.status = '保存仍未成功，请稍后重试；AI 结果已为你保留'
+      message.error(draft.generation.status)
+    }
+  })
+}
+
+async function goToEditor() {
+  const id = resumeStore.currentResumeId || draft.generation.resumeId
+  if (!id) {
+    message.warning('简历尚未保存成功，请重新生成后再进入编辑器')
+    return
+  }
+  resumeStore.currentResume = normalizeResumeFields(draft.generation.result || {})
+  resumeStore.currentResumeId = id
+  // 子组件会在导航完成时卸载，因此两份草稿必须先清理。
+  clearDraft()
+  recognitionRef.value?.clearDraft?.()
+  await router.push(`/editor/${encodeURIComponent(id)}`)
+}
 </script>
+
+<template>
+  <div class="mx-auto max-w-6xl">
+    <RecognitionPanel
+      ref="recognitionRef"
+      :disabled="generationLoading || operationStarting"
+      @loading-change="recognitionLoading = $event"
+      @partial="applyRecognizedResume"
+      @complete="applyRecognizedResume"
+    />
+
+    <a-card class="card-base mb-4" :bordered="false">
+      <a-steps :current="draft.currentStep" size="small" class="gen-steps">
+        <a-step title="基本信息" description="姓名和意向岗位必填" />
+        <a-step title="教育背景" description="选填" />
+        <a-step title="经历与生成" description="选填经历后开始生成" />
+      </a-steps>
+    </a-card>
+
+    <div class="relative">
+      <div
+        :class="formLocked ? 'pointer-events-none select-none opacity-60' : ''"
+        :inert="formLocked ? '' : null"
+        :aria-busy="formLocked"
+      >
+        <div v-show="draft.currentStep === 0">
+          <a-alert message="姓名与意向岗位为必填项，其他内容均可选填。" type="info" show-icon class="mb-4" />
+          <a-card class="card-base mb-4" :bordered="false">
+            <template #title><span class="flex items-center gap-2 font-semibold text-ink"><UserOutlined /> 基本信息</span></template>
+            <ResumeBasicFieldsSection
+              ref="basicFieldsRef"
+              v-model="draft.basic"
+              :show-summary="false"
+              :show-avatar="false"
+              collapsible-advanced
+              :disabled="formLocked"
+            />
+            <a-form layout="vertical" class="mt-4">
+              <a-row :gutter="[16, 0]">
+                <a-col :span="24"><a-form-item label="技能标签"><a-input v-model:value="draft.basic.skills" class="input-field" placeholder="用逗号分隔，如：Vue3、JavaScript" /></a-form-item></a-col>
+                <a-col :span="24"><a-form-item label="获奖情况"><a-textarea v-model:value="draft.basic.awards" :rows="2" class="input-field" placeholder="每行一条" /></a-form-item></a-col>
+                <a-col :span="24"><a-form-item label="证书"><a-textarea v-model:value="draft.basic.certificates" :rows="2" class="input-field" placeholder="每行一条" /></a-form-item></a-col>
+              </a-row>
+            </a-form>
+          </a-card>
+          <div class="flex justify-center p-3">
+            <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[190px]" @click="nextFromBasic">下一步：教育背景 <ArrowRightOutlined /></GradientButton>
+          </div>
+        </div>
+
+        <div v-show="draft.currentStep === 1">
+          <a-card class="card-base mb-4" :bordered="false">
+            <template #title><span class="flex items-center gap-2 font-semibold text-ink"><ReadOutlined /> 教育背景（选填）</span></template>
+            <ResumeEducationListSection v-model="draft.educations" />
+          </a-card>
+          <div class="flex flex-col-reverse justify-center gap-3 p-3 sm:flex-row">
+            <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[150px]" @click="draft.currentStep = 0"><ArrowLeftOutlined /> 上一步</button>
+            <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[190px]" @click="draft.currentStep = 2">下一步：经历与生成 <ArrowRightOutlined /></GradientButton>
+          </div>
+        </div>
+
+        <div v-show="draft.currentStep === 2">
+          <ResumeExperienceSections
+            v-model:projects="draft.projects"
+            v-model:internships="draft.internships"
+            v-model:work-experiences="draft.workExperiences"
+          />
+          <div class="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-center">
+            <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[140px]" @click="draft.currentStep = 1"><ArrowLeftOutlined /> 上一步</button>
+            <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[170px]" :loading="generationLoading && draft.generation.kind === 'generate'" @click="handleGenerate"><ThunderboltOutlined v-if="!generationLoading" /> 开始 AI 生成</GradientButton>
+            <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[180px]" @click="openJdOptimize"><AimOutlined /> 按岗位优化简历</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 锁定层只覆盖表单，生成结果仍持续可见。 -->
+      <div v-if="formLocked" class="pointer-events-none absolute inset-0 z-10 flex items-start justify-center rounded-card bg-white/15 pt-24 backdrop-blur-[1px]">
+        <div class="rounded-full bg-white/95 px-4 py-2 text-sm font-medium text-brand-dark shadow-card"><a-spin size="small" class="mr-2" />{{ recognitionLoading ? '识别中，表单暂时锁定' : 'AI 输出中，表单暂时锁定' }}</div>
+      </div>
+    </div>
+
+    <!-- 流式结果不会在结束后隐藏，完成按钮只在全部输出完成后出现。 -->
+    <a-card v-if="hasGenerationPanel" class="card-base mt-5" :bordered="false">
+      <div class="mb-4 flex items-center gap-2 text-base font-semibold text-ink">
+        <a-spin v-if="generationLoading" size="small" />
+        <CheckCircleFilled v-else-if="draft.generation.phase === 'complete'" class="text-success" />
+        <span>{{ draft.generation.status || 'AI 处理结果' }}</span>
+      </div>
+
+      <div class="rounded-card border border-line/50 bg-cream p-2 sm:p-5">
+        <StreamResumePreview
+          :stream-text="previewStreamText"
+          :loading="generationLoading"
+          :template-id="resumeStore.currentTemplateId"
+          :loading-hint="draft.generation.status || 'AI 正在处理...'"
+        />
+      </div>
+
+      <!-- 完成态预览使用最终结构，原始流式文本仍常驻可展开核对。 -->
+      <details
+        v-if="draft.generation.streamText && draft.generation.phase !== 'streaming'"
+        class="mt-3 rounded-card border border-line/60 bg-white/70"
+      >
+        <summary class="cursor-pointer px-4 py-3 text-sm font-medium text-ink-secondary">查看本次流式输出原文</summary>
+        <pre class="max-h-64 overflow-auto whitespace-pre-wrap break-words border-t border-line/50 px-4 py-3 text-xs leading-6 text-ink-secondary">{{ draft.generation.streamText }}</pre>
+      </details>
+
+      <div v-if="['complete', 'save_error'].includes(draft.generation.phase)" class="mt-5 rounded-card border border-success/20 bg-emerald-50/40 p-4">
+        <h3 class="mb-3 flex items-center gap-2 font-semibold text-ink"><BulbOutlined class="text-warning" /> 本次优化亮点</h3>
+        <ul class="space-y-2 text-sm text-ink-secondary">
+          <li v-for="(note, index) in draft.generation.notes" :key="index" class="flex gap-2"><span class="text-success">✓</span><span>{{ note }}</span></li>
+        </ul>
+      </div>
+
+      <div v-if="draft.generation.phase === 'complete'" class="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[150px]" @click="goToEditor"><EditOutlined /> 进入编辑</GradientButton>
+        <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[150px]" @click="restartGeneration"><ReloadOutlined /> 重新生成</button>
+      </div>
+      <div v-else-if="draft.generation.phase === 'save_error'" class="mt-5 flex justify-center">
+        <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[170px]" @click="retrySaveResult">
+          <ReloadOutlined /> 重试保存结果
+        </GradientButton>
+      </div>
+      <div v-else-if="['error', 'interrupted'].includes(draft.generation.phase)" class="mt-5 flex justify-center">
+        <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[160px]" @click="restartGeneration"><ReloadOutlined /> 重新生成</button>
+      </div>
+    </a-card>
+
+    <JdResumeOptimizeModal
+      v-model:open="jdOptimizeOpen"
+      :resume="jdOptimizeResume"
+      :template-id="resumeStore.currentTemplateId"
+      :initial-jd-text="draft.generation.lastJdText"
+      @confirm-start="handleJdConfirmStart"
+    />
+
+    <a-modal v-model:open="overLimitVisible" title="简历数量超限提醒" ok-text="继续生成（替换最早一份）" cancel-text="取消" @ok="confirmOverLimit">
+      <p class="py-2 text-sm leading-7 text-ink-secondary">每人最多保存 {{ resumeStore.resumeMaxCount }} 份简历。继续生成将替换最早的一份简历，请确认是否继续。</p>
+    </a-modal>
+  </div>
+</template>
 
 <style scoped>
 :deep(.ant-card-head) {
-  @apply border-b border-line/70 px-6;
+  @apply border-b border-line/70 px-4 sm:px-6;
 }
 
 :deep(.ant-card-body) {
   @apply px-4 py-5 sm:px-6;
 }
 
-:deep(.ant-form-item-label > label) {
-  @apply text-sm font-medium text-ink-secondary;
-}
-
 :deep(.gen-steps .ant-steps-item-process .ant-steps-item-icon) {
   @apply border-brand-dark bg-brand-dark;
 }
 
-:deep(.gen-steps .ant-steps-item-finish .ant-steps-item-icon) {
-  @apply border-brand-dark text-brand-dark;
-}
+@media (max-width: 375px) {
+  :deep(.gen-steps .ant-steps-item-description) {
+    display: none;
+  }
 
-:deep(.gen-steps .ant-steps-item-finish .ant-steps-item-tail::after) {
-  @apply bg-brand;
-}
+  :deep(.gen-steps .ant-steps-item-title) {
+    @apply text-xs;
+  }
 
-:deep(.gen-steps .ant-steps-item-title) {
-  @apply text-sm font-medium text-ink;
-}
-
-:deep(.gen-steps .ant-steps-item-description) {
-  @apply text-xs text-muted;
-}
-
-/* 项目描述输入框：单层边框 + 更大书写区域 */
-:deep(.project-desc-field.ant-input-textarea-show-count) {
-  @apply relative border-0 bg-transparent p-0 shadow-none;
-}
-
-:deep(.project-desc-field textarea.ant-input) {
-  @apply min-h-[120px] resize-y rounded-button border border-line bg-white/80 px-4 py-2.5 pb-8 text-sm leading-relaxed text-ink placeholder:text-muted transition-colors hover:border-brand/40 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15;
-}
-
-:deep(.project-desc-field.ant-input-textarea-show-count::after) {
-  @apply absolute bottom-3 right-3 text-xs text-muted;
+  :deep(.ant-card-body) {
+    @apply px-3;
+  }
 }
 </style>

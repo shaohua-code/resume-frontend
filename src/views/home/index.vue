@@ -30,8 +30,8 @@ const navTo = createHomeNavigator(router, userStore);
 const HOME_FLOW = [
   {
     icon: CloudUploadOutlined,
-    title: "选择创建方式",
-    description: "上传旧简历，或从零填写信息",
+    title: "识别或直接填写",
+    description: "PDF、文字识别与统一表单在同一页完成",
   },
   {
     icon: ThunderboltOutlined,

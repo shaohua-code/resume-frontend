@@ -1,5 +1,5 @@
 /**
- * 25 套模板字体颜色独立默认预设
+ * 27 套模板字体颜色独立默认预设
  * - label / basicValue / name / content 对应编辑器四项颜色
  * - 用户未自定义（null）时由 CSS fallback 与本表 picker 展示值共同决定
  */
@@ -52,6 +52,10 @@ export const TEMPLATE_FONT_COLOR_PRESETS = {
   23: { label: '#7ee9e5', basicValue: '#ffffff', name: '#ffffff', content: '#33405a' },
   24: { label: '#f4c45c', basicValue: '#ffffff', name: '#ffffff', content: '#343c55' },
   25: { label: '#e65057', basicValue: '#3d3656', name: '#302947', content: '#403a4d' },
+  // 26. 晨光校刊：学院蓝文字搭配暖橙标签，保持打印阅读清晰。
+  26: { label: '#b85f2e', basicValue: '#29465a', name: '#173f5f', content: '#344754' },
+  // 27. 起跑计划：青绿标签与深海蓝正文，传达清爽的成长感。
+  27: { label: '#0f7f78', basicValue: '#24444d', name: '#ffffff', content: '#304751' },
 }
 
 /** 获取指定模板的字体色默认值（供颜色选择器展示） */

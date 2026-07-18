@@ -191,6 +191,7 @@
       v-model:open="jdOptimizeOpen"
       :resume="jdOptimizeResume"
       :template-id="resumeStore.currentTemplateId"
+      :initial-jd-text="initialJdText"
       @confirm-start="handleJdConfirmStart"
     />
   </div>
@@ -215,6 +216,7 @@ import StreamResumePreview from './StreamResumePreview.vue'
 import { useJdResumeOptimize } from '@/composables/useJdResumeOptimize'
 import { useScrollToStreamPreview } from '@/composables/useScrollToStreamPreview'
 import { REQUIRED_BASIC_FORM_RULES, mergeOptimizedResume, normalizeResumeFields } from '@/constants/resumeFieldSchema'
+import { getCurrentSessionOwner } from '@/utils/emailBindingGate'
 
 const router = useRouter()
 const resumeStore = useResumeStore()
@@ -284,6 +286,7 @@ const jdOptimizeOpen = ref(false)
 const jdOptimizeResume = ref({})
 const isJdOptimizing = ref(false)
 const pendingJdText = ref('')
+const initialJdText = ref('')
 const {
   streamText: jdStreamText,
   loading: jdLoading,
@@ -388,13 +391,16 @@ async function handleJdConfirmStart({ jdText }) {
   await runJdOptimize(jdText)
 }
 
-// 读取首页 JD 输入模块暂存的求职方向
+// 兼容旧面板时也只消费当前账号的完整 JD，并预填岗位弹窗而非污染意向岗位。
 onMounted(() => {
-  const pendingJd = sessionStorage.getItem('pending_jd')
+  const owner = getCurrentSessionOwner()
+  const key = owner ? `pending_jd:${owner}` : ''
+  const pendingJd = key ? sessionStorage.getItem(key) : ''
   if (pendingJd) {
-    lazyForm.target_position = pendingJd
-    sessionStorage.removeItem('pending_jd')
+    initialJdText.value = pendingJd
+    sessionStorage.removeItem(key)
   }
+  sessionStorage.removeItem('pending_jd')
 })
 
 const progressSteps = [
@@ -457,13 +463,13 @@ async function handleGenerate() {
   await scrollToStreamPreview()
   // 若自由文本未包含姓名，自动补一行便于 AI 识别
   const rawText = /姓名\s*[:：]/.test(text) ? text : `姓名：${name}\n${text}`
-  const result = await resumeStore.generateResume({
+  const outcome = await resumeStore.generateResume({
     input_mode: 'lazy',
     raw_text: rawText,
     target_position: position,
     name,
   })
-  if (result) {
+  if (outcome?.persisted) {
     currentStep.value = 2
     overLimitConfirmed.value = false
   } else {
@@ -486,7 +492,7 @@ async function confirmOverLimit() {
 }
 
 function goToEditor() {
-  router.push('/editor')
+  if (resumeStore.currentResumeId) router.push(`/editor/${resumeStore.currentResumeId}`)
 }
 
 /**

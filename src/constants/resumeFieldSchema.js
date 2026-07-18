@@ -78,6 +78,48 @@ export function normalizeCustomField(item = {}) {
   }
 }
 
+/** 归一化项目经历，避免识别结果中的空对象污染表单。 */
+export function normalizeProjectItem(item = {}) {
+  return {
+    name: item.name || item.project_name || '',
+    role: item.role || '',
+    description: item.description || item.content || '',
+    tech_stack: item.tech_stack || item.skills || '',
+    start_date: item.start_date || '',
+    end_date: item.end_date || '',
+  }
+}
+
+/** 归一化实习经历。 */
+export function normalizeInternshipItem(item = {}) {
+  return {
+    company: item.company || '',
+    position: item.position || item.role || '',
+    description: item.description || item.content || '',
+    start_date: item.start_date || '',
+    end_date: item.end_date || '',
+  }
+}
+
+/** 归一化正式工作经历，兼容旧版 workExperiences 命名。 */
+export function normalizeWorkExperienceItem(item = {}) {
+  return {
+    company: item.company || '',
+    position: item.position || item.role || '',
+    department: item.department || '',
+    description: item.description || item.content || '',
+    start_date: item.start_date || '',
+    end_date: item.end_date || '',
+  }
+}
+
+/** 将字符串或数组统一为去空字符串数组。 */
+function normalizeStringList(value) {
+  if (Array.isArray(value)) return value.map((item) => String(item || '').trim()).filter(Boolean)
+  if (!value) return []
+  return String(value).split(/[\n,，、]/).map((item) => item.trim()).filter(Boolean)
+}
+
 /**
  * 归一化教育背景数组
  * 兼容 educations[] 与扁平 school/major/education
@@ -138,6 +180,23 @@ export function normalizeResumeFields(resume = {}) {
   const educations = normalizeEducations(r)
   const customFields = normalizeCustomFields(r)
 
+  const projects = Array.isArray(r.projects)
+    ? r.projects.map(normalizeProjectItem).filter((item) => (
+      item.name || item.role || item.description || item.tech_stack || item.start_date || item.end_date
+    ))
+    : []
+  const internships = Array.isArray(r.internships)
+    ? r.internships.map(normalizeInternshipItem).filter((item) => (
+      item.company || item.position || item.description || item.start_date || item.end_date
+    ))
+    : []
+  const rawWorkExperiences = r.work_experiences || r.workExperiences || []
+  const workExperiences = Array.isArray(rawWorkExperiences)
+    ? rawWorkExperiences.map(normalizeWorkExperienceItem).filter((item) => (
+      item.company || item.position || item.department || item.description || item.start_date || item.end_date
+    ))
+    : []
+
   r.work_years = r.work_years || r.workYears || ''
   r.marital_status = r.marital_status || r.maritalStatus || ''
   r.height = r.height || ''
@@ -148,6 +207,12 @@ export function normalizeResumeFields(resume = {}) {
   r.expected_salary = r.expected_salary || r.expectedSalary || r.salary || ''
   r.educations = educations
   r.custom_fields = customFields
+  r.projects = projects
+  r.internships = internships
+  r.work_experiences = workExperiences
+  r.skills = normalizeStringList(r.skills)
+  r.awards = normalizeStringList(r.awards)
+  r.certificates = normalizeStringList(r.certificates)
 
   // target_position 多源归一化：兼容 AI 返回的多种岗位字段命名
   r.target_position = (
@@ -169,6 +234,34 @@ export function normalizeResumeFields(resume = {}) {
   }
 
   return r
+}
+
+/**
+ * 将流式识别结果安全合并到已有表单。
+ * 空字符串与空数组永远不会覆盖用户已填写内容，避免部分 JSON 解析造成字段闪空。
+ */
+export function mergeRecognizedResume(current = {}, recognized = {}) {
+  const target = normalizeResumeFields(current)
+  const source = normalizeResumeFields(recognized)
+  const scalarFields = [
+    'name', 'target_position', 'phone', 'email', 'summary',
+    'work_years', 'marital_status', 'height', 'weight', 'ethnicity',
+    'native_place', 'political_status', 'expected_salary',
+  ]
+
+  scalarFields.forEach((key) => {
+    const value = source[key]
+    if (value !== undefined && value !== null && String(value).trim()) {
+      target[key] = value
+    }
+  })
+
+  ;['educations', 'projects', 'internships', 'work_experiences', 'skills', 'awards', 'certificates', 'custom_fields']
+    .forEach((key) => {
+      if (Array.isArray(source[key]) && source[key].length) target[key] = source[key]
+    })
+
+  return syncFlatEducationFields(normalizeResumeFields(target))
 }
 
 /**

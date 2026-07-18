@@ -1,7 +1,14 @@
 /**
  * 流式 SSE 文本增量解析为简历对象
  */
-import { normalizeResumeFields, normalizeEducationItem, normalizeCustomField } from '@/constants/resumeFieldSchema'
+import {
+  normalizeResumeFields,
+  normalizeEducationItem,
+  normalizeCustomField,
+  normalizeProjectItem,
+  normalizeInternshipItem,
+  normalizeWorkExperienceItem,
+} from '@/constants/resumeFieldSchema'
 
 // 流式解析需要提取的字符串字段（包含岗位相关的中文变体）
 const STRING_FIELDS = [
@@ -52,6 +59,55 @@ function extractStringArray(slice, field) {
   return [...match[1].matchAll(/"((?:[^"\\]|\\.)*)"/g)].map((m) => unescapeJsonString(m[1]))
 }
 
+/**
+ * 从尚未闭合的数组中提取已经闭合的对象。
+ * 流式输出不完整时只返回可安全 JSON.parse 的项目，后续项目会在下一批 chunk 自动补齐。
+ */
+function extractCompletedObjectArray(slice, field) {
+  const fieldMatch = new RegExp(`"${field}"\\s*:\\s*\\[`).exec(slice)
+  if (!fieldMatch) return []
+
+  const arrayStart = fieldMatch.index + fieldMatch[0].length
+  const objects = []
+  let objectStart = -1
+  let depth = 0
+  let inString = false
+  let escaped = false
+
+  for (let index = arrayStart; index < slice.length; index += 1) {
+    const char = slice[index]
+    if (inString) {
+      if (escaped) escaped = false
+      else if (char === '\\') escaped = true
+      else if (char === '"') inString = false
+      continue
+    }
+    if (char === '"') {
+      inString = true
+      continue
+    }
+    if (char === '{') {
+      if (depth === 0) objectStart = index
+      depth += 1
+      continue
+    }
+    if (char === '}' && depth > 0) {
+      depth -= 1
+      if (depth === 0 && objectStart >= 0) {
+        try {
+          objects.push(JSON.parse(slice.slice(objectStart, index + 1)))
+        } catch {
+          // 单个对象还不可解析时保留既有结果，等待后续 chunk。
+        }
+        objectStart = -1
+      }
+      continue
+    }
+    if (char === ']' && depth === 0) break
+  }
+  return objects
+}
+
 function normalizeResume(data) {
   const source = data?.resume && typeof data.resume === 'object' ? data.resume : (data || {})
   // 使用统一提取函数兼容多种岗位字段命名
@@ -76,6 +132,11 @@ function normalizeResume(data) {
     skills: Array.isArray(source.skills) ? source.skills.filter(Boolean) : [],
     projects: Array.isArray(source.projects) ? source.projects : [],
     internships: Array.isArray(source.internships) ? source.internships : [],
+    work_experiences: Array.isArray(source.work_experiences)
+      ? source.work_experiences.map(normalizeWorkExperienceItem)
+      : Array.isArray(source.workExperiences)
+        ? source.workExperiences.map(normalizeWorkExperienceItem)
+        : [],
     awards: Array.isArray(source.awards) ? source.awards.filter(Boolean) : [],
     certificates: Array.isArray(source.certificates) ? source.certificates.filter(Boolean) : [],
     educations: Array.isArray(source.educations)
@@ -129,6 +190,26 @@ export function parsePartialResumeJson(text) {
   const awards = extractStringArray(slice, 'awards')
   if (awards.length) partial.awards = awards
 
+  const certificates = extractStringArray(slice, 'certificates')
+  if (certificates.length) partial.certificates = certificates
+
+  const educations = extractCompletedObjectArray(slice, 'educations')
+  if (educations.length) partial.educations = educations.map(normalizeEducationItem)
+
+  const projects = extractCompletedObjectArray(slice, 'projects')
+  if (projects.length) partial.projects = projects.map(normalizeProjectItem)
+
+  const internships = extractCompletedObjectArray(slice, 'internships')
+  if (internships.length) partial.internships = internships.map(normalizeInternshipItem)
+
+  const workExperiences = extractCompletedObjectArray(slice, 'work_experiences')
+  if (workExperiences.length) {
+    partial.work_experiences = workExperiences.map(normalizeWorkExperienceItem)
+  }
+
+  const customFields = extractCompletedObjectArray(slice, 'custom_fields')
+  if (customFields.length) partial.custom_fields = customFields.map(normalizeCustomField)
+
   return normalizeResume(partial)
 }
 
@@ -141,5 +222,7 @@ export function hasStreamResumeContent(resume) {
     resume?.educations?.length ||
     resume?.skills?.length ||
     resume?.projects?.length
+    || resume?.internships?.length
+    || resume?.work_experiences?.length
   )
 }

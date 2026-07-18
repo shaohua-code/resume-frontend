@@ -207,10 +207,8 @@ import {
   AimOutlined,
 } from '@ant-design/icons-vue'
 import {
-  uploadOptimizeResume,
   uploadOptimizeResumeStream,
   uploadOptimizeExistingStream,
-  uploadOptimizeExisting,
   uploadOptimizeByJdStream,
   uploadOptimizeByJdExistingStream,
   getUploadedResume,
@@ -422,17 +420,8 @@ async function handleSubmit() {
   await beginStreamingPreview()
 
   try {
-    let resultData = null
-    try {
-      resultData = await uploadOptimizeResumeStream(realFile, targetPosition.value, streamHandlers)
-    } catch (streamErr) {
-      console.warn('[UploadPanel] 流式失败，回退同步接口:', streamErr)
-      uploadPercent.value = 0
-      const res = await uploadOptimizeResume(realFile, targetPosition.value, (p) => {
-        uploadPercent.value = p
-      })
-      if (res.success) resultData = res.data
-    }
+    // 只执行一次流式请求，失败时由用户主动重试，避免重复扣费与结果覆盖。
+    const resultData = await uploadOptimizeResumeStream(realFile, targetPosition.value, streamHandlers)
     if (resultData) await handleOptimizeSuccess(resultData)
   } catch (e) {
     /* request / fetch 已提示 */
@@ -456,15 +445,8 @@ async function handleOptimizeExisting() {
   await beginStreamingPreview()
 
   try {
-    let resultData = null
-    try {
-      resultData = await uploadOptimizeExistingStream(targetPosition.value, streamHandlers)
-    } catch (streamErr) {
-      console.warn('[UploadPanel] 已有文件流式失败，回退同步接口:', streamErr)
-      uploadPercent.value = 100
-      const res = await uploadOptimizeExisting(targetPosition.value)
-      if (res.success) resultData = res.data
-    }
+    // 旧入口同样禁止同步回退，保证一次点击只产生一次 AI 调用。
+    const resultData = await uploadOptimizeExistingStream(targetPosition.value, streamHandlers)
     if (resultData) await handleOptimizeSuccess(resultData)
   } catch (e) {
     /* request / fetch 已提示 */
@@ -475,7 +457,7 @@ async function handleOptimizeExisting() {
 }
 
 function goEditor() {
-  router.push('/editor')
+  if (resumeStore.currentResumeId) router.push(`/editor/${resumeStore.currentResumeId}`)
 }
 
 async function fetchExisting() {

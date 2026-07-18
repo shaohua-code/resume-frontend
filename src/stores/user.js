@@ -10,10 +10,14 @@ import {
   refreshToken as refreshTokenApi,
   register as registerApi,
   loginPassword as loginPasswordApi,
+  sendEmailBindingCode as sendEmailBindingCodeApi,
+  bindEmail as bindEmailApi,
 } from '@/api/auth'
 import { message } from 'ant-design-vue'
 import { useWalletStore } from '@/stores/wallet'
 import { roleHasPermission } from '@/constants/permissions'
+import { cancelEmailBinding } from '@/utils/emailBindingGate'
+import { markNewUserGuidePending } from '@/utils/newUserGuide'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref(localStorage.getItem('token') || '')
@@ -25,6 +29,10 @@ export const useUserStore = defineStore('user', () => {
   const role = computed(() => userInfo.value.role || 'USER')
   const permissions = computed(() => userInfo.value.permissions || [])
   const isAdmin = computed(() => ['SUPER_ADMIN', 'ADMIN'].includes(role.value))
+  // 绑定接口完成验证码校验后会同时返回两个标记；任一为 true 即可放行前端提示。
+  const isEmailBound = computed(() => (
+    userInfo.value.email_bound === true || userInfo.value.email_verified === true
+  ))
 
   // 额度变更时间戳：用于通知 admin/stats 页面刷新额度池数据
   const dashboardRefreshTick = ref(0)
@@ -37,18 +45,33 @@ export const useUserStore = defineStore('user', () => {
   let isRefreshing = false
   let refreshPromise = null
 
+  /** 合并并持久化非敏感账户信息；随机密码绝不进入该方法。 */
+  function patchUserInfo(patch = {}) {
+    userInfo.value = { ...userInfo.value, ...patch }
+    localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
+  }
+
   function persistAuth(res) {
     token.value = res.token
     refreshTokenValue.value = res.refresh_token || refreshTokenValue.value
     expiresAt.value = res.expires_at || 0
-    if (res.role || res.permissions) {
-      userInfo.value = {
-        ...userInfo.value,
-        role: res.role || userInfo.value.role || 'USER',
-        status: res.status || userInfo.value.status || 'ACTIVE',
-        permissions: res.permissions || userInfo.value.permissions || [],
-      }
-      localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
+    // 刷新响应若携带身份字段则同步缓存，未携带的字段保持原值。
+    const identityPatch = {}
+    const identityFields = [
+      'account',
+      'email',
+      'email_verified',
+      'email_bound',
+      'nickname',
+      'role',
+      'status',
+      'permissions',
+    ]
+    identityFields.forEach((field) => {
+      if (Object.prototype.hasOwnProperty.call(res, field)) identityPatch[field] = res[field]
+    })
+    if (Object.keys(identityPatch).length) {
+      patchUserInfo(identityPatch)
     }
     localStorage.setItem('token', token.value)
     localStorage.setItem('refresh_token', refreshTokenValue.value)
@@ -56,10 +79,15 @@ export const useUserStore = defineStore('user', () => {
   }
 
   function saveSession(res) {
+    const emailBound = res.email_bound ?? res.email_verified ?? false
+    const account = res.account || res.username || res.nickname || ''
     userInfo.value = {
       userId: res.user_id,
-      email: res.email,
-      nickname: res.nickname,
+      account,
+      email: res.email || '',
+      email_verified: res.email_verified ?? emailBound,
+      email_bound: emailBound,
+      nickname: res.nickname || account || '用户',
       role: res.role || 'USER',
       status: res.status || 'ACTIVE',
       permissions: res.permissions || [],
@@ -90,15 +118,31 @@ export const useUserStore = defineStore('user', () => {
     return res
   }
 
-  async function register(payload) {
-    const res = await registerApi(payload)
-    if (res.need_verify) {
-      message.success('请先完成邮箱验证')
-      return res
-    }
+  async function register(inviteCode = '') {
+    const res = await registerApi(inviteCode)
     saveSession(res)
+    markNewUserGuidePending(userInfo.value)
     message.success('注册成功')
     return res
+  }
+
+  /** 为当前账号发送绑定验证码，发送频率和有效期以后端限制为准。 */
+  async function sendEmailBindingCode(email) {
+    const res = await sendEmailBindingCodeApi(email)
+    message.success('验证码已发送，请查收邮箱')
+    return res
+  }
+
+  /** 完成邮箱绑定并立即刷新本地身份标记，让等待中的 AI 请求可以续接。 */
+  async function bindAccountEmail(email, code) {
+    const res = await bindEmailApi(email, code)
+    const data = res?.data || res || {}
+    patchUserInfo({
+      email: data.email || email,
+      email_verified: data.email_verified ?? true,
+      email_bound: data.email_bound ?? true,
+    })
+    return data
   }
 
   async function doRefreshToken() {
@@ -149,6 +193,8 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('refresh_token')
     localStorage.removeItem('expires_at')
     localStorage.removeItem('userInfo')
+    // 退出时终止仍在等待绑定的请求，避免下一位登录用户继承旧操作。
+    cancelEmailBinding('登录状态已结束')
     useWalletStore().reset()
     message.success('已退出登录')
   }
@@ -161,16 +207,20 @@ export const useUserStore = defineStore('user', () => {
     role,
     permissions,
     isAdmin,
+    isEmailBound,
     isLoggedIn,
     dashboardRefreshTick,
     sendCode,
     login,
     loginWithPassword,
     register,
+    sendEmailBindingCode,
+    bindAccountEmail,
     doRefreshToken,
     isTokenExpiringSoon,
     hasPermission,
     getValidToken,
+    patchUserInfo,
     logout,
     triggerDashboardRefresh,
   }

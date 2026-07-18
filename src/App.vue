@@ -17,6 +17,12 @@
 
       <!-- 用户端可拖拽反馈入口 -->
       <FeedbackFloatingButton v-if="showFeedback && deferredReady" />
+
+      <!-- 服务端命中 AI 邮箱门禁时才按需加载弹窗，绑定成功后自动续接原操作。 -->
+      <EmailBindingModal v-if="emailBindingGateOpen" />
+
+      <!-- 注册产生待引导标记后，在首次进入生成页时展示三步新手指引。 -->
+      <NewUserGuide v-if="deferredReady" />
     </div>
   </ConfigProvider>
 </template>
@@ -29,10 +35,13 @@ import zhCN from 'ant-design-vue/es/locale/zh_CN'
 import { antdToken } from '@/constants/theme'
 import { useTheme } from '@/composables/useTheme'
 import { useVisitTracker } from '@/composables/useVisitTracker'
+import { emailBindingGateOpen } from '@/utils/emailBindingGate'
 
-// 顶栏与反馈均拆出首屏入口；反馈含富文本编辑器，只在浏览器空闲后加载。
+// 顶栏、反馈和邮箱绑定弹窗均按需加载，避免非 AI 首屏承担无关组件体积。
 const AppHeader = defineAsyncComponent(() => import('@/components/AppHeader.vue'))
 const FeedbackFloatingButton = defineAsyncComponent(() => import('@/components/FeedbackFloatingButton.vue'))
+const EmailBindingModal = defineAsyncComponent(() => import('@/components/EmailBindingModal.vue'))
+const NewUserGuide = defineAsyncComponent(() => import('@/components/NewUserGuide.vue'))
 
 const route = useRoute()
 const { applyCssVariables } = useTheme()

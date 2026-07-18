@@ -5,7 +5,13 @@
 import { ref, computed } from 'vue'
 import AvatarUpload from '@/components/AvatarUpload.vue'
 import GradientButton from '@/components/GradientButton.vue'
-import { ThunderboltOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue'
+import {
+  ThunderboltOutlined,
+  PlusOutlined,
+  DeleteOutlined,
+  DownOutlined,
+  UpOutlined,
+} from '@ant-design/icons-vue'
 import {
   EXTENDED_BASIC_FIELDS,
   createEmptyCustomField,
@@ -22,9 +28,34 @@ const props = defineProps({
   onOptimize: { type: Function, default: null },
   /** 是否校验姓名、意向岗位必填 */
   requiredBasic: { type: Boolean, default: true },
+  /** 生成页将低频字段默认收进“更多内容”，编辑器仍可保持全部展开。 */
+  collapsibleAdvanced: { type: Boolean, default: false },
+  /** 流式识别或生成时由父级锁定全部表单控件。 */
+  disabled: { type: Boolean, default: false },
 })
 
 const formRef = ref(null)
+const moreOpen = ref(false)
+const advancedKeys = new Set([
+  'height',
+  'weight',
+  'ethnicity',
+  'native_place',
+  'political_status',
+  'expected_salary',
+])
+
+const regularExtendedFields = computed(() => (
+  props.collapsibleAdvanced
+    ? EXTENDED_BASIC_FIELDS.filter((field) => !advancedKeys.has(field.key))
+    : EXTENDED_BASIC_FIELDS
+))
+const advancedExtendedFields = computed(() => (
+  props.collapsibleAdvanced
+    ? EXTENDED_BASIC_FIELDS.filter((field) => advancedKeys.has(field.key))
+    : []
+))
+const showAdvancedContent = computed(() => !props.collapsibleAdvanced || moreOpen.value)
 
 // 姓名、意向岗位校验规则（随 requiredBasic 开关）
 const formRules = computed(() => (props.requiredBasic ? REQUIRED_BASIC_FORM_RULES : {}))
@@ -94,7 +125,7 @@ function removeCustomField(index) {
       </a-col>
       <!-- 扩展基本信息字段 -->
       <a-col
-        v-for="field in EXTENDED_BASIC_FIELDS"
+        v-for="field in regularExtendedFields"
         :key="field.key"
         :xs="24"
         :sm="8"
@@ -123,8 +154,43 @@ function removeCustomField(index) {
           />
         </a-form-item>
       </a-col>
-      <!-- 自定义键值对（放在基本信息内） -->
-      <a-col :span="24">
+
+      <!-- 低频字段默认收起，减少移动端首屏长度。 -->
+      <template v-if="showAdvancedContent">
+        <a-col
+          v-for="field in advancedExtendedFields"
+          :key="field.key"
+          :xs="24"
+          :sm="8"
+        >
+          <a-form-item :label="field.label">
+            <a-select
+              v-if="field.type === 'select'"
+              v-model:value="resume[field.key]"
+              allow-clear
+              :placeholder="`请选择${field.label}`"
+              class="input-field w-full"
+            >
+              <a-select-option
+                v-for="opt in field.options"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </a-select-option>
+            </a-select>
+            <a-input
+              v-else
+              v-model:value="resume[field.key]"
+              :placeholder="field.placeholder"
+              class="input-field"
+            />
+          </a-form-item>
+        </a-col>
+      </template>
+
+      <!-- 自定义信息与其他低频字段一起收起。 -->
+      <a-col v-if="showAdvancedContent" :span="24">
         <div class="mb-2 flex items-center justify-between">
           <span class="text-sm font-medium text-ink">自定义信息</span>
           <button type="button" class="text-sm text-brand-dark hover:opacity-80" @click="addCustomField">
@@ -142,6 +208,19 @@ function removeCustomField(index) {
             <DeleteOutlined />
           </button>
         </div>
+      </a-col>
+
+      <a-col v-if="collapsibleAdvanced" :span="24">
+        <button
+          type="button"
+          class="btn-ghost flex h-10 w-full items-center justify-center gap-2 border-dashed text-sm"
+          :disabled="disabled"
+          @click="moreOpen = !moreOpen"
+        >
+          {{ moreOpen ? '收起更多内容' : '更多内容' }}
+          <UpOutlined v-if="moreOpen" />
+          <DownOutlined v-else />
+        </button>
       </a-col>
       <a-col v-if="showSummary" :span="24">
         <a-form-item label="个人评价">

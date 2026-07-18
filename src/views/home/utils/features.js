@@ -11,9 +11,9 @@ export const HOME_FEATURES = [
   },
   {
     icon: '⚡',
-    title: '三种方式快速创建',
+    title: '统一入口快速创建',
     path: '/generate?mode=lazy',
-    desc: '支持表单填写、自由文本识别和 PDF 上传，已有信息也能快速成稿',
+    desc: 'PDF 与文字可智能识别回填，也可以在同一页直接填写并生成',
     iconBg: 'bg-accent-lighter/60',
   },
   {

@@ -2,7 +2,7 @@
 /**
  * 忘记密码页（验证码重置方案）
  * H5 移动端优化：步骤清晰、表单紧凑、触摸友好、安全区域适配
- * 用户输入邮箱获取验证码，再输入验证码和新密码完成重置
+ * 仅已绑定邮箱可获取验证码，再输入验证码和新密码完成重置
  */
 import { reactive, ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -71,7 +71,8 @@ async function handleReset() {
   <LoginCard>
     <!-- 标题区：移动端缩小尺寸 -->
     <h3 class="mb-1 text-center text-base font-semibold text-ink sm:text-lg">忘记密码</h3>
-    <p class="mb-4 text-center text-xs text-ink-secondary sm:mb-6 sm:text-sm">通过邮箱验证码重置密码</p>
+    <!-- 随机账号没有绑定邮箱时无法走找回流程，文案提前说明边界。 -->
+    <p class="mb-4 text-center text-xs text-ink-secondary sm:mb-6 sm:text-sm">通过账号已绑定的邮箱重置密码</p>
 
     <!-- 步骤1：发送验证码 -->
     <a-form v-if="step === 'send'" :model="form" layout="vertical" class="forgot-form" @finish="handleSendCode">
@@ -83,7 +84,7 @@ async function handleReset() {
       >
         <a-input
           v-model:value="form.email"
-          placeholder="请输入注册邮箱"
+          placeholder="请输入账号已绑定的邮箱"
           size="large"
           autocomplete="email"
           class="input-field"

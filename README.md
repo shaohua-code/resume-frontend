@@ -1,6 +1,6 @@
 # AI 简历 · 前端项目
 
-面向全行业、全职业阶段求职者的响应式 AI 简历前端，提供 AI 生成简历、在线编辑、上传优化、岗位匹配分析、AI 评分、多格式导出与 25 套分类模板等完整能力。
+面向全行业、全职业阶段求职者的响应式 AI 简历前端，提供 AI 生成简历、在线编辑、上传优化、岗位匹配分析、AI 评分、多格式导出与 27 套分类模板等完整能力。
 
 ## 一、技术栈
 
@@ -86,7 +86,7 @@ src/
 | TrustOfferWall | Offer 数量 + 行业标签 + 匿名证言轮播 |
 | JdInputPanel | JD 输入模块 |
 
-模板预览页：`src/views/templates/index.vue`（`/templates`）展示全部 25 套模板。
+模板预览页：`src/views/templates/index.vue`（`/templates`）展示全部 27 套模板。
 
 首页模块顺序：Hero → 核心功能 → 精选模板预览 → 信任背书 → 使用流程。
 
@@ -97,17 +97,18 @@ src/
 - 首页模板预览和信任背书由 `LazyRender` 在接近视口时加载，避免模板注册表和轮播依赖进入首屏入口包。
 - 未知地址统一进入 `/:pathMatch(.*)*`，展示轻量 404 页面并提供首页、上一页、模板库和生成页入口。
 
-## 六、生成页三模式
+## 六、统一简历生成页
 
-`/generate` 统一入口，顶部 `a-segmented` 切换：
+`/generate` 只维护一份结构化表单。页面上方提供“智能 PDF 识别”和“智能文字识别”，识别结果通过 SSE 持续展示并安全回填下方表单；用户也可跳过识别直接填写。
 
-| 模式 | URL 参数 | 组件 | 说明 |
-| --- | --- | --- | --- |
-| 上传 PDF | `?mode=upload` | `UploadPanel.vue` | PDF 校验、流式优化、已上传简历可直接引用优化 |
-| 表单填写 | `?mode=form` | `FormPanel.vue` | **5 步向导**：基本信息（含扩展字段与自定义键值对）→ 教育背景（可多条）→ 项目/实习 → AI 生成 → 预览编辑；仅姓名与求职方向必填 |
-| 智能识别 | `?mode=lazy` | `LazyPanel.vue` | 自由文本键值对填写，AI 智能解析生成 |
+| 区域 | 组件 | 说明 |
+| --- | --- | --- |
+| 智能识别 | `RecognitionPanel.vue` | PDF/文字两种输入；识别期间锁定表单，完成后不创建简历，只回填字段 |
+| 统一表单 | `FormPanel.vue` | 基本信息 → 教育背景 → 经历信息 → AI 结果；仅姓名与意向岗位必填 |
+| 更多内容 | `ResumeBasicFieldsSection.vue` | 身高、体重、民族、籍贯、政治面貌、期望薪资和自定义信息默认收起 |
+| 最终结果 | `StreamResumePreview.vue` | 流式内容完成后继续保留，展示优化亮点，再提供进入编辑和重新生成 |
 
-旧路由 `/upload-optimize` 自动 redirect 至 `/generate?mode=upload`。
+旧 `?mode=form|lazy|upload` 和 `/upload-optimize` 仅用于兼容入口并选择默认识别方式，不再挂载三套独立生成状态。表单、最终结果和最近操作使用按用户隔离的 `sessionStorage` 草稿恢复；刷新不会自动重放可能计费的 AI 请求。
 
 Hero 数据背书（stat-glass）：紧凑胶囊 `min-w-[88px] px-4 py-2.5`，数字 `text-2xl sm:text-3xl`，标签 `text-xs sm:text-sm`。首项文案「AI / 智能一键生成」。
 
@@ -150,7 +151,7 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 
 | 前缀 | 前端文件 | 后端路由 | 职责 |
 | --- | --- | --- | --- |
-| `/api/auth` | `api/auth.js` | `routers/auth.js` | 登录、验证码、密码重置 |
+| `/api/auth` | `api/auth.js` | `routers/auth.js` | 随机账号注册、登录、邮箱绑定验证码、密码重置 |
 | `/api/ai` | `api/resume.js` | `routers/ai.js` | AI 生成、分模块优化、岗位匹配分析、评分 |
 | `/api/pdf` | `api/resume.js` | `routers/pdf.js` | PDF 上传、解析、优化 |
 | `/api/wallet` | `api/wallet.js` | `routers/wallet.js` | 余额、流水 |
@@ -228,7 +229,7 @@ npm run preview  # 预览构建
 1. **简历模板**（`src/components/resume-templates/`）使用独立 CSS（`rt-*`），保证 PDF/打印友好
 2. **编辑器组件**位于 `src/views/editor/components/`
 3. 环境变量：`.env.development` / `.env.production`；生产通过 `VITE_API_URL` 指定后端
-4. **计费**：AI 按账户余额扣费，余额不足时接口返回 402；导出对登录用户免费
+4. **计费与门禁**：AI 按账户余额扣费，余额不足时接口返回 402；未绑定邮箱时返回 `EMAIL_BINDING_REQUIRED` 并由全局弹窗完成绑定后重试一次；导出对登录用户免费
 5. 全功能说明见项目根目录 [`AI简历-项目全功能说明.md`](../AI简历-项目全功能说明.md)
 
 ## 十六、风格提示词

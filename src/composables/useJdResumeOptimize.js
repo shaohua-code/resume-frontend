@@ -2,7 +2,7 @@
  * 基于岗位 JD 流式优化简历 — 组合式函数
  * 负责 SSE 调用与状态管理；流式过程中仅累积预览文本，不写入父级 resume
  */
-import { ref } from 'vue'
+import { onScopeDispose, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { optimizeResumeByJdStream } from '@/api/resume'
 
@@ -15,13 +15,23 @@ export function useJdResumeOptimize() {
   const optimizeResult = ref(null)
   // 最近一次错误信息
   const errorMsg = ref('')
+  let activeController = null
+  let operationSerial = 0
+
+  /** 终止当前流并使旧回调全部失效，关闭弹窗后不得继续产生结果或提示。 */
+  function cancel() {
+    operationSerial += 1
+    activeController?.abort()
+    activeController = null
+    loading.value = false
+  }
 
   /**
    * 重置所有状态（关闭弹窗时调用）
    */
   function reset() {
+    cancel()
     streamText.value = ''
-    loading.value = false
     optimizeResult.value = null
     errorMsg.value = ''
   }
@@ -40,6 +50,9 @@ export function useJdResumeOptimize() {
 
     if (loading.value) return false
 
+    const operationId = ++operationSerial
+    const controller = new AbortController()
+    activeController = controller
     loading.value = true
     streamText.value = ''
     optimizeResult.value = null
@@ -47,11 +60,14 @@ export function useJdResumeOptimize() {
 
     try {
       const result = await optimizeResumeByJdStream(resume || {}, trimmedJd, {
+        signal: controller.signal,
         onChunk: (chunk) => {
+          if (operationId !== operationSerial || controller.signal.aborted) return
           // 仅累积流式文本用于预览，禁止在此处修改父级 resume
           streamText.value += chunk
         },
         onDone: (data) => {
+          if (operationId !== operationSerial || controller.signal.aborted) return
           optimizeResult.value = {
             resume: data?.resume || {},
             optimization_notes: data?.optimization_notes || [],
@@ -60,6 +76,7 @@ export function useJdResumeOptimize() {
       })
 
       // onDone 未触发时兜底使用返回值
+      if (operationId !== operationSerial || controller.signal.aborted) return false
       if (!optimizeResult.value && result) {
         optimizeResult.value = {
           resume: result.resume || {},
@@ -77,13 +94,22 @@ export function useJdResumeOptimize() {
       message.success(successMsg)
       return true
     } catch (e) {
+      if (operationId !== operationSerial || controller.signal.aborted || e?.silent) {
+        errorMsg.value = ''
+        return false
+      }
       errorMsg.value = e.message || '岗位优化失败，请重试'
       message.error(errorMsg.value)
       return false
     } finally {
-      loading.value = false
+      if (operationId === operationSerial) {
+        loading.value = false
+        activeController = null
+      }
     }
   }
+
+  onScopeDispose(cancel)
 
   /**
    * 获取可应用的优化后简历（供父组件合并）
@@ -98,6 +124,7 @@ export function useJdResumeOptimize() {
     loading,
     optimizeResult,
     errorMsg,
+    cancel,
     reset,
     startOptimize,
     getOptimizedResume,

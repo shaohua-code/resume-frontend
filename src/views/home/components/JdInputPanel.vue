@@ -6,6 +6,7 @@ import { useRouter } from 'vue-router'
 import { ThunderboltOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 import GradientButton from '@/components/GradientButton.vue'
+import { getCurrentSessionOwner } from '@/utils/emailBindingGate'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -17,9 +18,14 @@ function handleSubmit() {
     router.push('/login')
     return
   }
-  if (jdText.value.trim()) {
-    sessionStorage.setItem('pending_jd', jdText.value.trim())
+  // 先清理当前账号旧值；本次空输入也不能意外复用上一次导航失败留下的 JD。
+  const owner = getCurrentSessionOwner()
+  const pendingJdKey = owner ? `pending_jd:${owner}` : ''
+  if (pendingJdKey) sessionStorage.removeItem(pendingJdKey)
+  if (pendingJdKey && jdText.value.trim()) {
+    sessionStorage.setItem(pendingJdKey, jdText.value.trim())
   }
+  sessionStorage.removeItem('pending_jd')
   router.push('/generate')
 }
 </script>

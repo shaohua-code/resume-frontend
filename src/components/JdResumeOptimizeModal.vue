@@ -41,6 +41,11 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  // 统一生成页可把首页暂存的完整 JD 预填进来，不占用意向岗位字段。
+  initialJdText: {
+    type: String,
+    default: '',
+  },
 })
 
 const emit = defineEmits(['apply', 'confirm-start'])
@@ -57,7 +62,10 @@ const jdText = ref('')
 const jdImageFile = ref(null)
 const jdImageName = ref('')
 const extracting = ref(false)
+const confirming = ref(false)
 const jdImageUrl = ref('')
+let activeExtractController = null
+let modalOperationVersion = 0
 
 function revokeJdImageUrl() {
   if (jdImageUrl.value) {
@@ -72,8 +80,6 @@ watch(jdImageFile, (file) => {
   if (file) jdImageUrl.value = URL.createObjectURL(file)
 })
 
-onBeforeUnmount(revokeJdImageUrl)
-
 const {
   streamText,
   loading,
@@ -83,12 +89,27 @@ const {
   getOptimizedResume,
 } = useJdResumeOptimize()
 
+/** 关闭或重新打开弹窗时终止 OCR/优化，并让已排队的异步回调失效。 */
+function cancelModalOperations() {
+  modalOperationVersion += 1
+  activeExtractController?.abort()
+  activeExtractController = null
+  extracting.value = false
+  confirming.value = false
+  resetOptimize()
+}
+
+onBeforeUnmount(() => {
+  cancelModalOperations()
+  revokeJdImageUrl()
+})
+
 // 规范化模板 ID
 const previewTemplateId = computed(() => clampTemplateId(props.templateId))
 
 // 弹窗标题随阶段变化
 const modalTitle = computed(() => (
-  phase.value === 'input' ? '按岗位 岗位优化简历' : '岗位优化预览'
+  phase.value === 'input' ? '按岗位优化简历' : '岗位优化预览'
 ))
 
 // 弹窗宽度：移动端预览阶段 95vw
@@ -106,20 +127,17 @@ const modalContentClass = 'max-h-[calc(100vh-160px)] overflow-y-auto pr-1'
 
 // 打开/关闭弹窗时重置状态
 watch(open, (val) => {
+  cancelModalOperations()
   if (val) {
     phase.value = 'input'
-    jdText.value = ''
+    jdText.value = props.initialJdText || ''
     jdImageFile.value = null
     jdImageName.value = ''
-    extracting.value = false
-    resetOptimize()
   } else {
     phase.value = 'input'
     jdText.value = ''
     jdImageFile.value = null
     jdImageName.value = ''
-    extracting.value = false
-    resetOptimize()
   }
 })
 
@@ -152,19 +170,25 @@ function clearJdImage() {
  * 解析最终 JD 文本：有文本用文本，仅图片则 OCR 提取
  * @returns {Promise<string|null>}
  */
-async function resolveJdText() {
+async function resolveJdText(operationVersion) {
   const trimmed = jdText.value.trim()
   if (trimmed) return trimmed
   if (!jdImageFile.value) return null
 
+  const controller = new AbortController()
+  activeExtractController?.abort()
+  activeExtractController = controller
   extracting.value = true
   try {
     jdText.value = ''
     const data = await extractJdFromImageStream(jdImageFile.value, {
+      signal: controller.signal,
       onChunk: (chunk) => {
+        if (!open.value || operationVersion !== modalOperationVersion || controller.signal.aborted) return
         jdText.value += chunk
       },
     })
+    if (!open.value || operationVersion !== modalOperationVersion || controller.signal.aborted) return null
     const text = (data?.jd_text || jdText.value).trim()
     if (!text) {
       message.warning('未能从图片中识别 JD 内容，请换一张更清晰的图片或改用文本粘贴')
@@ -173,15 +197,18 @@ async function resolveJdText() {
     jdText.value = text
     return text
   } catch (e) {
-    message.error(e.message || '图片识别失败，请重试')
+    if (controller.signal.aborted || operationVersion !== modalOperationVersion || !open.value) return null
+    if (!e?.silent) message.error(e.message || '图片识别失败，请重试')
     return null
   } finally {
-    extracting.value = false
+    if (activeExtractController === controller) activeExtractController = null
+    if (operationVersion === modalOperationVersion) extracting.value = false
   }
 }
 
 /** 阶段1：点击确定 — 校验后提交或进入预览 */
 async function handleConfirm() {
+  if (confirming.value || extracting.value || loading.value) return
   const hasText = !!jdText.value.trim()
   const hasImage = !!jdImageFile.value
   if (!hasText && !hasImage) {
@@ -189,20 +216,27 @@ async function handleConfirm() {
     return
   }
 
-  const finalJdText = await resolveJdText()
-  if (!finalJdText) return
+  const operationVersion = ++modalOperationVersion
+  confirming.value = true
+  try {
+    const finalJdText = await resolveJdText(operationVersion)
+    if (!finalJdText || !open.value || operationVersion !== modalOperationVersion) return
 
-  // 生成页：关闭弹窗，交由父组件页内流式预览
-  if (props.inputOnly) {
-    emit('confirm-start', { jdText: finalJdText })
-    open.value = false
-    return
+    // 生成页：关闭弹窗，交由父组件页内流式预览
+    if (props.inputOnly) {
+      emit('confirm-start', { jdText: finalJdText })
+      open.value = false
+      return
+    }
+
+    // 编辑器：弹窗内进入预览并自动开始优化；关闭弹窗会由组合式函数立即 abort。
+    phase.value = 'preview'
+    await scrollToStreamPreview()
+    if (!open.value || operationVersion !== modalOperationVersion) return
+    await startOptimize(props.resume, { jdText: finalJdText, skipBasicCheck: true, inputOnly: false })
+  } finally {
+    if (operationVersion === modalOperationVersion) confirming.value = false
   }
-
-  // 编辑器：弹窗内进入预览并自动开始优化
-  phase.value = 'preview'
-  await scrollToStreamPreview()
-  await startOptimize(props.resume, { jdText: finalJdText, skipBasicCheck: true, inputOnly: false })
 }
 
 /** 用户确认后将优化结果交给父组件合并 */
@@ -317,10 +351,10 @@ function handleCancel() {
         </button>
         <GradientButton
           class="inline-flex items-center justify-center h-10 px-6"
-          :loading="extracting"
+          :loading="extracting || confirming"
           @click="handleConfirm"
         >
-          {{ extracting ? '识别中' : '确定' }}
+          {{ extracting ? '识别中' : (confirming ? '处理中' : '确定') }}
         </GradientButton>
       </div>
     </template>

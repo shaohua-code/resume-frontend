@@ -2,6 +2,7 @@
 /**
  * 登录页 - 账号密码 / 邮箱验证码双 Tab
  * H5 移动端优化：Tab 栏触摸友好、表单间距优化、按钮高度适配
+ * 随机注册账号默认使用账号密码登录，验证码登录仅服务于已绑定邮箱。
  */
 import { reactive, ref, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -74,8 +75,8 @@ onUnmounted(() => countdown.stop())
       <a-tab-pane key="password" tab="账号密码">
         <!-- 表单：移动端减小间距 -->
         <a-form :model="pwdForm" layout="vertical" class="login-form mt-1.5 sm:mt-2" @finish="handlePasswordLogin">
-          <a-form-item label="用户名/邮箱" name="identifier" :rules="[{ required: true, message: '请输入用户名或邮箱' }]">
-            <a-input v-model:value="pwdForm.identifier" placeholder="请输入用户名或邮箱" size="large" autocomplete="username" class="input-field" />
+          <a-form-item label="账号/邮箱" name="identifier" :rules="[{ required: true, message: '请输入账号或已绑定邮箱' }]">
+            <a-input v-model:value="pwdForm.identifier" placeholder="请输入系统账号或已绑定邮箱" size="large" autocomplete="username" class="input-field" />
           </a-form-item>
           <a-form-item label="密码" name="password" :rules="[{ required: true, message: '请输入密码' }]">
             <a-input-password v-model:value="pwdForm.password" placeholder="请输入密码" size="large" autocomplete="current-password" class="input-field" />
@@ -83,6 +84,8 @@ onUnmounted(() => countdown.stop())
           <a-form-item class="!mb-3 sm:!mb-4">
             <GradientButton block html-type="submit" :loading="pwdLogging" class="h-11 sm:h-12">登录</GradientButton>
           </a-form-item>
+          <!-- 随机注册凭据是新用户的默认登录方式，避免误以为必须先绑定邮箱。 -->
+          <p class="-mt-1 text-center text-xs text-muted sm:-mt-2">新账号请使用注册时生成的账号和密码登录</p>
         </a-form>
       </a-tab-pane>
 
@@ -110,7 +113,8 @@ onUnmounted(() => countdown.stop())
           <a-form-item class="!mb-2 sm:!mb-4">
             <GradientButton block html-type="submit" :loading="codeLogging" class="h-11 sm:h-12">登录</GradientButton>
           </a-form-item>
-          <p class="-mt-1 text-center text-xs text-muted sm:-mt-2">首次使用将自动注册账号</p>
+          <!-- 邮箱验证码不再自动创建账号，只允许已完成绑定的用户登录。 -->
+          <p class="-mt-1 text-center text-xs text-muted sm:-mt-2">仅已绑定邮箱的账号可使用验证码登录</p>
         </a-form>
       </a-tab-pane>
     </a-tabs>

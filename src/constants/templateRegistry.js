@@ -1,5 +1,5 @@
 /**
- * 25 套AI简历风格模板注册表
+ * 27 套AI简历风格模板注册表
  */
 import Tpl01Universal from '@/components/resume-templates/Tpl01Universal.vue'
 import Tpl02Business from '@/components/resume-templates/Tpl02Business.vue'
@@ -26,8 +26,11 @@ import Tpl22Botanical from '@/components/resume-templates/Tpl22Botanical.vue'
 import Tpl23Dashboard from '@/components/resume-templates/Tpl23Dashboard.vue'
 import Tpl24Constructivist from '@/components/resume-templates/Tpl24Constructivist.vue'
 import Tpl25Gallery from '@/components/resume-templates/Tpl25Gallery.vue'
+// 应届生模板保持独立组件，便于在不改公共逻辑的前提下形成明显不同版式。
+import Tpl26CampusJournal from '@/components/resume-templates/Tpl26CampusJournal.vue'
+import Tpl27GraduateLaunch from '@/components/resume-templates/Tpl27GraduateLaunch.vue'
 
-export const MAX_TEMPLATE_ID = 25
+export const MAX_TEMPLATE_ID = 27
 
 export const TEMPLATE_LIST = [
   { id: 1, name: '全职业通用', category: '通用', desc: '清晰稳妥的单栏结构，适合大多数岗位', color: 'linear-gradient(135deg,#334155,#64748b)' },
@@ -55,6 +58,9 @@ export const TEMPLATE_LIST = [
   { id: 23, name: '信息面板', category: '创意', desc: '仪表盘卡片结构，高密度信息仍保持清晰', color: 'linear-gradient(135deg,#1d2747,#3ad5d0)' },
   { id: 24, name: '构成主义', category: '创意', desc: '建筑网格、竖排标题和大胆几何色块', color: 'linear-gradient(135deg,#2846a2,#e7aa32)' },
   { id: 25, name: '策展画廊', category: '创意', desc: '展签式卡片与多彩拼贴，突出个人作品叙事', color: 'linear-gradient(135deg,#24213e,#e65057)' },
+  // 两套校招模板分别突出校园成长档案与实践成果路径。
+  { id: 26, name: '晨光校刊', category: '校招', desc: '校刊式单栏档案，清晰呈现教育、项目与校园成长', color: 'linear-gradient(135deg,#173f5f,#e68a4f)' },
+  { id: 27, name: '起跑计划', category: '校招', desc: '清爽成长轨道与成果卡片，突出技能和实践潜力', color: 'linear-gradient(135deg,#126e82,#35b7a6)' },
 ]
 
 /** 模板 ID 映射到组件 */
@@ -84,6 +90,9 @@ export const TEMPLATE_MAP = {
   23: Tpl23Dashboard,
   24: Tpl24Constructivist,
   25: Tpl25Gallery,
+  // 连续 ID 映射保证模板库、生成页和编辑器自动接入。
+  26: Tpl26CampusJournal,
+  27: Tpl27GraduateLaunch,
 }
 
 export function clampTemplateId(id) {

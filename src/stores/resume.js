@@ -5,13 +5,13 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import {
-  generateResume as generateApi,
   generateResumeStream as generateStreamApi,
   matchJd as matchApi,
   scoreResume as scoreApi,
   scoreResumeStream as scoreStreamApi,
   saveResume as saveApi,
   createResume as createApi,
+  updateResume as updateApi,
   getResumeList as getListApi,
   getResumeDetail as getDetailApi,
   deleteResume as deleteApi,
@@ -21,6 +21,8 @@ import {
 import { message } from 'ant-design-vue'
 import { clampTemplateId } from '@/constants/templateRegistry'
 import { useWalletStore } from '@/stores/wallet'
+import { normalizeResumeFields } from '@/constants/resumeFieldSchema'
+import { getCurrentSessionOwner } from '@/utils/emailBindingGate'
 
 // AI 调用成功后刷新账户余额
 async function refreshWalletBalance() {
@@ -53,47 +55,62 @@ export const useResumeStore = defineStore('resume', () => {
   // 评分加载状态
   const scoring = ref(false)
 
-  // AI生成简历（流式优先，失败时回退同步接口）
-  async function generateResume(formData, { onChunk } = {}) {
+  /**
+   * 将最终 AI 结果落到当前简历。
+   * 已有 ID 时只更新同一条记录，重新生成不会不断新增简历。
+   */
+  async function persistGeneratedResume(data, { clientRequestId = '' } = {}) {
+    if (!data || typeof data !== 'object' || !Object.keys(data).length) {
+      throw new Error('AI 未返回有效简历')
+    }
+    const normalized = normalizeResumeFields(data || {})
+
+    const payload = {
+      title: normalized.name ? `${normalized.name}的简历` : '未命名简历',
+      resume_json: normalized,
+      template_id: currentTemplateId.value || 1,
+      score: 0,
+      // 首次创建携带稳定幂等键；服务端已提交但响应丢失时，重试会返回同一条简历。
+      client_request_id: clientRequestId || undefined,
+    }
+
+    if (currentResumeId.value) {
+      const updateRes = await updateApi(currentResumeId.value, payload)
+      if (!updateRes?.success) throw new Error('简历更新失败')
+    } else {
+      const createRes = await createApi(payload)
+      if (createRes.success && createRes.data?.id) {
+        currentResumeId.value = createRes.data.id
+      } else {
+        throw new Error('简历创建失败，服务端未返回记录 ID')
+      }
+    }
+    currentResume.value = normalized
+    return normalized
+  }
+
+  /**
+   * AI 生成只走 SSE；流式失败不再调用同步接口，避免重复请求、重复扣费和结果覆盖。
+   */
+  async function generateResume(formData, {
+    onChunk,
+    onStatus,
+    onResult,
+    signal,
+    clientRequestId,
+  } = {}) {
     generating.value = true
     streamText.value = ''
+    const sessionOwner = getCurrentSessionOwner()
     try {
-      let resumeData = null
-
-      const persistResume = async (data) => {
-        currentResume.value = data
-        try {
-          const createRes = await createApi({
-            title: data?.name ? `${data.name}的简历` : '未命名简历',
-            resume_json: data,
-            template_id: currentTemplateId.value || 1,
-            score: 0,
-          })
-          if (createRes.success && createRes.data?.id) {
-            currentResumeId.value = createRes.data.id
-          }
-        } catch (createErr) {
-          console.warn('[generateResume] 自动创建简历失败，保存时将无法更新:', createErr)
-        }
-      }
-
-      try {
-        resumeData = await generateStreamApi(formData, {
-          onChunk: (chunk) => {
-            streamText.value += chunk
-            onChunk?.(chunk)
-          },
-        })
-      } catch (streamErr) {
-        // 余额不足等业务错误不再回退同步接口，避免重复弹窗
-        const streamMsg = streamErr?.message || ''
-        if (streamMsg.includes('余额不足')) {
-          throw streamErr
-        }
-        console.warn('[generateResume] 流式生成失败，回退同步接口:', streamErr)
-        const res = await generateApi(formData)
-        if (res.success) resumeData = res.data
-      }
+      const resumeData = await generateStreamApi(formData, {
+        onStatus,
+        signal,
+        onChunk: (chunk) => {
+          streamText.value += chunk
+          onChunk?.(chunk)
+        },
+      })
 
       if (resumeData && Object.keys(resumeData).length) {
         // 兜底：确保 target_position 不丢失（AI 可能不返回该字段）
@@ -105,18 +122,34 @@ export const useResumeStore = defineStore('resume', () => {
         if (!resumeData.name && formData?.name) {
           resumeData.name = formData.name
         }
-        await persistResume(resumeData)
-        await refreshWalletBalance()
-        message.success('简历生成成功')
-        return resumeData
+        const normalized = normalizeResumeFields(resumeData)
+        currentResume.value = normalized
+        // AI 最终结构先交给页面草稿，再尝试落库；保存失败不能丢掉已计费结果。
+        onResult?.(normalized)
+        if (!sessionOwner || getCurrentSessionOwner() !== sessionOwner) {
+          return { resume: normalized, persisted: false, cancelled: true }
+        }
+        try {
+          const persisted = await persistGeneratedResume(normalized, { clientRequestId })
+          message.success('简历生成成功')
+          return { resume: persisted, persisted: true }
+        } catch (persistError) {
+          message.error('AI 已生成完成，但保存失败，请直接重试保存')
+          return { resume: normalized, persisted: false, persistError }
+        }
       }
       message.error('生成失败，请重试')
+      return { resume: null, persisted: false }
     } catch (e) {
       const msg = e?.response?.data?.detail || e?.message || '生成失败，请重试'
+      if (e?.silent) {
+        return { resume: null, persisted: false, cancelled: true, error: e }
+      }
       // 拦截器已提示过的 axios 错误不再重复弹窗
       if (!e?.response?.data?.detail) {
         message.error(msg)
       }
+      return { resume: null, persisted: false, error: e }
     } finally {
       generating.value = false
     }
@@ -132,6 +165,7 @@ export const useResumeStore = defineStore('resume', () => {
       }
       return res
     } catch (e) {
+      if (e?.silent) return null
       const msg = e?.response?.data?.detail || e?.message || '匹配分析失败'
       if (!e?.response?.data?.detail) {
         message.error(msg)
@@ -151,6 +185,7 @@ export const useResumeStore = defineStore('resume', () => {
       }
       return res
     } catch (e) {
+      if (e?.silent) return null
       const msg = e?.response?.data?.detail || e?.message || '评分失败'
       if (!e?.response?.data?.detail) {
         message.error(msg)
@@ -158,6 +193,14 @@ export const useResumeStore = defineStore('resume', () => {
     } finally {
       scoring.value = false
     }
+  }
+
+  /** 进入新的生成会话时清除旧编辑器数据，防止把上一次简历错误写回。 */
+  function resetGenerationContext() {
+    currentResume.value = {}
+    currentResumeId.value = null
+    generating.value = false
+    streamText.value = ''
   }
 
   async function scoreResumeStream(resumeId, handlers = {}) {
@@ -169,6 +212,7 @@ export const useResumeStore = defineStore('resume', () => {
         return { success: true, data }
       }
     } catch (e) {
+      if (e?.silent) return { success: false, cancelled: true }
       const msg = e?.response?.data?.detail || e?.message || '评分失败'
       if (!e?.response?.data?.detail) {
         message.error(msg)
@@ -238,6 +282,7 @@ export const useResumeStore = defineStore('resume', () => {
   async function fetchResumeCount() {
     const res = await getCountApi()
     if (res.success) {
+      resumeTotal.value = Number(res.data?.count || 0)
       resumeMaxCount.value = res.data.max
     }
     return res
@@ -255,6 +300,8 @@ export const useResumeStore = defineStore('resume', () => {
     matching,
     scoring,
     generateResume,
+    persistGeneratedResume,
+    resetGenerationContext,
     matchJd,
     scoreResume,
     scoreResumeStream,

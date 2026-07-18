@@ -3,9 +3,49 @@
  * AI生成简历、优化项目、JD匹配、评分、保存、列表、详情、删除、导出、PDF优化
  */
 import request from '@/utils/request'
+import {
+  EMAIL_BINDING_REQUIRED_CODE,
+  getCurrentSessionOwner,
+  withEmailBindingRetry,
+} from '@/utils/emailBindingGate'
 
 // 流式请求的 API 基础地址，与 request.js 保持一致
 const API_BASE = import.meta.env.VITE_API_URL || ''
+
+/**
+ * 原生 fetch 不经过 Axios 拦截器，因此在这里统一识别“需要绑定邮箱”。
+ * 首次请求被服务端拦截后等待全局弹窗完成，再原样重试一次，文件/FormData 也不会丢失。
+ */
+async function fetchSSEWithEmailGate(operation, options = {}) {
+  const sessionOwner = getCurrentSessionOwner()
+  let response = await operation()
+  if (response.ok) return response
+
+  let errorBody = null
+  try {
+    errorBody = await response.clone().json()
+  } catch {
+    // 非 JSON 错误继续交给各接口原有的错误提示处理。
+  }
+
+  const code = errorBody?.code || errorBody?.data?.code
+  if (code === EMAIL_BINDING_REQUIRED_CODE) {
+    response = await withEmailBindingRetry(operation, {
+      signal: options.signal,
+      sessionOwner,
+    })
+  }
+  return response
+}
+
+/** 每次执行（包括邮箱绑定后的重试）都重新取得有效令牌，避免续接时使用过期 token。 */
+async function authorizedSSEFetch(url, options = {}) {
+  const { useUserStore } = await import('@/stores/user')
+  const token = await useUserStore().getValidToken()
+  const headers = new Headers(options.headers || {})
+  headers.set('Authorization', `Bearer ${token}`)
+  return fetch(url, { ...options, headers })
+}
 
 /**
  * 分模块 AI 流式优化
@@ -15,21 +55,17 @@ const API_BASE = import.meta.env.VITE_API_URL || ''
  * @param {string} model 可选模型
  */
 export async function optimizeResumePartStream(type, payload, handlers = {}, model = '') {
-  const { useUserStore } = await import('@/stores/user')
-  const userStore = useUserStore()
-  const token = await userStore.getValidToken()
-
   const body = { ...payload }
   if (model) body.model = model
 
-  const response = await fetch(`${API_BASE}/api/ai/optimize/${type}/stream`, {
+  const response = await fetchSSEWithEmailGate(() => authorizedSSEFetch(`${API_BASE}/api/ai/optimize/${type}/stream`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify(body),
-  })
+    signal: handlers.signal,
+  }), { signal: handlers.signal })
 
   if (!response.ok) {
     let detail = '优化失败，请重试'
@@ -64,18 +100,14 @@ export async function generateResumeStream(data, handlers = {}, model = '') {
   const payload = model ? { ...data, model } : data
 
   // 流式请求需绕过 axios 拦截器，直接使用 fetch 读取 ReadableStream
-  const { useUserStore } = await import('@/stores/user')
-  const userStore = useUserStore()
-  const token = await userStore.getValidToken()
-
-  const response = await fetch(`${API_BASE}/api/ai/generate/stream`, {
+  const response = await fetchSSEWithEmailGate(() => authorizedSSEFetch(`${API_BASE}/api/ai/generate/stream`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify(payload),
-  })
+    signal: handlers.signal,
+  }), { signal: handlers.signal })
 
   if (!response.ok) {
     let detail = '生成失败，请重试'
@@ -107,55 +139,79 @@ async function readSSEStream(response, handlers = {}) {
   const decoder = new TextDecoder()
   let buffer = ''
   let finalData = null
+  let completed = false
 
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    buffer += decoder.decode(value, { stream: true })
-    const lines = buffer.split('\n')
-    buffer = lines.pop() || ''
-
-    for (const line of lines) {
-      const trimmed = line.trim()
-      if (!trimmed.startsWith('data:')) continue
-      try {
-        const event = JSON.parse(trimmed.slice(5).trim())
-        if (event.status) onStatus?.(event.status)
-        if (event.chunk) onChunk?.(event.chunk)
-        if (event.error) {
-          throw new Error(event.error)
-        }
-        if (event.done && event.data) {
-          finalData = event.data
-          onDone?.(event.data)
-        }
-      } catch (parseErr) {
-        if (parseErr.message && !parseErr.message.includes('JSON')) throw parseErr
-      }
+  /** 单行解析失败只忽略该行；服务端明确 error 事件必须向上抛出。 */
+  function handleLine(line) {
+    const trimmed = line.trim()
+    if (!trimmed.startsWith('data:')) return
+    let event
+    try {
+      event = JSON.parse(trimmed.slice(5).trim())
+    } catch {
+      return
+    }
+    if (event.status) onStatus?.(event.status)
+    if (event.chunk) onChunk?.(event.chunk)
+    if (event.error) {
+      const streamError = new Error(event.error)
+      streamError.code = event.code || ''
+      throw streamError
+    }
+    if (event.done && Object.prototype.hasOwnProperty.call(event, 'data')) {
+      completed = true
+      finalData = event.data
+      onDone?.(event.data)
     }
   }
 
-  return finalData
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+      for (const line of lines) handleLine(line)
+    }
+    buffer += decoder.decode()
+    if (buffer.trim()) handleLine(buffer)
+    if (!completed) {
+      const incompleteError = new Error('AI 流式响应未返回完成结果，请重试')
+      incompleteError.code = 'SSE_INCOMPLETE'
+      throw incompleteError
+    }
+    return finalData
+  } catch (error) {
+    if (error?.name === 'AbortError') error.silent = true
+    onError?.(error)
+    throw error
+  } finally {
+    reader.releaseLock?.()
+    // AI 可能已在完成或错误事件前计费，流结束后统一刷新钱包展示。
+    try {
+      const { useWalletStore } = await import('@/stores/wallet')
+      await useWalletStore().fetchBalance()
+    } catch {
+      // 退出登录或余额刷新失败不覆盖本次 AI 的真实结果。
+    }
+  }
 }
 
 /**
  * 上传 PDF 并由 AI 流式优化
  */
 export async function uploadOptimizeResumeStream(file, targetPosition = '', handlers = {}, model = '') {
-  const { useUserStore } = await import('@/stores/user')
-  const userStore = useUserStore()
-  const token = await userStore.getValidToken()
-
   const formData = new FormData()
   formData.append('file', file)
   if (targetPosition) formData.append('target_position', targetPosition)
   if (model) formData.append('model', model)
 
-  const response = await fetch(`${API_BASE}/api/pdf/uploadOptimize/stream`, {
+  const response = await fetchSSEWithEmailGate(() => authorizedSSEFetch(`${API_BASE}/api/pdf/uploadOptimize/stream`, {
     method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
-  })
+    signal: handlers.signal,
+  }), { signal: handlers.signal })
 
   if (!response.ok) {
     let detail = '优化失败，请重试'
@@ -185,21 +241,17 @@ export function matchJd(resumeId, jdText, model = '') {
  * @param {string} model 可选模型
  */
 export async function optimizeResumeByJdStream(resume, jdText, handlers = {}, model = '') {
-  const { useUserStore } = await import('@/stores/user')
-  const userStore = useUserStore()
-  const token = await userStore.getValidToken()
-
   const body = { resume, jd_text: jdText }
   if (model) body.model = model
 
-  const response = await fetch(`${API_BASE}/api/ai/optimize-by-jd/stream`, {
+  const response = await fetchSSEWithEmailGate(() => authorizedSSEFetch(`${API_BASE}/api/ai/optimize-by-jd/stream`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify(body),
-  })
+    signal: handlers.signal,
+  }), { signal: handlers.signal })
 
   if (!response.ok) {
     let detail = '岗位优化失败，请重试'
@@ -235,19 +287,15 @@ export function extractJdFromImage(file) {
  * @param {object} handlers 流式回调 { onChunk, onDone, onError, onStatus }
  */
 export async function extractJdFromImageStream(file, handlers = {}, model = '') {
-  const { useUserStore } = await import('@/stores/user')
-  const userStore = useUserStore()
-  const token = await userStore.getValidToken()
-
   const formData = new FormData()
   formData.append('file', file)
   if (model) formData.append('model', model)
 
-  const response = await fetch(`${API_BASE}/api/ai/extract-jd-image/stream`, {
+  const response = await fetchSSEWithEmailGate(() => authorizedSSEFetch(`${API_BASE}/api/ai/extract-jd-image/stream`, {
     method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
-  })
+    signal: handlers.signal,
+  }), { signal: handlers.signal })
 
   if (!response.ok) {
     let detail = '图片识别失败，请重试'
@@ -269,20 +317,16 @@ export async function extractJdFromImageStream(file, handlers = {}, model = '') 
  * @param {string} jdText 岗位 JD 文本
  */
 export async function uploadOptimizeByJdStream(file, jdText, handlers = {}, model = '') {
-  const { useUserStore } = await import('@/stores/user')
-  const userStore = useUserStore()
-  const token = await userStore.getValidToken()
-
   const formData = new FormData()
   formData.append('file', file)
   formData.append('jd_text', jdText)
   if (model) formData.append('model', model)
 
-  const response = await fetch(`${API_BASE}/api/pdf/uploadOptimizeByJd/stream`, {
+  const response = await fetchSSEWithEmailGate(() => authorizedSSEFetch(`${API_BASE}/api/pdf/uploadOptimizeByJd/stream`, {
     method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
-  })
+    signal: handlers.signal,
+  }), { signal: handlers.signal })
 
   if (!response.ok) {
     let detail = '岗位优化失败，请重试'
@@ -304,21 +348,17 @@ export async function uploadOptimizeByJdStream(file, jdText, handlers = {}, mode
  * @param {string} jdText 岗位 JD 文本
  */
 export async function uploadOptimizeByJdExistingStream(jdText, handlers = {}, model = '') {
-  const { useUserStore } = await import('@/stores/user')
-  const userStore = useUserStore()
-  const token = await userStore.getValidToken()
-
-  const response = await fetch(`${API_BASE}/api/pdf/uploadOptimizeByJd/existing/stream`, {
+  const response = await fetchSSEWithEmailGate(() => authorizedSSEFetch(`${API_BASE}/api/pdf/uploadOptimizeByJd/existing/stream`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({
       jd_text: jdText,
       ...(model ? { model } : {}),
     }),
-  })
+    signal: handlers.signal,
+  }), { signal: handlers.signal })
 
   if (!response.ok) {
     let detail = '岗位优化失败，请重试'
@@ -342,17 +382,14 @@ export function scoreResume(resumeId, model = '') {
 
 /** AI简历评分（SSE 流式输出中文评分报告） */
 export async function scoreResumeStream(resumeId, handlers = {}, model = '') {
-  const { useUserStore } = await import('@/stores/user')
-  const userStore = useUserStore()
-  const token = await userStore.getValidToken()
-  const response = await fetch(`${API_BASE}/api/ai/score/stream?resume_id=${encodeURIComponent(resumeId)}`, {
+  const response = await fetchSSEWithEmailGate(() => authorizedSSEFetch(`${API_BASE}/api/ai/score/stream?resume_id=${encodeURIComponent(resumeId)}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify(model ? { model } : {}),
-  })
+    signal: handlers.signal,
+  }), { signal: handlers.signal })
 
   if (!response.ok) {
     let detail = '评分失败，请重试'
@@ -453,21 +490,17 @@ export function deleteUploadedResume() {
  * 使用已上传的 PDF 进行 AI 流式优化（无需重新上传文件）
  */
 export async function uploadOptimizeExistingStream(targetPosition = '', handlers = {}, model = '') {
-  const { useUserStore } = await import('@/stores/user')
-  const userStore = useUserStore()
-  const token = await userStore.getValidToken()
-
-  const response = await fetch(`${API_BASE}/api/pdf/uploadOptimize/existing/stream`, {
+  const response = await fetchSSEWithEmailGate(() => authorizedSSEFetch(`${API_BASE}/api/pdf/uploadOptimize/existing/stream`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({
       target_position: targetPosition,
       ...(model ? { model } : {}),
     }),
-  })
+    signal: handlers.signal,
+  }), { signal: handlers.signal })
 
   if (!response.ok) {
     let detail = '优化失败，请重试'

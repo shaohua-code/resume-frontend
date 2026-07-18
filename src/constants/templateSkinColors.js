@@ -1,5 +1,5 @@
 /**
- * 25 套模板皮肤默认预设（唯一配置源）
+ * 27 套模板皮肤默认预设（唯一配置源）
  * - 11 项字段对应 EditorSkinPanel 自定义颜色
  * - 用户未覆盖（null）时由 mergeSkinThemeWithTemplate + skinThemeToCssVars 注入
  */
@@ -50,7 +50,7 @@ const GRAY_SKIN = {
   topBandBg: '#374151',
 }
 
-/** 25 套模板皮肤独立默认色（含中文注释说明视觉意图） */
+/** 27 套模板皮肤独立默认色（含中文注释说明视觉意图） */
 export const TEMPLATE_SKIN_PRESETS = {
   // 1. 全职业通用：深靛蓝、朱砂橙与薄荷灰编辑杂志
   1: {
@@ -407,6 +407,36 @@ export const TEMPLATE_SKIN_PRESETS = {
     skillBg: '#ddf1e9',
     skillBorder: '#6ec3a5',
     topBandBg: '#e65057',
+  },
+
+  // 26. 晨光校刊：学院蓝、晨光橙与温暖纸张色，突出校园档案感。
+  26: {
+    titleColor: '#173f5f',
+    dividerColor: '#b8c7cf',
+    headerBg: '#fff8ec',
+    headerBorder: '#7894a3',
+    itemBg: '#fffdf8',
+    itemBorder: '#d7c9b4',
+    basicRowBg: '#f1eadc',
+    basicRowBorder: '#cbbda7',
+    skillBg: '#e7f0ed',
+    skillBorder: '#7fa89e',
+    topBandBg: '#e68a4f',
+  },
+
+  // 27. 起跑计划：深海蓝、活力青绿与浅青卡片，强化校招成长路径。
+  27: {
+    titleColor: '#126e82',
+    dividerColor: '#c4dadd',
+    headerBg: '#164e63',
+    headerBorder: '#4e8c98',
+    itemBg: '#ffffff',
+    itemBorder: '#cfe1e2',
+    basicRowBg: '#eef8f6',
+    basicRowBorder: '#a9d0ca',
+    skillBg: '#dcf3ef',
+    skillBorder: '#56b8aa',
+    topBandBg: '#35b7a6',
   },
 }
 
