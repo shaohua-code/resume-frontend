@@ -16,29 +16,45 @@ const STRING_FIELDS = [
   'summary', 'target_position', 'targetPosition',
   'work_years', 'marital_status', 'height', 'weight',
   'ethnicity', 'native_place', 'political_status', 'expected_salary',
-  // 岗位相关字段（AI 可能返回的中文/英文变体）
-  '意向岗位', '求职岗位', '面试岗位', '应聘岗位',
+  // 岗位相关字段（AI 可能返回的中文/英文变体，含示例常用的「求职意向」）
+  '求职意向', '意向岗位', '目标岗位', '期望岗位', '求职岗位', '面试岗位', '应聘岗位', '意向职位',
 ]
 
 /** 岗位字段的别名列表（流式增量解析时统一映射到 target_position）*/
-const POSITION_ALIAS_FIELDS = ['targetPosition', '意向岗位', '求职岗位', '面试岗位', '应聘岗位']
+const POSITION_ALIAS_FIELDS = [
+  'targetPosition',
+  '求职意向',
+  '意向岗位',
+  '目标岗位',
+  '期望岗位',
+  '求职岗位',
+  '面试岗位',
+  '应聘岗位',
+  '意向职位',
+]
 
 /**
  * 从 AI 返回数据中提取目标岗位（兼容多种字段命名）
- * 与后端 ai.service.js 的 extractTargetPosition 保持一致
+ * 与后端 resume-content.js 的 extractTargetPosition 保持一致
  * @param {Object} source AI 原始返回数据
  * @returns {string} 目标岗位字符串
  */
 function extractTargetPosition(source) {
   return (
-    source.target_position ||
-    source.targetPosition ||
-    source['意向岗位'] ||
-    source['求职岗位'] ||
-    source['面试岗位'] ||
-    source['应聘岗位'] ||
-    source.position ||
-    ''
+    source.target_position
+    || source.targetPosition
+    || source['求职意向']
+    || source['意向岗位']
+    || source['目标岗位']
+    || source['期望岗位']
+    || source['求职岗位']
+    || source['面试岗位']
+    || source['应聘岗位']
+    || source['意向职位']
+    || source.job_intention
+    || source.jobIntention
+    || source.position
+    || ''
   )
 }
 
@@ -110,6 +126,29 @@ function extractCompletedObjectArray(slice, field) {
 
 function normalizeResume(data) {
   const source = data?.resume && typeof data.resume === 'object' ? data.resume : (data || {})
+  // 教育：优先 educations，兼容模型把多段写进 education[]
+  const educations = Array.isArray(source.educations) && source.educations.length
+    ? source.educations
+    : Array.isArray(source.education_list) && source.education_list.length
+      ? source.education_list
+      : Array.isArray(source.education) && source.education.length
+        ? source.education
+        : []
+  // 项目：兼容 project_experiences 等别名，避免流式阶段丢项目
+  const projects = Array.isArray(source.projects) && source.projects.length
+    ? source.projects
+    : Array.isArray(source.project_experiences) && source.project_experiences.length
+      ? source.project_experiences
+      : Array.isArray(source.projectExperiences) && source.projectExperiences.length
+        ? source.projectExperiences
+        : Array.isArray(source.project_list) && source.project_list.length
+          ? source.project_list
+          : []
+  // 扁平 education 仅保留字符串学历，避免数组污染 degree
+  const flatEducation = typeof source.education === 'string'
+    ? source.education
+    : (source.degree || '')
+
   // 使用统一提取函数兼容多种岗位字段命名
   const base = {
     name: source.name || '',
@@ -117,7 +156,7 @@ function normalizeResume(data) {
     school: source.school || '',
     major: source.major || '',
     main_course: source.main_course || source.mainCourse || '',
-    education: source.education || source.degree || '',
+    education: flatEducation,
     phone: source.phone || '',
     email: source.email || '',
     summary: source.summary || '',
@@ -130,7 +169,7 @@ function normalizeResume(data) {
     political_status: source.political_status || source.politicalStatus || '',
     expected_salary: source.expected_salary || source.expectedSalary || '',
     skills: Array.isArray(source.skills) ? source.skills.filter(Boolean) : [],
-    projects: Array.isArray(source.projects) ? source.projects : [],
+    projects,
     internships: Array.isArray(source.internships) ? source.internships : [],
     work_experiences: Array.isArray(source.work_experiences)
       ? source.work_experiences.map(normalizeWorkExperienceItem)
@@ -139,9 +178,7 @@ function normalizeResume(data) {
         : [],
     awards: Array.isArray(source.awards) ? source.awards.filter(Boolean) : [],
     certificates: Array.isArray(source.certificates) ? source.certificates.filter(Boolean) : [],
-    educations: Array.isArray(source.educations)
-      ? source.educations.map(normalizeEducationItem)
-      : [],
+    educations: educations.map(normalizeEducationItem),
     custom_fields: Array.isArray(source.custom_fields)
       ? source.custom_fields.map(normalizeCustomField)
       : Array.isArray(source.customFields)
@@ -184,20 +221,33 @@ export function parsePartialResumeJson(text) {
     }
   }
 
+  // 技能/证书可能是字符串数组，也可能是 {name/title} 对象数组
   const skills = extractStringArray(slice, 'skills')
+  const skillObjects = extractCompletedObjectArray(slice, 'skills')
   if (skills.length) partial.skills = skills
+  else if (skillObjects.length) partial.skills = skillObjects
 
   const awards = extractStringArray(slice, 'awards')
+  const awardObjects = extractCompletedObjectArray(slice, 'awards')
   if (awards.length) partial.awards = awards
+  else if (awardObjects.length) partial.awards = awardObjects
 
   const certificates = extractStringArray(slice, 'certificates')
+  const certificateObjects = extractCompletedObjectArray(slice, 'certificates')
   if (certificates.length) partial.certificates = certificates
+  else if (certificateObjects.length) partial.certificates = certificateObjects
 
+  // 同时抽取 educations / education，避免多段教育落在别名键上
   const educations = extractCompletedObjectArray(slice, 'educations')
-  if (educations.length) partial.educations = educations.map(normalizeEducationItem)
+  const educationAlias = extractCompletedObjectArray(slice, 'education')
+  const educationList = educations.length ? educations : educationAlias
+  if (educationList.length) partial.educations = educationList.map(normalizeEducationItem)
 
+  // 项目兼容多种字段名
   const projects = extractCompletedObjectArray(slice, 'projects')
-  if (projects.length) partial.projects = projects.map(normalizeProjectItem)
+  const projectAlias = extractCompletedObjectArray(slice, 'project_experiences')
+  const projectList = projects.length ? projects : projectAlias
+  if (projectList.length) partial.projects = projectList.map(normalizeProjectItem)
 
   const internships = extractCompletedObjectArray(slice, 'internships')
   if (internships.length) partial.internships = internships.map(normalizeInternshipItem)

@@ -31,7 +31,10 @@ import {
   deleteUploadedResume,
 } from '@/api/resume'
 import { getErrorMessage } from '@/utils/errorMessage'
-import { normalizeResumeFields } from '@/constants/resumeFieldSchema'
+import {
+  normalizeResumeFields,
+  extractTargetPositionFromText,
+} from '@/constants/resumeFieldSchema'
 import { parsePartialResumeJson } from '../utils/streamResumeParser'
 import { formatRecognitionPreview } from '../utils/recognitionPreview'
 import { useGenerateDraft } from '../composables/useGenerateDraft'
@@ -278,6 +281,10 @@ function emitPartialResult() {
 function finishRecognition(data) {
   const source = data?.resume || data || {}
   const normalized = normalizeResumeFields(source)
+  // 模型漏提意向岗位时，从输入原文「求职意向：xxx」回退补齐
+  if (!normalized.target_position) {
+    normalized.target_position = extractTargetPositionFromText(state.rawText)
+  }
   emit('complete', normalized)
   state.previewResume = normalized
   state.phase = 'complete'

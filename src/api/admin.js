@@ -181,9 +181,15 @@ export function getAiTaskModels() {
   return request.get('/admin/task-models')
 }
 
-/** 为单个 AI 任务切换模型，后端会再次校验模型类型 */
-export function saveAiTaskModel(taskType, modelId) {
-  return request.put(`/admin/task-models/${taskType}`, { model_id: modelId })
+/**
+ * 为单个 AI 任务切换模型，并可配置任务级深度思考。
+ * thinkingEnabled：null=沿用模型，true/false=强制开启/关闭。
+ */
+export function saveAiTaskModel(taskType, modelId, thinkingEnabled = null) {
+  return request.put(`/admin/task-models/${taskType}`, {
+    model_id: modelId,
+    thinking_enabled: thinkingEnabled,
+  })
 }
 
 /** 管理员默认业务提示词（不含输出 Schema） */

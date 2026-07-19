@@ -60,13 +60,25 @@ export function createEmptyCustomField() {
 
 /** 归一化单条教育记录 */
 export function normalizeEducationItem(item = {}) {
+  // degree 可能误收到数组（education[] 被塞进扁平字段），只接受字符串
+  const rawDegree = item.degree || item.education || ''
+  let degree = typeof rawDegree === 'string' ? rawDegree : ''
+  let major = item.major || ''
+  // 仅单段专业（无换行/分号/斜杠拼接）时，从「通信技术（大专）」拆出学历
+  if (major && !degree && !/[\n；;]|\s+\/\s+/.test(major)) {
+    const parsed = splitMajorAndDegree(major)
+    if (parsed.degree) {
+      major = parsed.major
+      degree = parsed.degree
+    }
+  }
   return {
-    school: item.school || '',
-    major: item.major || '',
+    school: item.school || item.school_name || item.schoolName || '',
+    major,
     main_course: item.main_course || item.mainCourse || '',
-    degree: item.degree || item.education || '',
-    start_date: item.start_date || '',
-    end_date: item.end_date || '',
+    degree,
+    start_date: item.start_date || item.startDate || '',
+    end_date: item.end_date || item.endDate || '',
   }
 }
 
@@ -80,14 +92,36 @@ export function normalizeCustomField(item = {}) {
 
 /** 归一化项目经历，避免识别结果中的空对象污染表单。 */
 export function normalizeProjectItem(item = {}) {
+  // 兼容 AI 偶发使用 title / project_name / content 等别名
+  const techStack = item.tech_stack || item.skills || item.techStack || ''
   return {
-    name: item.name || item.project_name || '',
-    role: item.role || '',
-    description: item.description || item.content || '',
-    tech_stack: item.tech_stack || item.skills || '',
-    start_date: item.start_date || '',
-    end_date: item.end_date || '',
+    name: item.name || item.project_name || item.projectName || item.title || '',
+    role: item.role || item.position || '',
+    description: item.description || item.content || item.desc || '',
+    tech_stack: Array.isArray(techStack) ? techStack.filter(Boolean).join('、') : techStack,
+    start_date: item.start_date || item.startDate || '',
+    end_date: item.end_date || item.endDate || '',
   }
+}
+
+/** 从多种字段名中取出项目数组，兼容模型别名。 */
+function pickProjectList(resume = {}) {
+  const r = resume || {}
+  const candidates = [
+    r.projects,
+    r.project_experiences,
+    r.projectExperiences,
+    r.project_list,
+    r.projectList,
+  ]
+  for (const list of candidates) {
+    if (Array.isArray(list) && list.length) return list
+  }
+  // 模型偶发把整段项目写成字符串时，降级为单条描述，避免静默丢弃
+  if (typeof r.projects === 'string' && r.projects.trim()) {
+    return [{ description: r.projects.trim() }]
+  }
+  return []
 }
 
 /** 归一化实习经历。 */
@@ -113,35 +147,193 @@ export function normalizeWorkExperienceItem(item = {}) {
   }
 }
 
+/**
+ * 把技能/证书等列表项安全转成可读字符串。
+ * AI 偶发返回 { name/title/... } 对象时，禁止直接 String(obj) 变成 [object Object]。
+ */
+function stringifyListItem(item) {
+  if (item === undefined || item === null) return ''
+  if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean') {
+    return String(item).trim()
+  }
+  if (typeof item === 'object') {
+    const text = (
+      item.name
+      || item.title
+      || item.label
+      || item.skill
+      || item.certificate
+      || item.award
+      || item.value
+      || item.text
+      || item.content
+      || ''
+    )
+    if (text) return String(text).trim()
+    // 对象仅含一个原始值时取其值，例如 { Java: true } 不处理，避免脏数据
+    const values = Object.values(item).filter((v) => typeof v === 'string' || typeof v === 'number')
+    if (values.length === 1) return String(values[0]).trim()
+  }
+  return ''
+}
+
 /** 将字符串或数组统一为去空字符串数组。 */
 function normalizeStringList(value) {
-  if (Array.isArray(value)) return value.map((item) => String(item || '').trim()).filter(Boolean)
+  if (Array.isArray(value)) {
+    return value.map(stringifyListItem).filter(Boolean)
+  }
   if (!value) return []
+  if (typeof value === 'object') {
+    const text = stringifyListItem(value)
+    return text ? [text] : []
+  }
   return String(value).split(/[\n,，、]/).map((item) => item.trim()).filter(Boolean)
 }
 
 /**
+ * 拆分被模型错误合并进同一字段的多段教育信息。
+ * 常见形态：school/major 用换行、分号或 " / " 拼接两所学校。
+ */
+function splitEducationField(value) {
+  const text = String(value || '').trim()
+  if (!text) return []
+  const parts = text
+    .split(/\n+|；|;|\s+\/\s+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+  return parts.length ? parts : [text]
+}
+
+/** 从「通信技术（大专）」这类文案中拆出专业与学历。 */
+function splitMajorAndDegree(text = '') {
+  const raw = String(text || '').trim()
+  if (!raw) return { major: '', degree: '' }
+  const match = raw.match(/^(.+?)[（(]\s*(大专|本科|硕士|博士|研究生|专科|高中|中专)\s*[）)]$/)
+  if (match) {
+    return { major: match[1].trim(), degree: match[2].trim() }
+  }
+  return { major: raw, degree: '' }
+}
+
+/**
+ * 从「学校A 专业（大专） 学校B 专业（本科）」这类粘连文本中尽量拆成多段。
+ * 仅在出现多所学校关键词时启用，避免误拆普通专业名。
+ */
+function splitStickyEducationText(text = '') {
+  const raw = String(text || '').trim()
+  if (!raw) return []
+  const schoolHits = raw.match(/[\u4e00-\u9fa5A-Za-z0-9（）()]{2,}(?:大学|学院|学校|职业技术学院|职业技术大学)/g) || []
+  if (schoolHits.length < 2) return []
+
+  const parts = []
+  let cursor = 0
+  schoolHits.forEach((school, index) => {
+    const start = raw.indexOf(school, cursor)
+    if (start < 0) return
+    const nextSchool = schoolHits[index + 1]
+    const end = nextSchool ? raw.indexOf(nextSchool, start + school.length) : raw.length
+    const chunk = raw.slice(start, end >= 0 ? end : raw.length).trim()
+    const rest = chunk.slice(school.length).trim().replace(/^[,，、|｜\-\s]+/, '')
+    const parsed = splitMajorAndDegree(rest)
+    parts.push({
+      school,
+      major: parsed.major,
+      degree: parsed.degree,
+    })
+    cursor = start + school.length
+  })
+  return parts
+}
+
+/** 把合并的一条教育记录尽量拆成多条。 */
+function expandMergedEducationItems(list = []) {
+  const result = []
+  list.forEach((item) => {
+    const schools = splitEducationField(item.school)
+    const majors = splitEducationField(item.major)
+    const degrees = splitEducationField(item.degree)
+    const startDates = splitEducationField(item.start_date)
+    const endDates = splitEducationField(item.end_date)
+    const courses = splitEducationField(item.main_course)
+
+    // 学校字段已有多分隔段：按段对齐拆分
+    if (schools.length > 1) {
+      schools.forEach((school, index) => {
+        const majorSource = majors[index] || ''
+        const parsed = splitMajorAndDegree(majorSource)
+        result.push({
+          school,
+          major: parsed.major || majorSource,
+          degree: degrees[index] || parsed.degree || '',
+          // 时间只挂在对应分段；没有分段时间时仅第一条继承原时间
+          start_date: startDates[index] || (index === 0 ? item.start_date : '') || '',
+          end_date: endDates[index] || (index === 0 ? item.end_date : '') || '',
+          main_course: courses[index] || '',
+        })
+      })
+      return
+    }
+
+    // 学校名粘连在同一字符串，或第二学历被塞进 major 时尝试拆分
+    // 注意：[] 在 JS 中为真值，不能用 || 串联
+    const stickyFromSchool = splitStickyEducationText(item.school)
+    const sticky = stickyFromSchool.length > 1
+      ? stickyFromSchool
+      : splitStickyEducationText([item.school, item.major].filter(Boolean).join(' '))
+    if (sticky.length > 1) {
+      sticky.forEach((part, index) => {
+        result.push({
+          school: part.school,
+          major: part.major || majors[index] || '',
+          degree: part.degree || degrees[index] || '',
+          start_date: startDates[index] || (index === 0 ? item.start_date : '') || '',
+          end_date: endDates[index] || (index === 0 ? item.end_date : '') || '',
+          main_course: courses[index] || '',
+        })
+      })
+      return
+    }
+
+    result.push(item)
+  })
+  return result
+}
+
+/**
  * 归一化教育背景数组
- * 兼容 educations[] 与扁平 school/major/education
+ * 兼容 educations[] / education[] / education_list 与扁平 school/major/education
  */
 export function normalizeEducations(resume = {}) {
   const r = resume || {}
-  const list = r.educations || r.education_list || []
-
-  if (Array.isArray(list) && list.length) {
-    return list.map(normalizeEducationItem).filter((item) =>
-      item.school || item.major || item.main_course || item.degree || item.start_date || item.end_date,
-    )
+  // 优先标准数组，其次兼容模型把多段教育写进 education[]
+  let list = []
+  if (Array.isArray(r.educations) && r.educations.length) {
+    list = r.educations
+  } else if (Array.isArray(r.education_list) && r.education_list.length) {
+    list = r.education_list
+  } else if (Array.isArray(r.education) && r.education.length) {
+    list = r.education
   }
 
-  // 旧数据：扁平字段合成一条
-  if (r.school || r.major || r.education) {
-    return [normalizeEducationItem({
+  if (list.length) {
+    const normalized = list
+      .map(normalizeEducationItem)
+      .filter((item) =>
+        item.school || item.major || item.main_course || item.degree || item.start_date || item.end_date,
+      )
+    return expandMergedEducationItems(normalized)
+  }
+
+  // 旧数据：扁平字段合成一条（education 为字符串学历时）
+  if (r.school || r.major || (typeof r.education === 'string' && r.education) || r.degree) {
+    return expandMergedEducationItems([normalizeEducationItem({
       school: r.school,
       major: r.major,
       main_course: r.main_course || r.mainCourse,
-      degree: r.education,
-    })]
+      degree: (typeof r.education === 'string' ? r.education : '') || r.degree,
+      start_date: r.start_date,
+      end_date: r.end_date,
+    })])
   }
 
   return []
@@ -173,6 +365,19 @@ export function syncFlatEducationFields(resume = {}) {
 }
 
 /**
+ * 从简历原文标签行回退提取求职意向。
+ * 用于识别场景：模型漏填 target_position 时仍能回填「求职意向：xxx」。
+ */
+export function extractTargetPositionFromText(text = '') {
+  const source = String(text || '')
+  if (!source.trim()) return ''
+  const match = source.match(
+    /(?:求职意向|意向岗位|目标岗位|期望岗位|求职岗位|应聘岗位|意向职位)\s*[:：]\s*([^\n，,；;]+)/,
+  )
+  return match ? String(match[1] || '').trim() : ''
+}
+
+/**
  * 完整归一化 resume 对象的新增字段
  */
 export function normalizeResumeFields(resume = {}) {
@@ -180,11 +385,12 @@ export function normalizeResumeFields(resume = {}) {
   const educations = normalizeEducations(r)
   const customFields = normalizeCustomFields(r)
 
-  const projects = Array.isArray(r.projects)
-    ? r.projects.map(normalizeProjectItem).filter((item) => (
+  // 兼容 projects / project_experiences 等别名，避免项目段被静默清空
+  const projects = pickProjectList(r)
+    .map(normalizeProjectItem)
+    .filter((item) => (
       item.name || item.role || item.description || item.tech_stack || item.start_date || item.end_date
     ))
-    : []
   const internships = Array.isArray(r.internships)
     ? r.internships.map(normalizeInternshipItem).filter((item) => (
       item.company || item.position || item.description || item.start_date || item.end_date
@@ -214,16 +420,22 @@ export function normalizeResumeFields(resume = {}) {
   r.awards = normalizeStringList(r.awards)
   r.certificates = normalizeStringList(r.certificates)
 
-  // target_position 多源归一化：兼容 AI 返回的多种岗位字段命名
+  // target_position 多源归一化：兼容 AI 返回的多种岗位字段命名（含「求职意向」）
   r.target_position = (
-    r.target_position ||
-    r.targetPosition ||
-    r['意向岗位'] ||
-    r['求职岗位'] ||
-    r['面试岗位'] ||
-    r['应聘岗位'] ||
-    r.position ||
-    ''
+    r.target_position
+    || r.targetPosition
+    || r['求职意向']
+    || r['意向岗位']
+    || r['目标岗位']
+    || r['期望岗位']
+    || r['求职岗位']
+    || r['面试岗位']
+    || r['应聘岗位']
+    || r['意向职位']
+    || r.job_intention
+    || r.jobIntention
+    || r.position
+    || ''
   )
 
   if (educations.length) {
