@@ -7,6 +7,7 @@ import axios from 'axios'
 import message from 'ant-design-vue/es/message'
 import router from '@/router'
 import { useUserStore } from '@/stores/user'
+import { getErrorMessage } from '@/utils/errorMessage'
 import {
   EMAIL_BINDING_REQUIRED_CODE,
   createOperationCancelledError,
@@ -111,7 +112,7 @@ request.interceptors.response.use(
         }
         if (originalRequest.__authRetried) {
           useUserStore().clearSession()
-          message.error('登录已过期，请重新登录')
+          message.error(getErrorMessage(error, '登录已过期，请重新登录'))
           router.push('/login')
           return Promise.reject(error)
         }
@@ -128,15 +129,18 @@ request.interceptors.response.use(
               : createOperationCancelledError('登录状态已变化，本次请求未继续'))
           }
           useUserStore().clearSession()
-          message.error('登录已过期，请重新登录')
+          message.error(getErrorMessage(refreshError, '登录已过期，请重新登录'))
           router.push('/login')
           return Promise.reject(refreshError)
         }
       } else {
-        message.error(data.detail || '请求失败，请重试')
+        // 统一友好提示，避免直接展示 detail 中的技术原文
+        const tip = getErrorMessage(error)
+        if (tip) message.error(tip)
       }
     } else {
-      message.error('网络错误，请检查网络连接')
+      const tip = getErrorMessage(error)
+      if (tip) message.error(tip)
     }
     return Promise.reject(error)
   }

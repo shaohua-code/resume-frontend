@@ -10,6 +10,7 @@ import App from './App.vue'
 import router from './router'
 import 'ant-design-vue/dist/reset.css'
 import './styles/global.css'
+import { antDesignReady } from '@/utils/uiReady'
 
 dayjs.locale('zh-cn')
 
@@ -19,21 +20,19 @@ let antDesignPromise
 
 // 缓存完整组件库的加载结果，避免连续导航时重复下载或重复注册。
 function ensureAntDesign() {
+  if (antDesignReady.value) return Promise.resolve()
   if (!antDesignPromise) {
     antDesignPromise = import('ant-design-vue').then(({ default: Antd }) => {
       app.use(Antd)
+      antDesignReady.value = true
     })
   }
   return antDesignPromise
 }
 
-// 轻量路由只加载首屏所需组件；其他页面并行准备完整组件库，并在解析完成前确保可用。
+// 非轻量路由仅预取，不再 beforeResolve 阻塞导航，避免浏览器顶栏/标签页长时间转圈。
 router.beforeEach((to) => {
   if (!to.meta.lightweight) void ensureAntDesign()
-})
-
-router.beforeResolve(async (to) => {
-  if (!to.meta.lightweight) await ensureAntDesign()
 })
 
 app.use(createPinia()) // Pinia 状态管理

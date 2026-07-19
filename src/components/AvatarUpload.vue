@@ -1,16 +1,20 @@
 <!--
   头像上传组件
-  通过统一上传接口获取 URL，绑定 resume.avatar
+  通过统一上传接口获取 URL，绑定 resume.avatar；预览使用 a-image 支持点击放大
 -->
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { PlusOutlined, DeleteOutlined, LoadingOutlined } from '@ant-design/icons-vue'
-import { message } from 'ant-design-vue'
+import message from 'ant-design-vue/es/message'
 import { uploadFile, resolveUploadUrl } from '@/api/upload'
+import { getErrorMessage } from '@/utils/errorMessage'
 
 const avatarUrl = defineModel({ type: String, default: '' })
 
 const uploading = ref(false)
+
+/** 可预览的绝对/可访问地址 */
+const previewSrc = computed(() => (avatarUrl.value ? resolveUploadUrl(avatarUrl.value) : ''))
 
 // 上传前校验：仅图片，最大 10MB
 function beforeUpload(file) {
@@ -35,7 +39,7 @@ async function handleUpload(file) {
     avatarUrl.value = data.url || ''
     message.success('头像上传成功')
   } catch (e) {
-    message.error(e.response?.data?.detail || e.message || '头像上传失败')
+    message.error(getErrorMessage(e, '头像上传失败'))
   } finally {
     uploading.value = false
   }
@@ -50,12 +54,16 @@ function removeAvatar() {
 <template>
   <div class="flex items-center gap-4">
     <div class="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-surface">
-      <img
-        v-if="avatarUrl"
-        :src="resolveUploadUrl(avatarUrl)"
+      <!-- 有头像时用 a-image，点击可全屏预览 -->
+      <a-image
+        v-if="previewSrc"
+        :src="previewSrc"
+        :width="80"
+        :height="80"
         alt="头像预览"
-        class="h-full w-full object-cover"
-      >
+        class="avatar-preview-image h-full w-full"
+        :preview="{ mask: '预览' }"
+      />
       <LoadingOutlined v-else-if="uploading" class="text-xl text-brand" />
       <PlusOutlined v-else class="text-xl text-muted" />
     </div>
@@ -79,7 +87,18 @@ function removeAvatar() {
         <DeleteOutlined />
         删除头像
       </button>
-      <p class="text-xs text-muted">支持 JPG/PNG/WebP，不上传则模板不显示头像，建议上传寸照</p>
+      <p class="text-xs text-muted">支持 JPG/PNG/WebP，不上传则模板不显示头像，建议上传寸照；点击头像可预览</p>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* 圆形裁切与 a-image 内部 img 对齐 */
+.avatar-preview-image :deep(.ant-image-img) {
+  @apply h-20 w-20 rounded-full object-cover;
+}
+
+.avatar-preview-image :deep(.ant-image-mask) {
+  @apply rounded-full;
+}
+</style>

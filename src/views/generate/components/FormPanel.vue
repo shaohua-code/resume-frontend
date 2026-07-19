@@ -4,7 +4,8 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
+import message from 'ant-design-vue/es/message'
+import { useMediaQuery } from '@/composables/useMediaQuery'
 import {
   AimOutlined,
   ArrowLeftOutlined,
@@ -38,6 +39,9 @@ import { useGenerateDraft } from '../composables/useGenerateDraft'
 
 const router = useRouter()
 const resumeStore = useResumeStore()
+/** 移动端改为单页折叠，桌面仍用三步步骤条 */
+const isMobileLayout = useMediaQuery('(max-width: 639px)')
+const mobileCollapseKeys = ref(['basic'])
 const basicFieldsRef = ref(null)
 const recognitionRef = ref(null)
 const recognitionLoading = ref(false)
@@ -214,6 +218,13 @@ async function validateBasicAndFocus() {
   if (!valid || !check.ok) {
     message.warning(check.message || '请填写姓名和意向岗位')
     draft.currentStep = 0
+    // 移动端折叠布局：展开基本信息面板并滚到顶部，方便补全必填项
+    if (isMobileLayout.value) {
+      if (!mobileCollapseKeys.value.includes('basic')) {
+        mobileCollapseKeys.value = [...mobileCollapseKeys.value, 'basic']
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
     return false
   }
   draft.basic.name = check.name
@@ -483,7 +494,8 @@ async function goToEditor() {
       @complete="applyRecognizedResume"
     />
 
-    <a-card class="card-base mb-4" :bordered="false">
+    <!-- 桌面：三步步骤条；移动端改为单页折叠，减少翻页提高可见信息量 -->
+    <a-card v-if="!isMobileLayout" class="card-base mb-4" :bordered="false">
       <a-steps :current="draft.currentStep" size="small" class="gen-steps">
         <a-step title="基本信息" description="姓名和意向岗位必填" />
         <a-step title="教育背景" description="选填" />
@@ -497,54 +509,93 @@ async function goToEditor() {
         :inert="formLocked ? '' : null"
         :aria-busy="formLocked"
       >
-        <div v-show="draft.currentStep === 0">
-          <a-alert message="姓名与意向岗位为必填项，其他内容均可选填。" type="info" show-icon class="mb-4" />
-          <a-card class="card-base mb-4" :bordered="false">
-            <template #title><span class="flex items-center gap-2 font-semibold text-ink"><UserOutlined /> 基本信息</span></template>
-            <ResumeBasicFieldsSection
-              ref="basicFieldsRef"
-              v-model="draft.basic"
-              :show-summary="false"
-              :show-avatar="false"
-              collapsible-advanced
-              :disabled="formLocked"
+        <!-- 移动端：折叠面板一步呈现 -->
+        <div v-if="isMobileLayout" class="space-y-3">
+          <a-alert message="姓名与意向岗位为必填项，其他内容均可选填。可展开下方各区块填写。" type="info" show-icon />
+          <a-collapse v-model:activeKey="mobileCollapseKeys" :bordered="false" class="generate-mobile-collapse bg-transparent">
+            <a-collapse-panel key="basic" header="基本信息（必填姓名与意向岗位）">
+              <ResumeBasicFieldsSection
+                ref="basicFieldsRef"
+                v-model="draft.basic"
+                :show-summary="false"
+                :show-avatar="false"
+                collapsible-advanced
+                :disabled="formLocked"
+              />
+              <a-form layout="vertical" class="mt-4">
+                <a-form-item label="技能标签"><a-input v-model:value="draft.basic.skills" class="input-field" placeholder="用逗号分隔，如：Vue3、JavaScript" /></a-form-item>
+                <a-form-item label="获奖情况"><a-textarea v-model:value="draft.basic.awards" :rows="2" class="input-field" placeholder="每行一条" /></a-form-item>
+                <a-form-item label="证书"><a-textarea v-model:value="draft.basic.certificates" :rows="2" class="input-field" placeholder="每行一条" /></a-form-item>
+              </a-form>
+            </a-collapse-panel>
+            <a-collapse-panel key="education" header="教育背景（选填）">
+              <ResumeEducationListSection v-model="draft.educations" />
+            </a-collapse-panel>
+            <a-collapse-panel key="experience" header="经历与生成（选填经历后可生成）">
+              <ResumeExperienceSections
+                v-model:projects="draft.projects"
+                v-model:internships="draft.internships"
+                v-model:work-experiences="draft.workExperiences"
+              />
+              <div class="mt-4 flex flex-col gap-3">
+                <GradientButton class="min-h-11 w-full justify-center" :loading="generationLoading && draft.generation.kind === 'generate'" @click="handleGenerate"><ThunderboltOutlined v-if="!generationLoading" /> 开始 AI 生成</GradientButton>
+                <button type="button" class="btn-ghost min-h-11 w-full" @click="openJdOptimize"><AimOutlined /> 按岗位优化简历</button>
+              </div>
+            </a-collapse-panel>
+          </a-collapse>
+        </div>
+
+        <!-- 桌面：原三步翻页 -->
+        <template v-else>
+          <div v-show="draft.currentStep === 0">
+            <a-alert message="姓名与意向岗位为必填项，其他内容均可选填。" type="info" show-icon class="mb-4" />
+            <a-card class="card-base mb-4" :bordered="false">
+              <template #title><span class="flex items-center gap-2 font-semibold text-ink"><UserOutlined /> 基本信息</span></template>
+              <ResumeBasicFieldsSection
+                ref="basicFieldsRef"
+                v-model="draft.basic"
+                :show-summary="false"
+                :show-avatar="false"
+                collapsible-advanced
+                :disabled="formLocked"
+              />
+              <a-form layout="vertical" class="mt-4">
+                <a-row :gutter="[16, 0]">
+                  <a-col :span="24"><a-form-item label="技能标签"><a-input v-model:value="draft.basic.skills" class="input-field" placeholder="用逗号分隔，如：Vue3、JavaScript" /></a-form-item></a-col>
+                  <a-col :span="24"><a-form-item label="获奖情况"><a-textarea v-model:value="draft.basic.awards" :rows="2" class="input-field" placeholder="每行一条" /></a-form-item></a-col>
+                  <a-col :span="24"><a-form-item label="证书"><a-textarea v-model:value="draft.basic.certificates" :rows="2" class="input-field" placeholder="每行一条" /></a-form-item></a-col>
+                </a-row>
+              </a-form>
+            </a-card>
+            <div class="flex justify-center p-3">
+              <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[190px]" @click="nextFromBasic">下一步：教育背景 <ArrowRightOutlined /></GradientButton>
+            </div>
+          </div>
+
+          <div v-show="draft.currentStep === 1">
+            <a-card class="card-base mb-4" :bordered="false">
+              <template #title><span class="flex items-center gap-2 font-semibold text-ink"><ReadOutlined /> 教育背景（选填）</span></template>
+              <ResumeEducationListSection v-model="draft.educations" />
+            </a-card>
+            <div class="flex flex-col-reverse justify-center gap-3 p-3 sm:flex-row">
+              <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[150px]" @click="draft.currentStep = 0"><ArrowLeftOutlined /> 上一步</button>
+              <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[190px]" @click="draft.currentStep = 2">下一步：经历与生成 <ArrowRightOutlined /></GradientButton>
+            </div>
+          </div>
+
+          <div v-show="draft.currentStep === 2">
+            <ResumeExperienceSections
+              v-model:projects="draft.projects"
+              v-model:internships="draft.internships"
+              v-model:work-experiences="draft.workExperiences"
             />
-            <a-form layout="vertical" class="mt-4">
-              <a-row :gutter="[16, 0]">
-                <a-col :span="24"><a-form-item label="技能标签"><a-input v-model:value="draft.basic.skills" class="input-field" placeholder="用逗号分隔，如：Vue3、JavaScript" /></a-form-item></a-col>
-                <a-col :span="24"><a-form-item label="获奖情况"><a-textarea v-model:value="draft.basic.awards" :rows="2" class="input-field" placeholder="每行一条" /></a-form-item></a-col>
-                <a-col :span="24"><a-form-item label="证书"><a-textarea v-model:value="draft.basic.certificates" :rows="2" class="input-field" placeholder="每行一条" /></a-form-item></a-col>
-              </a-row>
-            </a-form>
-          </a-card>
-          <div class="flex justify-center p-3">
-            <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[190px]" @click="nextFromBasic">下一步：教育背景 <ArrowRightOutlined /></GradientButton>
+            <div class="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-center">
+              <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[140px]" @click="draft.currentStep = 1"><ArrowLeftOutlined /> 上一步</button>
+              <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[170px]" :loading="generationLoading && draft.generation.kind === 'generate'" @click="handleGenerate"><ThunderboltOutlined v-if="!generationLoading" /> 开始 AI 生成</GradientButton>
+              <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[180px]" @click="openJdOptimize"><AimOutlined /> 按岗位优化简历</button>
+            </div>
           </div>
-        </div>
-
-        <div v-show="draft.currentStep === 1">
-          <a-card class="card-base mb-4" :bordered="false">
-            <template #title><span class="flex items-center gap-2 font-semibold text-ink"><ReadOutlined /> 教育背景（选填）</span></template>
-            <ResumeEducationListSection v-model="draft.educations" />
-          </a-card>
-          <div class="flex flex-col-reverse justify-center gap-3 p-3 sm:flex-row">
-            <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[150px]" @click="draft.currentStep = 0"><ArrowLeftOutlined /> 上一步</button>
-            <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[190px]" @click="draft.currentStep = 2">下一步：经历与生成 <ArrowRightOutlined /></GradientButton>
-          </div>
-        </div>
-
-        <div v-show="draft.currentStep === 2">
-          <ResumeExperienceSections
-            v-model:projects="draft.projects"
-            v-model:internships="draft.internships"
-            v-model:work-experiences="draft.workExperiences"
-          />
-          <div class="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-center">
-            <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[140px]" @click="draft.currentStep = 1"><ArrowLeftOutlined /> 上一步</button>
-            <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[170px]" :loading="generationLoading && draft.generation.kind === 'generate'" @click="handleGenerate"><ThunderboltOutlined v-if="!generationLoading" /> 开始 AI 生成</GradientButton>
-            <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[180px]" @click="openJdOptimize"><AimOutlined /> 按岗位优化简历</button>
-          </div>
-        </div>
+        </template>
       </div>
 
       <!-- 锁定层只覆盖表单，生成结果仍持续可见。 -->
