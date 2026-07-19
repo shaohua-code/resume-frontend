@@ -3,11 +3,11 @@
  * 全站顶部导航
  * 品牌入口、桌面导航、账户菜单与移动端抽屉（样式全部使用 Tailwind）
  */
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import Dropdown from 'ant-design-vue/es/dropdown'
-import Drawer from 'ant-design-vue/es/drawer'
-import { LayoutHeader } from 'ant-design-vue/es/layout'
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import Dropdown from "ant-design-vue/es/dropdown";
+import Drawer from "ant-design-vue/es/drawer";
+import { LayoutHeader } from "ant-design-vue/es/layout";
 import {
   AppstoreOutlined,
   ArrowRightOutlined,
@@ -20,112 +20,120 @@ import {
   SettingOutlined,
   UserOutlined,
   WalletOutlined,
-} from '@ant-design/icons-vue'
-import { useUserStore } from '@/stores/user'
-import { useWalletStore } from '@/stores/wallet'
-import { formatBalanceText, getRoleLabel } from '@/constants/roles'
-import { useMediaQuery } from '@/composables/useMediaQuery'
+} from "@ant-design/icons-vue";
+import { useUserStore } from "@/stores/user";
+import { useWalletStore } from "@/stores/wallet";
+import { formatBalanceText, getRoleLabel } from "@/constants/roles";
+import { useMediaQuery } from "@/composables/useMediaQuery";
 
-const route = useRoute()
-const router = useRouter()
-const userStore = useUserStore()
-const walletStore = useWalletStore()
-const drawerOpen = ref(false)
-const isMobile = useMediaQuery()
+const route = useRoute();
+const router = useRouter();
+const userStore = useUserStore();
+const walletStore = useWalletStore();
+const drawerOpen = ref(false);
+const isMobile = useMediaQuery();
 
 const drawerWidth = computed(() =>
-  typeof window === 'undefined' ? 320 : Math.min(340, window.innerWidth),
-)
+  typeof window === "undefined" ? 320 : Math.min(340, window.innerWidth),
+);
 
 const navItems = [
-  { key: 'home', label: '首页', description: '发现简历新灵感', path: '/', icon: HomeOutlined },
   {
-    key: 'templates',
-    label: '模板中心',
-    description: '精选多行业模板',
-    path: '/templates',
+    key: "home",
+    label: "首页",
+    description: "发现简历新灵感",
+    path: "/",
+    icon: HomeOutlined,
+  },
+  {
+    key: "templates",
+    label: "模板中心",
+    description: "精选多行业模板",
+    path: "/templates",
     icon: AppstoreOutlined,
   },
   {
-    key: 'generate',
-    label: 'AI 创作',
-    description: '智能生成专业简历',
-    path: '/generate',
+    key: "generate",
+    label: "AI 创作",
+    description: "智能生成专业简历",
+    path: "/generate",
     icon: FileAddOutlined,
     primary: true,
   },
   {
-    key: 'user',
-    label: '我的简历',
-    description: '管理简历与用量',
-    path: '/user',
+    key: "user",
+    label: "我的简历",
+    description: "管理简历与用量",
+    path: "/user",
     icon: UserOutlined,
   },
   {
-    key: 'admin',
-    label: '管理后台',
-    description: '系统管理与配置',
-    path: '/admin',
+    key: "admin",
+    label: "管理后台",
+    description: "系统管理与配置",
+    path: "/admin",
     icon: SettingOutlined,
     adminOnly: true,
   },
-]
+];
 
 const visibleNavItems = computed(() =>
   navItems.filter((item) => !item.adminOnly || userStore.isAdmin),
-)
-const balanceText = computed(() => formatBalanceText(walletStore.balance))
+);
+const balanceText = computed(() => formatBalanceText(walletStore.balance));
 const accountInitial = computed(
-  () => (userStore.userInfo.nickname || 'U').trim().charAt(0).toUpperCase() || 'U',
-)
+  () =>
+    (userStore.userInfo.nickname || "U").trim().charAt(0).toUpperCase() || "U",
+);
 
 const selectedKeys = computed(() => {
-  const path = route.path
-  if (path === '/') return ['home']
-  if (path.startsWith('/templates')) return ['templates']
-  if (path.startsWith('/generate') || path.startsWith('/editor')) return ['generate']
-  if (path.startsWith('/user')) return ['user']
-  if (path.startsWith('/admin')) return ['admin']
-  return []
-})
+  const path = route.path;
+  if (path === "/") return ["home"];
+  if (path.startsWith("/templates")) return ["templates"];
+  if (path.startsWith("/generate") || path.startsWith("/editor"))
+    return ["generate"];
+  if (path.startsWith("/user")) return ["user"];
+  if (path.startsWith("/admin")) return ["admin"];
+  return [];
+});
 
 /** 桌面导航项：仅当前路由高亮，primary 不再默认选中 */
 function desktopNavClass(item) {
-  const active = selectedKeys.value.includes(item.key)
+  const active = selectedKeys.value.includes(item.key);
   return [
-    'relative inline-flex h-11 items-center justify-center gap-2 rounded-xl border-0 bg-transparent px-3 text-[15px] font-semibold leading-none text-[#667085] whitespace-nowrap transition-all duration-200 ease-smooth xl:px-4',
-    'hover:bg-[linear-gradient(110deg,rgba(0,212,255,0.09),rgba(168,85,247,0.08))] hover:text-brand-dark',
+    "relative inline-flex h-11 items-center justify-center gap-2 rounded-xl border-0 bg-transparent px-3 text-[15px] font-semibold leading-none text-[#667085] whitespace-nowrap transition-all duration-200 ease-smooth xl:px-4",
+    "hover:bg-[linear-gradient(110deg,rgba(0,212,255,0.09),rgba(168,85,247,0.08))] hover:text-brand-dark",
     active
-      ? 'bg-[linear-gradient(110deg,rgba(0,212,255,0.15),rgba(79,172,254,0.13)_52%,rgba(168,85,247,0.13))] text-[#2563eb] shadow-[inset_0_0_0_1px_rgba(79,172,254,0.09)]'
-      : '',
-  ]
+      ? "bg-[linear-gradient(110deg,rgba(0,212,255,0.15),rgba(79,172,254,0.13)_52%,rgba(168,85,247,0.13))] text-[#2563eb] shadow-[inset_0_0_0_1px_rgba(79,172,254,0.09)]"
+      : "",
+  ];
 }
 
 /** 移动端导航项：仅 active 时高亮 */
 function mobileNavClass(item) {
-  const active = selectedKeys.value.includes(item.key)
+  const active = selectedKeys.value.includes(item.key);
   return [
-    'grid w-full min-h-[58px] grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-2.5 rounded-[14px] border border-transparent bg-transparent py-1.5 pr-2.5 pl-1.5 text-left text-ink-secondary',
+    "grid w-full min-h-[58px] grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-2.5 rounded-[14px] border border-transparent bg-transparent py-1.5 pr-2.5 pl-1.5 text-left text-ink-secondary",
     active
-      ? 'border-[rgba(79,172,254,0.24)] bg-[linear-gradient(110deg,rgba(0,212,255,0.1),rgba(79,172,254,0.08)_55%,rgba(168,85,247,0.08))]'
-      : '',
-  ]
+      ? "border-[rgba(79,172,254,0.24)] bg-[linear-gradient(110deg,rgba(0,212,255,0.1),rgba(79,172,254,0.08)_55%,rgba(168,85,247,0.08))]"
+      : "",
+  ];
 }
 
 function mobileNavIconClass(item) {
-  const active = selectedKeys.value.includes(item.key)
+  const active = selectedKeys.value.includes(item.key);
   return [
-    'inline-flex h-[42px] w-[42px] items-center justify-center rounded-xl border border-line bg-white text-ink-secondary',
+    "inline-flex h-[42px] w-[42px] items-center justify-center rounded-xl border border-line bg-white text-ink-secondary",
     active
-      ? 'border-[rgba(79,172,254,0.24)] text-[#2563eb] shadow-[0_5px_14px_rgba(79,172,254,0.12)]'
-      : '',
-  ]
+      ? "border-[rgba(79,172,254,0.24)] text-[#2563eb] shadow-[0_5px_14px_rgba(79,172,254,0.12)]"
+      : "",
+  ];
 }
 
 async function refreshBalance() {
-  if (!userStore.isLoggedIn) return
+  if (!userStore.isLoggedIn) return;
   try {
-    await walletStore.fetchBalance()
+    await walletStore.fetchBalance();
   } catch {
     // 顶栏余额失败不阻断页面加载，后续进入用户中心仍可重新获取。
   }
@@ -134,33 +142,33 @@ async function refreshBalance() {
 watch(
   () => userStore.isLoggedIn,
   (loggedIn) => {
-    if (loggedIn) refreshBalance()
-    else walletStore.reset()
+    if (loggedIn) refreshBalance();
+    else walletStore.reset();
   },
   { immediate: true },
-)
+);
 
-onMounted(refreshBalance)
+onMounted(refreshBalance);
 
 function navTo(path) {
-  const publicPaths = ['/', '/templates']
-  const pathname = path.split('?')[0]
+  const publicPaths = ["/", "/templates"];
+  const pathname = path.split("?")[0];
   if (!userStore.isLoggedIn && !publicPaths.includes(pathname)) {
-    router.push({ name: 'Login', query: { redirect: path } })
-    return
+    router.push({ name: "Login", query: { redirect: path } });
+    return;
   }
-  router.push(path)
+  router.push(path);
 }
 
 function navToMobile(path) {
-  drawerOpen.value = false
-  navTo(path)
+  drawerOpen.value = false;
+  navTo(path);
 }
 
 function handleLogout() {
-  drawerOpen.value = false
-  userStore.logout()
-  window.location.href = '/'
+  drawerOpen.value = false;
+  userStore.logout();
+  window.location.href = "/";
 }
 </script>
 
@@ -178,18 +186,24 @@ function handleLogout() {
         @click="navTo('/')"
       >
         <div
-          class="mr-0.5 flex h-10 w-10 items-center justify-center rounded-full [background-image:var(--gradient-primary)] text-[20px] font-bold text-white"
+          class="mr-0.5 flex h-[35px] w-[35px] items-center justify-center rounded-full [background-image:var(--gradient-primary)] text-[20px] font-bold text-white"
         >
-          AI
+        <span class="text-[20px] font-bold">AI</span>
+        
         </div>
         <span class="block whitespace-nowrap max-[390px]:hidden">
-          <span class="block text-base font-extrabold tracking-tight text-[#172033] sm:text-[19px]">
+          <span
+            class="block text-base font-extrabold tracking-tight text-[#172033] sm:text-[19px]"
+          >
             AI 简历
           </span>
         </span>
       </button>
 
-      <nav class="hidden items-center justify-center gap-0.5 bg-transparent p-0 lg:flex" aria-label="主导航">
+      <nav
+        class="hidden items-center justify-center gap-0.5 bg-transparent p-0 lg:flex"
+        aria-label="主导航"
+      >
         <button
           v-for="item in visibleNavItems"
           :key="item.key"
@@ -220,9 +234,11 @@ function handleLogout() {
               </span>
               <span class="min-w-0">
                 <b class="block max-w-[92px] truncate text-sm font-bold">
-                  {{ userStore.userInfo.nickname || '用户' }}
+                  {{ userStore.userInfo.nickname || "用户" }}
                 </b>
-                <small class="mt-1 block max-w-[92px] truncate text-[11px] font-bold text-[#3b82f6]">
+                <small
+                  class="mt-1 block max-w-[92px] truncate text-[11px] font-bold text-[#3b82f6]"
+                >
                   {{ balanceText }}
                 </small>
               </span>
@@ -241,9 +257,11 @@ function handleLogout() {
                   </span>
                   <div>
                     <b class="block text-[15px] leading-snug text-ink">
-                      {{ userStore.userInfo.nickname || '用户' }}
+                      {{ userStore.userInfo.nickname || "用户" }}
                     </b>
-                    <span class="mt-1 block text-xs leading-snug text-ink-secondary">
+                    <span
+                      class="mt-1 block text-xs leading-snug text-ink-secondary"
+                    >
                       {{ getRoleLabel(userStore.role) }}
                     </span>
                   </div>
@@ -252,10 +270,14 @@ function handleLogout() {
                 <div
                   class="my-1 mb-2 flex items-center justify-between rounded-xl border border-[rgba(79,172,254,0.25)] bg-[linear-gradient(110deg,rgba(0,212,255,0.1),rgba(79,172,254,0.08)_52%,rgba(168,85,247,0.08))] p-3"
                 >
-                  <span class="inline-flex items-center gap-1.5 text-[13px] text-ink-secondary">
+                  <span
+                    class="inline-flex items-center gap-1.5 text-[13px] text-ink-secondary"
+                  >
                     <WalletOutlined /> 账户余额
                   </span>
-                  <strong class="text-base text-[#2563eb]">{{ balanceText }}</strong>
+                  <strong class="text-base text-[#2563eb]">{{
+                    balanceText
+                  }}</strong>
                 </div>
 
                 <button
@@ -312,7 +334,11 @@ function handleLogout() {
       :open="drawerOpen"
       placement="right"
       :width="drawerWidth"
-      @update:open="(val) => { drawerOpen = val }"
+      @update:open="
+        (val) => {
+          drawerOpen = val;
+        }
+      "
     >
       <template #title>
         <div class="flex items-center gap-2.5">
@@ -337,20 +363,26 @@ function handleLogout() {
           </span>
           <div>
             <b class="block text-[15px] leading-snug text-ink">
-              {{ userStore.userInfo.nickname || '用户' }}
+              {{ userStore.userInfo.nickname || "用户" }}
             </b>
             <span class="mt-1 block text-xs leading-snug text-ink-secondary">
               {{ getRoleLabel(userStore.role) }}
             </span>
           </div>
         </div>
-        <div class="mt-2 flex items-center justify-between rounded-[11px] bg-white/75 p-2.5">
+        <div
+          class="mt-2 flex items-center justify-between rounded-[11px] bg-white/75 p-2.5"
+        >
           <span class="text-[11px] text-ink-secondary">账户余额</span>
           <strong class="text-sm text-[#2563eb]">{{ balanceText }}</strong>
         </div>
       </div>
 
-      <p class="mx-1 mb-2.5 text-[10px] font-extrabold tracking-[0.16em] text-muted">探索职简</p>
+      <p
+        class="mx-1 mb-2.5 text-[10px] font-extrabold tracking-[0.16em] text-muted"
+      >
+        探索职简
+      </p>
       <nav class="grid gap-2" aria-label="移动端主导航">
         <button
           v-for="item in visibleNavItems"
@@ -365,7 +397,9 @@ function handleLogout() {
           </span>
           <span class="block min-w-0">
             <b class="block text-[13px] text-ink">{{ item.label }}</b>
-            <small class="mt-1 block truncate text-[10px] text-muted">{{ item.description }}</small>
+            <small class="mt-1 block truncate text-[10px] text-muted">{{
+              item.description
+            }}</small>
           </span>
           <RightOutlined class="text-[10px] text-line" />
         </button>
