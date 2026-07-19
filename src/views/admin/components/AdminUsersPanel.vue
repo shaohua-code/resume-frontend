@@ -67,14 +67,11 @@ const roleOptions = computed(() => {
   return ['USER']
 })
 
-const visibleUsers = computed(() => {
-  return users.value.filter((item) => roleOptions.value.includes(item.role))
-})
-
 async function loadUsers() {
   loading.value = true
   try {
-    const res = await getAdminUsers({ ...query })
+    // 带上 mode，后端按管理员/用户角色集合分页，避免先取全量用户再前端过滤导致第一页空白
+    const res = await getAdminUsers({ ...query, mode: props.mode })
     users.value = res.items || []
     total.value = res.total || 0
   } finally {
@@ -198,7 +195,7 @@ onMounted(loadUsers)
     </a-card>
 
     <a-card :bordered="false" class="card-base">
-      <a-table :columns="columns" :data-source="visibleUsers" :loading="loading"
+      <a-table :columns="columns" :data-source="users" :loading="loading"
         :pagination="{ current: query.page, pageSize: query.size, total }" :scroll="{ x: 'max-content' }"
         row-key="user_id" size="small" @change="handleTableChange">
         <template #bodyCell="{ column, record }">
