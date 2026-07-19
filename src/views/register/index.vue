@@ -99,7 +99,7 @@ onBeforeUnmount(() => {
 <template>
   <!-- 外层容器：添加安全区域适配和触摸优化 -->
   <div
-    class="relative flex items-start justify-center min-h-screen p-3 overflow-hidden overflow-y-auto register-wrapper sm:p-6"
+    class="relative flex min-h-screen items-center justify-center overflow-hidden overflow-y-auto p-3 register-wrapper sm:p-6"
     style="background: var(--gradient-hero)"
     :style="{
       paddingTop: 'calc(1.5rem + env(safe-area-inset-top, 0))',
