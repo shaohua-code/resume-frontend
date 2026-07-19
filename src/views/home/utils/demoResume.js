@@ -163,16 +163,61 @@ const PROFILE_BY_TEMPLATE = {
   16: CAMPUS_DEMO,
   19: CREATIVE_DEMO,
   20: EXECUTIVE_DEMO,
+  // 其余模板按类目补齐人设，便于 /templates 页头像轮换更丰富
+  1: GENERAL_DEMO,
+  2: GENERAL_DEMO,
+  4: SALES_DEMO,
+  5: GENERAL_DEMO,
+  7: FINANCE_DEMO,
+  8: TECH_DEMO,
+  15: SALES_DEMO,
+  17: TECH_DEMO,
+  18: GENERAL_DEMO,
+  21: CREATIVE_DEMO,
+  22: EDUCATION_DEMO,
+  23: TECH_DEMO,
+  24: CREATIVE_DEMO,
+  25: CREATIVE_DEMO,
+  26: CAMPUS_DEMO,
+  27: CAMPUS_DEMO,
 }
 
-/** 本地演示头像，避免模板预览依赖第三方图片服务 */
+/** 兜底矢量头像（无本地 jpg 时使用） */
 export const DEMO_AVATAR = '/demo-avatar.svg'
-export const DEMO_AVATAR_TEMPLATE_IDS = [2, 4, 8, 10, 12, 14, 20]
+
+/** 女性 / 男性演示肖像池（Random User 公开库，已落地到 public/demo-avatars） */
+const WOMAN_AVATARS = [
+  '/demo-avatars/woman-01.jpg',
+  '/demo-avatars/woman-02.jpg',
+  '/demo-avatars/woman-03.jpg',
+  '/demo-avatars/woman-04.jpg',
+  '/demo-avatars/woman-05.jpg',
+]
+const MAN_AVATARS = [
+  '/demo-avatars/man-01.jpg',
+  '/demo-avatars/man-02.jpg',
+  '/demo-avatars/man-03.jpg',
+  '/demo-avatars/man-04.jpg',
+  '/demo-avatars/man-05.jpg',
+]
+
+/** 按演示人设姓名区分性别，再按 templateId 轮换，保证画廊卡片头像多样 */
+const FEMALE_DEMO_NAMES = new Set(['林悦', '许知夏', '顾一'])
+
+/** @deprecated 旧逻辑：仅部分模板带头像；现已全量模板预览带头像 */
+export const DEMO_AVATAR_TEMPLATE_IDS = Array.from({ length: 27 }, (_, i) => i + 1)
+
+function resolveDemoAvatar(name, templateId) {
+  const pool = FEMALE_DEMO_NAMES.has(name) ? WOMAN_AVATARS : MAN_AVATARS
+  const idx = Math.abs((Number(templateId) || 1) - 1) % pool.length
+  return pool[idx] || DEMO_AVATAR
+}
 
 export function getDemoResume(templateId) {
   const source = PROFILE_BY_TEMPLATE[templateId] || GENERAL_DEMO
   const resume = JSON.parse(JSON.stringify(source))
-  if (DEMO_AVATAR_TEMPLATE_IDS.includes(templateId)) resume.avatar = DEMO_AVATAR
+  // /templates 与首页预览统一写入演示头像，让版式中的头像位有真实肖像示例
+  resume.avatar = resolveDemoAvatar(resume.name, templateId)
   return resume
 }
 
