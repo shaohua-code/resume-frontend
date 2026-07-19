@@ -1,34 +1,7 @@
 /**
- * 27 套AI简历风格模板注册表
+ * 27 套 AI 简历风格模板注册表
+ * 元数据与组件加载器分离：列表页只引元数据，渲染时再按 id 动态 import 组件。
  */
-import Tpl01Universal from '@/components/resume-templates/Tpl01Universal.vue'
-import Tpl02Business from '@/components/resume-templates/Tpl02Business.vue'
-import Tpl03Campus from '@/components/resume-templates/Tpl03Campus.vue'
-import Tpl04TwoColumn from '@/components/resume-templates/Tpl04TwoColumn.vue'
-import Tpl05TopBand from '@/components/resume-templates/Tpl05TopBand.vue'
-import Tpl06TableInfo from '@/components/resume-templates/Tpl06TableInfo.vue'
-import Tpl07ClassicBW from '@/components/resume-templates/Tpl07ClassicBW.vue'
-import Tpl08Internet from '@/components/resume-templates/Tpl08Internet.vue'
-import Tpl09Admin from '@/components/resume-templates/Tpl09Admin.vue'
-import Tpl10Sales from '@/components/resume-templates/Tpl10Sales.vue'
-import Tpl11Education from '@/components/resume-templates/Tpl11Education.vue'
-import Tpl12Finance from '@/components/resume-templates/Tpl12Finance.vue'
-import Tpl13Creative from '@/components/resume-templates/Tpl13Creative.vue'
-import Tpl14Programmer from '@/components/resume-templates/Tpl14Programmer.vue'
-import Tpl15Bilingual from '@/components/resume-templates/Tpl15Bilingual.vue'
-import Tpl16Timeline from '@/components/resume-templates/Tpl16Timeline.vue'
-import Tpl17SkillProgress from '@/components/resume-templates/Tpl17SkillProgress.vue'
-import Tpl18MinimalLine from '@/components/resume-templates/Tpl18MinimalLine.vue'
-import Tpl19Envelope from '@/components/resume-templates/Tpl19Envelope.vue'
-import Tpl20Executive from '@/components/resume-templates/Tpl20Executive.vue'
-import Tpl21Brutalist from '@/components/resume-templates/Tpl21Brutalist.vue'
-import Tpl22Botanical from '@/components/resume-templates/Tpl22Botanical.vue'
-import Tpl23Dashboard from '@/components/resume-templates/Tpl23Dashboard.vue'
-import Tpl24Constructivist from '@/components/resume-templates/Tpl24Constructivist.vue'
-import Tpl25Gallery from '@/components/resume-templates/Tpl25Gallery.vue'
-// 应届生模板保持独立组件，便于在不改公共逻辑的前提下形成明显不同版式。
-import Tpl26CampusJournal from '@/components/resume-templates/Tpl26CampusJournal.vue'
-import Tpl27GraduateLaunch from '@/components/resume-templates/Tpl27GraduateLaunch.vue'
 
 export const MAX_TEMPLATE_ID = 27
 
@@ -63,43 +36,50 @@ export const TEMPLATE_LIST = [
   { id: 27, name: '起跑计划', category: '校招', desc: '清爽成长轨道与成果卡片，突出技能和实践潜力', color: 'linear-gradient(135deg,#126e82,#35b7a6)' },
 ]
 
-/** 模板 ID 映射到组件 */
-export const TEMPLATE_MAP = {
-  1: Tpl01Universal,
-  2: Tpl02Business,
-  3: Tpl03Campus,
-  4: Tpl04TwoColumn,
-  5: Tpl05TopBand,
-  6: Tpl06TableInfo,
-  7: Tpl07ClassicBW,
-  8: Tpl08Internet,
-  9: Tpl09Admin,
-  10: Tpl10Sales,
-  11: Tpl11Education,
-  12: Tpl12Finance,
-  13: Tpl13Creative,
-  14: Tpl14Programmer,
-  15: Tpl15Bilingual,
-  16: Tpl16Timeline,
-  17: Tpl17SkillProgress,
-  18: Tpl18MinimalLine,
-  19: Tpl19Envelope,
-  20: Tpl20Executive,
-  21: Tpl21Brutalist,
-  22: Tpl22Botanical,
-  23: Tpl23Dashboard,
-  24: Tpl24Constructivist,
-  25: Tpl25Gallery,
-  // 连续 ID 映射保证模板库、生成页和编辑器自动接入。
-  26: Tpl26CampusJournal,
-  27: Tpl27GraduateLaunch,
+/** 模板 ID -> 动态 import，避免 27 套组件同步打进首页包 */
+export const TEMPLATE_LOADERS = {
+  1: () => import('@/components/resume-templates/Tpl01Universal.vue'),
+  2: () => import('@/components/resume-templates/Tpl02Business.vue'),
+  3: () => import('@/components/resume-templates/Tpl03Campus.vue'),
+  4: () => import('@/components/resume-templates/Tpl04TwoColumn.vue'),
+  5: () => import('@/components/resume-templates/Tpl05TopBand.vue'),
+  6: () => import('@/components/resume-templates/Tpl06TableInfo.vue'),
+  7: () => import('@/components/resume-templates/Tpl07ClassicBW.vue'),
+  8: () => import('@/components/resume-templates/Tpl08Internet.vue'),
+  9: () => import('@/components/resume-templates/Tpl09Admin.vue'),
+  10: () => import('@/components/resume-templates/Tpl10Sales.vue'),
+  11: () => import('@/components/resume-templates/Tpl11Education.vue'),
+  12: () => import('@/components/resume-templates/Tpl12Finance.vue'),
+  13: () => import('@/components/resume-templates/Tpl13Creative.vue'),
+  14: () => import('@/components/resume-templates/Tpl14Programmer.vue'),
+  15: () => import('@/components/resume-templates/Tpl15Bilingual.vue'),
+  16: () => import('@/components/resume-templates/Tpl16Timeline.vue'),
+  17: () => import('@/components/resume-templates/Tpl17SkillProgress.vue'),
+  18: () => import('@/components/resume-templates/Tpl18MinimalLine.vue'),
+  19: () => import('@/components/resume-templates/Tpl19Envelope.vue'),
+  20: () => import('@/components/resume-templates/Tpl20Executive.vue'),
+  21: () => import('@/components/resume-templates/Tpl21Brutalist.vue'),
+  22: () => import('@/components/resume-templates/Tpl22Botanical.vue'),
+  23: () => import('@/components/resume-templates/Tpl23Dashboard.vue'),
+  24: () => import('@/components/resume-templates/Tpl24Constructivist.vue'),
+  25: () => import('@/components/resume-templates/Tpl25Gallery.vue'),
+  26: () => import('@/components/resume-templates/Tpl26CampusJournal.vue'),
+  27: () => import('@/components/resume-templates/Tpl27GraduateLaunch.vue'),
 }
+
+/** @deprecated 兼容旧引用：请改用 TEMPLATE_LOADERS / getTemplateLoader */
+export const TEMPLATE_MAP = TEMPLATE_LOADERS
 
 export function clampTemplateId(id) {
   const n = Number(id) || 1
   if (n < 1) return 1
   if (n > MAX_TEMPLATE_ID) return 1
   return n
+}
+
+export function getTemplateLoader(id) {
+  const safeId = clampTemplateId(id)
+  return TEMPLATE_LOADERS[safeId] || TEMPLATE_LOADERS[1]
 }
 
 export function getTemplateName(id) {

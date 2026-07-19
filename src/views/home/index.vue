@@ -88,7 +88,7 @@ function handleFeatureClick(item) {
       <TemplatePreview />
     </LazyRender>
 
-    <LazyRender min-height="36rem" root-margin="400px 0px">
+    <LazyRender min-height="36rem" root-margin="200px 0px">
       <TrustOfferWall />
     </LazyRender>
     <section

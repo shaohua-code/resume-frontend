@@ -4,7 +4,7 @@
  * 支持 access_token 过期自动刷新
  */
 import axios from 'axios'
-import { message } from 'ant-design-vue'
+import message from 'ant-design-vue/es/message'
 import router from '@/router'
 import { useUserStore } from '@/stores/user'
 import {

@@ -13,7 +13,7 @@ import {
   sendEmailBindingCode as sendEmailBindingCodeApi,
   bindEmail as bindEmailApi,
 } from '@/api/auth'
-import { message } from 'ant-design-vue'
+import message from 'ant-design-vue/es/message'
 import { useWalletStore } from '@/stores/wallet'
 import { roleHasPermission } from '@/constants/permissions'
 import { cancelEmailBinding } from '@/utils/emailBindingGate'

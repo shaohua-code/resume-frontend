@@ -4,7 +4,6 @@
  * 需要登录的页面通过 meta.requireAuth 标记，路由守卫自动跳转登录
  */
 import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '@/stores/user'
 
 const routes = [
   {
@@ -189,15 +188,20 @@ router.beforeEach((to, from, next) => {
   } else if (requireAuth && !token) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
   } else if (rolesMeta) {
-    const userStore = useUserStore()
-    if (!rolesMeta.includes(userStore.role)) {
-      void import('ant-design-vue/es/message').then(({ default: message }) => {
-        message.error('无权访问该页面')
+    // 仅后台角色校验时再拉 userStore，避免首页入口同步带上 auth/antd 链路
+    void import('@/stores/user')
+      .then(({ useUserStore }) => {
+        const userStore = useUserStore()
+        if (!rolesMeta.includes(userStore.role)) {
+          void import('ant-design-vue/es/message').then(({ default: message }) => {
+            message.error('无权访问该页面')
+          })
+          next('/')
+          return
+        }
+        next()
       })
-      next('/')
-      return
-    }
-    next()
+      .catch(() => next('/'))
   } else {
     next()
   }

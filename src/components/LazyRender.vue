@@ -8,7 +8,8 @@ const props = defineProps({
   },
   rootMargin: {
     type: String,
-    default: '500px 0px',
+    // 收紧预加载距离，避免首页一进来就预取模板/下方重块
+    default: '200px 0px',
   },
 })
 

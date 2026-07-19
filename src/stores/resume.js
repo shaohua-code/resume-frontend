@@ -18,7 +18,7 @@ import {
   batchDeleteResume as batchDeleteApi,
   getResumeCount as getCountApi,
 } from '@/api/resume'
-import { message } from 'ant-design-vue'
+import message from 'ant-design-vue/es/message'
 import { clampTemplateId } from '@/constants/templateRegistry'
 import { useWalletStore } from '@/stores/wallet'
 import { normalizeResumeFields } from '@/constants/resumeFieldSchema'

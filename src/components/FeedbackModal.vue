@@ -5,7 +5,8 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { message, Modal } from 'ant-design-vue'
+import message from 'ant-design-vue/es/message'
+import Modal from 'ant-design-vue/es/modal'
 import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import { useUserStore } from '@/stores/user'
