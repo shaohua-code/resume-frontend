@@ -225,6 +225,7 @@ export const useUserStore = defineStore('user', () => {
     isTokenExpiringSoon,
     hasPermission,
     getValidToken,
+    persistAuth,
     patchUserInfo,
     clearSession,
     logout,

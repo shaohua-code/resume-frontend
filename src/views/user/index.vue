@@ -28,12 +28,18 @@
             <span class="role-pill">{{ getRoleLabel(userStore.role) }}</span>
           </div>
           <p>{{ userStore.userInfo.email || '暂未绑定邮箱' }}</p>
-          <span
-            class="account-status"
-            :class="userStore.userInfo.status === 'BANNED' ? 'account-status--danger' : 'account-status--active'"
-          >
-            <i></i>{{ getStatusLabel(userStore.userInfo.status) }}
-          </span>
+          <div class="account-status-row">
+            <span
+              class="account-status"
+              :class="userStore.userInfo.status === 'BANNED' ? 'account-status--danger' : 'account-status--active'"
+            >
+              <i></i>{{ getStatusLabel(userStore.userInfo.status) }}
+            </span>
+            <!-- 快捷进入账户资料编辑 -->
+            <button type="button" class="account-edit-button" @click="activeTab = 'profile'">
+              修改资料
+            </button>
+          </div>
         </div>
       </div>
 
@@ -199,6 +205,9 @@
         <section v-else-if="activeTab === 'usage'" class="workspace-content-body">
           <UsagePanel />
         </section>
+        <section v-else-if="activeTab === 'profile'" class="workspace-content-body">
+          <UserProfilePanel />
+        </section>
         <section v-else-if="activeTab === 'models'" class="workspace-content-body">
           <UserTaskModelsPanel />
         </section>
@@ -239,6 +248,7 @@ import {
   RobotOutlined,
   FormOutlined,
   ThunderboltOutlined,
+  UserOutlined,
 } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useWalletStore } from '@/stores/wallet'
@@ -248,6 +258,7 @@ import { getTemplateName } from '@/constants/templateNames'
 import THEME from '@/constants/theme'
 import GradientButton from '@/components/GradientButton.vue'
 import UsagePanel from './components/UsagePanel.vue'
+import UserProfilePanel from './components/UserProfilePanel.vue'
 import UserTaskModelsPanel from './components/UserTaskModelsPanel.vue'
 import UserTaskPromptsPanel from './components/UserTaskPromptsPanel.vue'
 import ResumeCardList from './components/ResumeCardList.vue'
@@ -291,6 +302,14 @@ const workspaceGroups = computed(() => {
           longDescription: '查看账户余额、累计消费和每一次额度变动记录。',
           eyebrow: 'USAGE & BILLING',
           icon: WalletOutlined,
+        },
+        {
+          key: 'profile',
+          label: '账户资料',
+          description: '昵称与密码',
+          longDescription: '修改昵称、登录密码，并查看账号与邮箱绑定状态。',
+          eyebrow: 'ACCOUNT PROFILE',
+          icon: UserOutlined,
         },
       ],
     },
@@ -602,6 +621,32 @@ function handleLogout() {
 .account-status--active i { background: #10b981; box-shadow: 0 0 0 4px #d1fae5; }
 .account-status--danger { color: #dc2626; }
 .account-status--danger i { background: #ef4444; box-shadow: 0 0 0 4px #fee2e2; }
+
+.account-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-edit-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid #dbe3ef;
+  border-radius: 999px;
+  background: #fff;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background .15s ease, border-color .15s ease;
+}
+
+.account-edit-button:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
 
 .account-metrics {
   display: grid;
