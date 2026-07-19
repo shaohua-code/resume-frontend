@@ -1,4 +1,8 @@
-const GUIDE_STORAGE_PREFIX = 'ai_resume_new_user_guide_v1'
+/**
+ * 新用户指引本地状态（按账号隔离）。
+ * 版本号升级会使旧 pending/done 失效，从而按最新产品流程重新展示一次指引。
+ */
+const GUIDE_STORAGE_PREFIX = 'ai_resume_new_user_guide_v2'
 export const NEW_USER_GUIDE_PENDING_EVENT = 'ai-resume:new-user-guide-pending'
 
 function getUserIdentity(userInfo = {}) {

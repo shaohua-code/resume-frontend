@@ -93,7 +93,7 @@ onBeforeUnmount(() => {
       <!-- 服务端命中 AI 邮箱门禁时才按需加载弹窗，绑定成功后自动续接原操作。 -->
       <EmailBindingModal v-if="emailBindingGateOpen" />
 
-      <!-- 仅登录后挂载；注册产生 pending 后，首次进入生成页再展示三步指引。 -->
+      <!-- 仅登录后挂载；注册写 pending，首次进 /generate 展示三步指引（文案/存储键见 NewUserGuide + newUserGuide.js）。 -->
       <NewUserGuide v-if="deferredReady && userStore.isLoggedIn" />
 
       <!-- 版本公告：生效时间窗内、未读时弹一次 -->

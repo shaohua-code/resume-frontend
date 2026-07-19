@@ -1,11 +1,16 @@
 <script setup>
 /**
  * 新用户三步指引：仅登录后、生成页、且存在 pending 标记时展示。
- * 使用 Teleport 自建居中层，避免 a-modal 在窄屏被顶出视口只剩底部「跳过指引」。
+ * 文案对齐当前统一生成页（识别回填 + Tab 表单 + 底栏 AI）与编辑器导出流程。
+ * 使用 Teleport 自建居中层，避免 a-modal 在窄屏被顶出视口。
  */
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { FileSearchOutlined, FormOutlined, RocketOutlined } from '@ant-design/icons-vue'
+import {
+  FileSearchOutlined,
+  ThunderboltOutlined,
+  EditOutlined,
+} from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 import {
   completeNewUserGuide,
@@ -18,29 +23,30 @@ const route = useRoute()
 const open = ref(false)
 const currentStep = ref(0)
 
+/** 步骤内容随产品形态维护；存储键版本见 newUserGuide.js */
 const steps = [
   {
-    shortTitle: '准备内容',
-    title: '选择最顺手的录入方式',
-    description: '可以上传 PDF、粘贴已有文字，或直接在页面里填写。辅助识别后的内容仍然可以手动修改。',
-    tip: '首次使用 AI 能力时，系统会引导你绑定并验证邮箱。',
+    shortTitle: '录入内容',
+    title: '识别导入或直接填写',
+    description: '上方可选「智能 PDF 识别」或「智能文字识别」把已有内容回填到表单；也可以跳过识别，用「基本信息 / 教育背景 / 经历」三个 Tab 直接填写。识别只整理原文事实，不会自动生成简历。',
+    tip: '姓名与意向岗位是必填项；其他模块可按需补充，信息越完整生成质量越好。',
     icon: FileSearchOutlined,
     iconClass: 'bg-cyan-50 text-brand-dark',
   },
   {
-    shortTitle: '生成简历',
-    title: '检查信息并生成简历',
-    description: '补齐基本信息、教育经历、实习与项目，确认内容无误后点击生成，系统会为你整理成专业简历。',
-    tip: '经历尽量写清“做了什么、怎么做、结果如何”，生成效果会更好。',
-    icon: FormOutlined,
+    shortTitle: 'AI 生成',
+    title: '用底栏按钮生成或按岗位优化',
+    description: '检查表单无误后，点击底部「开始 AI 生成」整理成专业简历；若已有明确招聘要求，可用「按岗位优化简历」对照岗位强化表述。生成结果会留在本页，确认保存后再进入编辑器。',
+    tip: '首次使用 AI 能力时需绑定并验证邮箱；余额不足时请先到用户中心充值。',
+    icon: ThunderboltOutlined,
     iconClass: 'bg-violet-50 text-accent',
   },
   {
     shortTitle: '编辑导出',
-    title: '进入编辑器完成最后调整',
-    description: '生成后可继续修改内容、切换模板和调整字体间距，确认预览效果后导出 PDF 或 Word。',
-    tip: '导出前建议检查分页和联系方式，确保投递版本完整无误。',
-    icon: RocketOutlined,
+    title: '进编辑器润色并导出投递版',
+    description: '生成成功后进入编辑器，可改内容、切换 27 套模板、调整字体间距，并用评分/匹配等工具查漏补缺，预览满意后导出 PDF 或 Word。简历列表、用量与账户资料在「用户中心」统一管理。',
+    tip: '导出前检查分页、联系方式和头像；投递前建议再对一下目标岗位关键词。',
+    icon: EditOutlined,
     iconClass: 'bg-emerald-50 text-emerald-600',
   },
 ]
@@ -57,6 +63,7 @@ function dismissGuide() {
 
 function finishGuide() {
   closeAndRemember()
+  // 完成后滚到表单区域，方便立刻开始填写
   window.requestAnimationFrame(() => {
     document.querySelector('form, [data-resume-form]')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   })
@@ -107,7 +114,7 @@ watch(
         </div>
         <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6 sm:py-5">
           <p class="mb-5 text-sm leading-6 text-ink-secondary">
-            第一次使用不用摸索，跟着下面的步骤即可完成生成、编辑和导出。
+            注册后首次进入生成页会看到本指引；步骤对应当前「识别 → AI 生成 → 编辑导出」流程。
           </p>
           <a-steps :current="currentStep" size="small" class="mb-6">
             <a-step v-for="item in steps" :key="item.title" :title="item.shortTitle" />
