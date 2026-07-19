@@ -114,7 +114,7 @@ onMounted(loadConfig)
         <p class="text-base font-semibold text-ink">任务模型配置</p>
         <p class="mt-1 text-xs text-muted">
           每个 AI 任务独立选择模型与深度思考策略；文本任务只能选择文本模型，图片识别只能选择视觉模型。
-          任务级深度思考优先于模型配置。
+          任务级深度思考优先于模型配置。DeepSeek V4 默认开启思考，识别任务请显式「关闭深度思考」，否则易截断导致解析失败。
         </p>
       </div>
     </a-card>
