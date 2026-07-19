@@ -1046,15 +1046,24 @@ function handleLogout() {
 
   .workspace-sidebar {
     position: static;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
     padding: 12px;
   }
 
-  .workspace-nav-group + .workspace-nav-group {
-    margin-top: 12px;
+  /* 分组容器透明化，让全部 Tab 进入同一 2 列网格：左右左右 */
+  .workspace-nav-group,
+  .workspace-nav-list {
+    display: contents;
   }
 
-  .workspace-nav-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .workspace-nav-group + .workspace-nav-group {
+    margin-top: 0;
+  }
+
+  .workspace-nav-label {
+    display: none;
   }
 
   .workspace-sidebar-note {
@@ -1131,10 +1140,6 @@ function handleLogout() {
   .workspace-nav-copy small,
   .workspace-nav-badge {
     display: none;
-  }
-
-  .workspace-nav-list {
-    gap: 6px;
   }
 
   .workspace-nav-item {

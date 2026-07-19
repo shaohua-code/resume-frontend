@@ -182,36 +182,24 @@ const PROFILE_BY_TEMPLATE = {
   27: CAMPUS_DEMO,
 }
 
-/** 本地轻量矢量头像（不引入仓库内 jpg，降低体积） */
-export const DEMO_AVATAR = '/demo-avatar.svg'
+/**
+ * 模板预览统一演示头像：AI 生成职业肖像（非真人/非明星），本地静态资源，避免侵权与外链依赖。
+ * 对应文件：public/demo-avatar.webp
+ */
+export const DEMO_AVATAR = '/demo-avatar.webp'
 
 /** @deprecated 旧逻辑：仅部分模板带头像；现已全量模板预览带头像 */
 export const DEMO_AVATAR_TEMPLATE_IDS = Array.from({ length: 27 }, (_, i) => i + 1)
 
-const AVATAR_PALETTE = ['#1F6FEB', '#0F766E', '#B45309', '#7C3AED', '#BE123C']
-
-/** 按姓名生成首字母 SVG data URL，无外网依赖 */
-function buildInitialsAvatar(name = '', templateId = 1) {
-  const text = String(name || '简历').trim()
-  const initial = text.charAt(0) || '简'
-  const color = AVATAR_PALETTE[Math.abs((Number(templateId) || 1) - 1) % AVATAR_PALETTE.length]
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
-    <rect width="160" height="160" rx="80" fill="${color}"/>
-    <text x="80" y="88" text-anchor="middle" dominant-baseline="middle" font-size="64" fill="#fff" font-family="Segoe UI, PingFang SC, sans-serif">${initial}</text>
-  </svg>`
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
-}
-
-function resolveDemoAvatar(name, templateId) {
-  // 优先首字母占位；DEMO_AVATAR 仅作极端兜底
-  return buildInitialsAvatar(name, templateId) || DEMO_AVATAR
+function resolveDemoAvatar() {
+  return DEMO_AVATAR
 }
 
 export function getDemoResume(templateId) {
   const source = PROFILE_BY_TEMPLATE[templateId] || GENERAL_DEMO
   const resume = JSON.parse(JSON.stringify(source))
-  // /templates 与首页预览统一写入演示头像，让版式中的头像位有真实肖像示例
-  resume.avatar = resolveDemoAvatar(resume.name, templateId)
+  // /templates 与首页预览统一写入演示头像，让版式中的头像位有肖像示例
+  resume.avatar = resolveDemoAvatar()
   return resume
 }
 

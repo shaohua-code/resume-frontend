@@ -14,6 +14,8 @@ const API_BASE = import.meta.env.VITE_API_URL || ''
 export function resolveUploadUrl(path) {
   if (!path) return ''
   if (/^https?:\/\//i.test(path)) return path
+  // 仅用户上传目录拼后端域名；/demo-avatar 等 public 静态资源走前端站点
+  if (!String(path).startsWith('/uploads')) return path
   if (API_BASE) return `${API_BASE.replace(/\/$/, '')}${path}`
   return path
 }
