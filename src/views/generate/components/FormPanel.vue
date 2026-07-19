@@ -593,7 +593,7 @@ async function goToEditor() {
       :class="tabsStuck ? 'rounded-card' : 'rounded-b-card border-t-0'"
     >
       <div
-        class="px-4 py-6 sm:px-8"
+        class="px-3 py-4 sm:px-6 sm:py-6"
         :class="formLocked ? 'pointer-events-none select-none opacity-60' : ''"
         :inert="formLocked ? '' : null"
         :aria-busy="formLocked"

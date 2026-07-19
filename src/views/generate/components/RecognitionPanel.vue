@@ -399,9 +399,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <a-card class="mb-5 card-base" :bordered="false">
+  <!-- 不用 card-base 的 p-5，避免与 ant-card-body 双重内边距导致两侧空白过大 -->
+  <a-card
+    class="mb-3 rounded-card border border-line/60 bg-surface/80 shadow-card backdrop-blur-sm sm:mb-4"
+    :bordered="false"
+  >
     <template #title>
-      <div class="flex flex-col gap-1">
+      <div class="flex flex-col gap-0.5">
         <span class="text-base font-semibold text-ink">辅助识别</span>
         <span class="text-xs font-normal text-muted">只提取原文事实并回填，不生成、不润色；也可跳过识别直接填写下方表单</span>
       </div>
@@ -416,14 +420,14 @@ onBeforeUnmount(() => {
       ]"
       block
       size="large"
-      class="mb-5 w-full"
+      class="mb-3 w-full"
     />
 
     <!-- PDF：已存状态 + 可选替换区 + 唯一主按钮 -->
-    <div v-if="state.method === 'pdf'" class="space-y-4">
+    <div v-if="state.method === 'pdf'" class="space-y-3">
       <div
         v-if="existingFile"
-        class="flex flex-col gap-3 rounded-lg border border-line/30 bg-cream/50 p-3 sm:flex-row sm:items-center sm:justify-between"
+        class="flex flex-col gap-2 rounded-lg border border-line/30 bg-cream/50 p-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-3"
       >
         <div class="min-w-0 space-y-1">
           <div class="flex items-center gap-2 text-sm font-medium text-ink">
@@ -436,9 +440,9 @@ onBeforeUnmount(() => {
             <span v-if="pdfFile" class="text-brand-dark">已选新文件，识别时将覆盖</span>
           </div>
         </div>
-        <div class="flex flex-col gap-2 sm:flex-row sm:shrink-0">
+        <div class="flex flex-col gap-1.5 sm:flex-row sm:shrink-0 sm:gap-2">
           <a-button
-            class="w-full min-h-11 sm:w-auto"
+            class="w-full min-h-10 sm:w-auto sm:min-h-11"
             :disabled="loading || disabled"
             :loading="previewLoading"
             @click="openPdfPreview"
@@ -446,14 +450,14 @@ onBeforeUnmount(() => {
             <EyeOutlined /> 预览
           </a-button>
           <a-button
-            class="w-full min-h-11 sm:w-auto"
+            class="w-full min-h-10 sm:w-auto sm:min-h-11"
             :disabled="loading || disabled"
             @click="showReplaceUpload = !showReplaceUpload"
           >
             <CloudUploadOutlined /> {{ showReplaceUpload ? '收起替换' : '替换文件' }}
           </a-button>
           <a-button
-            class="w-full min-h-11 sm:w-auto"
+            class="w-full min-h-10 sm:w-auto sm:min-h-11"
             danger
             :disabled="loading || disabled || deleting"
             :loading="deleting"
@@ -496,7 +500,7 @@ onBeforeUnmount(() => {
 
       <div class="flex justify-center sm:justify-end">
         <GradientButton
-          class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[180px]"
+          class="min-h-10 w-full justify-center sm:min-h-11 sm:w-auto sm:min-w-[180px]"
           :loading="loading"
           :disabled="disabled || !canStartPdf"
           @click="recognizePdf"
@@ -524,8 +528,8 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- 文字：提示条 + 输入区 + 唯一主按钮 -->
-    <div v-else class="space-y-4">
-      <div class="rounded-lg border border-line/30 bg-cream/50 px-3 py-2 text-xs leading-5 text-muted">
+    <div v-else class="space-y-3">
+      <div class="rounded-lg border border-line/30 bg-cream/50 px-2.5 py-2 text-xs leading-5 text-muted sm:px-3">
         粘贴整段简历即可；系统只抽取明确写出的事实，不会补写或润色。建议至少 20 字。
       </div>
       <a-textarea
@@ -536,17 +540,17 @@ onBeforeUnmount(() => {
         placeholder="例如：姓名、求职意向、教育经历、工作/项目经历、技能…"
         class="input-field"
       />
-      <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex flex-col gap-2 sm:flex-row">
+      <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <div class="flex flex-col gap-1.5 sm:flex-row sm:gap-2">
           <a-button
-            class="min-h-11 w-full sm:w-auto sm:min-w-[112px]"
+            class="min-h-10 w-full sm:min-h-11 sm:w-auto sm:min-w-[112px]"
             :disabled="loading || disabled"
             @click="fillTextExample"
           >
             填写示例
           </a-button>
           <a-button
-            class="min-h-11 w-full sm:w-auto sm:min-w-[112px]"
+            class="min-h-10 w-full sm:min-h-11 sm:w-auto sm:min-w-[112px]"
             :disabled="loading || disabled || !textLength"
             @click="clearTextInput"
           >
@@ -554,7 +558,7 @@ onBeforeUnmount(() => {
           </a-button>
         </div>
         <GradientButton
-          class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[180px]"
+          class="min-h-10 w-full justify-center sm:min-h-11 sm:w-auto sm:min-w-[180px]"
           :loading="loading"
           :disabled="disabled || textLength < 20"
           @click="recognizeText"
@@ -568,11 +572,11 @@ onBeforeUnmount(() => {
     <div
       v-if="hasRun"
       ref="streamBoxRef"
-      class="mt-5 min-w-0 overflow-hidden rounded-lg border border-line/30 bg-cream/40"
+      class="mt-3 min-w-0 overflow-hidden rounded-lg border border-line/30 bg-cream/40 sm:mt-4"
     >
       <button
         type="button"
-        class="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-medium"
+        class="flex w-full items-center gap-2 px-2.5 py-2 text-left text-sm font-medium sm:px-3 sm:py-2.5"
         :class="showStreamBody ? 'border-b border-line/25' : ''"
         :aria-expanded="showStreamBody"
         :disabled="!isMobile || loading"
@@ -593,19 +597,28 @@ onBeforeUnmount(() => {
         <pre
           v-if="readableStreamText"
           ref="streamPreRef"
-          class="max-h-64 overflow-auto break-words whitespace-pre-wrap px-3 py-2.5 text-sm leading-6 text-ink-secondary"
+          class="max-h-64 overflow-auto break-words whitespace-pre-wrap px-2.5 py-2 text-sm leading-6 text-ink-secondary sm:px-3 sm:py-2.5"
         >{{ readableStreamText }}</pre>
-        <p v-else class="px-3 py-2.5 text-xs text-muted">识别内容会逐步显示在这里，并同步写入下方表单。</p>
+        <p v-else class="px-2.5 py-2 text-xs text-muted sm:px-3 sm:py-2.5">识别内容会逐步显示在这里，并同步写入下方表单。</p>
       </div>
     </div>
   </a-card>
 </template>
 
 <style scoped>
+/* 收紧卡片头/内容区内边距，消除两侧过大留白 */
+:deep(.ant-card-head) {
+  @apply min-h-0 border-b border-line/40 px-3 py-3 sm:px-4;
+}
+:deep(.ant-card-body) {
+  @apply px-3 py-3 sm:px-4 sm:py-4;
+}
+:deep(.ant-card-head-title) {
+  @apply overflow-visible whitespace-normal;
+}
 :deep(.ant-upload-drag-icon) {
   @apply mb-2 text-brand-dark;
 }
-
 @media (max-width: 375px) {
   :deep(.ant-segmented-item-label) {
     @apply px-2 text-xs;
