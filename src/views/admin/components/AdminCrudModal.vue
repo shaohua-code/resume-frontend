@@ -1,6 +1,14 @@
 <script setup>
-import { computed } from 'vue'
+/**
+ * 管理端公告 / 模型表单弹窗；公告内容使用 Quill 富文本，下方实时预览。
+ */
+import { computed, ref } from 'vue'
+import { message } from 'ant-design-vue'
+import { QuillEditor } from '@vueup/vue-quill'
+import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import { useMediaQuery } from '@/composables/useMediaQuery'
+import { uploadFile, resolveUploadUrl } from '@/api/upload'
+import AnnouncementRichContent from '@/components/AnnouncementRichContent.vue'
 
 const open = defineModel({ type: Boolean, default: false })
 
@@ -20,15 +28,61 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['submit', 'update:form'])
+const editorRef = ref(null)
 
 // 长表单在小屏使用视口安全宽度和内部滚动，避免按钮或字段被屏幕边缘裁切。
 const isMobile = useMediaQuery()
-const modalWidth = computed(() => (isMobile.value ? 'calc(100vw - 24px)' : 520))
+const modalWidth = computed(() => {
+  if (isMobile.value) return 'calc(100vw - 24px)'
+  // 公告富文本需要更宽编辑区
+  return props.type === 'announcements' ? 720 : 520
+})
 const modalBodyStyle = computed(() => ({
   maxHeight: isMobile.value ? 'calc(100vh - 120px)' : '70vh',
   overflowY: 'auto',
   padding: isMobile.value ? '16px' : undefined,
 }))
+
+/** 公告工具栏：标题、列表、链接与图片 */
+const announcementToolbar = [
+  [{ header: [1, 2, 3, false] }],
+  ['bold', 'italic', 'underline'],
+  [{ list: 'ordered' }, { list: 'bullet' }],
+  ['link', 'image'],
+  ['clean'],
+]
+
+function announcementImageHandler() {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  input.onchange = async () => {
+    const file = input.files?.[0]
+    if (!file) return
+    try {
+      const data = await uploadFile(file)
+      const quill = editorRef.value?.getQuill?.()
+      if (!quill) return
+      const range = quill.getSelection(true)
+      const url = resolveUploadUrl(data.url)
+      quill.insertEmbed(range.index, 'image', url)
+      quill.setSelection(range.index + 1)
+    } catch (e) {
+      message.error(e.response?.data?.detail || '图片上传失败')
+    }
+  }
+  input.click()
+}
+
+const announcementEditorOptions = {
+  placeholder: '请输入公告内容，支持标题、列表、链接与图片…',
+  modules: {
+    toolbar: {
+      container: announcementToolbar,
+      handlers: { image: announcementImageHandler },
+    },
+  },
+}
 
 // 预置常用值，同时允许直接输入新供应商或新模型类型，为后续扩展保留入口。
 const providerOptions = [
@@ -72,6 +126,7 @@ function updateField(key, value) {
     :footer="null"
     :width="modalWidth"
     :body-style="modalBodyStyle"
+    destroy-on-close
     @update:open="open = $event"
   >
     <a-form layout="vertical">
@@ -87,14 +142,26 @@ function updateField(key, value) {
             @update:value="updateField('version_label', $event)"
           />
         </a-form-item>
-        <a-form-item label="内容（Markdown）">
-          <a-textarea
-            :value="form.content"
-            :rows="8"
-            class="input-field"
-            placeholder="支持 Markdown，用户端禁 HTML 渲染"
-            @update:value="updateField('content', $event)"
+        <a-form-item label="内容（富文本）">
+          <QuillEditor
+            ref="editorRef"
+            :content="form.content || ''"
+            content-type="html"
+            theme="snow"
+            :options="announcementEditorOptions"
+            class="announcement-quill-editor min-h-[220px] rounded-card border border-line bg-white"
+            @update:content="updateField('content', $event)"
           />
+        </a-form-item>
+        <!-- 与用户端一致的富文本预览，编辑时即时可见 -->
+        <a-form-item label="预览效果">
+          <div class="max-h-56 overflow-y-auto rounded-card border border-line/70 bg-cream/40 px-4 py-3">
+            <AnnouncementRichContent
+              v-if="form.content"
+              :content="form.content"
+            />
+            <p v-else class="text-sm text-muted">输入内容后在此预览用户端展示效果</p>
+          </div>
         </a-form-item>
         <a-form-item label="生效开始时间">
           <a-date-picker
@@ -190,5 +257,19 @@ function updateField(key, value) {
 }
 :deep(.ant-modal-title) {
   @apply font-semibold text-ink;
+}
+.announcement-quill-editor :deep(.ql-container) {
+  min-height: 180px;
+  font-size: 14px;
+}
+.announcement-quill-editor :deep(.ql-editor) {
+  min-height: 180px;
+}
+@media (max-width: 640px) {
+  .announcement-quill-editor :deep(.ql-toolbar) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
 }
 </style>

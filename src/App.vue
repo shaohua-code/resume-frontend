@@ -96,8 +96,10 @@ onBeforeUnmount(() => {
       <!-- 仅登录后挂载；注册写 pending，首次进 /generate 展示三步指引（文案/存储键见 NewUserGuide + newUserGuide.js）。 -->
       <NewUserGuide v-if="deferredReady && userStore.isLoggedIn" />
 
-      <!-- 版本公告：生效时间窗内、未读时弹一次 -->
-      <AnnouncementModal v-if="deferredReady && userStore.isLoggedIn" />
+      <!-- 版本公告：仅登录后展示；注册/登录/找回密码页不挂载，避免盖住凭据弹窗 -->
+      <AnnouncementModal
+        v-if="deferredReady && userStore.isLoggedIn && !['/login', '/register', '/forgot-password'].includes($route.path)"
+      />
 
     </div>
   </ConfigProvider>

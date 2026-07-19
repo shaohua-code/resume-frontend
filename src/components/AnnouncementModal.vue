@@ -1,22 +1,33 @@
 <script setup>
 /**
- * 登录用户首次进入时展示生效中的版本公告（Markdown，禁 HTML）
+ * 登录用户在业务页首次展示生效中的版本公告。
+ * 注册/登录/找回密码页即使已有会话也不弹，避免注册成功凭据弹窗被公告盖住。
  */
 import { computed, onMounted, ref, watch } from 'vue'
-import MarkdownIt from 'markdown-it'
+import { useRoute } from 'vue-router'
 import { getActiveAnnouncements } from '@/api/announcement'
 import { useUserStore } from '@/stores/user'
 import { hasSeenAnnouncement, markAnnouncementSeen } from '@/utils/announcementSeen'
+import AnnouncementRichContent from '@/components/AnnouncementRichContent.vue'
+
+/** 认证相关页面：不可展示版本公告 */
+const AUTH_PATHS = ['/login', '/register', '/forgot-password']
 
 const userStore = useUserStore()
+const route = useRoute()
 const open = ref(false)
 const current = ref(null)
 
-const md = new MarkdownIt({ html: false, linkify: true, breaks: true })
-const htmlContent = computed(() => md.render(String(current.value?.content || '')))
+const isAuthPage = computed(() => AUTH_PATHS.some(
+  (path) => route.path === path || route.path.startsWith(`${path}/`),
+))
 
 async function loadAndMaybeShow() {
-  if (!userStore.isLoggedIn) return
+  // 未登录或仍在注册/登录页时绝不请求与展示
+  if (!userStore.isLoggedIn || isAuthPage.value) {
+    open.value = false
+    return
+  }
   try {
     const res = await getActiveAnnouncements()
     const items = res.items || []
@@ -37,13 +48,16 @@ function handleClose() {
 }
 
 onMounted(loadAndMaybeShow)
-watch(() => userStore.isLoggedIn, (loggedIn) => {
-  if (loggedIn) loadAndMaybeShow()
-  else {
-    open.value = false
-    current.value = null
-  }
-})
+watch(
+  () => [userStore.isLoggedIn, route.path],
+  ([loggedIn]) => {
+    if (loggedIn) loadAndMaybeShow()
+    else {
+      open.value = false
+      current.value = null
+    }
+  },
+)
 </script>
 
 <template>
@@ -58,11 +72,9 @@ watch(() => userStore.isLoggedIn, (loggedIn) => {
     <div v-if="current?.version_label" class="mb-3 text-xs text-muted">
       版本 {{ current.version_label }}
     </div>
-    <!-- Markdown 渲染区：html:false 防 XSS -->
-    <div
-      class="max-h-[60vh] overflow-y-auto text-sm leading-6 text-ink"
-      v-html="htmlContent"
-    />
+    <div class="max-h-[60vh] overflow-y-auto">
+      <AnnouncementRichContent :content="current?.content || ''" />
+    </div>
     <div class="flex justify-end mt-5">
       <button type="button" class="btn-primary min-h-11 px-6" @click="handleClose">
         我知道了

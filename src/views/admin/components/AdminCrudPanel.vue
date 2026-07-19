@@ -6,6 +6,7 @@ import AdminCrudModal from './AdminCrudModal.vue'
 import { formatDateTime } from '@/utils/date'
 import { getAiModelTypeLabel } from '@/constants/aiTasks'
 import { useMediaQuery } from '@/composables/useMediaQuery'
+import { toEditorHtml } from '@/utils/announcementContent'
 
 const props = defineProps({
   type: {
@@ -135,6 +136,12 @@ function openModal(record = null) {
       cached_input_price_per_million: record.official_cached_input_price_per_million ?? record.cached_input_price_per_million,
       output_price_per_million: record.official_output_price_per_million ?? record.output_price_per_million,
     }
+  } else if (record && props.type === 'announcements') {
+    // 旧 Markdown 公告转为 HTML，便于 Quill 所见即所得编辑
+    modalForm.value = {
+      ...record,
+      content: toEditorHtml(record.content),
+    }
   } else {
     modalForm.value = record ? { ...record } : currentConfig.value.defaultForm()
   }
@@ -142,6 +149,21 @@ function openModal(record = null) {
 }
 
 async function submitModal() {
+  // 富文本空内容常为 <p><br></p>，需剥标签后再校验
+  if (props.type === 'announcements') {
+    const plain = String(modalForm.value.content || '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .trim()
+    if (!String(modalForm.value.title || '').trim()) {
+      message.warning('请填写公告标题')
+      return
+    }
+    if (!plain) {
+      message.warning('请填写公告内容')
+      return
+    }
+  }
   if (modalId.value) {
     await currentConfig.value.api.update(modalId.value, modalForm.value)
   } else {
@@ -186,7 +208,9 @@ onMounted(loadItems)
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div class="min-w-0">
           <p class="text-base font-semibold text-ink">{{ currentConfig.title }}</p>
-          <p class="mt-1 text-xs text-muted">{{ type === 'models' ? '维护模型类型、供应商、调用入口与 Token 单价' : '统一维护后台基础资源配置' }}</p>
+          <p class="mt-1 text-xs text-muted">
+            {{ type === 'models' ? '维护模型类型、供应商、调用入口与 Token 单价' : '公告支持富文本编辑与实时预览，用户端弹窗同步渲染' }}
+          </p>
         </div>
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:justify-end">
           <button v-if="type === 'models'" class="btn-ghost min-h-11" @click="rateModalOpen = true">一键倍率调整</button>
