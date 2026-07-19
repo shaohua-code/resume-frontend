@@ -1,5 +1,7 @@
 <!--
-  统一简历生成面板：顶部辅助识别回填表单；Tab 切换基本信息/教育/经历；底部固定 AI 操作。
+  统一简历生成面板：顶部辅助识别回填表单；
+  Tab 用 IntersectionObserver + fixed 吸顶（全局 overflow-x:hidden 会导致 sticky 失效）；
+  底部两枚 AI 操作按钮横排固定。
 -->
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
@@ -45,10 +47,16 @@ const FORM_TABS = [
 ]
 const activeFormTab = ref('basic')
 const tabScrollRef = ref(null)
+const tabSentinelRef = ref(null)
+const tabBarRef = ref(null)
+/** 是否已滚过原位，改用 fixed 贴在顶栏下（避开全局 overflow-x 导致 sticky 失效） */
+const tabsStuck = ref(false)
+const tabBarHeight = ref(0)
 const basicFieldsRef = ref(null)
 /** 生成/岗位优化结果锚点：开始流式时滚入视口 */
 const generationPanelRef = ref(null)
 const { scrollToStreamPreview } = useScrollToStreamPreview(generationPanelRef)
+let tabStickObserver = null
 
 function selectFormTab(key) {
   activeFormTab.value = key
@@ -56,6 +64,26 @@ function selectFormTab(key) {
     const activeEl = tabScrollRef.value?.querySelector('[data-form-tab].is-active')
     activeEl?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
   })
+}
+
+/** 测量 Tab 高度，固定定位时用占位避免表单上跳 */
+function syncTabBarHeight() {
+  tabBarHeight.value = tabBarRef.value?.offsetHeight || 0
+}
+
+/** 监听哨兵：离开顶栏下方视口后启用吸顶副本态 */
+function setupTabStickObserver() {
+  if (typeof IntersectionObserver === 'undefined' || !tabSentinelRef.value) return
+  tabStickObserver?.disconnect()
+  // rootMargin 顶部 -64px：与 AppHeader h-16 对齐
+  tabStickObserver = new IntersectionObserver(
+    ([entry]) => {
+      tabsStuck.value = !entry.isIntersecting
+      nextTick(syncTabBarHeight)
+    },
+    { root: null, threshold: 0, rootMargin: '-64px 0px 0px 0px' },
+  )
+  tabStickObserver.observe(tabSentinelRef.value)
 }
 const recognitionRef = ref(null)
 const recognitionLoading = ref(false)
@@ -156,9 +184,20 @@ onMounted(() => {
   } else {
     resumeStore.resetGenerationContext()
   }
+
+  nextTick(() => {
+    syncTabBarHeight()
+    setupTabStickObserver()
+  })
+  window.addEventListener('resize', syncTabBarHeight)
 })
 
-onBeforeUnmount(() => activeOperationController?.abort())
+onBeforeUnmount(() => {
+  activeOperationController?.abort()
+  tabStickObserver?.disconnect()
+  tabStickObserver = null
+  window.removeEventListener('resize', syncTabBarHeight)
+})
 
 /** 每个付费流式操作只保留一个控制器，离页或新操作开始时可立即终止旧请求。 */
 function createOperationController() {
@@ -503,35 +542,56 @@ async function goToEditor() {
       @complete="applyRecognizedResume"
     />
 
-    <!-- Tab + 内容同一外框；Tab 等分居中；表单内容限宽居中 -->
-    <div class="relative mb-4 overflow-hidden rounded-card border border-line/60 bg-white shadow-sm">
-      <div class="border-b border-line/40 bg-cream/50">
-        <div ref="tabScrollRef" class="overflow-x-auto scrollbar-hide">
-          <ul class="mx-auto flex w-full max-w-3xl items-stretch" role="tablist">
-            <li
-              v-for="tab in FORM_TABS"
-              :key="tab.key"
-              data-form-tab
-              role="tab"
-              :aria-selected="activeFormTab === tab.key"
-              class="flex min-h-12 flex-1 cursor-pointer flex-col items-center justify-center border-b-2 border-transparent px-2 py-2.5 text-sm text-ink-secondary transition-colors duration-200 hover:text-brand-dark sm:px-4"
-              :class="{
-                'is-active border-b-brand-dark font-semibold text-brand-dark': activeFormTab === tab.key,
-              }"
-              @click="selectFormTab(tab.key)"
-            >
-              <span class="flex items-center justify-center gap-1.5">
-                <UserOutlined v-if="tab.key === 'basic'" />
-                <ReadOutlined v-else-if="tab.key === 'education'" />
-                <AimOutlined v-else />
-                <b class="font-semibold">{{ tab.title }}</b>
-              </span>
-              <span class="mt-0.5 text-center text-xs font-normal text-muted">{{ tab.hint }}</span>
-            </li>
-          </ul>
-        </div>
-      </div>
+    <!-- 哨兵：滚出顶栏下方后切换 Tab 为 fixed 吸顶 -->
+    <div ref="tabSentinelRef" class="h-px w-full" aria-hidden="true" />
 
+    <div
+      ref="tabBarRef"
+      class="z-30 border-b border-line/40 bg-cream/95 backdrop-blur-md"
+      :class="tabsStuck
+        ? 'fixed inset-x-0 top-16 shadow-[0_6px_16px_rgba(15,23,42,0.08)]'
+        : 'relative rounded-t-card border border-b-0 border-line/60'"
+    >
+      <div ref="tabScrollRef" class="overflow-x-auto scrollbar-hide">
+        <ul
+          class="mx-auto flex w-full max-w-3xl items-stretch px-0 sm:px-0"
+          role="tablist"
+        >
+          <li
+            v-for="tab in FORM_TABS"
+            :key="tab.key"
+            data-form-tab
+            role="tab"
+            :aria-selected="activeFormTab === tab.key"
+            class="flex min-h-12 flex-1 cursor-pointer flex-col items-center justify-center border-b-2 border-transparent px-2 py-2.5 text-sm text-ink-secondary transition-colors duration-200 hover:text-brand-dark sm:px-4"
+            :class="{
+              'is-active border-b-brand-dark font-semibold text-brand-dark': activeFormTab === tab.key,
+            }"
+            @click="selectFormTab(tab.key)"
+          >
+            <span class="flex items-center justify-center gap-1.5">
+              <UserOutlined v-if="tab.key === 'basic'" />
+              <ReadOutlined v-else-if="tab.key === 'education'" />
+              <AimOutlined v-else />
+              <b class="font-semibold">{{ tab.title }}</b>
+            </span>
+            <span class="mt-0.5 text-center text-xs font-normal text-muted">{{ tab.hint }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- fixed 后保留原高度，避免表单内容上窜 -->
+    <div
+      v-if="tabsStuck"
+      class="w-full"
+      :style="{ height: `${tabBarHeight}px` }"
+      aria-hidden="true"
+    />
+
+    <div
+      class="relative mb-4 overflow-hidden border border-line/60 bg-white shadow-sm"
+      :class="tabsStuck ? 'rounded-card' : 'rounded-b-card border-t-0'"
+    >
       <div
         class="px-4 py-6 sm:px-8"
         :class="formLocked ? 'pointer-events-none select-none opacity-60' : ''"
@@ -576,10 +636,10 @@ async function goToEditor() {
         </div>
       </div>
 
-      <!-- 锁定层只覆盖表单，生成结果仍持续可见 -->
+      <!-- 锁定层只覆盖表单内容，不挡住吸顶 Tab -->
       <div
         v-if="formLocked"
-        class="pointer-events-none absolute inset-0 z-10 flex items-start justify-center bg-white/20 pt-28 backdrop-blur-[1px]"
+        class="pointer-events-none absolute inset-0 z-10 flex items-start justify-center bg-white/20 pt-16 backdrop-blur-[1px]"
       >
         <div class="rounded-full bg-white/95 px-4 py-2 text-sm font-medium text-brand-dark shadow-card">
           <a-spin size="small" class="mr-2" />{{ recognitionLoading ? '识别中，表单暂时锁定' : 'AI 输出中，表单暂时锁定' }}
@@ -587,13 +647,13 @@ async function goToEditor() {
       </div>
     </div>
 
-    <!-- 吸底操作栏：按钮组居中 -->
+    <!-- 吸底操作栏：两按钮始终横排 -->
     <div
       class="fixed bottom-0 left-0 right-0 z-40 border-t border-line/50 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(31,41,55,0.06)] backdrop-blur-sm"
     >
-      <div class="mx-auto flex max-w-3xl flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-center sm:gap-3 sm:px-6">
+      <div class="mx-auto flex max-w-3xl flex-row items-center justify-center gap-2 px-3 py-3 sm:gap-3 sm:px-6">
         <GradientButton
-          class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[170px]"
+          class="min-h-11 min-w-0 flex-1 justify-center px-2 text-sm sm:flex-none sm:min-w-[170px] sm:px-4 sm:text-base"
           :loading="generationLoading && draft.generation.kind === 'generate'"
           :disabled="formLocked && !(generationLoading && draft.generation.kind === 'generate')"
           @click="handleGenerate"
@@ -603,7 +663,7 @@ async function goToEditor() {
         </GradientButton>
         <button
           type="button"
-          class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[180px]"
+          class="btn-ghost min-h-11 min-w-0 flex-1 px-2 text-sm sm:flex-none sm:min-w-[180px] sm:px-4 sm:text-base"
           :disabled="formLocked"
           @click="openJdOptimize"
         >
