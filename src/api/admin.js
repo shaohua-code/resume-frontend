@@ -185,3 +185,12 @@ export function getAiTaskModels() {
 export function saveAiTaskModel(taskType, modelId) {
   return request.put(`/admin/task-models/${taskType}`, { model_id: modelId })
 }
+
+/** 管理员默认业务提示词（不含输出 Schema） */
+export function getAdminTaskPrompts() {
+  return request.get('/admin/task-prompts')
+}
+
+export function saveAdminTaskPrompt(taskType, instruction) {
+  return request.put(`/admin/task-prompts/${taskType}`, { instruction })
+}

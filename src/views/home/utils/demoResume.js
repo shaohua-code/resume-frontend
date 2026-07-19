@@ -182,35 +182,29 @@ const PROFILE_BY_TEMPLATE = {
   27: CAMPUS_DEMO,
 }
 
-/** 兜底矢量头像（无本地 jpg 时使用） */
+/** 本地轻量矢量头像（不引入仓库内 jpg，降低体积） */
 export const DEMO_AVATAR = '/demo-avatar.svg'
-
-/** 女性 / 男性演示肖像池（Random User 公开库，已落地到 public/demo-avatars） */
-const WOMAN_AVATARS = [
-  '/demo-avatars/woman-01.jpg',
-  '/demo-avatars/woman-02.jpg',
-  '/demo-avatars/woman-03.jpg',
-  '/demo-avatars/woman-04.jpg',
-  '/demo-avatars/woman-05.jpg',
-]
-const MAN_AVATARS = [
-  '/demo-avatars/man-01.jpg',
-  '/demo-avatars/man-02.jpg',
-  '/demo-avatars/man-03.jpg',
-  '/demo-avatars/man-04.jpg',
-  '/demo-avatars/man-05.jpg',
-]
-
-/** 按演示人设姓名区分性别，再按 templateId 轮换，保证画廊卡片头像多样 */
-const FEMALE_DEMO_NAMES = new Set(['林悦', '许知夏', '顾一'])
 
 /** @deprecated 旧逻辑：仅部分模板带头像；现已全量模板预览带头像 */
 export const DEMO_AVATAR_TEMPLATE_IDS = Array.from({ length: 27 }, (_, i) => i + 1)
 
+const AVATAR_PALETTE = ['#1F6FEB', '#0F766E', '#B45309', '#7C3AED', '#BE123C']
+
+/** 按姓名生成首字母 SVG data URL，无外网依赖 */
+function buildInitialsAvatar(name = '', templateId = 1) {
+  const text = String(name || '简历').trim()
+  const initial = text.charAt(0) || '简'
+  const color = AVATAR_PALETTE[Math.abs((Number(templateId) || 1) - 1) % AVATAR_PALETTE.length]
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+    <rect width="160" height="160" rx="80" fill="${color}"/>
+    <text x="80" y="88" text-anchor="middle" dominant-baseline="middle" font-size="64" fill="#fff" font-family="Segoe UI, PingFang SC, sans-serif">${initial}</text>
+  </svg>`
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
+
 function resolveDemoAvatar(name, templateId) {
-  const pool = FEMALE_DEMO_NAMES.has(name) ? WOMAN_AVATARS : MAN_AVATARS
-  const idx = Math.abs((Number(templateId) || 1) - 1) % pool.length
-  return pool[idx] || DEMO_AVATAR
+  // 优先首字母占位；DEMO_AVATAR 仅作极端兜底
+  return buildInitialsAvatar(name, templateId) || DEMO_AVATAR
 }
 
 export function getDemoResume(templateId) {

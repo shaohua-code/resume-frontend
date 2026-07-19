@@ -198,6 +198,12 @@
         <section v-else-if="activeTab === 'usage'" class="workspace-content-body">
           <UsagePanel />
         </section>
+        <section v-else-if="activeTab === 'models'" class="workspace-content-body">
+          <UserTaskModelsPanel />
+        </section>
+        <section v-else-if="activeTab === 'prompts'" class="workspace-content-body">
+          <UserTaskPromptsPanel />
+        </section>
       </main>
     </div>
 
@@ -242,6 +248,8 @@ import { getTemplateName } from '@/constants/templateNames'
 import THEME from '@/constants/theme'
 import GradientButton from '@/components/GradientButton.vue'
 import UsagePanel from './components/UsagePanel.vue'
+import UserTaskModelsPanel from './components/UserTaskModelsPanel.vue'
+import UserTaskPromptsPanel from './components/UserTaskPromptsPanel.vue'
 import ResumeCardList from './components/ResumeCardList.vue'
 import RechargeModal from './components/RechargeModal.vue'
 import { formatDateTime } from '@/utils/date'
@@ -287,22 +295,18 @@ const workspaceGroups = [
       {
         key: 'models',
         label: '模型配置',
-        description: '模型与生成参数',
-        longDescription: '管理默认模型和生成参数。',
+        description: '按任务选择模型',
+        longDescription: '在管理员开放后，为每个 AI 任务选择平台已启用的模型。',
         eyebrow: 'MODEL SETTINGS',
         icon: RobotOutlined,
-        badge: '规划中',
-        disabled: true,
       },
       {
         key: 'prompts',
         label: '提示词配置',
-        description: '模板与变量管理',
-        longDescription: '维护可复用的提示词模板。',
+        description: '业务指令自定义',
+        longDescription: '在管理员开放后，自定义各 AI 功能的业务提示词（输出格式不可改）。',
         eyebrow: 'PROMPT LIBRARY',
         icon: FormOutlined,
-        badge: '规划中',
-        disabled: true,
       },
     ],
   },

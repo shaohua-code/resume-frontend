@@ -16,6 +16,7 @@ import {
   ExclamationCircleOutlined,
   DeleteOutlined,
   CloudUploadOutlined,
+  EyeOutlined,
 } from '@ant-design/icons-vue'
 import GradientButton from '@/components/GradientButton.vue'
 import {
@@ -23,8 +24,10 @@ import {
   uploadRecognizeResumeStream,
   uploadRecognizeExistingStream,
   getUploadedResume,
+  getUploadedResumeContent,
   deleteUploadedResume,
 } from '@/api/resume'
+import { getErrorMessage } from '@/utils/errorMessage'
 import { normalizeResumeFields } from '@/constants/resumeFieldSchema'
 import { parsePartialResumeJson } from '../utils/streamResumeParser'
 import { formatRecognitionPreview } from '../utils/recognitionPreview'
@@ -62,7 +65,54 @@ const existingFile = ref(null)
 const deleting = ref(false)
 // 已有云端 PDF 时默认收起替换区，避免与主识别 CTA 抢注意力。
 const showReplaceUpload = ref(false)
+const previewOpen = ref(false)
+const previewUrl = ref('')
+const previewLoading = ref(false)
 let activeRecognitionController = null
+let localPreviewUrl = ''
+
+function revokePreviewUrl() {
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+    previewUrl.value = ''
+  }
+  if (localPreviewUrl) {
+    URL.revokeObjectURL(localPreviewUrl)
+    localPreviewUrl = ''
+  }
+}
+
+/** 预览本地新选文件或服务端已存 PDF */
+async function openPdfPreview() {
+  if (previewLoading.value) return
+  previewLoading.value = true
+  try {
+    revokePreviewUrl()
+    if (pdfFile.value) {
+      // 本地尚未上传的文件直接用 blob URL
+      previewUrl.value = URL.createObjectURL(pdfFile.value)
+      previewOpen.value = true
+      return
+    }
+    if (!existingFile.value) {
+      message.warning('请先选择或上传 PDF')
+      return
+    }
+    const blob = await getUploadedResumeContent()
+    const fileBlob = blob instanceof Blob ? blob : new Blob([blob], { type: 'application/pdf' })
+    previewUrl.value = URL.createObjectURL(fileBlob)
+    previewOpen.value = true
+  } catch (e) {
+    message.error(getErrorMessage(e) || 'PDF 预览失败')
+  } finally {
+    previewLoading.value = false
+  }
+}
+
+function closePdfPreview() {
+  previewOpen.value = false
+  revokePreviewUrl()
+}
 
 // 示例只用于帮助用户理解可识别格式，内容全部是演示数据且不会自动发起 AI 请求。
 const TEXT_RECOGNITION_EXAMPLE = `姓名：张三
@@ -164,6 +214,7 @@ function removePdf() {
   if (existingFile.value) showReplaceUpload.value = false
   return true
 }
+
 
 /** 删除服务端已保存的唯一 PDF。 */
 async function handleDeleteExisting() {
@@ -291,7 +342,10 @@ function clearTextInput() {
 
 defineExpose({ clearDraft })
 onMounted(fetchExisting)
-onBeforeUnmount(() => activeRecognitionController?.abort())
+onBeforeUnmount(() => {
+  activeRecognitionController?.abort()
+  revokePreviewUrl()
+})
 </script>
 
 <template>
@@ -336,6 +390,14 @@ onBeforeUnmount(() => activeRecognitionController?.abort())
           <a-button
             class="w-full min-h-11 sm:w-auto"
             :disabled="loading || disabled"
+            :loading="previewLoading"
+            @click="openPdfPreview"
+          >
+            <EyeOutlined /> 预览
+          </a-button>
+          <a-button
+            class="w-full min-h-11 sm:w-auto"
+            :disabled="loading || disabled"
             @click="showReplaceUpload = !showReplaceUpload"
           >
             <CloudUploadOutlined /> {{ showReplaceUpload ? '收起替换' : '替换文件' }}
@@ -367,6 +429,16 @@ onBeforeUnmount(() => activeRecognitionController?.abort())
           </p>
           <p class="ant-upload-hint">含可复制文字 · 最大 10MB · 每人仅保留一份</p>
         </a-upload-dragger>
+        <div v-if="pdfFile" class="flex justify-end">
+          <a-button
+            class="min-h-11"
+            :disabled="loading || disabled"
+            :loading="previewLoading"
+            @click="openPdfPreview"
+          >
+            <EyeOutlined /> 预览已选文件
+          </a-button>
+        </div>
         <p class="text-xs leading-5 text-muted">
           扫描件需先 OCR；识别失败可切换到「智能文字识别」。
         </p>
@@ -382,6 +454,23 @@ onBeforeUnmount(() => activeRecognitionController?.abort())
           <FilePdfOutlined v-if="!loading" /> {{ pdfPrimaryLabel }}
         </GradientButton>
       </div>
+
+      <!-- PDF 预览：本地 blob 或鉴权拉取后的 blob -->
+      <a-modal
+        v-model:open="previewOpen"
+        title="PDF 预览"
+        :footer="null"
+        width="90vw"
+        :style="{ top: '24px' }"
+        @cancel="closePdfPreview"
+      >
+        <iframe
+          v-if="previewUrl"
+          :src="previewUrl"
+          class="w-full h-[70vh] border-0 rounded-card bg-white"
+          title="PDF 预览"
+        />
+      </a-modal>
     </div>
 
     <!-- 文字：提示条 + 输入区 + 唯一主按钮 -->

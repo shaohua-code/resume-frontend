@@ -79,8 +79,42 @@ function updateField(key, value) {
         <a-form-item label="标题">
           <a-input :value="form.title" class="input-field" @update:value="updateField('title', $event)" />
         </a-form-item>
-        <a-form-item label="内容">
-          <a-textarea :value="form.content" :rows="5" class="input-field" @update:value="updateField('content', $event)" />
+        <a-form-item label="版本号（可选）">
+          <a-input
+            :value="form.version_label"
+            class="input-field"
+            placeholder="如 v1.2.0"
+            @update:value="updateField('version_label', $event)"
+          />
+        </a-form-item>
+        <a-form-item label="内容（Markdown）">
+          <a-textarea
+            :value="form.content"
+            :rows="8"
+            class="input-field"
+            placeholder="支持 Markdown，用户端禁 HTML 渲染"
+            @update:value="updateField('content', $event)"
+          />
+        </a-form-item>
+        <a-form-item label="生效开始时间">
+          <a-date-picker
+            show-time
+            class="w-full"
+            :value="form.start_at"
+            value-format="YYYY-MM-DDTHH:mm:ssZ"
+            placeholder="留空表示立即生效"
+            @update:value="updateField('start_at', $event || null)"
+          />
+        </a-form-item>
+        <a-form-item label="生效结束时间">
+          <a-date-picker
+            show-time
+            class="w-full"
+            :value="form.end_at"
+            value-format="YYYY-MM-DDTHH:mm:ssZ"
+            placeholder="留空表示长期有效"
+            @update:value="updateField('end_at', $event || null)"
+          />
         </a-form-item>
         <a-form-item label="是否启用">
           <a-switch :checked="form.enabled" @update:checked="updateField('enabled', $event)" />

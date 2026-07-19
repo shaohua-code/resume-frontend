@@ -569,6 +569,11 @@ export function getUploadedResume() {
   return request.get('/pdf/uploadedFile')
 }
 
+/** 拉取已上传 PDF 二进制，供预览（需登录，不走公开 URL） */
+export function getUploadedResumeContent() {
+  return request.get('/pdf/uploadedFile/content', { responseType: 'blob' })
+}
+
 /** 删除当前用户已上传的 PDF */
 export function deleteUploadedResume() {
   return request.delete('/pdf/uploadedFile')

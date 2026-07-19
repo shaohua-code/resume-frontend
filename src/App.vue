@@ -20,6 +20,7 @@ const AppHeader = defineAsyncComponent(() => import('@/components/AppHeader.vue'
 const FeedbackFloatingButton = defineAsyncComponent(() => import('@/components/FeedbackFloatingButton.vue'))
 const EmailBindingModal = defineAsyncComponent(() => import('@/components/EmailBindingModal.vue'))
 const NewUserGuide = defineAsyncComponent(() => import('@/components/NewUserGuide.vue'))
+const AnnouncementModal = defineAsyncComponent(() => import('@/components/AnnouncementModal.vue'))
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -94,6 +95,9 @@ onBeforeUnmount(() => {
 
       <!-- 仅登录后挂载；注册产生 pending 后，首次进入生成页再展示三步指引。 -->
       <NewUserGuide v-if="deferredReady && userStore.isLoggedIn" />
+
+      <!-- 版本公告：生效时间窗内、未读时弹一次 -->
+      <AnnouncementModal v-if="deferredReady && userStore.isLoggedIn" />
 
     </div>
   </ConfigProvider>

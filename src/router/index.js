@@ -148,6 +148,12 @@ const routes = [
         meta: { title: '任务模型配置', permission: 'admin:ai_model' },
       },
       {
+        path: 'task-prompts',
+        name: 'AdminTaskPrompts',
+        component: () => import('@/views/admin/components/AdminTaskPromptsPanel.vue'),
+        meta: { title: '任务提示词', permission: 'admin:ai_model' },
+      },
+      {
         path: 'configs',
         name: 'AdminConfigs',
         component: () => import('@/views/admin/components/AdminConfigsPanel.vue'),
