@@ -80,11 +80,12 @@
           </div>
         </div>
 
-        <div class="workspace-sidebar-note">
+        <!-- 配置中心有任一 Tab 开放时才展示侧栏说明 -->
+        <div v-if="hasConfigCenter" class="workspace-sidebar-note">
           <span><ThunderboltOutlined /></span>
           <div>
-            <b>配置中心已预留</b>
-            <p>后续可直接接入模型参数、提示词模板和更多 AI 工具。</p>
+            <b>个性化 AI 配置</b>
+            <p>可按任务选择模型或自定义业务提示词，输出格式仍由系统锁定。</p>
           </div>
         </div>
       </aside>
@@ -228,7 +229,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   PlusOutlined,
@@ -237,7 +238,6 @@ import {
   WalletOutlined,
   RobotOutlined,
   FormOutlined,
-  LogoutOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
@@ -254,6 +254,7 @@ import ResumeCardList from './components/ResumeCardList.vue'
 import RechargeModal from './components/RechargeModal.vue'
 import { formatDateTime } from '@/utils/date'
 import { useMediaQuery } from '@/composables/useMediaQuery'
+import { getUserTaskModels, getUserTaskPrompts } from '@/api/userAi'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -266,54 +267,65 @@ const mobilePage = ref(1)
 const rechargeOpen = ref(false)
 const selectedRowKeys = ref([])
 const overLimitVisible = ref(false)
+// 管理员开关：关闭时侧栏不展示对应 Tab
+const modelCustomizationEnabled = ref(false)
+const promptCustomizationEnabled = ref(false)
 
-const workspaceGroups = [
-  {
-    label: '工作台',
-    items: [
-      {
-        key: 'resumes',
-        label: '我的简历',
-        description: '创建、编辑与管理',
-        longDescription: '集中管理简历版本、模板、评分与最近更新时间。',
-        eyebrow: 'RESUME LIBRARY',
-        icon: FileTextOutlined,
-      },
-      {
-        key: 'usage',
-        label: '用量明细',
-        description: '余额与消费记录',
-        longDescription: '查看账户余额、累计消费和每一次额度变动记录。',
-        eyebrow: 'USAGE & BILLING',
-        icon: WalletOutlined,
-      },
-    ],
-  },
-  {
-    label: '配置中心',
-    items: [
-      {
-        key: 'models',
-        label: '模型配置',
-        description: '按任务选择模型',
-        longDescription: '在管理员开放后，为每个 AI 任务选择平台已启用的模型。',
-        eyebrow: 'MODEL SETTINGS',
-        icon: RobotOutlined,
-      },
-      {
-        key: 'prompts',
-        label: '提示词配置',
-        description: '业务指令自定义',
-        longDescription: '在管理员开放后，自定义各 AI 功能的业务提示词（输出格式不可改）。',
-        eyebrow: 'PROMPT LIBRARY',
-        icon: FormOutlined,
-      },
-    ],
-  },
-]
+const workspaceGroups = computed(() => {
+  const groups = [
+    {
+      label: '工作台',
+      items: [
+        {
+          key: 'resumes',
+          label: '我的简历',
+          description: '创建、编辑与管理',
+          longDescription: '集中管理简历版本、模板、评分与最近更新时间。',
+          eyebrow: 'RESUME LIBRARY',
+          icon: FileTextOutlined,
+        },
+        {
+          key: 'usage',
+          label: '用量明细',
+          description: '余额与消费记录',
+          longDescription: '查看账户余额、累计消费和每一次额度变动记录。',
+          eyebrow: 'USAGE & BILLING',
+          icon: WalletOutlined,
+        },
+      ],
+    },
+  ]
+  // 仅展示管理员已开放的配置入口
+  const configItems = []
+  if (modelCustomizationEnabled.value) {
+    configItems.push({
+      key: 'models',
+      label: '模型配置',
+      description: '按任务选择模型',
+      longDescription: '为每个 AI 任务选择平台已启用的模型。',
+      eyebrow: 'MODEL SETTINGS',
+      icon: RobotOutlined,
+    })
+  }
+  if (promptCustomizationEnabled.value) {
+    configItems.push({
+      key: 'prompts',
+      label: '提示词配置',
+      description: '业务指令自定义',
+      longDescription: '自定义各 AI 功能的业务提示词（输出格式不可改）。',
+      eyebrow: 'PROMPT LIBRARY',
+      icon: FormOutlined,
+    })
+  }
+  if (configItems.length) {
+    groups.push({ label: '配置中心', items: configItems })
+  }
+  return groups
+})
 
-const allWorkspaceItems = workspaceGroups.flatMap((group) => group.items)
-const activeMeta = computed(() => allWorkspaceItems.find((item) => item.key === activeTab.value) || allWorkspaceItems[0])
+const allWorkspaceItems = computed(() => workspaceGroups.value.flatMap((group) => group.items))
+const hasConfigCenter = computed(() => modelCustomizationEnabled.value || promptCustomizationEnabled.value)
+const activeMeta = computed(() => allWorkspaceItems.value.find((item) => item.key === activeTab.value) || allWorkspaceItems.value[0])
 const accountName = computed(() => userStore.userInfo.nickname || '用户')
 const accountInitial = computed(() => accountName.value.trim().charAt(0).toUpperCase() || 'U')
 const balanceText = computed(() => formatBalanceText(walletStore.balance))
@@ -337,12 +349,38 @@ function getScoreColor(score) {
   return THEME.chart.danger
 }
 
+/** 拉取管理员是否开放用户自定义模型 / 提示词 */
+async function loadCustomizationFlags() {
+  const [modelsRes, promptsRes] = await Promise.allSettled([
+    getUserTaskModels(),
+    getUserTaskPrompts(),
+  ])
+  if (modelsRes.status === 'fulfilled') {
+    modelCustomizationEnabled.value = Boolean(modelsRes.value?.customization_enabled)
+  }
+  if (promptsRes.status === 'fulfilled') {
+    promptCustomizationEnabled.value = Boolean(promptsRes.value?.customization_enabled)
+  }
+}
+
+// 当前 Tab 被关闭时回退到「我的简历」
+watch(
+  [modelCustomizationEnabled, promptCustomizationEnabled, activeTab],
+  () => {
+    const visibleKeys = allWorkspaceItems.value.map((item) => item.key)
+    if (!visibleKeys.includes(activeTab.value)) {
+      activeTab.value = 'resumes'
+    }
+  },
+)
+
 onMounted(async () => {
   loading.value = true
   await Promise.all([
     resumeStore.fetchResumeList(),
     resumeStore.fetchResumeCount(),
     walletStore.fetchBalance(),
+    loadCustomizationFlags(),
   ])
   loading.value = false
 })

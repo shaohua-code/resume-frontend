@@ -1,6 +1,6 @@
 <script setup>
 /**
- * 管理员默认业务提示词：仅 instruction，不含输出 Schema
+ * 管理员默认业务提示词：仅可编辑业务指令，结果格式由系统锁定
  */
 import { onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
@@ -17,6 +17,7 @@ async function loadConfig() {
   try {
     const res = await getAdminTaskPrompts()
     tasks.value = res.items || []
+    // 同步各任务编辑草稿
     for (const task of tasks.value) {
       drafts[task.task_type] = task.instruction || ''
     }
@@ -43,6 +44,11 @@ async function saveTask(task) {
   }
 }
 
+/** 来源文案仅展示中文，不暴露程序标识 */
+function sourceLabel(source) {
+  return source === 'admin' ? '管理员' : '系统默认'
+}
+
 onMounted(loadConfig)
 </script>
 
@@ -51,7 +57,7 @@ onMounted(loadConfig)
     <a-card :bordered="false" class="rounded-card shadow-card">
       <p class="text-base font-semibold text-ink">任务提示词配置</p>
       <p class="mt-1 text-xs text-muted">
-        仅配置各 AI 任务的业务指令；JSON Schema / 输出格式由系统锁定，不会展示给用户。
+        只调整各 AI 任务的业务要求；结果格式由系统固定，不可修改。
       </p>
     </a-card>
     <a-spin :spinning="loading">
@@ -66,14 +72,14 @@ onMounted(loadConfig)
             <div>
               <p class="font-semibold text-ink">{{ task.name }}</p>
               <p class="mt-1 text-xs text-muted">
-                {{ task.task_type }} · 来源 {{ task.source === 'admin' ? '管理员' : '代码默认' }}
+                来源 {{ sourceLabel(task.source) }}
               </p>
             </div>
             <a-textarea
               v-model:value="drafts[task.task_type]"
-              :rows="6"
+              :rows="8"
               class="input-field"
-              placeholder="业务指令（不含输出格式）"
+              placeholder="填写业务要求（例如处理原则、真实性边界、岗位相关性等）"
             />
             <button
               class="btn-primary min-h-11 w-full"

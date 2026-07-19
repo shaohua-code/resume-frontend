@@ -1,6 +1,6 @@
 <script setup>
 /**
- * 用户业务提示词：只编辑 instruction，不展示输出格式/Schema
+ * 用户业务提示词：只编辑业务指令，不展示结果格式细节
  */
 import { onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
@@ -19,6 +19,7 @@ async function loadConfig() {
     const res = await getUserTaskPrompts()
     customizationEnabled.value = Boolean(res.customization_enabled)
     tasks.value = res.items || []
+    // 同步各任务编辑草稿
     for (const task of tasks.value) {
       drafts[task.task_type] = task.editable_instruction || ''
     }
@@ -60,6 +61,12 @@ async function resetTask(task) {
   }
 }
 
+/** 来源文案仅展示中文 */
+function sourceLabel(task) {
+  if (task.has_override) return '个人覆盖'
+  return task.source === 'admin' ? '默认（管理员）' : '默认（系统）'
+}
+
 onMounted(loadConfig)
 </script>
 
@@ -68,7 +75,7 @@ onMounted(loadConfig)
     <a-card :bordered="false" class="rounded-card shadow-card">
       <p class="text-base font-semibold text-ink">提示词配置</p>
       <p class="mt-1 text-xs text-muted">
-        可调整各 AI 功能的业务指令；输出格式由系统固定，界面不会展示也不可修改。
+        可调整各 AI 功能的业务要求；结果格式由系统固定，界面不可修改。
       </p>
     </a-card>
 
@@ -77,7 +84,7 @@ onMounted(loadConfig)
       type="info"
       show-icon
       message="管理员尚未开放用户自定义提示词"
-      description="当前将使用管理员或系统默认业务指令。"
+      description="当前将使用管理员或系统默认业务要求。"
     />
 
     <a-spin :spinning="loading">
@@ -92,16 +99,14 @@ onMounted(loadConfig)
             <div>
               <p class="font-semibold text-ink">{{ task.name }}</p>
               <p class="mt-1 text-xs text-muted">
-                {{ task.task_type }}
-                ·
-                {{ task.has_override ? '个人覆盖' : `默认（${task.source === 'admin' ? '管理员' : '系统'}）` }}
+                {{ sourceLabel(task) }}
               </p>
             </div>
             <a-textarea
               v-model:value="drafts[task.task_type]"
-              :rows="6"
+              :rows="8"
               class="input-field"
-              placeholder="业务指令"
+              placeholder="填写业务要求（例如处理原则、真实性边界、岗位相关性等）"
             />
             <div class="flex flex-col gap-2 sm:flex-row">
               <button
