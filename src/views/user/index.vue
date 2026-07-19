@@ -87,13 +87,13 @@
         </div>
 
         <!-- 配置中心有任一 Tab 开放时才展示侧栏说明 -->
-        <div v-if="hasConfigCenter" class="workspace-sidebar-note">
+        <!-- <div v-if="hasConfigCenter" class="workspace-sidebar-note">
           <span><ThunderboltOutlined /></span>
           <div>
             <b>个性化 AI 配置</b>
             <p>可按任务选择模型或自定义业务提示词，输出格式仍由系统锁定。</p>
           </div>
-        </div>
+        </div> -->
       </aside>
 
       <main class="workspace-main">
