@@ -22,71 +22,74 @@ function removeEducation(index) {
 
 <template>
   <div>
-    <div
-      v-for="(edu, index) in educations"
-      :key="index"
-      class="mb-4 rounded-card border border-line/60 bg-cream/30 p-4"
-    >
-      <div class="mb-3 flex items-center justify-between">
-        <span class="text-sm font-semibold text-ink">教育经历 {{ index + 1 }}</span>
-        <button type="button" class="text-sm font-medium text-danger hover:text-red-500" @click="removeEducation(index)">
-          删除
-        </button>
+    <!-- 条目用分隔线区分，去掉嵌套卡片边框 -->
+    <div class="divide-y divide-line/40">
+      <div
+        v-for="(edu, index) in educations"
+        :key="index"
+        class="py-5 first:pt-0"
+      >
+        <div class="mb-3 flex items-center justify-between">
+          <span class="text-sm font-semibold text-ink">教育经历 {{ index + 1 }}</span>
+          <button type="button" class="text-sm font-medium text-danger hover:text-red-500" @click="removeEducation(index)">
+            删除
+          </button>
+        </div>
+        <a-form layout="vertical" size="small">
+          <a-row :gutter="12">
+            <a-col :xs="24" :sm="12">
+              <a-form-item label="就读开始时间">
+                <a-date-picker
+                  v-model:value="edu.start_date"
+                  picker="month"
+                  value-format="YYYY.MM"
+                  format="YYYY.MM"
+                  placeholder="请选择"
+                  class="input-field w-full"
+                />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :sm="12">
+              <a-form-item label="毕业时间">
+                <a-date-picker
+                  v-model:value="edu.end_date"
+                  picker="month"
+                  value-format="YYYY.MM"
+                  format="YYYY.MM"
+                  placeholder="请选择"
+                  class="input-field w-full"
+                />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :sm="12">
+              <a-form-item label="学校">
+                <a-input v-model:value="edu.school" placeholder="如：清华大学" class="input-field" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :sm="12">
+              <a-form-item label="学历">
+                <a-select v-model:value="edu.degree" allow-clear placeholder="请选择学历" class="input-field w-full">
+                  <a-select-option v-for="opt in DEGREE_OPTIONS" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </a-select-option>
+                </a-select>
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :sm="12">
+              <a-form-item label="专业">
+                <a-input v-model:value="edu.major" placeholder="如：计算机科学与技术" class="input-field" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :sm="12">
+              <a-form-item label="主修">
+                <a-input v-model:value="edu.main_course" placeholder="如：财务管理 / 前端开发 / 机械设计" class="input-field" />
+              </a-form-item>
+            </a-col>
+          </a-row>
+        </a-form>
       </div>
-      <a-form layout="vertical" size="small">
-        <a-row :gutter="12">
-          <a-col :xs="24" :sm="12">
-            <a-form-item label="就读开始时间">
-              <a-date-picker
-                v-model:value="edu.start_date"
-                picker="month"
-                value-format="YYYY.MM"
-                format="YYYY.MM"
-                placeholder="请选择"
-                class="input-field w-full"
-              />
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :sm="12">
-            <a-form-item label="毕业时间">
-              <a-date-picker
-                v-model:value="edu.end_date"
-                picker="month"
-                value-format="YYYY.MM"
-                format="YYYY.MM"
-                placeholder="请选择"
-                class="input-field w-full"
-              />
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :sm="12">
-            <a-form-item label="学校">
-              <a-input v-model:value="edu.school" placeholder="如：清华大学" class="input-field" />
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :sm="12">
-            <a-form-item label="学历">
-              <a-select v-model:value="edu.degree" allow-clear placeholder="请选择学历" class="input-field w-full">
-                <a-select-option v-for="opt in DEGREE_OPTIONS" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </a-select-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :sm="12">
-            <a-form-item label="专业">
-              <a-input v-model:value="edu.major" placeholder="如：计算机科学与技术" class="input-field" />
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :sm="12">
-            <a-form-item label="主修">
-              <a-input v-model:value="edu.main_course" placeholder="如：财务管理 / 前端开发 / 机械设计" class="input-field" />
-            </a-form-item>
-          </a-col>
-        </a-row>
-      </a-form>
     </div>
-    <button type="button" class="btn-ghost-dashed text-sm" @click="addEducation">
+    <button type="button" class="btn-ghost-dashed mt-4 text-sm" @click="addEducation">
       <PlusOutlined /> 添加教育经历
     </button>
   </div>

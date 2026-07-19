@@ -42,8 +42,18 @@ const props = defineProps({
 
 const containerRef = ref(null)
 const innerRef = ref(null)
+/** 可滚动预览容器：流式输出时自动贴底 */
+const scrollBoxRef = ref(null)
 const rawContentHeight = ref(0)
 let resizeObserver = null
+
+/** 流式增量后将预览滚到底部 */
+async function scrollPreviewToBottom() {
+  await nextTick()
+  const el = scrollBoxRef.value
+  if (!el) return
+  el.scrollTop = el.scrollHeight
+}
 
 // 根据容器宽度自适应缩放，不超过 props.scale
 const { scale: containerScale } = usePreviewScale(containerRef, {
@@ -103,10 +113,12 @@ const templatePreviewStyle = computed(() => ({
 }))
 
 watch(
-  () => [props.streamText, effectiveScale.value, props.templateId, resume.value],
+  () => [props.streamText, effectiveScale.value, props.templateId, resume.value, props.loading],
   async () => {
     await nextTick()
     updateScaledHeight()
+    // AI 生成 / 岗位优化流式过程中始终滚到底部
+    if (props.loading) await scrollPreviewToBottom()
   },
   { flush: 'post' },
 )
@@ -115,7 +127,11 @@ onMounted(async () => {
   await nextTick()
   updateScaledHeight()
   if (innerRef.value && typeof ResizeObserver !== 'undefined') {
-    resizeObserver = new ResizeObserver(() => updateScaledHeight())
+    // 内容高度变化时同步测量；流式中同步贴底
+    resizeObserver = new ResizeObserver(() => {
+      updateScaledHeight()
+      if (props.loading) scrollPreviewToBottom()
+    })
     resizeObserver.observe(innerRef.value)
   }
 })
@@ -134,7 +150,8 @@ onBeforeUnmount(() => {
 
     <div
       v-if="hasContent"
-      class="relative mx-auto rounded-card border border-line/50 bg-white shadow-card"
+      ref="scrollBoxRef"
+      class="relative mx-auto rounded-card border border-line/30 bg-white"
       :style="wrapperStyle"
     >
       <!-- 绝对定位缩放层 + 精确占位高度 -->

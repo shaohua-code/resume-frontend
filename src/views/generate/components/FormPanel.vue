@@ -1,15 +1,13 @@
 <!--
-  统一简历生成面板：顶部辅助识别只回填这一份表单，最后一步再执行 AI 生成或岗位优化。
+  统一简历生成面板：顶部辅助识别回填表单；Tab 切换基本信息/教育/经历；底部固定 AI 操作。
 -->
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useScrollToStreamPreview } from '@/composables/useScrollToStreamPreview'
 import { useRouter } from 'vue-router'
 import message from 'ant-design-vue/es/message'
-import { useMediaQuery } from '@/composables/useMediaQuery'
 import {
   AimOutlined,
-  ArrowLeftOutlined,
-  ArrowRightOutlined,
   BulbOutlined,
   CheckCircleFilled,
   EditOutlined,
@@ -39,10 +37,26 @@ import { useGenerateDraft } from '../composables/useGenerateDraft'
 
 const router = useRouter()
 const resumeStore = useResumeStore()
-/** 移动端改为单页折叠，桌面仍用三步步骤条 */
-const isMobileLayout = useMediaQuery('(max-width: 639px)')
-const mobileCollapseKeys = ref(['basic'])
+/** 表单模块 Tab，交互对齐编辑器横向切换（仅渲染当前模块） */
+const FORM_TABS = [
+  { key: 'basic', title: '基本信息', hint: '姓名与岗位必填' },
+  { key: 'education', title: '教育背景', hint: '选填' },
+  { key: 'experience', title: '经历', hint: '选填' },
+]
+const activeFormTab = ref('basic')
+const tabScrollRef = ref(null)
 const basicFieldsRef = ref(null)
+/** 生成/岗位优化结果锚点：开始流式时滚入视口 */
+const generationPanelRef = ref(null)
+const { scrollToStreamPreview } = useScrollToStreamPreview(generationPanelRef)
+
+function selectFormTab(key) {
+  activeFormTab.value = key
+  nextTick(() => {
+    const activeEl = tabScrollRef.value?.querySelector('[data-form-tab].is-active')
+    activeEl?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+  })
+}
 const recognitionRef = ref(null)
 const recognitionLoading = ref(false)
 const overLimitVisible = ref(false)
@@ -213,27 +227,20 @@ function applyRecognizedResume(recognized) {
 }
 
 async function validateBasicAndFocus() {
+  // 必填失败时切回基本信息 Tab，方便用户补全
+  selectFormTab('basic')
+  await nextTick()
   const valid = await basicFieldsRef.value?.validate()
   const check = validateRequiredBasicFields(draft.basic)
   if (!valid || !check.ok) {
     message.warning(check.message || '请填写姓名和意向岗位')
     draft.currentStep = 0
-    // 移动端折叠布局：展开基本信息面板并滚到顶部，方便补全必填项
-    if (isMobileLayout.value) {
-      if (!mobileCollapseKeys.value.includes('basic')) {
-        mobileCollapseKeys.value = [...mobileCollapseKeys.value, 'basic']
-      }
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
+    window.scrollTo({ top: 0, behavior: 'smooth' })
     return false
   }
   draft.basic.name = check.name
   draft.basic.target_position = check.target_position
   return true
-}
-
-async function nextFromBasic() {
-  if (await validateBasicAndFocus()) draft.currentStep = 1
 }
 
 /** 新建达到上限时沿用既有二次确认；同一 ID 重新生成无需再检查数量。 */
@@ -280,6 +287,8 @@ function beginGeneration(kind, status) {
   draft.generation.notes = []
   draft.generation.saveRequestId = createSaveRequestId()
   persistDraft()
+  // 开始流式输出时把结果区滚入视口；预览内部由 StreamResumePreview 自动贴底
+  scrollToStreamPreview({ behavior: 'smooth', block: 'start' })
 }
 
 /** 生成接口没有单独亮点字段时，根据实际输出模块生成可核对的摘要。 */
@@ -485,7 +494,7 @@ async function goToEditor() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl">
+  <div class="mx-auto max-w-6xl pb-28 sm:pb-24">
     <RecognitionPanel
       ref="recognitionRef"
       :disabled="generationLoading || operationStarting"
@@ -494,125 +503,128 @@ async function goToEditor() {
       @complete="applyRecognizedResume"
     />
 
-    <!-- 桌面：三步步骤条；移动端改为单页折叠，减少翻页提高可见信息量 -->
-    <a-card v-if="!isMobileLayout" class="card-base mb-4" :bordered="false">
-      <a-steps :current="draft.currentStep" size="small" class="gen-steps">
-        <a-step title="基本信息" description="姓名和意向岗位必填" />
-        <a-step title="教育背景" description="选填" />
-        <a-step title="经历与生成" description="选填经历后开始生成" />
-      </a-steps>
-    </a-card>
+    <!-- Tab + 内容同一外框；Tab 等分居中；表单内容限宽居中 -->
+    <div class="relative mb-4 overflow-hidden rounded-card border border-line/60 bg-white shadow-sm">
+      <div class="border-b border-line/40 bg-cream/50">
+        <div ref="tabScrollRef" class="overflow-x-auto scrollbar-hide">
+          <ul class="mx-auto flex w-full max-w-3xl items-stretch" role="tablist">
+            <li
+              v-for="tab in FORM_TABS"
+              :key="tab.key"
+              data-form-tab
+              role="tab"
+              :aria-selected="activeFormTab === tab.key"
+              class="flex min-h-12 flex-1 cursor-pointer flex-col items-center justify-center border-b-2 border-transparent px-2 py-2.5 text-sm text-ink-secondary transition-colors duration-200 hover:text-brand-dark sm:px-4"
+              :class="{
+                'is-active border-b-brand-dark font-semibold text-brand-dark': activeFormTab === tab.key,
+              }"
+              @click="selectFormTab(tab.key)"
+            >
+              <span class="flex items-center justify-center gap-1.5">
+                <UserOutlined v-if="tab.key === 'basic'" />
+                <ReadOutlined v-else-if="tab.key === 'education'" />
+                <AimOutlined v-else />
+                <b class="font-semibold">{{ tab.title }}</b>
+              </span>
+              <span class="mt-0.5 text-center text-xs font-normal text-muted">{{ tab.hint }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
 
-    <div class="relative">
       <div
+        class="px-4 py-6 sm:px-8"
         :class="formLocked ? 'pointer-events-none select-none opacity-60' : ''"
         :inert="formLocked ? '' : null"
         :aria-busy="formLocked"
       >
-        <!-- 移动端：折叠面板一步呈现 -->
-        <div v-if="isMobileLayout" class="space-y-3">
-          <a-alert message="姓名与意向岗位为必填项，其他内容均可选填。可展开下方各区块填写。" type="info" show-icon />
-          <a-collapse v-model:activeKey="mobileCollapseKeys" :bordered="false" class="generate-mobile-collapse bg-transparent">
-            <a-collapse-panel key="basic" header="基本信息（必填姓名与意向岗位）">
-              <ResumeBasicFieldsSection
-                ref="basicFieldsRef"
-                v-model="draft.basic"
-                :show-summary="false"
-                :show-avatar="false"
-                collapsible-advanced
-                :disabled="formLocked"
-              />
-              <a-form layout="vertical" class="mt-4">
-                <a-form-item label="技能标签"><a-input v-model:value="draft.basic.skills" class="input-field" placeholder="用逗号分隔，如：Vue3、JavaScript" /></a-form-item>
-                <a-form-item label="获奖情况"><a-textarea v-model:value="draft.basic.awards" :rows="2" class="input-field" placeholder="每行一条" /></a-form-item>
-                <a-form-item label="证书"><a-textarea v-model:value="draft.basic.certificates" :rows="2" class="input-field" placeholder="每行一条" /></a-form-item>
-              </a-form>
-            </a-collapse-panel>
-            <a-collapse-panel key="education" header="教育背景（选填）">
-              <ResumeEducationListSection v-model="draft.educations" />
-            </a-collapse-panel>
-            <a-collapse-panel key="experience" header="经历与生成（选填经历后可生成）">
-              <ResumeExperienceSections
-                v-model:projects="draft.projects"
-                v-model:internships="draft.internships"
-                v-model:work-experiences="draft.workExperiences"
-              />
-              <div class="mt-4 flex flex-col gap-3">
-                <GradientButton class="min-h-11 w-full justify-center" :loading="generationLoading && draft.generation.kind === 'generate'" @click="handleGenerate"><ThunderboltOutlined v-if="!generationLoading" /> 开始 AI 生成</GradientButton>
-                <button type="button" class="btn-ghost min-h-11 w-full" @click="openJdOptimize"><AimOutlined /> 按岗位优化简历</button>
-              </div>
-            </a-collapse-panel>
-          </a-collapse>
-        </div>
+        <!-- 内容区限宽居中，避免宽屏左右空、表单拉得过散 -->
+        <div class="mx-auto w-full max-w-3xl">
+          <template v-if="activeFormTab === 'basic'">
+            <ResumeBasicFieldsSection
+              ref="basicFieldsRef"
+              v-model="draft.basic"
+              :show-summary="false"
+              :show-avatar="false"
+              collapsible-advanced
+              :disabled="formLocked"
+            />
+            <a-form layout="vertical" class="mt-4">
+              <a-form-item label="技能标签">
+                <a-input v-model:value="draft.basic.skills" class="input-field" placeholder="用逗号分隔，如：Vue3、JavaScript" />
+              </a-form-item>
+              <a-form-item label="获奖情况">
+                <a-textarea v-model:value="draft.basic.awards" :rows="2" class="input-field" placeholder="每行一条" />
+              </a-form-item>
+              <a-form-item label="证书">
+                <a-textarea v-model:value="draft.basic.certificates" :rows="2" class="input-field" placeholder="每行一条" />
+              </a-form-item>
+            </a-form>
+          </template>
 
-        <!-- 桌面：原三步翻页 -->
-        <template v-else>
-          <div v-show="draft.currentStep === 0">
-            <a-alert message="姓名与意向岗位为必填项，其他内容均可选填。" type="info" show-icon class="mb-4" />
-            <a-card class="card-base mb-4" :bordered="false">
-              <template #title><span class="flex items-center gap-2 font-semibold text-ink"><UserOutlined /> 基本信息</span></template>
-              <ResumeBasicFieldsSection
-                ref="basicFieldsRef"
-                v-model="draft.basic"
-                :show-summary="false"
-                :show-avatar="false"
-                collapsible-advanced
-                :disabled="formLocked"
-              />
-              <a-form layout="vertical" class="mt-4">
-                <a-row :gutter="[16, 0]">
-                  <a-col :span="24"><a-form-item label="技能标签"><a-input v-model:value="draft.basic.skills" class="input-field" placeholder="用逗号分隔，如：Vue3、JavaScript" /></a-form-item></a-col>
-                  <a-col :span="24"><a-form-item label="获奖情况"><a-textarea v-model:value="draft.basic.awards" :rows="2" class="input-field" placeholder="每行一条" /></a-form-item></a-col>
-                  <a-col :span="24"><a-form-item label="证书"><a-textarea v-model:value="draft.basic.certificates" :rows="2" class="input-field" placeholder="每行一条" /></a-form-item></a-col>
-                </a-row>
-              </a-form>
-            </a-card>
-            <div class="flex justify-center p-3">
-              <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[190px]" @click="nextFromBasic">下一步：教育背景 <ArrowRightOutlined /></GradientButton>
-            </div>
-          </div>
+          <template v-else-if="activeFormTab === 'education'">
+            <ResumeEducationListSection v-model="draft.educations" />
+          </template>
 
-          <div v-show="draft.currentStep === 1">
-            <a-card class="card-base mb-4" :bordered="false">
-              <template #title><span class="flex items-center gap-2 font-semibold text-ink"><ReadOutlined /> 教育背景（选填）</span></template>
-              <ResumeEducationListSection v-model="draft.educations" />
-            </a-card>
-            <div class="flex flex-col-reverse justify-center gap-3 p-3 sm:flex-row">
-              <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[150px]" @click="draft.currentStep = 0"><ArrowLeftOutlined /> 上一步</button>
-              <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[190px]" @click="draft.currentStep = 2">下一步：经历与生成 <ArrowRightOutlined /></GradientButton>
-            </div>
-          </div>
-
-          <div v-show="draft.currentStep === 2">
+          <template v-else>
             <ResumeExperienceSections
               v-model:projects="draft.projects"
               v-model:internships="draft.internships"
               v-model:work-experiences="draft.workExperiences"
             />
-            <div class="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-center">
-              <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[140px]" @click="draft.currentStep = 1"><ArrowLeftOutlined /> 上一步</button>
-              <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[170px]" :loading="generationLoading && draft.generation.kind === 'generate'" @click="handleGenerate"><ThunderboltOutlined v-if="!generationLoading" /> 开始 AI 生成</GradientButton>
-              <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[180px]" @click="openJdOptimize"><AimOutlined /> 按岗位优化简历</button>
-            </div>
-          </div>
-        </template>
+          </template>
+        </div>
       </div>
 
-      <!-- 锁定层只覆盖表单，生成结果仍持续可见。 -->
-      <div v-if="formLocked" class="pointer-events-none absolute inset-0 z-10 flex items-start justify-center rounded-card bg-white/15 pt-24 backdrop-blur-[1px]">
-        <div class="rounded-full bg-white/95 px-4 py-2 text-sm font-medium text-brand-dark shadow-card"><a-spin size="small" class="mr-2" />{{ recognitionLoading ? '识别中，表单暂时锁定' : 'AI 输出中，表单暂时锁定' }}</div>
+      <!-- 锁定层只覆盖表单，生成结果仍持续可见 -->
+      <div
+        v-if="formLocked"
+        class="pointer-events-none absolute inset-0 z-10 flex items-start justify-center bg-white/20 pt-28 backdrop-blur-[1px]"
+      >
+        <div class="rounded-full bg-white/95 px-4 py-2 text-sm font-medium text-brand-dark shadow-card">
+          <a-spin size="small" class="mr-2" />{{ recognitionLoading ? '识别中，表单暂时锁定' : 'AI 输出中，表单暂时锁定' }}
+        </div>
       </div>
     </div>
 
-    <!-- 流式结果不会在结束后隐藏，完成按钮只在全部输出完成后出现。 -->
-    <a-card v-if="hasGenerationPanel" class="card-base mt-5" :bordered="false">
+    <!-- 吸底操作栏：按钮组居中 -->
+    <div
+      class="fixed bottom-0 left-0 right-0 z-40 border-t border-line/50 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(31,41,55,0.06)] backdrop-blur-sm"
+    >
+      <div class="mx-auto flex max-w-3xl flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-center sm:gap-3 sm:px-6">
+        <GradientButton
+          class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[170px]"
+          :loading="generationLoading && draft.generation.kind === 'generate'"
+          :disabled="formLocked && !(generationLoading && draft.generation.kind === 'generate')"
+          @click="handleGenerate"
+        >
+          <ThunderboltOutlined v-if="!generationLoading || draft.generation.kind !== 'generate'" />
+          开始 AI 生成
+        </GradientButton>
+        <button
+          type="button"
+          class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[180px]"
+          :disabled="formLocked"
+          @click="openJdOptimize"
+        >
+          <AimOutlined /> 按岗位优化简历
+        </button>
+      </div>
+    </div>
+
+    <!-- 流式结果：单层外框；生成/岗位优化时自动滚入并贴底 -->
+    <div
+      v-if="hasGenerationPanel"
+      ref="generationPanelRef"
+      class="mt-5 overflow-hidden rounded-card border border-line/40 bg-white px-4 py-5 sm:px-6"
+    >
       <div class="mb-4 flex items-center gap-2 text-base font-semibold text-ink">
         <a-spin v-if="generationLoading" size="small" />
         <CheckCircleFilled v-else-if="draft.generation.phase === 'complete'" class="text-success" />
         <span>{{ draft.generation.status || 'AI 处理结果' }}</span>
       </div>
 
-      <div class="rounded-card border border-line/50 bg-cream p-2 sm:p-5">
+      <div class="rounded-lg bg-cream/50 p-2 sm:p-4">
         <StreamResumePreview
           :stream-text="previewStreamText"
           :loading="generationLoading"
@@ -621,16 +633,7 @@ async function goToEditor() {
         />
       </div>
 
-      <!-- 完成态预览使用最终结构，原始流式文本仍常驻可展开核对。 -->
-      <details
-        v-if="draft.generation.streamText && draft.generation.phase !== 'streaming'"
-        class="mt-3 rounded-card border border-line/60 bg-white/70"
-      >
-        <summary class="cursor-pointer px-4 py-3 text-sm font-medium text-ink-secondary">查看本次流式输出原文</summary>
-        <pre class="max-h-64 overflow-auto whitespace-pre-wrap break-words border-t border-line/50 px-4 py-3 text-xs leading-6 text-ink-secondary">{{ draft.generation.streamText }}</pre>
-      </details>
-
-      <div v-if="['complete', 'save_error'].includes(draft.generation.phase)" class="mt-5 rounded-card border border-success/20 bg-emerald-50/40 p-4">
+      <div v-if="['complete', 'save_error'].includes(draft.generation.phase)" class="mt-5 rounded-card bg-emerald-50/50 p-4">
         <h3 class="mb-3 flex items-center gap-2 font-semibold text-ink"><BulbOutlined class="text-warning" /> 本次优化亮点</h3>
         <ul class="space-y-2 text-sm text-ink-secondary">
           <li v-for="(note, index) in draft.generation.notes" :key="index" class="flex gap-2"><span class="text-success">✓</span><span>{{ note }}</span></li>
@@ -649,7 +652,7 @@ async function goToEditor() {
       <div v-else-if="['error', 'interrupted'].includes(draft.generation.phase)" class="mt-5 flex justify-center">
         <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[160px]" @click="restartGeneration"><ReloadOutlined /> 重新生成</button>
       </div>
-    </a-card>
+    </div>
 
     <JdResumeOptimizeModal
       v-model:open="jdOptimizeOpen"
@@ -666,29 +669,12 @@ async function goToEditor() {
 </template>
 
 <style scoped>
-:deep(.ant-card-head) {
-  @apply border-b border-line/70 px-4 sm:px-6;
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-:deep(.ant-card-body) {
-  @apply px-4 py-5 sm:px-6;
-}
-
-:deep(.gen-steps .ant-steps-item-process .ant-steps-item-icon) {
-  @apply border-brand-dark bg-brand-dark;
-}
-
-@media (max-width: 375px) {
-  :deep(.gen-steps .ant-steps-item-description) {
-    display: none;
-  }
-
-  :deep(.gen-steps .ant-steps-item-title) {
-    @apply text-xs;
-  }
-
-  :deep(.ant-card-body) {
-    @apply px-3;
-  }
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 </style>

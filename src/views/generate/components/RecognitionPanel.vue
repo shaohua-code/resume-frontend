@@ -3,7 +3,7 @@
   PDF / 文字两种模式各自只保留一个主识别按钮；PDF 支持复用已存唯一文件。
 -->
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
@@ -17,8 +17,11 @@ import {
   DeleteOutlined,
   CloudUploadOutlined,
   EyeOutlined,
+  DownOutlined,
+  UpOutlined,
 } from '@ant-design/icons-vue'
 import GradientButton from '@/components/GradientButton.vue'
+import { useMediaQuery } from '@/composables/useMediaQuery'
 import {
   extractResumeTextStream,
   uploadRecognizeResumeStream,
@@ -68,8 +71,22 @@ const showReplaceUpload = ref(false)
 const previewOpen = ref(false)
 const previewUrl = ref('')
 const previewLoading = ref(false)
+/** 仅移动端：折叠 PDF/文字识别下方的流式结果；PC 始终展开 */
+const isMobile = useMediaQuery('(max-width: 639px)')
+const streamExpanded = ref(false)
+/** 流式预览区，增量输出时滚到底部 */
+const streamPreRef = ref(null)
+const streamBoxRef = ref(null)
 let activeRecognitionController = null
 let localPreviewUrl = ''
+
+/** 流式文本更新后，预览区始终贴底 */
+async function scrollStreamToBottom() {
+  await nextTick()
+  const el = streamPreRef.value
+  if (!el) return
+  el.scrollTop = el.scrollHeight
+}
 
 function revokePreviewUrl() {
   if (previewUrl.value) {
@@ -160,8 +177,28 @@ const pdfPrimaryLabel = computed(() => {
   return '开始 PDF 识别'
 })
 const canStartPdf = computed(() => !!(pdfFile.value || existingFile.value))
+/** PC 始终展示结果正文；移动端受 streamExpanded 控制 */
+const showStreamBody = computed(() => !isMobile.value || streamExpanded.value)
 
-watch(loading, (value) => emit('loading-change', value), { immediate: true })
+function toggleStreamExpanded() {
+  // 仅移动端可折叠；识别进行中不允许收起
+  if (!isMobile.value || loading.value) return
+  streamExpanded.value = !streamExpanded.value
+}
+
+watch(loading, (value) => {
+  emit('loading-change', value)
+  // 移动端开始识别时展开下方流式结果
+  if (value && isMobile.value) streamExpanded.value = true
+}, { immediate: true })
+
+// 流式增量与可读预览变化时滚到底部
+watch(
+  () => [state.streamText, readableStreamText.value, loading.value, showStreamBody.value],
+  () => {
+    if ((state.streamText || loading.value) && showStreamBody.value) scrollStreamToBottom()
+  },
+)
 
 /** 拉取当前用户已保存的唯一 PDF，供直接识别。 */
 async function fetchExisting() {
@@ -253,12 +290,16 @@ async function runRecognition(operation, startStatus) {
   activeRecognitionController?.abort()
   const controller = new AbortController()
   activeRecognitionController = controller
+  // 移动端识别开始时展开下方结果区
+  if (isMobile.value) streamExpanded.value = true
   state.phase = 'running'
   state.status = startStatus
   state.streamText = ''
   state.previewResume = {}
   state.error = ''
   let doneHandled = false
+  await nextTick()
+  streamBoxRef.value?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' })
 
   try {
     const result = await operation({
@@ -270,10 +311,12 @@ async function runRecognition(operation, startStatus) {
         state.streamText += chunk
         state.status = 'AI 正在流式提取原文事实，表单将持续回填...'
         emitPartialResult()
+        scrollStreamToBottom()
       },
       onDone: (data) => {
         doneHandled = true
         finishRecognition(data)
+        scrollStreamToBottom()
       },
     })
     if (!doneHandled && result) finishRecognition(result)
@@ -366,14 +409,14 @@ onBeforeUnmount(() => {
       ]"
       block
       size="large"
-      class="w-full mb-5"
+      class="mb-5 w-full"
     />
 
     <!-- PDF：已存状态 + 可选替换区 + 唯一主按钮 -->
     <div v-if="state.method === 'pdf'" class="space-y-4">
       <div
         v-if="existingFile"
-        class="flex flex-col gap-3 p-4 border rounded-card border-line/60 bg-cream/70 sm:flex-row sm:items-center sm:justify-between"
+        class="flex flex-col gap-3 rounded-lg border border-line/30 bg-cream/50 p-3 sm:flex-row sm:items-center sm:justify-between"
       >
         <div class="min-w-0 space-y-1">
           <div class="flex items-center gap-2 text-sm font-medium text-ink">
@@ -475,7 +518,7 @@ onBeforeUnmount(() => {
 
     <!-- 文字：提示条 + 输入区 + 唯一主按钮 -->
     <div v-else class="space-y-4">
-      <div class="px-3 py-2 text-xs leading-5 border rounded-card border-line/50 bg-cream/70 text-muted">
+      <div class="rounded-lg border border-line/30 bg-cream/50 px-3 py-2 text-xs leading-5 text-muted">
         粘贴整段简历即可；系统只抽取明确写出的事实，不会补写或润色。建议至少 20 字。
       </div>
       <a-textarea
@@ -514,20 +557,39 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- 流式结果预览：只展示中文可读内容 -->
-    <div v-if="hasRun" class="min-w-0 mt-5 overflow-hidden border rounded-card border-line/60 bg-cream/70">
-      <div class="flex items-center gap-2 px-4 py-3 text-sm font-medium border-b border-line/50">
+    <!-- 流式结果：仅移动端可折叠正文；PC 始终展开 -->
+    <div
+      v-if="hasRun"
+      ref="streamBoxRef"
+      class="mt-5 min-w-0 overflow-hidden rounded-lg border border-line/30 bg-cream/40"
+    >
+      <button
+        type="button"
+        class="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-medium"
+        :class="showStreamBody ? 'border-b border-line/25' : ''"
+        :aria-expanded="showStreamBody"
+        :disabled="!isMobile || loading"
+        @click="toggleStreamExpanded"
+      >
         <a-spin v-if="loading" size="small" />
         <CheckCircleFilled v-else-if="statusType === 'success'" class="text-success" />
         <ExclamationCircleOutlined v-else class="text-warning" />
         <ThunderboltOutlined v-if="statusType === 'processing' && !loading" class="text-brand" />
-        <span class="min-w-0 truncate">{{ state.status || '等待识别' }}</span>
+        <span class="min-w-0 flex-1 truncate">{{ state.status || '等待识别' }}</span>
+        <!-- 折叠控件仅移动端显示 -->
+        <span v-if="isMobile" class="shrink-0 text-muted">
+          <UpOutlined v-if="showStreamBody" />
+          <DownOutlined v-else />
+        </span>
+      </button>
+      <div v-show="showStreamBody">
+        <pre
+          v-if="readableStreamText"
+          ref="streamPreRef"
+          class="max-h-64 overflow-auto break-words whitespace-pre-wrap px-3 py-2.5 text-sm leading-6 text-ink-secondary"
+        >{{ readableStreamText }}</pre>
+        <p v-else class="px-3 py-2.5 text-xs text-muted">识别内容会逐步显示在这里，并同步写入下方表单。</p>
       </div>
-      <pre
-        v-if="readableStreamText"
-        class="px-4 py-3 overflow-auto text-sm leading-6 break-words whitespace-pre-wrap max-h-64 text-ink-secondary"
-      >{{ readableStreamText }}</pre>
-      <p v-else class="px-4 py-3 text-xs text-muted">识别内容会逐步显示在这里，并同步写入下方表单。</p>
     </div>
   </a-card>
 </template>
