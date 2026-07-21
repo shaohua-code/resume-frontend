@@ -357,6 +357,11 @@ function buildHighlights(resume, kind, notes = []) {
   if (provided.length) return provided
 
   const result = []
+  // 极简生成时模型会在 custom_fields 写入「生成说明」，优先展示给用户
+  const bootstrapNote = (resume.custom_fields || []).find((item) => (
+    String(item?.label || '').includes('生成说明') && String(item?.value || '').trim()
+  ))
+  if (bootstrapNote) result.push(String(bootstrapNote.value).trim())
   if (resume.target_position) result.push(`围绕「${resume.target_position}」强化了岗位匹配表达`)
   if (resume.projects?.length || resume.internships?.length || resume.work_experiences?.length) {
     result.push('重组经历描述，突出行动、职责与可验证成果')
