@@ -1,12 +1,16 @@
 /**
  * 简历分模块 AI 优化组合式函数
- * 提供个人评价、技能特长、项目经历、实习经历的流式优化能力
- * 优化基于完整简历内容与意向岗位信息
+ * 流式结果先进入对比面板，确认后再写回简历；禁止边流式边覆盖原文
  */
 import { reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { optimizeResumePartStream } from '@/api/resume'
 import { validateRequiredBasicFields } from '@/constants/resumeFieldSchema'
+import {
+  applyModuleOptimizeResult,
+  snapshotField,
+} from '@/utils/optimizeDiff'
+import { getErrorMessage } from '@/utils/errorMessage'
 
 /**
  * 提取 AI 返回的技能数组
@@ -30,17 +34,13 @@ function extractSkills(text) {
 
 /**
  * 过滤流式输出中的 JSON 包裹格式，只保留纯文本内容
- * 后端可能发送 {"optimized":"xxx"} 格式，需提取内部纯文本用于实时展示
  * @param {string} raw 原始累积文本
  * @returns {string} 过滤后的纯文本
  */
 function filterStreamingJson(raw) {
   if (!raw) return ''
-  // 匹配 {"optimized":"..."} 或 {"optimized": "..."} 格式，提取内部值
   const jsonMatch = raw.match(/\{[\s]*"optimized"[\s]*:[\s]*"((?:[^"\\]|\\.)*)"/)
   if (jsonMatch) return jsonMatch[1]
-  // 无 JSON 包裹时直接返回原文
-  // 移除可能的残留 JSON 结构字符（如 { } " optimized : 等）
   let cleaned = raw
     .replace(/\{[\s]*"optimized"[\s]*:[\s]*"/g, '')
     .replace(/"\s*\}\s*$/g, '')
@@ -49,60 +49,61 @@ function filterStreamingJson(raw) {
 }
 
 /**
- * 使用简历优化器
  * @param {object} options
- * @param {import('vue').Ref<object>} options.resume 简历响应式对象
+ * @param {import('vue').Ref<object>} options.resume
  */
 export function useResumeOptimizer({ resume }) {
-  // 各优化按钮的加载状态 key: `${type}-${index}`
   const optimizingMap = reactive(new Map())
-  // 当前流式输出的文本，用于文本类字段实时回填
   const streamingText = ref('')
-  // 技能优化时的临时文本，用于打印机效果展示
   const streamingSkillsText = ref('')
 
-  /**
-   * 生成优化状态 key
-   * @param {string} type 优化类型
-   * @param {number} [index] 项目/实习索引
-   */
+  // 对比面板状态：不直接改 resume，等用户应用
+  const diffOpen = ref(false)
+  const diffLoading = ref(false)
+  const pendingDiff = ref(null)
+
   function getKey(type, index) {
     return index === undefined ? type : `${type}-${index}`
   }
 
-  /**
-   * 判断指定优化是否进行中
-   */
   function isOptimizing(type, index) {
     return optimizingMap.get(getKey(type, index)) || false
   }
 
-  /**
-   * 设置优化状态
-   */
   function setOptimizing(type, index, value) {
     optimizingMap.set(getKey(type, index), value)
   }
 
+  function formatAfterText(type, value) {
+    if (type === 'skills') {
+      return Array.isArray(value) ? value.join('、') : String(value || '')
+    }
+    return String(value || '')
+  }
+
+  function formatBeforeText(type, value) {
+    if (type === 'skills') {
+      return Array.isArray(value) ? value.join('、') : String(value || '')
+    }
+    return String(value || '')
+  }
+
   /**
- * 触发指定模块的 AI 流式优化
- * @param {'summary'|'skills'|'project'|'internship'|'work_experience'} type 优化类型
- * @param {number} [index] 项目/实习/工作经历索引
- */
+   * 触发指定模块的 AI 流式优化
+   * @param {'summary'|'skills'|'project'|'internship'|'work_experience'} type
+   * @param {number} [index]
+   */
   async function optimize(type, index) {
     const basicCheck = validateRequiredBasicFields(resume.value || {})
     if (!basicCheck.ok) {
       message.warning(basicCheck.message)
       return
     }
-    const targetPosition = basicCheck.target_position
 
     const key = getKey(type, index)
     if (optimizingMap.get(key)) return
 
-    // 项目/实习/工作经历需确保目标项存在
     if (type === 'project' || type === 'internship' || type === 'work_experience') {
-      // 类型到 resume 字段的映射
       const listMap = { project: 'projects', internship: 'internships', work_experience: 'work_experiences' }
       const list = resume.value[listMap[type]]
       if (!list || index < 0 || index >= list.length) {
@@ -111,70 +112,123 @@ export function useResumeOptimizer({ resume }) {
       }
     }
 
+    // 冻结优化前原文，流式过程只更新 pending.after
+    const beforeValue = snapshotField(resume.value, type, index)
+    pendingDiff.value = {
+      type,
+      index,
+      beforeText: formatBeforeText(type, beforeValue),
+      afterText: '',
+      afterValue: type === 'skills' ? [] : '',
+    }
+    diffOpen.value = true
+    diffLoading.value = true
     setOptimizing(type, index, true)
     streamingText.value = ''
     streamingSkillsText.value = ''
 
     try {
       const payload = { resume: resume.value }
-      // 项目/实习/工作经历需要传递索引
       if (type === 'project' || type === 'internship' || type === 'work_experience') {
         payload.index = index
       }
 
       await optimizeResumePartStream(type, payload, {
         onChunk: (chunk) => {
-          // 技能类：累积到临时文本，展示打印机效果
           if (type === 'skills') {
             streamingSkillsText.value += chunk
+            const skills = extractSkills(streamingSkillsText.value)
+            pendingDiff.value = {
+              ...pendingDiff.value,
+              afterValue: skills.length ? skills : pendingDiff.value.afterValue,
+              afterText: skills.length
+                ? skills.join('、')
+                : formatAfterText('skills', extractSkillsPreview(streamingSkillsText.value)),
+            }
             return
           }
-          // 文本类：累积后过滤 JSON 包裹格式，再回填到对应输入框
           streamingText.value += chunk
           const filtered = filterStreamingJson(streamingText.value)
-          if (type === 'summary') {
-            resume.value.summary = filtered
-          } else if (type === 'project') {
-            resume.value.projects[index].description = filtered
-          } else if (type === 'internship') {
-            resume.value.internships[index].description = filtered
-          } else if (type === 'work_experience') {
-            // 工作经历流式回填描述字段
-            resume.value.work_experiences[index].description = filtered
+          pendingDiff.value = {
+            ...pendingDiff.value,
+            afterValue: filtered,
+            afterText: filtered,
           }
         },
         onDone: (data) => {
           if (type === 'skills') {
-            const skills = Array.isArray(data?.optimized) ? data.optimized : extractSkills(streamingSkillsText.value)
-            if (skills.length) {
-              resume.value.skills = skills
-              message.success('技能特长已优化')
-            } else {
+            const skills = Array.isArray(data?.optimized)
+              ? data.optimized
+              : extractSkills(streamingSkillsText.value)
+            if (!skills.length) {
               message.warning('AI 未返回有效技能，请重试')
+              discardDiff()
+              return
             }
-            streamingSkillsText.value = ''
+            pendingDiff.value = {
+              ...pendingDiff.value,
+              afterValue: skills,
+              afterText: skills.join('、'),
+            }
           } else {
-            const optimized = data?.optimized || ''
-            if (type === 'summary') {
-              resume.value.summary = optimized
-            } else if (type === 'project') {
-              resume.value.projects[index].description = optimized
-            } else if (type === 'internship') {
-              resume.value.internships[index].description = optimized
-            } else if (type === 'work_experience') {
-              // 工作经历优化完成后最终赋值
-              resume.value.work_experiences[index].description = optimized
+            const optimized = data?.optimized || pendingDiff.value?.afterValue || ''
+            if (!String(optimized || '').trim()) {
+              message.warning('AI 未返回有效内容，请重试')
+              discardDiff()
+              return
             }
-            streamingText.value = ''
-            message.success('优化完成')
+            pendingDiff.value = {
+              ...pendingDiff.value,
+              afterValue: optimized,
+              afterText: String(optimized),
+            }
           }
+          streamingText.value = ''
+          streamingSkillsText.value = ''
+          message.success('优化完成，请对比后选择应用或放弃')
         },
       })
     } catch (e) {
-      message.error(e.message || '优化失败，请重试')
+      message.error(getErrorMessage(e) || '优化失败，请重试')
+      discardDiff()
     } finally {
       setOptimizing(type, index, false)
+      diffLoading.value = false
     }
+  }
+
+  /** 技能流式过程中尽量展示可读预览 */
+  function extractSkillsPreview(raw) {
+    if (!raw) return ''
+    try {
+      const start = raw.indexOf('[')
+      const end = raw.lastIndexOf(']') + 1
+      if (start !== -1 && end > start) {
+        const arr = JSON.parse(raw.slice(start, end).replace(/,\s*]/g, ']'))
+        if (Array.isArray(arr)) return arr.join('、')
+      }
+    } catch {
+      /* ignore */
+    }
+    return raw.replace(/\{[\s]*"optimized"[\s]*:[\s]*"?/g, '').replace(/"?\s*\}\s*$/g, '')
+  }
+
+  /** 一键应用当前模块优化结果 */
+  function applyPendingDiff() {
+    const pending = pendingDiff.value
+    if (!pending) return
+    applyModuleOptimizeResult(resume.value, pending.type, pending.index, pending.afterValue)
+    message.success('已应用优化结果，记得保存简历')
+    pendingDiff.value = null
+    diffOpen.value = false
+  }
+
+  function discardDiff() {
+    pendingDiff.value = null
+    streamingText.value = ''
+    streamingSkillsText.value = ''
+    diffOpen.value = false
+    diffLoading.value = false
   }
 
   return {
@@ -182,5 +236,10 @@ export function useResumeOptimizer({ resume }) {
     streamingSkillsText,
     isOptimizing,
     optimize,
+    diffOpen,
+    diffLoading,
+    pendingDiff,
+    applyPendingDiff,
+    discardDiff,
   }
 }

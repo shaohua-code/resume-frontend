@@ -122,13 +122,14 @@
       </div>
     </a-modal>
 
-    <!-- 岗位优化简历弹窗：流式预览，用户手动应用替换 -->
+    <!-- 岗位优化简历弹窗：对比后一键/逐项应用，不自动保存 -->
     <JdResumeOptimizeModal
       v-model:open="showJdOptimizeModal"
       :resume="resume"
       :template-id="templateId"
       :input-only="false"
       @apply="handleJdOptimizeApply"
+      @apply-section="handleJdOptimizeApplySection"
     />
 
     <!-- 模板选择抽屉 -->
@@ -317,15 +318,36 @@ function openJdOptimizeModal() {
 }
 
 /**
- * 用户确认应用 岗位优化结果后，合并到编辑器 resume
- * 保留编辑器样式设置，不自动保存
+ * 将岗位优化结果写回编辑器（全量或指定分区）
+ * @param {object} optimized
+ * @param {string[]|null} sectionKeys null 表示全量合并
  */
-function handleJdOptimizeApply(optimized) {
-  const merged = mergeOptimizedResume(resume, optimized)
+function writeJdOptimizeResult(optimized, sectionKeys = null) {
+  const merged = mergeOptimizedResume(resume, optimized, sectionKeys)
   Object.keys(resume).forEach((key) => delete resume[key])
   Object.assign(resume, merged)
   resumeStore.currentResume = { ...merged }
-  message.success('已应用 岗位优化结果，记得保存简历')
+}
+
+/**
+ * 一键应用岗位优化全部结果；不自动保存
+ */
+function handleJdOptimizeApply(payload) {
+  const optimized = payload?.resume || payload
+  if (!optimized || !Object.keys(optimized).length) return
+  writeJdOptimizeResult(optimized, payload?.sectionKeys ?? null)
+  message.success('已应用岗位优化结果，记得保存简历')
+}
+
+/**
+ * 逐项应用某个变更分区；不关闭对比弹窗
+ */
+function handleJdOptimizeApplySection(payload) {
+  const optimized = payload?.resume
+  const sectionKey = payload?.sectionKey
+  if (!optimized || !sectionKey) return
+  writeJdOptimizeResult(optimized, [sectionKey])
+  message.success('已应用该模块，可继续应用其他项或保存简历')
 }
 
 // 根据匹配分数返回进度条颜色

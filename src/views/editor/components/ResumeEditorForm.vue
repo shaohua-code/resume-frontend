@@ -5,6 +5,7 @@
 import { computed, ref } from 'vue'
 import { PlusOutlined, ThunderboltOutlined } from '@ant-design/icons-vue'
 import GradientButton from '@/components/GradientButton.vue'
+import OptimizeDiffPanel from '@/components/OptimizeDiffPanel.vue'
 import { useResumeOptimizer } from '@/composables/useResumeOptimizer'
 import ResumeBasicFieldsSection from '@/views/generate/components/ResumeBasicFieldsSection.vue'
 import ResumeEducationListSection from '@/views/generate/components/ResumeEducationListSection.vue'
@@ -20,34 +21,17 @@ const props = defineProps({
 const contentRef = ref(null)
 const basicFieldsRef = ref(null)
 
-// 简历分模块 AI 优化能力
-const { streamingSkillsText, isOptimizing, optimize } = useResumeOptimizer({ resume })
+// 分模块优化：对比后再应用，不即时覆盖表单
+const {
+  isOptimizing,
+  optimize,
+  diffOpen,
+  diffLoading,
+  pendingDiff,
+  applyPendingDiff,
+  discardDiff,
+} = useResumeOptimizer({ resume })
 
-// 过滤技能流式文本中的 JSON 包裹格式（如 {"optimized":["技能1","技能2"]}）
-const filteredSkillsText = computed(() => {
-  const raw = streamingSkillsText.value
-  if (!raw) return ''
-  // 尝试匹配 {"optimized": [...]} 格式并提取内部文本
-  try {
-    const start = raw.indexOf('[')
-    const end = raw.lastIndexOf(']') + 1
-    if (start !== -1 && end > start) {
-      // 提取数组部分，展示为逗号分隔的文本
-      const arrStr = raw.slice(start, end)
-      const arr = JSON.parse(arrStr.replace(/,\s*]/g, ']'))
-      if (Array.isArray(arr)) return arr.join('、')
-    }
-    // 匹配 {"optimized":"纯文本"} 格式
-    const jsonMatch = raw.match(/\{[\s]*"optimized"[\s]*:[\s]*"((?:[^"\\]|\\.)*)"/)
-    if (jsonMatch) return jsonMatch[1]
-  } catch (e) {
-    /* 流式过程中 JSON 可能不完整 */
-  }
-  // 移除残留 JSON 结构字符后返回
-  return raw.replace(/\{[\s]*"optimized"[\s]*:[\s]*"?/g, '').replace(/"?\s*\}\s*$/g, '')
-})
-
-// 聚焦到当前模块内容区（供父组件调用）
 function focusModule(key) {
   if (key) {
     contentRef.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
@@ -56,7 +40,6 @@ function focusModule(key) {
 
 defineExpose({
   focusModule,
-  /** 校验基本信息必填项 */
   validateBasic: () => basicFieldsRef.value?.validate(),
 })
 
@@ -191,13 +174,9 @@ const educationsModel = computed({
           <PlusOutlined /> 添加
         </a-tag>
       </div>
-      <!-- 技能优化打印机效果临时输入框（过滤 JSON 后展示） -->
-      <div v-if="filteredSkillsText" class="mt-2">
-        <a-input :value="filteredSkillsText" size="small" readonly class="w-full input-field" />
-      </div>
-      <!-- 技能特长 AI 优化按钮 -->
+      <!-- 技能特长 AI 优化：结果在对比面板确认后再写回 -->
       <div class="mt-2 flex justify-end">
-        <GradientButton  :loading="isOptimizing('skills')" @click="optimize('skills')">
+        <GradientButton :loading="isOptimizing('skills')" @click="optimize('skills')">
           <ThunderboltOutlined /> 优化技能
         </GradientButton>
       </div>
@@ -341,5 +320,19 @@ const educationsModel = computed({
         </a-form-item>
       </a-form>
     </template>
+
+    <!-- 分模块优化对比：桌面左右栏，移动端 Tab；确认后才写回 -->
+    <OptimizeDiffPanel
+      v-model="diffOpen"
+      mode="field"
+      title="模块优化对比"
+      :loading="diffLoading"
+      :before-text="pendingDiff?.beforeText || ''"
+      :after-text="pendingDiff?.afterText || ''"
+      apply-all-label="应用优化"
+      @apply-all="applyPendingDiff"
+      @discard="discardDiff"
+      @close="discardDiff"
+    />
   </div>
 </template>

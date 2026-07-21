@@ -20,16 +20,23 @@ import {
 } from '@ant-design/icons-vue'
 import GradientButton from '@/components/GradientButton.vue'
 import JdResumeOptimizeModal from '@/components/JdResumeOptimizeModal.vue'
+import OptimizeDiffPanel from '@/components/OptimizeDiffPanel.vue'
 import { optimizeResumeByJdStream } from '@/api/resume'
 import { useResumeStore } from '@/stores/resume'
 import { getCurrentSessionOwner } from '@/utils/emailBindingGate'
 import {
   createEmptyBasicForm,
+  mergeOptimizedResume,
   mergeRecognizedResume,
   normalizeResumeFields,
   syncFlatEducationFields,
   validateRequiredBasicFields,
 } from '@/constants/resumeFieldSchema'
+import {
+  diffResumeSections,
+  formatResumeSummary,
+  snapshotResume,
+} from '@/utils/optimizeDiff'
 import RecognitionPanel from './RecognitionPanel.vue'
 import ResumeBasicFieldsSection from './ResumeBasicFieldsSection.vue'
 import ResumeEducationListSection from './ResumeEducationListSection.vue'
@@ -89,6 +96,11 @@ const recognitionRef = ref(null)
 const recognitionLoading = ref(false)
 const overLimitVisible = ref(false)
 const jdOptimizeOpen = ref(false)
+// 岗位优化对比：应用前不落库
+const jdDiffOpen = ref(false)
+const jdBeforeSnapshot = ref(null)
+// 逐项应用累积稿（以优化前为底）；一键应用仍落库完整优化后结果
+const jdPartialApplied = ref(null)
 const pendingAction = ref(null)
 const operationStarting = ref(false)
 const pageSessionOwner = getCurrentSessionOwner()
@@ -165,6 +177,15 @@ const previewStreamText = computed(() => {
   return draft.generation.result ? JSON.stringify(draft.generation.result, null, 2) : ''
 })
 const jdOptimizeResume = computed(() => getFormSnapshot())
+
+// 岗位优化对比面板数据
+const jdBeforeSummary = computed(() => formatResumeSummary(jdBeforeSnapshot.value || {}))
+const jdAfterSummary = computed(() => formatResumeSummary(draft.generation.result || {}))
+const jdDiffSections = computed(() => {
+  if (!jdBeforeSnapshot.value || !draft.generation.result) return []
+  return diffResumeSections(jdBeforeSnapshot.value, draft.generation.result)
+})
+const jdDiffNotes = computed(() => draft.generation.notes || [])
 
 onMounted(() => {
   const pendingJdKey = pageSessionOwner ? `pending_jd:${pageSessionOwner}` : ''
@@ -419,7 +440,9 @@ async function openJdOptimize() {
 async function executeJdOptimize(jdText) {
   const controller = createOperationController()
   const sessionOwner = getCurrentSessionOwner()
+  // 冻结表单快照作为「优化前」，流式结果只进 generation，确认后再落库
   const snapshot = getFormSnapshot()
+  jdBeforeSnapshot.value = snapshotResume(snapshot)
   beginGeneration('jd', 'AI 正在结合岗位要求优化简历...')
   draft.generation.lastJdText = jdText
   let finalData = null
@@ -441,23 +464,17 @@ async function executeJdOptimize(jdText) {
     finalData = finalData || returned
     const optimizedResume = finalData?.resume || finalData
     if (!optimizedResume || !Object.keys(optimizedResume).length) throw new Error('AI 未返回有效简历')
-    const normalized = preserveGeneratedResult(optimizedResume, finalData?.optimization_notes || [])
+    // 仅本地保留结果，等待用户在对比面板确认后再 persist
+    preserveGeneratedResult(optimizedResume, finalData?.optimization_notes || [])
     if (!sessionOwner || getCurrentSessionOwner() !== sessionOwner) {
       draft.generation.phase = 'interrupted'
       draft.generation.status = '登录状态已变化，已保留优化结果但未保存'
       return
     }
-    try {
-      const persisted = await resumeStore.persistGeneratedResume(normalized, {
-        clientRequestId: draft.generation.saveRequestId,
-      })
-      completeGeneration(persisted, finalData?.optimization_notes || [])
-      message.success('岗位优化完成')
-    } catch {
-      draft.generation.phase = 'save_error'
-      draft.generation.status = '岗位优化已完成，但保存失败，请直接重试保存'
-      message.error(draft.generation.status)
-    }
+    draft.generation.phase = 'review'
+    draft.generation.status = '岗位优化完成，请对比后选择应用或放弃'
+    jdDiffOpen.value = true
+    message.success('岗位优化完成，请对比后应用')
   } catch (error) {
     if (error?.silent) {
       draft.generation.phase = 'cancelled'
@@ -469,6 +486,74 @@ async function executeJdOptimize(jdText) {
     message.error(draft.generation.status)
   } finally {
     if (activeOperationController === controller) activeOperationController = null
+  }
+}
+
+/**
+ * 岗位优化：一键应用并落库
+ * - 若已逐项选择：保存累积稿（优化前 + 已选项）
+ * - 否则：保存完整优化后结果
+ */
+async function applyJdDiffAll() {
+  const toSave = jdPartialApplied.value || draft.generation.result
+  if (!toSave) return
+  await persistJdOptimizeResult(toSave)
+}
+
+/**
+ * 岗位优化：逐项把某分区并入累积稿（以优化前为底）
+ * 点「一键应用」时若存在累积稿则只保存已选项
+ */
+function applyJdDiffSection(sectionKey) {
+  if (!draft.generation.result || !jdBeforeSnapshot.value || !sectionKey) return
+  if (!jdPartialApplied.value) {
+    jdPartialApplied.value = snapshotResume(jdBeforeSnapshot.value)
+  }
+  jdPartialApplied.value = mergeOptimizedResume(
+    jdPartialApplied.value,
+    draft.generation.result,
+    [sectionKey],
+  )
+  message.success('已加入待保存；可继续选择，或点「一键应用」保存已选内容')
+}
+
+/** 放弃岗位优化对比：不落库，清空结果 */
+function discardJdDiff() {
+  jdDiffOpen.value = false
+  jdBeforeSnapshot.value = null
+  jdPartialApplied.value = null
+  draft.generation.phase = 'idle'
+  draft.generation.result = null
+  draft.generation.streamText = ''
+  draft.generation.status = ''
+  draft.generation.notes = []
+  persistDraft()
+  message.info('已放弃本次岗位优化结果')
+}
+
+/**
+ * 将岗位优化结果落库并进入完成态
+ * @param {object} resumeToSave
+ */
+async function persistJdOptimizeResult(resumeToSave) {
+  if (!pageSessionOwner || getCurrentSessionOwner() !== pageSessionOwner) {
+    message.warning('登录状态已变化，请重新进入生成页')
+    return
+  }
+  const normalized = preserveGeneratedResult(resumeToSave, draft.generation.notes)
+  try {
+    const persisted = await resumeStore.persistGeneratedResume(normalized, {
+      clientRequestId: draft.generation.saveRequestId,
+    })
+    completeGeneration(persisted, draft.generation.notes)
+    jdDiffOpen.value = false
+    jdBeforeSnapshot.value = null
+    jdPartialApplied.value = null
+    message.success('岗位优化已应用并保存')
+  } catch {
+    draft.generation.phase = 'save_error'
+    draft.generation.status = '岗位优化已完成，但保存失败，请直接重试保存'
+    message.error(draft.generation.status)
   }
 }
 
@@ -680,7 +765,7 @@ async function goToEditor() {
     >
       <div class="mb-4 flex items-center gap-2 text-base font-semibold text-ink">
         <a-spin v-if="generationLoading" size="small" />
-        <CheckCircleFilled v-else-if="draft.generation.phase === 'complete'" class="text-success" />
+        <CheckCircleFilled v-else-if="['complete', 'review'].includes(draft.generation.phase)" class="text-success" />
         <span>{{ draft.generation.status || 'AI 处理结果' }}</span>
       </div>
 
@@ -693,7 +778,7 @@ async function goToEditor() {
         />
       </div>
 
-      <div v-if="['complete', 'save_error'].includes(draft.generation.phase)" class="mt-5 rounded-card bg-emerald-50/50 p-4">
+      <div v-if="['complete', 'save_error', 'review'].includes(draft.generation.phase)" class="mt-5 rounded-card bg-emerald-50/50 p-4">
         <h3 class="mb-3 flex items-center gap-2 font-semibold text-ink"><BulbOutlined class="text-warning" /> 本次优化亮点</h3>
         <ul class="space-y-2 text-sm text-ink-secondary">
           <li v-for="(note, index) in draft.generation.notes" :key="index" class="flex gap-2"><span class="text-success">✓</span><span>{{ note }}</span></li>
@@ -704,6 +789,13 @@ async function goToEditor() {
         <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[150px]" @click="goToEditor"><EditOutlined /> 进入编辑</GradientButton>
         <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[150px]" @click="restartGeneration"><ReloadOutlined /> 重新生成</button>
       </div>
+      <!-- 岗位优化待对比：可重新打开对比面板 -->
+      <div v-else-if="draft.generation.phase === 'review'" class="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[160px]" @click="jdDiffOpen = true">
+          查看优化对比
+        </GradientButton>
+        <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[150px]" @click="discardJdDiff">放弃结果</button>
+      </div>
       <div v-else-if="draft.generation.phase === 'save_error'" class="mt-5 flex justify-center">
         <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[170px]" @click="retrySaveResult">
           <ReloadOutlined /> 重试保存结果
@@ -713,6 +805,21 @@ async function goToEditor() {
         <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[160px]" @click="restartGeneration"><ReloadOutlined /> 重新生成</button>
       </div>
     </div>
+
+    <!-- 岗位优化前后对比：桌面左右栏，移动端 Tab；确认后才落库 -->
+    <OptimizeDiffPanel
+      v-model="jdDiffOpen"
+      mode="resume"
+      title="岗位优化对比"
+      :before-summary="jdBeforeSummary"
+      :after-summary="jdAfterSummary"
+      :sections="jdDiffSections"
+      :notes="jdDiffNotes"
+      apply-all-label="一键应用并保存"
+      @apply-all="applyJdDiffAll"
+      @apply-section="applyJdDiffSection"
+      @discard="discardJdDiff"
+    />
 
     <JdResumeOptimizeModal
       v-model:open="jdOptimizeOpen"

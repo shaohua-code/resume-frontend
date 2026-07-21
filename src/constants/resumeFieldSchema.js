@@ -567,9 +567,19 @@ export function validateRequiredBasicFields(data = {}) {
  * 保留目标对象中编辑器样式等未在 AI 结果中出现的字段
  * @param {object} target 待写入的简历对象
  * @param {object} optimized AI 优化后的简历
+ * @param {string[]} [sectionKeys] 仅合并指定分区；空则整份合并
  * @returns {object} 合并后的简历
  */
-export function mergeOptimizedResume(target = {}, optimized = {}) {
+export function mergeOptimizedResume(target = {}, optimized = {}, sectionKeys = null) {
+  // 按分区选择性合并：供对比面板「逐项应用」
+  if (Array.isArray(sectionKeys) && sectionKeys.length) {
+    const merged = normalizeResumeFields({ ...target })
+    for (const key of sectionKeys) {
+      applySectionToResume(merged, optimized, key)
+    }
+    return syncFlatEducationFields(merged)
+  }
+
   const merged = normalizeResumeFields({
     ...target,
     ...optimized,
@@ -587,4 +597,39 @@ export function mergeOptimizedResume(target = {}, optimized = {}) {
     custom_fields: optimized.custom_fields?.length ? optimized.custom_fields : (target.custom_fields || []),
   })
   return syncFlatEducationFields(merged)
+}
+
+/** 选择性合并单个分区（避免与 optimizeDiff 循环依赖） */
+function applySectionToResume(dst, optimized, sectionKey) {
+  const src = normalizeResumeFields(optimized)
+  if (sectionKey === 'basic') {
+    ;['name', 'target_position', 'phone', 'email', 'work_years', 'expected_salary'].forEach((key) => {
+      if (src[key] !== undefined) dst[key] = src[key]
+    })
+    return
+  }
+  if (sectionKey === 'summary') {
+    dst.summary = src.summary || ''
+    return
+  }
+  if (sectionKey === 'skills') {
+    dst.skills = [...(src.skills || [])]
+    return
+  }
+  if (sectionKey === 'awards') {
+    dst.awards = [...(src.awards || [])]
+    return
+  }
+  if (sectionKey === 'certificates') {
+    dst.certificates = [...(src.certificates || [])]
+    return
+  }
+  const listMatch = String(sectionKey).match(/^(educations|projects|internships|work_experiences)\[(\d+)\]$/)
+  if (listMatch) {
+    const [, listKey, indexStr] = listMatch
+    const index = Number(indexStr)
+    if (!Array.isArray(dst[listKey])) dst[listKey] = []
+    const sourceItem = src[listKey]?.[index]
+    if (sourceItem) dst[listKey][index] = JSON.parse(JSON.stringify(sourceItem))
+  }
 }

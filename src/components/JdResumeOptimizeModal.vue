@@ -7,20 +7,24 @@
 import { ref, watch, computed, onBeforeUnmount } from 'vue'
 import { message } from 'ant-design-vue'
 import {
-  BulbOutlined,
-  CheckCircleFilled,
   DeleteOutlined,
   PictureOutlined,
   ThunderboltOutlined,
   UploadOutlined,
 } from '@ant-design/icons-vue'
 import GradientButton from '@/components/GradientButton.vue'
+import OptimizeDiffPanel from '@/components/OptimizeDiffPanel.vue'
 import StreamResumePreview from '@/views/generate/components/StreamResumePreview.vue'
 import { useJdResumeOptimize } from '@/composables/useJdResumeOptimize'
 import { extractJdFromImageStream } from '@/api/resume'
 import { clampTemplateId } from '@/constants/templateRegistry'
 import { useMediaQuery } from '@/composables/useMediaQuery'
 import { useScrollToStreamPreview } from '@/composables/useScrollToStreamPreview'
+import {
+  diffResumeSections,
+  formatResumeSummary,
+  snapshotResume,
+} from '@/utils/optimizeDiff'
 
 // 弹窗显隐，父组件 v-model:open 控制
 const open = defineModel('open', { type: Boolean, default: false })
@@ -48,14 +52,16 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['apply', 'confirm-start'])
+const emit = defineEmits(['apply', 'apply-section', 'confirm-start'])
 
 const isMobile = useMediaQuery()
 const streamPreviewAnchorRef = ref(null)
 const { scrollToStreamPreview } = useScrollToStreamPreview(streamPreviewAnchorRef)
 
-// 弹窗阶段：input 输入 JD | preview 流式预览（仅 inputOnly=false）
+// 弹窗阶段：input 输入 JD | preview 对比预览（仅 inputOnly=false）
 const phase = ref('input')
+// 进入预览时冻结的优化前快照，保证左侧不被流式污染
+const beforeSnapshot = ref(null)
 
 // JD 文本与图片（二选一必填）
 const jdText = ref('')
@@ -109,14 +115,30 @@ const previewTemplateId = computed(() => clampTemplateId(props.templateId))
 
 // 弹窗标题随阶段变化
 const modalTitle = computed(() => (
-  phase.value === 'input' ? '按岗位优化简历' : '岗位优化预览'
+  phase.value === 'input' ? '按岗位优化简历' : '岗位优化对比'
 ))
 
-// 弹窗宽度：移动端预览阶段 95vw
+// 弹窗宽度：移动端全宽；桌面对比阶段加宽
 const modalWidth = computed(() => {
   if (isMobile.value) return '95vw'
-  return phase.value === 'preview' ? 860 : 640
+  return phase.value === 'preview' ? 920 : 640
 })
+
+const beforeSummary = computed(() => formatResumeSummary(beforeSnapshot.value || props.resume || {}))
+
+const afterSummary = computed(() => {
+  const after = optimizeResult.value?.resume
+  if (after && Object.keys(after).length) return formatResumeSummary(after)
+  // 流式未完成时右侧由插槽预览，摘要留空提示生成中
+  return ''
+})
+
+const diffSections = computed(() => {
+  if (!optimizeResult.value?.resume || loading.value) return []
+  return diffResumeSections(beforeSnapshot.value || props.resume, optimizeResult.value.resume)
+})
+
+const optimizeNotes = computed(() => optimizeResult.value?.optimization_notes || [])
 
 const modalBodyStyle = computed(() => ({
   maxHeight: 'calc(100vh - 120px)',
@@ -128,6 +150,7 @@ const modalContentClass = 'max-h-[calc(100vh-160px)] overflow-y-auto pr-1'
 // 打开/关闭弹窗时重置状态
 watch(open, (val) => {
   cancelModalOperations()
+  beforeSnapshot.value = null
   if (val) {
     phase.value = 'input'
     jdText.value = props.initialJdText || ''
@@ -229,21 +252,39 @@ async function handleConfirm() {
       return
     }
 
-    // 编辑器：弹窗内进入预览并自动开始优化；关闭弹窗会由组合式函数立即 abort。
+    // 编辑器：冻结优化前快照，弹窗内对比预览；关闭会 abort 流式
+    beforeSnapshot.value = snapshotResume(props.resume)
     phase.value = 'preview'
     await scrollToStreamPreview()
     if (!open.value || operationVersion !== modalOperationVersion) return
-    await startOptimize(props.resume, { jdText: finalJdText, skipBasicCheck: true, inputOnly: false })
+    await startOptimize(props.resume, {
+      jdText: finalJdText,
+      skipBasicCheck: true,
+      inputOnly: false,
+      successMessage: '岗位优化完成，请对比后选择应用或放弃',
+    })
   } finally {
     if (operationVersion === modalOperationVersion) confirming.value = false
   }
 }
 
-/** 用户确认后将优化结果交给父组件合并 */
-function handleApply() {
+/** 一键应用全部优化结果 */
+function handleApplyAll() {
   const optimized = getOptimizedResume()
   if (!optimized) return
-  emit('apply', optimized)
+  emit('apply', { resume: optimized, sectionKeys: null })
+  open.value = false
+}
+
+/** 逐项应用某个变更分区（不关闭弹窗，可继续点其他项） */
+function handleApplySection(sectionKey) {
+  const optimized = getOptimizedResume()
+  if (!optimized || !sectionKey) return
+  emit('apply-section', { resume: optimized, sectionKey })
+}
+
+/** 放弃对比结果，关闭弹窗且不写回 */
+function handleDiscardDiff() {
   open.value = false
 }
 
@@ -359,61 +400,33 @@ function handleCancel() {
       </div>
     </template>
 
-    <!-- 阶段2：流式预览 + 优化要点（仅编辑器 inputOnly=false） -->
+    <!-- 阶段2：优化前后对比（桌面左右栏 / 移动端 Tab；流式时右侧用模板预览） -->
     <template v-else>
-      <div>
-        <div
-          ref="streamPreviewAnchorRef"
-          class="p-2 mb-4 border rounded-card border-line/50 bg-cream lg:p-4"
+      <div ref="streamPreviewAnchorRef">
+        <OptimizeDiffPanel
+          inline
+          mode="resume"
+          :loading="loading"
+          :before-summary="beforeSummary"
+          :after-summary="afterSummary"
+          :sections="diffSections"
+          :notes="optimizeNotes"
+          apply-all-label="一键应用"
+          :show-after-slot="loading"
+          @apply-all="handleApplyAll"
+          @apply-section="handleApplySection"
+          @discard="handleDiscardDiff"
         >
-          <StreamResumePreview
-            :stream-text="streamText"
-            :loading="loading"
-            :template-id="previewTemplateId"
-            :scale="0.6"
-            loading-hint="AI 正在根据岗位 岗位优化你的简历..."
-          />
-        </div>
-
-        <div
-          v-if="optimizeResult && !loading"
-          class="p-3 mb-4 bg-white border rounded-card border-line/40 shadow-soft lg:p-4"
-        >
-        <p class="flex items-center gap-2 mb-3 text-base font-semibold text-ink">
-          <CheckCircleFilled class="text-success" /> 优化完成
-        </p>
-        <h4 class="mb-2 text-sm font-medium text-ink-secondary">AI 优化要点</h4>
-        <ul class="space-y-2">
-          <li
-            v-for="(note, idx) in optimizeResult.optimization_notes"
-            :key="idx"
-            class="flex items-start gap-2 py-2 text-sm border-b border-dashed border-line/60 text-ink-secondary last:border-b-0"
-          >
-            <BulbOutlined class="mt-0.5 shrink-0 text-warning" />
-            <span>{{ note }}</span>
-          </li>
-          <li v-if="!optimizeResult.optimization_notes?.length" class="py-2 text-sm text-muted">
-            （AI 未返回优化要点）
-          </li>
-        </ul>
-        </div>
-
-        <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          <button
-            type="button"
-            class="inline-flex items-center justify-center h-10 px-6 btn-ghost"
-            @click="handleCancel"
-          >
-            取消
-          </button>
-          <GradientButton
-            class="inline-flex items-center justify-center h-10 px-6"
-            :disabled="!optimizeResult || loading"
-            @click="handleApply"
-          >
-            应用替换
-          </GradientButton>
-        </div>
+          <template #after>
+            <StreamResumePreview
+              :stream-text="streamText"
+              :loading="loading"
+              :template-id="previewTemplateId"
+              :scale="0.55"
+              loading-hint="AI 正在根据岗位要求优化你的简历..."
+            />
+          </template>
+        </OptimizeDiffPanel>
       </div>
     </template>
     </div>
