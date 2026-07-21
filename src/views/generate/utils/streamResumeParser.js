@@ -170,12 +170,22 @@ function normalizeResume(data) {
     expected_salary: source.expected_salary || source.expectedSalary || '',
     skills: Array.isArray(source.skills) ? source.skills.filter(Boolean) : [],
     projects,
-    internships: Array.isArray(source.internships) ? source.internships : [],
+    internships: Array.isArray(source.internships)
+      ? source.internships.map(normalizeInternshipItem)
+      : Array.isArray(source.internship_experiences)
+        ? source.internship_experiences.map(normalizeInternshipItem)
+        : Array.isArray(source['实习经历'])
+          ? source['实习经历'].map(normalizeInternshipItem)
+          : [],
     work_experiences: Array.isArray(source.work_experiences)
       ? source.work_experiences.map(normalizeWorkExperienceItem)
       : Array.isArray(source.workExperiences)
         ? source.workExperiences.map(normalizeWorkExperienceItem)
-        : [],
+        : Array.isArray(source.work_experience)
+          ? source.work_experience.map(normalizeWorkExperienceItem)
+          : Array.isArray(source['工作经历'])
+            ? source['工作经历'].map(normalizeWorkExperienceItem)
+            : [],
     awards: Array.isArray(source.awards) ? source.awards.filter(Boolean) : [],
     certificates: Array.isArray(source.certificates) ? source.certificates.filter(Boolean) : [],
     educations: educations.map(normalizeEducationItem),
@@ -250,11 +260,18 @@ export function parsePartialResumeJson(text) {
   if (projectList.length) partial.projects = projectList.map(normalizeProjectItem)
 
   const internships = extractCompletedObjectArray(slice, 'internships')
-  if (internships.length) partial.internships = internships.map(normalizeInternshipItem)
+  const internshipAlias = extractCompletedObjectArray(slice, 'internship_experiences')
+  const internshipList = internships.length ? internships : internshipAlias
+  if (internshipList.length) partial.internships = internshipList.map(normalizeInternshipItem)
 
   const workExperiences = extractCompletedObjectArray(slice, 'work_experiences')
-  if (workExperiences.length) {
-    partial.work_experiences = workExperiences.map(normalizeWorkExperienceItem)
+  const workAlias = extractCompletedObjectArray(slice, 'workExperiences')
+  const workExperienceAlias = extractCompletedObjectArray(slice, 'work_experience')
+  const workList = workExperiences.length
+    ? workExperiences
+    : (workAlias.length ? workAlias : workExperienceAlias)
+  if (workList.length) {
+    partial.work_experiences = workList.map(normalizeWorkExperienceItem)
   }
 
   const customFields = extractCompletedObjectArray(slice, 'custom_fields')
