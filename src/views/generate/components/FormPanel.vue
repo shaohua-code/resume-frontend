@@ -351,30 +351,17 @@ function beginGeneration(kind, status) {
   scrollToStreamPreview({ behavior: 'smooth', block: 'start' })
 }
 
-/** 生成接口没有单独亮点字段时，根据实际输出模块生成可核对的摘要。 */
-function buildHighlights(resume, kind, notes = []) {
-  const provided = (Array.isArray(notes) ? notes : []).map((item) => String(item || '').trim()).filter(Boolean)
-  if (provided.length) return provided
-
-  const result = []
-  // 极简生成时模型会在 custom_fields 写入「生成说明」，优先展示给用户
-  const bootstrapNote = (resume.custom_fields || []).find((item) => (
-    String(item?.label || '').includes('生成说明') && String(item?.value || '').trim()
-  ))
-  if (bootstrapNote) result.push(String(bootstrapNote.value).trim())
-  if (resume.target_position) result.push(`围绕「${resume.target_position}」强化了岗位匹配表达`)
-  if (resume.projects?.length || resume.internships?.length || resume.work_experiences?.length) {
-    result.push('重组经历描述，突出行动、职责与可验证成果')
-  }
-  if (resume.skills?.length) result.push('整理核心技能关键词，便于招聘方快速定位优势')
-  if (resume.summary) result.push('生成更聚焦的个人评价与职业定位')
-  return result.length ? result : [kind === 'jd' ? '已结合岗位要求完成针对性优化' : '已完成简历结构与表达优化']
+/** 仅使用 AI 返回的 optimization_notes，不再由前端写死亮点文案 */
+function normalizeAiNotes(notes = []) {
+  return (Array.isArray(notes) ? notes : [])
+    .map((item) => String(item || '').trim())
+    .filter(Boolean)
 }
 
 function completeGeneration(result, notes = []) {
   const normalized = normalizeResumeFields(result)
   draft.generation.result = normalized
-  draft.generation.notes = buildHighlights(normalized, draft.generation.kind, notes)
+  draft.generation.notes = normalizeAiNotes(notes)
   draft.generation.resumeId = resumeStore.currentResumeId
   draft.generation.phase = 'complete'
   draft.generation.status = '优化完成'
@@ -383,10 +370,13 @@ function completeGeneration(result, notes = []) {
 }
 
 /** AI 完成后立即保存权威结构，落库失败时也能直接重试保存而无需再次调用模型。 */
-function preserveGeneratedResult(result, notes = []) {
+function preserveGeneratedResult(result, notes) {
   const normalized = normalizeResumeFields(result)
   draft.generation.result = normalized
-  draft.generation.notes = buildHighlights(normalized, draft.generation.kind, notes)
+  // 显式传入 notes 时更新；未传则保留已有 AI 亮点（避免重试保存清空）
+  if (notes !== undefined) {
+    draft.generation.notes = normalizeAiNotes(notes)
+  }
   persistDraft()
   return normalized
 }
@@ -405,16 +395,17 @@ async function executeGenerate() {
         draft.generation.streamText += chunk
         draft.generation.status = 'AI 正在流式输出简历内容...'
       },
-      onResult: (result) => preserveGeneratedResult(result),
+      onResult: (result, notes) => preserveGeneratedResult(result, notes),
     })
 
     if (outcome?.persisted) {
-      completeGeneration(outcome.resume)
+      completeGeneration(outcome.resume, outcome.optimizationNotes)
     } else if (outcome?.resume && outcome?.persistError) {
-      preserveGeneratedResult(outcome.resume)
+      preserveGeneratedResult(outcome.resume, outcome.optimizationNotes)
       draft.generation.phase = 'save_error'
       draft.generation.status = 'AI 已生成完成，但保存失败，请直接重试保存'
     } else if (outcome?.cancelled) {
+      if (outcome.resume) preserveGeneratedResult(outcome.resume, outcome.optimizationNotes)
       draft.generation.phase = outcome.resume ? 'interrupted' : 'cancelled'
       draft.generation.status = outcome.resume
         ? '登录状态已变化，已保留生成结果但未保存'
@@ -783,7 +774,10 @@ async function goToEditor() {
         />
       </div>
 
-      <div v-if="['complete', 'save_error', 'review'].includes(draft.generation.phase)" class="mt-5 rounded-card bg-emerald-50/50 p-4">
+      <div
+        v-if="['complete', 'save_error', 'review'].includes(draft.generation.phase) && draft.generation.notes.length"
+        class="mt-5 rounded-card bg-emerald-50/50 p-4"
+      >
         <h3 class="mb-3 flex items-center gap-2 font-semibold text-ink"><BulbOutlined class="text-warning" /> 本次优化亮点</h3>
         <ul class="space-y-2 text-sm text-ink-secondary">
           <li v-for="(note, index) in draft.generation.notes" :key="index" class="flex gap-2"><span class="text-success">✓</span><span>{{ note }}</span></li>

@@ -57,7 +57,7 @@ onMounted(loadConfig)
     <a-card :bordered="false" class="rounded-card shadow-card">
       <p class="text-base font-semibold text-ink">任务提示词配置</p>
       <p class="mt-1 text-xs text-muted">
-        只调整各 AI 任务的业务要求；结果格式由系统固定，不可修改。
+        只调整各 AI 任务的业务要求（如何处理简历与岗位）。输出 JSON 结构、optimization_notes 亮点总结等结果格式由系统锁定，用户与管理员均不可改写。
       </p>
     </a-card>
     <a-spin :spinning="loading">

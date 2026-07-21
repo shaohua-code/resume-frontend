@@ -112,30 +112,38 @@ export const useResumeStore = defineStore('resume', () => {
         },
       })
 
-      if (resumeData && Object.keys(resumeData).length) {
+      // 兼容新旧协议：{ resume, optimization_notes } 或直接 resume 对象
+      const rawResume = resumeData?.resume && typeof resumeData.resume === 'object'
+        ? resumeData.resume
+        : resumeData
+      const optimizationNotes = Array.isArray(resumeData?.optimization_notes)
+        ? resumeData.optimization_notes.map((item) => String(item || '').trim()).filter(Boolean)
+        : []
+
+      if (rawResume && Object.keys(rawResume).length) {
         // 兜底：确保 target_position 不丢失（AI 可能不返回该字段）
-        if (!resumeData.target_position && formData?.target_position) {
+        if (!rawResume.target_position && formData?.target_position) {
           console.warn('[generateResume] AI 未返回 target_position，已从输入回填:', formData.target_position)
-          resumeData.target_position = formData.target_position
+          rawResume.target_position = formData.target_position
         }
         // 兜底：确保姓名不丢失
-        if (!resumeData.name && formData?.name) {
-          resumeData.name = formData.name
+        if (!rawResume.name && formData?.name) {
+          rawResume.name = formData.name
         }
-        const normalized = normalizeResumeFields(resumeData)
+        const normalized = normalizeResumeFields(rawResume)
         currentResume.value = normalized
         // AI 最终结构先交给页面草稿，再尝试落库；保存失败不能丢掉已计费结果。
-        onResult?.(normalized)
+        onResult?.(normalized, optimizationNotes)
         if (!sessionOwner || getCurrentSessionOwner() !== sessionOwner) {
-          return { resume: normalized, persisted: false, cancelled: true }
+          return { resume: normalized, optimizationNotes, persisted: false, cancelled: true }
         }
         try {
           const persisted = await persistGeneratedResume(normalized, { clientRequestId })
           message.success('简历生成成功')
-          return { resume: persisted, persisted: true }
+          return { resume: persisted, optimizationNotes, persisted: true }
         } catch (persistError) {
           message.error('AI 已生成完成，但保存失败，请直接重试保存')
-          return { resume: normalized, persisted: false, persistError }
+          return { resume: normalized, optimizationNotes, persisted: false, persistError }
         }
       }
       message.error('生成失败，请重试')
