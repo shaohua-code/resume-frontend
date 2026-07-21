@@ -37,6 +37,11 @@ import {
   formatResumeSummary,
   snapshotResume,
 } from '@/utils/optimizeDiff'
+import {
+  buildFallbackOptimizationNotes,
+  normalizeOptimizationNotes,
+  resolveOptimizationNotes,
+} from '@/utils/optimizationNotes'
 import RecognitionPanel from './RecognitionPanel.vue'
 import ResumeBasicFieldsSection from './ResumeBasicFieldsSection.vue'
 import ResumeEducationListSection from './ResumeEducationListSection.vue'
@@ -185,7 +190,17 @@ const jdDiffSections = computed(() => {
   if (!jdBeforeSnapshot.value || !draft.generation.result) return []
   return diffResumeSections(jdBeforeSnapshot.value, draft.generation.result)
 })
-const jdDiffNotes = computed(() => draft.generation.notes || [])
+const jdDiffNotes = computed(() => displayOptimizationNotes.value)
+
+/** 完成态始终可展示的亮点：草稿 notes → 按结果兜底 */
+const displayOptimizationNotes = computed(() => {
+  const existing = normalizeOptimizationNotes(draft.generation.notes)
+  if (existing.length) return existing
+  if (!['complete', 'save_error', 'review'].includes(draft.generation.phase)) return []
+  if (!draft.generation.result) return []
+  const mode = draft.generation.kind === 'jd' ? 'optimize' : 'generate'
+  return buildFallbackOptimizationNotes(draft.generation.result, mode)
+})
 
 onMounted(() => {
   const pendingJdKey = pageSessionOwner ? `pending_jd:${pageSessionOwner}` : ''
@@ -351,17 +366,20 @@ function beginGeneration(kind, status) {
   scrollToStreamPreview({ behavior: 'smooth', block: 'start' })
 }
 
-/** 仅使用 AI 返回的 optimization_notes，不再由前端写死亮点文案 */
-function normalizeAiNotes(notes = []) {
-  return (Array.isArray(notes) ? notes : [])
-    .map((item) => String(item || '').trim())
-    .filter(Boolean)
+/** 规范化亮点；为空时按简历内容兜底，保证完成态一定能展示总结 */
+function ensureGenerationNotes(result, notes, mode = 'generate') {
+  return resolveOptimizationNotes(
+    { optimization_notes: notes },
+    normalizeResumeFields(result || {}),
+    mode,
+  )
 }
 
 function completeGeneration(result, notes = []) {
   const normalized = normalizeResumeFields(result)
+  const mode = draft.generation.kind === 'jd' ? 'optimize' : 'generate'
   draft.generation.result = normalized
-  draft.generation.notes = normalizeAiNotes(notes)
+  draft.generation.notes = ensureGenerationNotes(normalized, notes, mode)
   draft.generation.resumeId = resumeStore.currentResumeId
   draft.generation.phase = 'complete'
   draft.generation.status = '优化完成'
@@ -375,7 +393,8 @@ function preserveGeneratedResult(result, notes) {
   draft.generation.result = normalized
   // 显式传入 notes 时更新；未传则保留已有 AI 亮点（避免重试保存清空）
   if (notes !== undefined) {
-    draft.generation.notes = normalizeAiNotes(notes)
+    const mode = draft.generation.kind === 'jd' ? 'optimize' : 'generate'
+    draft.generation.notes = ensureGenerationNotes(normalized, notes, mode)
   }
   persistDraft()
   return normalized
@@ -461,7 +480,11 @@ async function executeJdOptimize(jdText) {
     const optimizedResume = finalData?.resume || finalData
     if (!optimizedResume || !Object.keys(optimizedResume).length) throw new Error('AI 未返回有效简历')
     // 仅本地保留结果，等待用户在对比面板确认后再 persist
-    preserveGeneratedResult(optimizedResume, finalData?.optimization_notes || [])
+    // 岗位优化亮点同样走统一解析（含兜底）
+    preserveGeneratedResult(
+      optimizedResume,
+      resolveOptimizationNotes(finalData, optimizedResume, 'optimize'),
+    )
     if (!sessionOwner || getCurrentSessionOwner() !== sessionOwner) {
       draft.generation.phase = 'interrupted'
       draft.generation.status = '登录状态已变化，已保留优化结果但未保存'
@@ -775,12 +798,12 @@ async function goToEditor() {
       </div>
 
       <div
-        v-if="['complete', 'save_error', 'review'].includes(draft.generation.phase) && draft.generation.notes.length"
+        v-if="displayOptimizationNotes.length"
         class="mt-5 rounded-card bg-emerald-50/50 p-4"
       >
         <h3 class="mb-3 flex items-center gap-2 font-semibold text-ink"><BulbOutlined class="text-warning" /> 本次优化亮点</h3>
         <ul class="space-y-2 text-sm text-ink-secondary">
-          <li v-for="(note, index) in draft.generation.notes" :key="index" class="flex gap-2"><span class="text-success">✓</span><span>{{ note }}</span></li>
+          <li v-for="(note, index) in displayOptimizationNotes" :key="index" class="flex gap-2"><span class="text-success">✓</span><span>{{ note }}</span></li>
         </ul>
       </div>
 

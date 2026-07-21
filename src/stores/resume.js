@@ -23,6 +23,7 @@ import { clampTemplateId } from '@/constants/templateRegistry'
 import { useWalletStore } from '@/stores/wallet'
 import { normalizeResumeFields } from '@/constants/resumeFieldSchema'
 import { getCurrentSessionOwner } from '@/utils/emailBindingGate'
+import { resolveOptimizationNotes } from '@/utils/optimizationNotes'
 
 // AI 调用成功后刷新账户余额
 async function refreshWalletBalance() {
@@ -116,9 +117,6 @@ export const useResumeStore = defineStore('resume', () => {
       const rawResume = resumeData?.resume && typeof resumeData.resume === 'object'
         ? resumeData.resume
         : resumeData
-      const optimizationNotes = Array.isArray(resumeData?.optimization_notes)
-        ? resumeData.optimization_notes.map((item) => String(item || '').trim()).filter(Boolean)
-        : []
 
       if (rawResume && Object.keys(rawResume).length) {
         // 兜底：确保 target_position 不丢失（AI 可能不返回该字段）
@@ -131,6 +129,8 @@ export const useResumeStore = defineStore('resume', () => {
           rawResume.name = formData.name
         }
         const normalized = normalizeResumeFields(rawResume)
+        // 亮点优先取接口字段；缺失时按简历内容兜底，避免「优化完成」却无总结
+        const optimizationNotes = resolveOptimizationNotes(resumeData, normalized, 'generate')
         currentResume.value = normalized
         // AI 最终结构先交给页面草稿，再尝试落库；保存失败不能丢掉已计费结果。
         onResult?.(normalized, optimizationNotes)
