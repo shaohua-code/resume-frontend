@@ -238,7 +238,7 @@ onMounted(async () => {
     <a-modal v-model:open="adjustModalOpen" :title="adjustModalTitle" ok-text="确认"
       :confirm-loading="adjustLoading" @ok="submitAdjust">
       <div class="py-2 space-y-4">
-        <div class="px-3 py-2 text-sm rounded-lg bg-slate-50 text-muted">
+        <div class="px-3 py-2 text-sm rounded-lg bg-canvas text-muted">
           当前可用额度 ¥{{ myBalance.toFixed(2) }}
           <span v-if="canDeduct">；回收后将退回您的余额</span>
           <span v-else>；分配后将同步扣减您的余额</span>

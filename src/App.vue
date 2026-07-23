@@ -8,7 +8,6 @@ import { useRoute } from 'vue-router'
 import ConfigProvider from 'ant-design-vue/es/config-provider'
 import Spin from 'ant-design-vue/es/spin'
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
-import { antdToken } from '@/constants/theme'
 import { useTheme } from '@/composables/useTheme'
 import { useVisitTracker } from '@/composables/useVisitTracker'
 import { useUserStore } from '@/stores/user'
@@ -24,7 +23,7 @@ const AnnouncementModal = defineAsyncComponent(() => import('@/components/Announ
 
 const route = useRoute()
 const userStore = useUserStore()
-const { applyCssVariables } = useTheme()
+const { antdTheme, applyCssVariables } = useTheme()
 const { init: initVisitTracker } = useVisitTracker()
 const deferredReady = ref(false)
 let deferredHandle
@@ -63,8 +62,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <ConfigProvider :locale="zhCN" :theme="{ token: antdToken }">
-    <div class="relative flex min-h-screen flex-col bg-cream font-sans text-ink antialiased">
+  <ConfigProvider :locale="zhCN" :theme="antdTheme">
+    <div class="system-ui-shell relative flex min-h-screen flex-col bg-cream font-sans text-ink antialiased">
       <!-- 全页背景装饰层 -->
       <div class="page-bg pointer-events-none fixed inset-0 z-0" />
       <AppHeader v-if="!$route.meta.hideLayout" />
@@ -80,7 +79,7 @@ onBeforeUnmount(() => {
           role="status"
           aria-live="polite"
         >
-          <div class="flex items-center gap-3 rounded-banner border border-line/60 bg-white/95 px-5 py-3 text-sm font-medium text-ink shadow-soft">
+          <div class="flex items-center gap-3 rounded-banner border border-line/60 bg-surface/95 px-5 py-3 text-sm font-medium text-ink shadow-soft">
             <Spin size="small" />
             <span>页面加载中，请稍候…</span>
           </div>

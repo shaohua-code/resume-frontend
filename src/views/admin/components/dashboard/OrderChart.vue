@@ -5,7 +5,7 @@
  */
 import { computed } from 'vue'
 import BaseChart from '@/components/charts/BaseChart.vue'
-import CHART_COLORS, { CHART_GRADIENT } from '../../utils/chartTheme.js'
+import { useChartTheme } from '../../utils/chartTheme.js'
 
 const props = defineProps({
   months: {
@@ -22,6 +22,7 @@ const props = defineProps({
   },
 })
 
+const { chartGradient, chartUi } = useChartTheme()
 const axisLabels = computed(() => props.months.map((item) => `${Number(item.split('-')[1])}月`))
 
 const option = computed(() => ({
@@ -31,13 +32,13 @@ const option = computed(() => ({
   xAxis: {
     type: 'category',
     data: axisLabels.value,
-    axisLine: { lineStyle: { color: '#E8ECEF' } },
-    axisLabel: { color: '#9CA3AF' },
+    axisLine: { lineStyle: { color: chartUi.value.axis } },
+    axisLabel: { color: chartUi.value.label },
   },
   yAxis: {
     type: 'value',
-    splitLine: { lineStyle: { color: '#F7F9FA' } },
-    axisLabel: { color: '#9CA3AF' },
+    splitLine: { lineStyle: { color: chartUi.value.splitLine } },
+    axisLabel: { color: chartUi.value.label },
   },
   series: [
     {
@@ -51,8 +52,8 @@ const option = computed(() => ({
           type: 'linear',
           x: 0, y: 0, x2: 0, y2: 1,
           colorStops: [
-            { offset: 0, color: CHART_GRADIENT.start },
-            { offset: 1, color: CHART_GRADIENT.end },
+            { offset: 0, color: chartGradient.value.start },
+            { offset: 1, color: chartGradient.value.end },
           ],
         },
       },

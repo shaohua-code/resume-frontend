@@ -1,5 +1,5 @@
 /**
- * 27 套模板字体颜色独立默认预设
+ * 50 套模板字体颜色独立默认预设
  * - label / basicValue / name / content 对应编辑器四项颜色
  * - 用户未自定义（null）时由 CSS fallback 与本表 picker 展示值共同决定
  */
@@ -56,6 +56,31 @@ export const TEMPLATE_FONT_COLOR_PRESETS = {
   26: { label: '#b85f2e', basicValue: '#29465a', name: '#173f5f', content: '#344754' },
   // 27. 起跑计划：青绿标签与深海蓝正文，传达清爽的成长感。
   27: { label: '#0f7f78', basicValue: '#24444d', name: '#ffffff', content: '#304751' },
+  // 28–47. 新增模板分别使用与其版式匹配的四类字体色，且保留用户覆盖能力。
+  28: { label: '#c62828', basicValue: '#263238', name: '#111827', content: '#303846' },
+  29: { label: '#9c7a3c', basicValue: '#2b2925', name: '#171717', content: '#2f2f2f' },
+  30: { label: '#047c8f', basicValue: '#254b55', name: '#0e5b6b', content: '#304b55' },
+  31: { label: '#b6536f', basicValue: '#5d3c48', name: '#784154', content: '#59454b' },
+  32: { label: '#7dd3fc', basicValue: '#f0f9ff', name: '#ffffff', content: '#12354a' },
+  33: { label: '#a34e37', basicValue: '#5b4237', name: '#6d3527', content: '#4c403a' },
+  34: { label: '#7dd3fc', basicValue: '#ffffff', name: '#ffffff', content: '#293d4b' },
+  35: { label: '#697c78', basicValue: '#34434c', name: '#22313b', content: '#3c474d' },
+  36: { label: '#4dffc3', basicValue: '#dbfff3', name: '#79ffd4', content: '#d1eee6' },
+  37: { label: '#a4473d', basicValue: '#4c3c32', name: '#5b2a28', content: '#403832' },
+  38: { label: '#e05a7a', basicValue: '#463750', name: '#4b2a60', content: '#41394b' },
+  39: { label: '#5e70aa', basicValue: '#39445c', name: '#405083', content: '#374052' },
+  40: { label: '#8a5b24', basicValue: '#4b4032', name: '#4e3926', content: '#494139' },
+  41: { label: '#5379ac', basicValue: '#364b5c', name: '#494797', content: '#344859' },
+  42: { label: '#111111', basicValue: '#111111', name: '#111111', content: '#1c1c1c' },
+  43: { label: '#b6904b', basicValue: '#33475a', name: '#173f5f', content: '#344452' },
+  44: { label: '#d76f19', basicValue: '#405d55', name: '#a8501e', content: '#3e4b47' },
+  45: { label: '#ffffff', basicValue: '#ffffff', name: '#ffffff', content: '#171717' },
+  46: { label: '#75e8ff', basicValue: '#e4fbff', name: '#ffffff', content: '#dce9ff' },
+  47: { label: '#8b6f47', basicValue: '#51483c', name: '#5c4630', content: '#49443c' },
+  // 48–50. 校招成长档案、实践冲刺与新星作品集使用各自独立的文字层级。
+  48: { label: '#9a6b16', basicValue: '#3e514a', name: '#275d4d', content: '#384740' },
+  49: { label: '#76e0d2', basicValue: '#ffffff', name: '#ffffff', content: '#304154' },
+  50: { label: '#5a44b5', basicValue: '#302b46', name: '#392a78', content: '#3d3850' },
 }
 
 /** 获取指定模板的字体色默认值（供颜色选择器展示） */

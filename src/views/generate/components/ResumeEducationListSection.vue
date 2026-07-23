@@ -31,7 +31,7 @@ function removeEducation(index) {
       >
         <div class="mb-3 flex items-center justify-between">
           <span class="text-sm font-semibold text-ink">教育经历 {{ index + 1 }}</span>
-          <button type="button" class="text-sm font-medium text-danger hover:text-red-500" @click="removeEducation(index)">
+          <button type="button" class="text-sm font-medium text-danger hover:text-danger/80" @click="removeEducation(index)">
             删除
           </button>
         </div>

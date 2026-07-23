@@ -359,7 +359,7 @@ function handleCancel() {
               </div>
               <button
                 type="button"
-                class="shrink-0 rounded-lg p-2 text-muted transition-colors hover:bg-red-50 hover:text-danger"
+                class="shrink-0 rounded-lg p-2 text-muted transition-colors hover:bg-danger/10 hover:text-danger"
                 @click.stop="clearJdImage"
               >
                 <DeleteOutlined />

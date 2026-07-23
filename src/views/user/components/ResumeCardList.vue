@@ -5,7 +5,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { DeleteOutlined } from '@ant-design/icons-vue'
-import THEME from '@/constants/theme'
+import { useTheme } from '@/composables/useTheme'
 import { formatDateTime } from '@/utils/date'
 
 const props = defineProps({
@@ -34,12 +34,13 @@ const props = defineProps({
 const emit = defineEmits(['update:selectedKeys', 'delete'])
 
 const router = useRouter()
+const { chartColors } = useTheme()
 
 /** 根据评分返回进度条颜色 */
 function getScoreColor(score) {
-  if (score >= 80) return THEME.chart.success
-  if (score >= 60) return THEME.chart.warning
-  return THEME.chart.danger
+  if (score >= 80) return chartColors.value.success
+  if (score >= 60) return chartColors.value.warning
+  return chartColors.value.danger
 }
 
 /** 切换单条简历的选中状态 */
@@ -62,7 +63,7 @@ function handleEdit(id) {
     <div
       v-for="record in list"
       :key="record.id"
-      class="rounded-card border border-line/60 bg-white p-4 shadow-sm"
+      class="rounded-card border border-line/60 bg-surface p-4 shadow-card"
     >
       <div class="flex items-start gap-3">
         <!-- 批量选择复选框 -->
@@ -97,7 +98,7 @@ function handleEdit(id) {
         <a-popconfirm title="确定删除？" @confirm="emit('delete', record.id)">
           <button
             type="button"
-            class="btn-ghost-sm flex-1 border-danger/30 text-danger hover:bg-red-50"
+            class="btn-ghost-sm flex-1 border-danger/30 text-danger hover:bg-danger/10"
           >
             <DeleteOutlined /> 删除
           </button>

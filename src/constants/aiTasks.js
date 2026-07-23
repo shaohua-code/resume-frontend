@@ -43,6 +43,15 @@ export const AI_TASK_TYPE_LABEL_MAP = {
   [AI_TASK_TYPES.JD_IMAGE_EXTRACT]: 'JD图片提取',
 }
 
+// 流水备注可能混入任务标识；由映射表动态生成规则，新增任务时无需再维护另一份硬编码名单。
+const AI_TASK_TYPE_TEXT_PATTERN = new RegExp(
+  Object.keys(AI_TASK_TYPE_LABEL_MAP)
+    .sort((left, right) => right.length - left.length)
+    .map((taskType) => taskType.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|'),
+  'g',
+)
+
 /**
  * 模型能力类型。模型与任务分开管理，后续可继续增加 audio、image 等类型。
  */
@@ -74,6 +83,16 @@ export function getAiModelTypeLabel(modelType) {
  */
 export function getAiTaskLabel(taskType) {
   return AI_TASK_TYPE_LABEL_MAP[taskType] || taskType || '-'
+}
+
+/**
+ * 把任意展示文本中的已知任务标识全部替换为中文，确保流水等混合文案与任务映射始终同步。
+ * @param {unknown} text - 可能包含一个或多个任务标识的展示文本
+ * @returns {string} 已替换任务名称的用户可见文本
+ */
+export function replaceAiTaskLabels(text) {
+  const source = String(text || '')
+  return source.replace(AI_TASK_TYPE_TEXT_PATTERN, (taskType) => getAiTaskLabel(taskType))
 }
 
 /**

@@ -826,7 +826,7 @@ watch(
 .editor-modal-input,
 .editor-modal-select,
 .editor-modal-textarea {
-  @apply rounded-button border-line bg-white px-4 py-2 text-sm text-ink placeholder:text-muted transition-colors hover:border-brand-lighter focus:border-brand focus:ring-2 focus:ring-brand/10;
+  @apply rounded-button border-line bg-surface px-4 py-2 text-sm text-ink placeholder:text-muted transition-colors hover:border-brand-lighter focus:border-brand focus:ring-2 focus:ring-brand/10;
 }
 
 .editor-modal :deep(.ant-form-item-label > label) {

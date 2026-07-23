@@ -276,6 +276,7 @@ function applyRecognizedResume(recognized) {
     target_position: merged.target_position || '',
     phone: merged.phone || '',
     email: merged.email || '',
+    summary: merged.summary || '',
     work_years: merged.work_years || '',
     marital_status: merged.marital_status || undefined,
     height: merged.height || '',
@@ -693,7 +694,7 @@ async function goToEditor() {
     />
 
     <div
-      class="relative mb-4 overflow-hidden border border-line/60 bg-white shadow-sm"
+      class="relative mb-4 overflow-hidden border border-line/60 bg-surface shadow-card"
       :class="tabsStuck ? 'rounded-card' : 'rounded-b-card border-t-0'"
     >
       <div
@@ -705,10 +706,11 @@ async function goToEditor() {
         <!-- 内容区限宽居中，避免宽屏左右空、表单拉得过散 -->
         <div class="mx-auto w-full max-w-3xl">
           <template v-if="activeFormTab === 'basic'">
+            <!-- 个人评价复用既有 summary 字段，保持选填并承接识别结果回填。 -->
             <ResumeBasicFieldsSection
               ref="basicFieldsRef"
               v-model="draft.basic"
-              :show-summary="false"
+              :show-summary="true"
               :show-avatar="false"
               collapsible-advanced
               :disabled="formLocked"
@@ -743,9 +745,9 @@ async function goToEditor() {
       <!-- 锁定层只覆盖表单内容，不挡住吸顶 Tab -->
       <div
         v-if="formLocked"
-        class="pointer-events-none absolute inset-0 z-10 flex items-start justify-center bg-white/20 pt-16 backdrop-blur-[1px]"
+        class="pointer-events-none absolute inset-0 z-10 flex items-start justify-center bg-surface/20 pt-16 backdrop-blur-[1px]"
       >
-        <div class="rounded-full bg-white/95 px-4 py-2 text-sm font-medium text-brand-dark shadow-card">
+        <div class="rounded-full bg-surface/95 px-4 py-2 text-sm font-medium text-brand-dark shadow-card">
           <a-spin size="small" class="mr-2" />{{ recognitionLoading ? '识别中，表单暂时锁定' : 'AI 输出中，表单暂时锁定' }}
         </div>
       </div>
@@ -753,7 +755,7 @@ async function goToEditor() {
 
     <!-- 吸底操作栏：两按钮始终横排 -->
     <div
-      class="fixed bottom-0 left-0 right-0 z-40 border-t border-line/50 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(31,41,55,0.06)] backdrop-blur-sm"
+      class="fixed bottom-0 left-0 right-0 z-40 border-t border-line/50 bg-surface/95 pb-[env(safe-area-inset-bottom)] shadow-card backdrop-blur-sm"
     >
       <div class="mx-auto flex max-w-3xl flex-row items-center justify-center gap-2 px-3 py-3 sm:gap-3 sm:px-6">
         <GradientButton
@@ -780,7 +782,7 @@ async function goToEditor() {
     <div
       v-if="hasGenerationPanel"
       ref="generationPanelRef"
-      class="mt-5 overflow-hidden rounded-card border border-line/40 bg-white px-4 py-5 sm:px-6"
+      class="mt-5 overflow-hidden rounded-card border border-line/40 bg-surface px-4 py-5 sm:px-6"
     >
       <div class="mb-4 flex items-center gap-2 text-base font-semibold text-ink">
         <a-spin v-if="generationLoading" size="small" />

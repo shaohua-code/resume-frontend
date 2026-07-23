@@ -133,7 +133,7 @@ function handleClose() {
         </div>
         <div class="min-w-0">
           <p class="mb-2 text-xs font-semibold tracking-wide text-brand-dark">优化后</p>
-          <div class="max-h-[42vh] overflow-y-auto rounded-card border border-brand/30 bg-white p-3 text-sm leading-6 whitespace-pre-wrap text-ink shadow-soft">
+          <div class="max-h-[42vh] overflow-y-auto rounded-card border border-brand/30 bg-surface p-3 text-sm leading-6 whitespace-pre-wrap text-ink shadow-soft">
             <slot v-if="useAfterSlot" name="after" />
             <template v-else>{{ displayAfter }}</template>
           </div>
@@ -144,7 +144,7 @@ function handleClose() {
         <div
           v-for="section in changedSections"
           :key="section.key"
-          class="rounded-card border border-line/50 bg-white p-3"
+          class="rounded-card border border-line/50 bg-surface p-3"
         >
           <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div class="min-w-0">
@@ -206,7 +206,7 @@ function handleClose() {
       </div>
       <div class="min-w-0">
         <p class="mb-2 text-xs font-semibold tracking-wide text-brand-dark">优化后</p>
-        <div class="max-h-[36vh] overflow-y-auto rounded-card border border-brand/30 bg-white p-3 text-sm leading-6 whitespace-pre-wrap text-ink shadow-soft">
+        <div class="max-h-[36vh] overflow-y-auto rounded-card border border-brand/30 bg-surface p-3 text-sm leading-6 whitespace-pre-wrap text-ink shadow-soft">
           <slot v-if="useAfterSlot" name="after" />
           <template v-else>{{ displayAfter }}</template>
         </div>
@@ -217,7 +217,7 @@ function handleClose() {
       <div
         v-for="section in changedSections"
         :key="section.key"
-        class="rounded-card border border-line/50 bg-white p-3"
+        class="rounded-card border border-line/50 bg-surface p-3"
       >
         <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div class="min-w-0">

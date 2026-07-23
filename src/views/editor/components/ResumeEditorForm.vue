@@ -187,7 +187,7 @@ const educationsModel = computed({
       <div v-for="(proj, i) in (resume.projects || [])" :key="i" class="mb-4 border-b border-dashed border-line/60 pb-4">
         <div class="mb-2 flex items-center justify-between text-sm font-semibold text-ink">
           <span>项目{{ i + 1 }}：{{ proj.name || '未命名' }}</span>
-          <button class="text-sm font-medium text-danger transition-colors hover:text-red-500" @click="removeProject(i)">删除</button>
+          <button class="text-sm font-medium text-danger transition-colors hover:text-danger/80" @click="removeProject(i)">删除</button>
         </div>
         <a-form layout="vertical" size="small">
           <a-row :gutter="[12, 0]">
@@ -216,7 +216,7 @@ const educationsModel = computed({
       <div v-for="(intern, i) in (resume.internships || [])" :key="i" class="mb-4 border-b border-dashed border-line/60 pb-4">
         <div class="mb-2 flex items-center justify-between text-sm font-semibold text-ink">
           <span>{{ intern.company || `实习${i + 1}` }}</span>
-          <button class="text-sm font-medium text-danger transition-colors hover:text-red-500" @click="removeInternship(i)">删除</button>
+          <button class="text-sm font-medium text-danger transition-colors hover:text-danger/80" @click="removeInternship(i)">删除</button>
         </div>
         <a-form layout="vertical" size="small">
           <a-row :gutter="[12, 0]">
@@ -245,7 +245,7 @@ const educationsModel = computed({
         <!-- 标题行：序号 + 公司名称 + 删除按钮 -->
         <div class="mb-2 flex items-center justify-between text-sm font-semibold text-ink">
           <span>工作{{ i + 1 }}：{{ exp.company || '未命名' }}</span>
-          <button class="text-sm font-medium text-danger transition-colors hover:text-red-500" @click="removeWorkExperience(i)">删除</button>
+          <button class="text-sm font-medium text-danger transition-colors hover:text-danger/80" @click="removeWorkExperience(i)">删除</button>
         </div>
         <a-form layout="vertical" size="small">
           <a-row :gutter="[16, 0]">

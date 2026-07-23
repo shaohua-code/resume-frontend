@@ -81,7 +81,7 @@ function removeAvatar() {
       <button
         v-if="avatarUrl"
         type="button"
-        class="flex items-center gap-1 text-sm text-muted transition-colors hover:text-red-500"
+        class="flex items-center gap-1 text-sm text-muted transition-colors hover:text-danger"
         @click="removeAvatar"
       >
         <DeleteOutlined />

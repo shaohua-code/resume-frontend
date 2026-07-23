@@ -4,7 +4,7 @@
  */
 import { computed } from 'vue'
 import BaseChart from '@/components/charts/BaseChart.vue'
-import CHART_COLORS from '../../utils/chartTheme.js'
+import { useChartTheme } from '../../utils/chartTheme.js'
 
 const props = defineProps({
   totalBalance: {
@@ -21,6 +21,7 @@ const props = defineProps({
   },
 })
 
+const { chartColors, chartUi } = useChartTheme()
 const consumedPercent = computed(() => {
   const total = props.totalBalance + props.totalConsumed
   if (!total) return 0
@@ -42,12 +43,12 @@ const option = computed(() => ({
         formatter: `${consumedPercent.value}%`,
         fontSize: 22,
         fontWeight: 'bold',
-        color: '#1F2937',
+        color: chartUi.value.text,
       },
       labelLine: { show: false },
       data: [
-        { value: props.totalBalance, name: '账户余额', itemStyle: { color: CHART_COLORS.primary } },
-        { value: props.totalConsumed, name: '累计消费', itemStyle: { color: CHART_COLORS.warning } },
+        { value: props.totalBalance, name: '账户余额', itemStyle: { color: chartColors.value.primary } },
+        { value: props.totalConsumed, name: '累计消费', itemStyle: { color: chartColors.value.warning } },
       ],
     },
   ],

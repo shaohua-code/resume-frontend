@@ -109,7 +109,7 @@
               title="确定批量删除选中的简历？"
               @confirm="handleBatchDelete"
             >
-              <button class="btn-ghost-sm border-danger/30 text-danger hover:bg-red-50">
+              <button class="btn-ghost-sm border-danger/30 text-danger hover:bg-danger/10">
                 <DeleteOutlined /> 批量删除 ({{ selectedRowKeys.length }})
               </button>
             </a-popconfirm>
@@ -173,7 +173,7 @@
                   <div class="flex items-center gap-3">
                     <button class="link-text" @click="router.push(`/editor/${record.id}`)">编辑</button>
                     <a-popconfirm title="确定删除？" @confirm="handleDelete(record.id)">
-                      <button class="text-sm font-medium transition-colors text-danger hover:text-red-500">删除</button>
+                      <button class="text-sm font-medium transition-colors text-danger hover:text-danger/80">删除</button>
                     </a-popconfirm>
                   </div>
                 </template>
@@ -255,7 +255,7 @@ import { useWalletStore } from '@/stores/wallet'
 import { useResumeStore } from '@/stores/resume'
 import { getRoleLabel, getStatusLabel, formatBalanceText } from '@/constants/roles'
 import { getTemplateName } from '@/constants/templateNames'
-import THEME from '@/constants/theme'
+import { useTheme } from '@/composables/useTheme'
 import GradientButton from '@/components/GradientButton.vue'
 import UsagePanel from './components/UsagePanel.vue'
 import UserProfilePanel from './components/UserProfilePanel.vue'
@@ -272,6 +272,7 @@ const userStore = useUserStore()
 const walletStore = useWalletStore()
 const resumeStore = useResumeStore()
 const isMobile = useMediaQuery()
+const { chartColors } = useTheme()
 const loading = ref(false)
 const activeTab = ref('resumes')
 const mobilePage = ref(1)
@@ -363,9 +364,9 @@ function onSelectChange(keys) {
 }
 
 function getScoreColor(score) {
-  if (score >= 80) return THEME.chart.success
-  if (score >= 60) return THEME.chart.warning
-  return THEME.chart.danger
+  if (score >= 80) return chartColors.value.success
+  if (score >= 60) return chartColors.value.warning
+  return chartColors.value.danger
 }
 
 /** 拉取管理员是否开放用户自定义模型 / 提示词 */
@@ -462,11 +463,10 @@ function handleLogout() {
   gap: 24px;
   overflow: hidden;
   padding: 42px 44px 72px;
-  border: 1px solid rgba(255, 255, 255, .12);
-  border-radius: 24px;
-  background:
-    linear-gradient(125deg, rgba(15, 23, 42, .98), rgba(20, 46, 67, .96) 58%, rgba(38, 35, 78, .95));
-  box-shadow: 0 24px 70px rgba(15, 23, 42, .16);
+  border: 1px solid rgb(var(--color-brand-light-rgb) / .28);
+  border-radius: var(--radius-banner);
+  background: var(--gradient-hero);
+  box-shadow: var(--shadow-lift);
   color: white;
 }
 
@@ -478,7 +478,7 @@ function handleLogout() {
 .workspace-eyebrow {
   display: inline-flex;
   margin-bottom: 12px;
-  color: #67e8f9;
+  color: rgba(255, 255, 255, .9);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: .22em;
@@ -494,7 +494,7 @@ function handleLogout() {
 
 .workspace-hero p {
   margin: 12px 0 0;
-  color: rgba(226, 232, 240, .76);
+  color: rgba(255, 255, 255, .78);
   font-size: 15px;
 }
 
@@ -506,7 +506,7 @@ function handleLogout() {
 
 .hero-orbit {
   position: absolute;
-  border: 1px solid rgba(103, 232, 249, .18);
+  border: 1px solid rgb(var(--color-brand-light-rgb) / .3);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -516,7 +516,7 @@ function handleLogout() {
   right: -42px;
   width: 320px;
   height: 320px;
-  box-shadow: inset 0 0 70px rgba(168, 85, 247, .09);
+  box-shadow: inset 0 0 70px rgb(var(--color-accent-rgb) / .18);
 }
 
 .hero-orbit-two {
@@ -524,7 +524,7 @@ function handleLogout() {
   bottom: -120px;
   width: 230px;
   height: 230px;
-  border-color: rgba(168, 85, 247, .2);
+  border-color: rgb(var(--color-accent-rgb) / .32);
 }
 
 .account-overview {
@@ -536,11 +536,11 @@ function handleLogout() {
   gap: 28px;
   margin: -42px 24px 24px;
   padding: 22px 24px;
-  border: 1px solid rgba(226, 232, 240, .82);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, .94);
-  box-shadow: 0 18px 46px rgba(15, 23, 42, .11);
-  backdrop-filter: blur(18px);
+  border: 1px solid rgb(var(--color-line-rgb) / .82);
+  border-radius: var(--radius-banner);
+  background: var(--glass-background);
+  box-shadow: var(--shadow-lift);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
 }
 
 .account-identity {
@@ -552,9 +552,9 @@ function handleLogout() {
 
 .account-avatar {
   flex: 0 0 auto;
-  border: 4px solid white;
-  background: linear-gradient(135deg, #0e7490, #4f46e5 55%, #a855f7);
-  box-shadow: 0 8px 24px rgba(79, 70, 229, .22);
+  border: 4px solid var(--color-surface);
+  background: var(--gradient-hero);
+  box-shadow: var(--shadow-float);
   color: white;
   font-size: 24px;
   font-weight: 800;
@@ -575,7 +575,7 @@ function handleLogout() {
   min-width: 0;
   margin: 0;
   overflow: hidden;
-  color: #172033;
+  color: var(--color-ink);
   font-size: 20px;
   font-weight: 800;
   text-overflow: ellipsis;
@@ -585,10 +585,10 @@ function handleLogout() {
 .role-pill {
   flex: 0 0 auto;
   padding: 3px 8px;
-  border: 1px solid #bae6fd;
-  border-radius: 999px;
-  background: #ecfeff;
-  color: #0e7490;
+  border: 1px solid rgb(var(--color-brand-rgb) / .28);
+  border-radius: var(--radius-pill);
+  background: var(--color-brand-lighter);
+  color: var(--color-brand-dark);
   font-size: 11px;
   font-weight: 700;
 }
@@ -597,7 +597,7 @@ function handleLogout() {
   max-width: 280px;
   margin: 5px 0 8px;
   overflow: hidden;
-  color: #64748b;
+  color: var(--color-ink-secondary);
   font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -617,10 +617,10 @@ function handleLogout() {
   border-radius: 50%;
 }
 
-.account-status--active { color: #047857; }
-.account-status--active i { background: #10b981; box-shadow: 0 0 0 4px #d1fae5; }
-.account-status--danger { color: #dc2626; }
-.account-status--danger i { background: #ef4444; box-shadow: 0 0 0 4px #fee2e2; }
+.account-status--active { color: var(--color-success); }
+.account-status--active i { background: var(--color-success); box-shadow: 0 0 0 4px rgb(var(--color-success-rgb) / .16); }
+.account-status--danger { color: var(--color-danger); }
+.account-status--danger i { background: var(--color-danger); box-shadow: 0 0 0 4px rgb(var(--color-danger-rgb) / .16); }
 
 .account-status-row {
   display: flex;
@@ -634,18 +634,19 @@ function handleLogout() {
   align-items: center;
   min-height: 28px;
   padding: 0 10px;
-  border: 1px solid #dbe3ef;
-  border-radius: 999px;
-  background: #fff;
-  color: #334155;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-ink-secondary);
   font-size: 12px;
   font-weight: 600;
   transition: background .15s ease, border-color .15s ease;
 }
 
 .account-edit-button:hover {
-  border-color: #94a3b8;
-  background: #f8fafc;
+  border-color: var(--color-brand-light);
+  background: var(--color-brand-lighter);
+  color: var(--color-brand-dark);
 }
 
 .account-metrics {
@@ -657,14 +658,14 @@ function handleLogout() {
 .metric-card {
   min-width: 0;
   padding: 12px 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 13px;
-  background: #f8fafc;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-button);
+  background: var(--color-canvas);
 }
 
 .metric-card > span {
   display: block;
-  color: #64748b;
+  color: var(--color-ink-secondary);
   font-size: 11px;
   font-weight: 700;
 }
@@ -672,7 +673,7 @@ function handleLogout() {
 .metric-card strong {
   display: block;
   margin-top: 2px;
-  color: #172033;
+  color: var(--color-ink);
   font-size: 20px;
   line-height: 1.3;
 }
@@ -681,7 +682,7 @@ function handleLogout() {
   display: block;
   margin-top: 2px;
   overflow: hidden;
-  color: #94a3b8;
+  color: var(--color-muted);
   font-size: 10px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -691,15 +692,15 @@ function handleLogout() {
   margin-top: 2px;
   border: 0;
   background: transparent;
-  color: #0e7490;
+  color: var(--color-brand-dark);
   cursor: pointer;
   font-size: 11px;
   font-weight: 800;
 }
 
 .metric-card--balance {
-  border-color: #bae6fd;
-  background: linear-gradient(135deg, #ecfeff, #eef2ff);
+  border-color: rgb(var(--color-brand-rgb) / .28);
+  background: linear-gradient(135deg, rgb(var(--color-brand-lighter-rgb) / .92), rgb(var(--color-accent-lighter-rgb) / .82));
 }
 
 .logout-button {
@@ -710,10 +711,10 @@ function handleLogout() {
   justify-content: center;
   gap: 7px;
   padding: 0 12px;
-  border: 1px solid #fecaca;
-  border-radius: 12px;
-  background: #fff;
-  color: #dc2626;
+  border: 1px solid rgb(var(--color-danger-rgb) / .25);
+  border-radius: var(--radius-button);
+  background: var(--color-surface);
+  color: var(--color-danger);
   cursor: pointer;
   font-size: 13px;
   font-weight: 700;
@@ -721,8 +722,8 @@ function handleLogout() {
 }
 
 .logout-button:hover {
-  border-color: #fca5a5;
-  background: #fef2f2;
+  border-color: var(--color-danger);
+  background: rgb(var(--color-danger-rgb) / .1);
 }
 
 .workspace-layout {
@@ -736,11 +737,11 @@ function handleLogout() {
   position: sticky;
   top: 88px;
   padding: 16px;
-  border: 1px solid rgba(226, 232, 240, .8);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, .82);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, .05);
-  backdrop-filter: blur(14px);
+  border: 1px solid rgb(var(--color-line-rgb) / .8);
+  border-radius: var(--radius-card);
+  background: var(--glass-background);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
 }
 
 .workspace-nav-group + .workspace-nav-group {
@@ -749,7 +750,7 @@ function handleLogout() {
 
 .workspace-nav-label {
   margin: 0 8px 8px;
-  color: #94a3b8;
+  color: var(--color-muted);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: .14em;
@@ -769,25 +770,25 @@ function handleLogout() {
   min-height: 58px;
   padding: 9px 10px;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: var(--radius-button);
   background: transparent;
-  color: #475569;
+  color: var(--color-ink-secondary);
   cursor: pointer;
   text-align: left;
   transition: .2s ease;
 }
 
 .workspace-nav-item:hover:not(:disabled) {
-  border-color: #cffafe;
-  background: #f0fdff;
-  color: #0e7490;
+  border-color: rgb(var(--color-brand-rgb) / .28);
+  background: var(--color-brand-lighter);
+  color: var(--color-brand-dark);
 }
 
 .workspace-nav-item--active {
-  border-color: #bae6fd;
-  background: linear-gradient(135deg, #ecfeff, #eef2ff);
-  color: #0f6175;
-  box-shadow: inset 3px 0 0 #06b6d4;
+  border-color: rgb(var(--color-brand-rgb) / .36);
+  background: linear-gradient(135deg, rgb(var(--color-brand-lighter-rgb) / .95), rgb(var(--color-accent-lighter-rgb) / .78));
+  color: var(--color-brand-dark);
+  box-shadow: inset 3px 0 0 var(--color-brand);
 }
 
 .workspace-nav-item--disabled {
@@ -801,9 +802,9 @@ function handleLogout() {
   height: 38px;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  background: white;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-button);
+  background: var(--color-surface);
   font-size: 17px;
 }
 
@@ -826,15 +827,15 @@ function handleLogout() {
 
 .workspace-nav-copy small {
   margin-top: 2px;
-  color: #94a3b8;
+  color: var(--color-muted);
   font-size: 10px;
 }
 
 .workspace-nav-badge {
   padding: 2px 6px;
-  border-radius: 999px;
-  background: #f1f5f9;
-  color: #64748b;
+  border-radius: var(--radius-pill);
+  background: var(--color-canvas);
+  color: var(--color-ink-secondary);
   font-size: 9px;
   font-weight: 800;
   white-space: nowrap;
@@ -845,24 +846,24 @@ function handleLogout() {
   gap: 10px;
   margin-top: 20px;
   padding: 12px;
-  border: 1px dashed #cbd5e1;
-  border-radius: 12px;
-  background: #f8fafc;
+  border: 1px dashed var(--color-line);
+  border-radius: var(--radius-button);
+  background: var(--color-canvas);
 }
 
 .workspace-sidebar-note > span {
-  color: #7c3aed;
+  color: var(--color-accent);
   font-size: 16px;
 }
 
 .workspace-sidebar-note b {
-  color: #475569;
+  color: var(--color-ink-secondary);
   font-size: 11px;
 }
 
 .workspace-sidebar-note p {
   margin: 4px 0 0;
-  color: #94a3b8;
+  color: var(--color-muted);
   font-size: 10px;
   line-height: 1.55;
 }
@@ -879,15 +880,15 @@ function handleLogout() {
   gap: 20px;
   margin-bottom: 14px;
   padding: 20px 24px;
-  border: 1px solid rgba(226, 232, 240, .8);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, .84);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, .05);
-  backdrop-filter: blur(14px);
+  border: 1px solid rgb(var(--color-line-rgb) / .8);
+  border-radius: var(--radius-card);
+  background: var(--glass-background);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
 }
 
 .workspace-content-header span {
-  color: #0891b2;
+  color: var(--color-brand-dark);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: .16em;
@@ -895,14 +896,14 @@ function handleLogout() {
 
 .workspace-content-header h2 {
   margin: 4px 0 0;
-  color: #172033;
+  color: var(--color-ink);
   font-size: 22px;
   font-weight: 800;
 }
 
 .workspace-content-header p {
   margin: 5px 0 0;
-  color: #64748b;
+  color: var(--color-ink-secondary);
   font-size: 13px;
 }
 
@@ -918,10 +919,10 @@ function handleLogout() {
 }
 
 .workspace-panel {
-  border: 1px solid rgba(226, 232, 240, .8);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, .9);
-  box-shadow: 0 12px 34px rgba(15, 23, 42, .055);
+  border: 1px solid rgb(var(--color-line-rgb) / .8);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .workspace-panel :deep(.ant-card-body) {
@@ -933,15 +934,15 @@ function handleLogout() {
 }
 
 .workspace-panel :deep(.ant-table-thead > tr > th) {
-  border-bottom-color: #e2e8f0;
-  background: #f8fafc;
-  color: #64748b;
+  border-bottom-color: var(--color-line);
+  background: var(--color-canvas);
+  color: var(--color-ink-secondary);
   font-size: 12px;
   font-weight: 700;
 }
 
 .workspace-panel :deep(.ant-table-tbody > tr > td) {
-  border-bottom-color: #edf2f7;
+  border-bottom-color: var(--color-line);
 }
 
 .resume-title-cell {
@@ -959,8 +960,8 @@ function handleLogout() {
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  background: linear-gradient(135deg, #ecfeff, #eef2ff);
-  color: #0891b2;
+  background: var(--gradient-primary);
+  color: #fff;
 }
 
 .resume-title-cell > div {
@@ -977,18 +978,18 @@ function handleLogout() {
 
 .resume-title-cell b {
   max-width: 240px;
-  color: #1e293b;
+  color: var(--color-ink);
   font-size: 13px;
 }
 
 .resume-title-cell small {
   margin-top: 2px;
-  color: #94a3b8;
+  color: var(--color-muted);
   font-size: 10px;
 }
 
 .table-secondary-text {
-  color: #64748b;
+  color: var(--color-ink-secondary);
   font-size: 12px;
 }
 
@@ -999,10 +1000,10 @@ function handleLogout() {
   align-items: center;
   justify-content: center;
   margin-bottom: 16px;
-  border: 1px solid #bae6fd;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #ecfeff, #eef2ff);
-  color: #0891b2;
+  border: 1px solid var(--color-brand-light);
+  border-radius: var(--radius-card);
+  background: var(--color-brand-lighter);
+  color: var(--color-brand-dark);
   font-size: 28px;
 }
 

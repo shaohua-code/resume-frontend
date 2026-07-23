@@ -603,6 +603,8 @@ export function createEmptyBasicForm() {
     target_position: '',
     phone: '',
     email: '',
+    // 个人评价属于基本信息主区，初始化与识别回填都保留稳定字符串字段。
+    summary: '',
     work_years: '',
     marital_status: undefined,
     height: '',

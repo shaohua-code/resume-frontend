@@ -11,21 +11,23 @@ import router from './router'
 import 'ant-design-vue/dist/reset.css'
 import './styles/global.css'
 import { antDesignReady } from '@/utils/uiReady'
-// 全局 Markdown 渲染组件
-import MdRender from '@/components/MdRender.vue'
+import { initializeSystemTheme } from '@/composables/useTheme'
 
 dayjs.locale('zh-cn')
+
+// 在 Vue 挂载前恢复界面主题，避免首屏先显示浏览器默认白底。
+initializeSystemTheme()
 
 const app = createApp(App)
 
 let antDesignPromise
 
-// 缓存完整组件库的加载结果，避免连续导航时重复下载或重复注册。
+// 缓存按需组件清单的加载结果，避免连续导航时重复下载或重复注册。
 function ensureAntDesign() {
   if (antDesignReady.value) return Promise.resolve()
   if (!antDesignPromise) {
-    antDesignPromise = import('ant-design-vue').then(({ default: Antd }) => {
-      app.use(Antd)
+    antDesignPromise = import('@/utils/installAntDesign').then(({ installAntDesign }) => {
+      installAntDesign(app)
       antDesignReady.value = true
     })
   }

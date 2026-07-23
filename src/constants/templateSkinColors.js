@@ -1,5 +1,5 @@
 /**
- * 27 套模板皮肤默认预设（唯一配置源）
+ * 50 套模板皮肤默认预设（唯一配置源）
  * - 11 项字段对应 EditorSkinPanel 自定义颜色
  * - 用户未覆盖（null）时由 mergeSkinThemeWithTemplate + skinThemeToCssVars 注入
  */
@@ -50,7 +50,7 @@ const GRAY_SKIN = {
   topBandBg: '#374151',
 }
 
-/** 27 套模板皮肤独立默认色（含中文注释说明视觉意图） */
+/** 50 套模板皮肤独立默认色（含中文注释说明视觉意图） */
 export const TEMPLATE_SKIN_PRESETS = {
   // 1. 全职业通用：深靛蓝、朱砂橙与薄荷灰编辑杂志
   1: {
@@ -437,6 +437,351 @@ export const TEMPLATE_SKIN_PRESETS = {
     skillBg: '#dcf3ef',
     skillBorder: '#56b8aa',
     topBandBg: '#35b7a6',
+  },
+
+  // 28. 瑞士网格：象牙白、石墨黑与信号红，强调精确栏线。
+  28: {
+    titleColor: '#171717',
+    dividerColor: '#cfd3d4',
+    headerBg: '#f4f5f2',
+    headerBorder: '#1c1c1c',
+    itemBg: '#ffffff',
+    itemBorder: '#c9ced1',
+    basicRowBg: '#ffffff',
+    basicRowBorder: '#b7bdc0',
+    skillBg: '#f2f3f1',
+    skillBorder: '#737b80',
+    topBandBg: '#e63946',
+  },
+
+  // 29. 黑金社论：墨黑刊头、旧纸底与香槟金栏目标记。
+  29: {
+    titleColor: '#171717',
+    dividerColor: '#b9ad96',
+    headerBg: '#f6f0e4',
+    headerBorder: '#24211d',
+    itemBg: '#fffdf8',
+    itemBorder: '#cfc4b2',
+    basicRowBg: '#faf7f0',
+    basicRowBorder: '#9f947f',
+    skillBg: '#efe7d8',
+    skillBorder: '#9c7a3c',
+    topBandBg: '#171717',
+  },
+
+  // 30. 海岸波纹：深海蓝、浅礁青与雾白信息岛。
+  30: {
+    titleColor: '#075f70',
+    dividerColor: '#b5d8dd',
+    headerBg: '#e7f5f7',
+    headerBorder: '#4d8d99',
+    itemBg: '#fbfeff',
+    itemBorder: '#c8e0e4',
+    basicRowBg: '#eff9fa',
+    basicRowBorder: '#9bc7cd',
+    skillBg: '#dff5f2',
+    skillBorder: '#54b7ad',
+    topBandBg: '#0ea5a8',
+  },
+
+  // 31. 樱色手账：柔粉页签、莓果线条与温暖便签纸。
+  31: {
+    titleColor: '#9b4f63',
+    dividerColor: '#e2c2cb',
+    headerBg: '#fff6f7',
+    headerBorder: '#c98999',
+    itemBg: '#fffdfb',
+    itemBorder: '#e5cbd0',
+    basicRowBg: '#fbecef',
+    basicRowBorder: '#d8adb7',
+    skillBg: '#f8dfe6',
+    skillBorder: '#c66f86',
+    topBandBg: '#be6477',
+  },
+
+  // 32. 工程蓝图：深工程蓝、天青标线与冷白图纸。
+  32: {
+    titleColor: '#0c5f84',
+    dividerColor: '#bedce8',
+    headerBg: '#0c4a6e',
+    headerBorder: '#7dd3fc',
+    itemBg: '#f5fbfe',
+    itemBorder: '#75a9bd',
+    basicRowBg: '#164e63',
+    basicRowBorder: '#4f91a9',
+    skillBg: '#e0f2fe',
+    skillBorder: '#38bdf8',
+    topBandBg: '#0284c7',
+  },
+
+  // 33. 陶土卡片：赤陶、燕麦与深棕，突出手作厚度。
+  33: {
+    titleColor: '#7d3f30',
+    dividerColor: '#d7bda9',
+    headerBg: '#f3dfcf',
+    headerBorder: '#9a5947',
+    itemBg: '#fffaf5',
+    itemBorder: '#d9b8a2',
+    basicRowBg: '#f7e9dc',
+    basicRowBorder: '#c89478',
+    skillBg: '#efe1d1',
+    skillBorder: '#ad7357',
+    topBandBg: '#9a4f3b',
+  },
+
+  // 34. 城市路线：深海军蓝、珊瑚站点与浅蓝线路牌。
+  34: {
+    titleColor: '#1d5b76',
+    dividerColor: '#b7cdd6',
+    headerBg: '#173b57',
+    headerBorder: '#4f7892',
+    itemBg: '#ffffff',
+    itemBorder: '#bdd1d9',
+    basicRowBg: '#234d67',
+    basicRowBorder: '#5d8196',
+    skillBg: '#e6f1f4',
+    skillBorder: '#67a6b3',
+    topBandBg: '#f05d5e',
+  },
+
+  // 35. 北欧留白：雾白、冷灰绿与柔和石墨线。
+  35: {
+    titleColor: '#415f5a',
+    dividerColor: '#d4dfdd',
+    headerBg: 'transparent',
+    headerBorder: '#7e9792',
+    itemBg: '#ffffff',
+    itemBorder: '#d9e1df',
+    basicRowBg: '#f4f8f7',
+    basicRowBorder: '#c9d6d3',
+    skillBg: '#eef4f2',
+    skillBorder: '#819d97',
+    topBandBg: '#607f78',
+  },
+
+  // 36. 霓虹终端：深墨绿底、荧光薄荷与电子蓝状态线。
+  36: {
+    titleColor: '#4dffc3',
+    dividerColor: '#24524b',
+    headerBg: '#071a1d',
+    headerBorder: '#2f6c62',
+    itemBg: '#0d2024',
+    itemBorder: '#2b5f57',
+    basicRowBg: '#10272b',
+    basicRowBorder: '#34736a',
+    skillBg: '#11342f',
+    skillBorder: '#39ffb6',
+    topBandBg: '#00c98b',
+  },
+
+  // 37. 东方印鉴：米纸、黛棕与朱砂印章。
+  37: {
+    titleColor: '#6e302d',
+    dividerColor: '#cdbb9c',
+    headerBg: '#fbf4e8',
+    headerBorder: '#6a5140',
+    itemBg: '#fffdf7',
+    itemBorder: '#d8c8ad',
+    basicRowBg: '#f5ecdd',
+    basicRowBorder: '#baa684',
+    skillBg: '#efe5d2',
+    skillBorder: '#9c7651',
+    topBandBg: '#a4473d',
+  },
+
+  // 38. 丝带作品：梅紫、莓红与柔雾紫展板。
+  38: {
+    titleColor: '#5d3676',
+    dividerColor: '#d9cde0',
+    headerBg: '#f2eaf4',
+    headerBorder: '#725184',
+    itemBg: '#fffafd',
+    itemBorder: '#dfcedc',
+    basicRowBg: '#eee2f0',
+    basicRowBorder: '#a88aaf',
+    skillBg: '#f4e1e8',
+    skillBorder: '#d16d8a',
+    topBandBg: '#e05a7a',
+  },
+
+  // 39. 水晶面板：雾紫蓝、薄荷切面与通透灰线。
+  39: {
+    titleColor: '#5066a5',
+    dividerColor: '#d4d9e8',
+    headerBg: '#f4f6fb',
+    headerBorder: '#8291bd',
+    itemBg: '#fbfcff',
+    itemBorder: '#ccd3e6',
+    basicRowBg: '#eef1fa',
+    basicRowBorder: '#a6b0d0',
+    skillBg: '#e4f4ef',
+    skillBorder: '#74bda8',
+    topBandBg: '#7183c5',
+  },
+
+  // 40. 纸本账册：牛皮棕、账簿绿灰与纸张米白。
+  40: {
+    titleColor: '#6f4a25',
+    dividerColor: '#d4c6ac',
+    headerBg: '#f4ecdd',
+    headerBorder: '#6b5a42',
+    itemBg: '#fffdf7',
+    itemBorder: '#cbbd9f',
+    basicRowBg: '#f6efe1',
+    basicRowBorder: '#aa9672',
+    skillBg: '#e8ede4',
+    skillBorder: '#7f967c',
+    topBandBg: '#9a6b31',
+  },
+
+  // 41. 极光流线：柔紫、湖蓝与薄荷青的连续渐变。
+  41: {
+    titleColor: '#5156a5',
+    dividerColor: '#d2d8e9',
+    headerBg: '#f3f3fb',
+    headerBorder: '#8588bf',
+    itemBg: '#fcfcff',
+    itemBorder: '#d8d8e9',
+    basicRowBg: '#eef3fa',
+    basicRowBorder: '#aab8d3',
+    skillBg: '#e4f5f1',
+    skillBorder: '#66bfb3',
+    topBandBg: '#695fd2',
+  },
+
+  // 42. 包豪斯积木：炭黑、原色红黄与克制纸白。
+  42: {
+    titleColor: '#111111',
+    dividerColor: '#b9b9b9',
+    headerBg: '#f2c230',
+    headerBorder: '#111111',
+    itemBg: '#fffdf5',
+    itemBorder: '#111111',
+    basicRowBg: '#ffffff',
+    basicRowBorder: '#111111',
+    skillBg: '#e7f0ec',
+    skillBorder: '#276f66',
+    topBandBg: '#de3c2f',
+  },
+
+  // 43. 学院徽章：学院蓝、古铜金与年鉴米白。
+  43: {
+    titleColor: '#173f5f',
+    dividerColor: '#c5b999',
+    headerBg: '#fbf8ef',
+    headerBorder: '#173f5f',
+    itemBg: '#fffdf8',
+    itemBorder: '#d4ccb7',
+    basicRowBg: '#f3efe4',
+    basicRowBorder: '#b7a987',
+    skillBg: '#e8eef1',
+    skillBorder: '#7793a5',
+    topBandBg: '#b6904b',
+  },
+
+  // 44. 柑橘工作室：鲜橙、鼠尾草绿与奶油纸色。
+  44: {
+    titleColor: '#a8501e',
+    dividerColor: '#d8d3b8',
+    headerBg: '#fff5dc',
+    headerBorder: '#d57923',
+    itemBg: '#fffdf5',
+    itemBorder: '#e4cca2',
+    basicRowBg: '#f4f0cf',
+    basicRowBorder: '#b9b57e',
+    skillBg: '#e4f1e9',
+    skillBorder: '#64a692',
+    topBandBg: '#ee8b2d',
+  },
+
+  // 45. 黑白索引：纯黑目录块、冷灰线条与白色档案页。
+  45: {
+    titleColor: '#ffffff',
+    dividerColor: '#a3a3a3',
+    headerBg: '#ffffff',
+    headerBorder: '#111111',
+    itemBg: '#ffffff',
+    itemBorder: '#111111',
+    basicRowBg: '#111111',
+    basicRowBorder: '#5c5c5c',
+    skillBg: '#f0f0f0',
+    skillBorder: '#111111',
+    topBandBg: '#111111',
+  },
+
+  // 46. 深空坐标：深靛夜空、电光蓝紫与冰青坐标。
+  46: {
+    titleColor: '#75e8ff',
+    dividerColor: '#334476',
+    headerBg: '#10183a',
+    headerBorder: '#5063a8',
+    itemBg: '#151f43',
+    itemBorder: '#40538b',
+    basicRowBg: '#1b2850',
+    basicRowBorder: '#5266a3',
+    skillBg: '#202f5d',
+    skillBorder: '#6a7cff',
+    topBandBg: '#5268ff',
+  },
+
+  // 47. 亚麻书信：亚麻米、暖棕邮线与鼠尾草信签。
+  47: {
+    titleColor: '#6b5136',
+    dividerColor: '#d4c7b2',
+    headerBg: '#f8f2e8',
+    headerBorder: '#8b765c',
+    itemBg: '#fffdf9',
+    itemBorder: '#d8ccb9',
+    basicRowBg: '#f3ede2',
+    basicRowBorder: '#b9aa91',
+    skillBg: '#e9eee5',
+    skillBorder: '#8ca086',
+    topBandBg: '#8b6f47',
+  },
+
+  // 48. 校园成长档案：学院绿、成长黄与档案米白，强调学习路径。
+  48: {
+    titleColor: '#275d4d',
+    dividerColor: '#c9d3bd',
+    headerBg: '#f6f1df',
+    headerBorder: '#557b6d',
+    itemBg: '#fffdf6',
+    itemBorder: '#d4c9ae',
+    basicRowBg: '#eef3e7',
+    basicRowBorder: '#a8b99c',
+    skillBg: '#e3efe7',
+    skillBorder: '#6fa087',
+    topBandBg: '#e9b949',
+  },
+
+  // 49. 实践冲刺：深蓝看板、活力橙与状态青，突出实习项目成果。
+  49: {
+    titleColor: '#1d5a75',
+    dividerColor: '#c4d4db',
+    headerBg: '#173b67',
+    headerBorder: '#50749a',
+    itemBg: '#ffffff',
+    itemBorder: '#c7d7df',
+    basicRowBg: '#214c76',
+    basicRowBorder: '#5c7fa0',
+    skillBg: '#e4f4f1',
+    skillBorder: '#48b9a8',
+    topBandBg: '#f47a3c',
+  },
+
+  // 50. 新星作品集：展览紫、票签酸橙与薄荷能力证明卡。
+  50: {
+    titleColor: '#4d3ca6',
+    dividerColor: '#d3cee8',
+    headerBg: '#eeeafb',
+    headerBorder: '#6656ad',
+    itemBg: '#fffefe',
+    itemBorder: '#d8d1ea',
+    basicRowBg: '#f3f0fa',
+    basicRowBorder: '#aa9ed1',
+    skillBg: '#e1f3ec',
+    skillBorder: '#5dbb9b',
+    topBandBg: '#d8ff4f',
   },
 }
 

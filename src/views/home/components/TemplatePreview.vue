@@ -64,12 +64,12 @@ function goAllTemplates() {
       class="template-carousel"
     >
       <template #prevArrow>
-        <div class="absolute z-20 hidden items-center justify-center w-8 h-8 -translate-y-1/2 rounded-full cursor-pointer -left-2 top-1/2 bg-white/90 text-brand-dark shadow-card sm:-left-4 sm:flex sm:h-10 sm:w-10">
+        <div class="absolute z-20 hidden items-center justify-center w-8 h-8 -translate-y-1/2 rounded-full cursor-pointer -left-2 top-1/2 bg-surface/90 text-brand-dark shadow-card sm:-left-4 sm:flex sm:h-10 sm:w-10">
           <LeftOutlined />
         </div>
       </template>
       <template #nextArrow>
-        <div class="absolute z-20 hidden items-center justify-center w-8 h-8 -translate-y-1/2 rounded-full cursor-pointer -right-2 top-1/2 bg-white/90 text-brand-dark shadow-card sm:-right-4 sm:flex sm:h-10 sm:w-10">
+        <div class="absolute z-20 hidden items-center justify-center w-8 h-8 -translate-y-1/2 rounded-full cursor-pointer -right-2 top-1/2 bg-surface/90 text-brand-dark shadow-card sm:-right-4 sm:flex sm:h-10 sm:w-10">
           <RightOutlined />
         </div>
       </template>

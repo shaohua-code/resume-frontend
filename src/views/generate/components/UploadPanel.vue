@@ -74,7 +74,7 @@
           :max-count="1"
           accept="application/pdf"
           :disabled="uploading"
-          class="upload-dragger-custom rounded-card border border-dashed border-line/60 bg-white/50 transition-colors hover:border-brand/40"
+          class="upload-dragger-custom rounded-card border border-dashed border-line/60 bg-surface/50 transition-colors hover:border-brand/40"
         >
           <p class="ant-upload-drag-icon text-brand-dark">
             <InboxOutlined class="text-5xl" />
@@ -128,7 +128,7 @@
       </a-form>
     </a-card>
 
-    <a-card v-if="optimizeResult" class="mb-4 rounded-card border-0 bg-white shadow-card" :bordered="false">
+    <a-card v-if="optimizeResult" class="mb-4 rounded-card border-0 bg-surface shadow-card" :bordered="false">
       <template #title>
         <span class="flex items-center gap-2 text-base font-semibold text-ink">
           <CheckCircleFilled class="text-success" /> 优化完成

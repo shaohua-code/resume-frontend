@@ -1,5 +1,5 @@
 <!--
-  AI简历风格标准模块（20 套模板共用 DOM 结构，样式由 variant 区分）
+  AI简历风格标准模块（多套模板共用 DOM 结构，样式由 variant 区分）
 -->
 <script setup>
 import { computed } from 'vue'
@@ -29,6 +29,11 @@ const basicInfoItems = computed(() => f.value.basicInfoItems || [])
 function isBasicRowWide(index) {
   const total = basicInfoItems.value.length
   return total % 2 === 1 && index === total - 1
+}
+
+// 经历日期允许只填开始或结束月份；两端都为空时不渲染孤立分隔符。
+function formatDateRange(item = {}) {
+  return [item.start_date, item.end_date].filter(Boolean).join(' ~ ')
 }
 </script>
 
@@ -84,7 +89,7 @@ function isBasicRowWide(index) {
       <div v-for="intern in f.internships" :key="intern.company + intern.start_date" class="rt-item">
         <div class="rt-item-header">
           <strong>{{ intern.company }}</strong>
-          <span>{{ intern.start_date }} ~ {{ intern.end_date }}</span>
+          <span v-if="formatDateRange(intern)">{{ formatDateRange(intern) }}</span>
         </div>
         <p v-if="intern.position" class="rt-sub">{{ intern.position }}</p>
         <p v-if="intern.description" class="rt-desc rt-preserve-text">{{ intern.description }}</p>
@@ -98,7 +103,7 @@ function isBasicRowWide(index) {
       <div v-for="(exp, idx) in f.workExperiences" :key="idx + (exp.company || '')" class="rt-item">
         <div class="rt-item-header">
           <strong>{{ exp.company }}</strong>
-          <span>{{ exp.start_date }} ~ {{ exp.end_date }}</span>
+          <span v-if="formatDateRange(exp)">{{ formatDateRange(exp) }}</span>
         </div>
         <p v-if="exp.position || exp.department" class="rt-sub">
           {{ exp.position }}<template v-if="exp.department"> · {{ exp.department }}</template>
@@ -112,7 +117,7 @@ function isBasicRowWide(index) {
       <div v-for="proj in f.projects" :key="proj.name" class="rt-item">
         <div class="rt-item-header">
           <strong>{{ proj.name }}</strong>
-          <span>{{ proj.start_date }} ~ {{ proj.end_date }}</span>
+          <span v-if="formatDateRange(proj)">{{ formatDateRange(proj) }}</span>
         </div>
         <p v-if="proj.role || proj.tech_stack" class="rt-sub">{{ proj.role }}<template v-if="proj.tech_stack"> | {{ proj.tech_stack }}</template></p>
         <p v-if="proj.description" class="rt-desc rt-preserve-text">{{ proj.description }}</p>

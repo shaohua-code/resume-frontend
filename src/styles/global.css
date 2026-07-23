@@ -4,30 +4,11 @@
 
 /**
  * 全局基础样式
- * CSS 变量默认值与 theme.js 保持同步
+ * CSS 变量默认值由 tailwind.config.js 从 theme.js 注入，运行时由 useTheme 同步。
  */
 
 :root {
-  --color-brand: #00D4FF;
-  --color-brand-light: #4FACFE;
-  --color-brand-lighter: #E0F7FA;
-  --color-brand-dark: #0891B2;
-  --color-accent: #A855F7;
-  --color-accent-light: #C084FC;
-  --color-cream: #F8FAFC;
-  --color-surface: #FFFFFF;
-  --color-surface-soft: rgba(255, 255, 255, 0.72);
-  --color-ink: #1E293B;
-  --color-ink-secondary: #64748B;
-  --color-muted: #94A3B8;
-  --color-line: #E2E8F0;
-  --gradient-primary: linear-gradient(90deg, #00D4FF, #4FACFE, #A855F7);
-  --gradient-hero: linear-gradient(135deg, #00D4FF 0%, #4FACFE 50%, #A855F7 100%);
-  --gradient-glow-border: linear-gradient(135deg, #00D4FF, #4FACFE, #A855F7);
-  --shadow-card: 0 2px 12px rgba(30, 41, 59, 0.06), 0 8px 24px rgba(30, 41, 59, 0.04);
-  --shadow-glow: 0 0 20px rgba(0, 212, 255, 0.3), 0 0 40px rgba(168, 85, 247, 0.15);
-  --radius-card: 16px;
-  --radius-button: 10px;
+  color-scheme: light;
 }
 
 * {
@@ -43,12 +24,27 @@ body,
   overflow-x: hidden;
 }
 
+html {
+  background: var(--color-cream, #F5FBFB);
+}
+
 body {
   font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  color: var(--color-ink);
-  background: var(--color-cream);
+  color: var(--color-ink, #1E293B);
+  background: var(--color-cream, #F5FBFB);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html[data-system-theme] body,
+html[data-system-theme] .system-ui-shell {
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.app-header-glass {
+  border-color: var(--glass-border);
+  background: var(--glass-background);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
 }
 
 ::-webkit-scrollbar {
@@ -57,12 +53,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: rgb(var(--color-muted-rgb) / 0.58);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: rgb(var(--color-muted-rgb) / 0.9);
 }
 
 ::-webkit-scrollbar-track {
@@ -74,10 +70,9 @@ body {
   .page-bg {
     background-color: var(--color-cream);
     background-image:
-      radial-gradient(ellipse at 20% 0%, rgba(0, 212, 255, 0.12) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 100%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
-      linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+      var(--gradient-page-bg),
+      linear-gradient(rgb(var(--color-brand-rgb) / var(--page-grid-opacity)) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--color-brand-rgb) / var(--page-grid-opacity)) 1px, transparent 1px);
     background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
   }
 
@@ -95,6 +90,9 @@ body {
 
   .card-base {
     @apply rounded-card border border-line/60 bg-surface/80 p-5 shadow-card backdrop-blur-sm transition-all duration-300 ease-smooth;
+    background: var(--glass-background);
+    border-color: var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
   }
 
   .card-hover {
@@ -106,7 +104,10 @@ body {
   }
 
   .glass {
-    @apply border border-white/60 bg-white/70 shadow-glass backdrop-blur-xl;
+    @apply border shadow-glass;
+    border-color: var(--glass-border);
+    background: var(--glass-background);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
   }
 
   /* 霓虹渐变边框容器 */
@@ -117,7 +118,9 @@ body {
   }
 
   .glass-glow-inner {
-    @apply rounded-banner bg-white/80 p-5 backdrop-blur-xl;
+    @apply rounded-banner p-5;
+    background: var(--glass-background);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
   }
 
   .btn-primary {
@@ -136,11 +139,11 @@ body {
   }
 
   .btn-ghost {
-    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button border border-line bg-white/60 px-5 py-0 text-sm font-medium leading-none text-ink-secondary backdrop-blur-sm transition-all duration-200 ease-smooth hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button border border-line bg-surface/60 px-5 py-0 text-sm font-medium leading-none text-ink-secondary backdrop-blur-sm transition-all duration-200 ease-smooth hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-ghost-sm {
-    @apply inline-flex h-10 min-h-10 items-center justify-center gap-1.5 rounded-button border border-line bg-white/60 px-3 py-0 text-sm font-medium leading-none text-ink-secondary backdrop-blur-sm transition-all duration-200 ease-smooth hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-1.5 rounded-button border border-line bg-surface/60 px-3 py-0 text-sm font-medium leading-none text-ink-secondary backdrop-blur-sm transition-all duration-200 ease-smooth hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   /* 全宽虚线添加按钮（添加项目/教育/实习等） */
@@ -149,15 +152,20 @@ body {
   }
 
   .btn-mint {
-    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button bg-mint px-5 py-0 text-sm font-medium leading-none text-emerald-700 shadow-sm transition-all duration-200 ease-smooth hover:bg-emerald-200 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button bg-mint px-5 py-0 text-sm font-medium leading-none shadow-sm transition-all duration-200 ease-smooth hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    color: color-mix(in srgb, var(--color-success) 78%, #000);
+  }
+
+  .btn-mint:hover {
+    background: color-mix(in srgb, var(--color-success) 22%, var(--color-surface));
   }
 
   .btn-danger {
-    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button bg-danger px-5 py-0 text-sm font-medium leading-none text-white shadow-sm transition-all duration-200 ease-smooth hover:bg-red-500 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button bg-danger px-5 py-0 text-sm font-medium leading-none text-white shadow-sm transition-all duration-200 ease-smooth hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .input-field {
-    @apply rounded-button border border-line bg-white/80 px-4 py-2.5 text-sm text-ink placeholder:text-muted backdrop-blur-sm transition-colors duration-200 hover:border-brand/40 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15;
+    @apply rounded-button border border-line bg-surface/80 px-4 py-2.5 text-sm text-ink placeholder:text-muted backdrop-blur-sm transition-colors duration-200 hover:border-brand/40 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15;
   }
 
   .link-text {
@@ -179,7 +187,7 @@ body {
 
   /* Hero 主 CTA - 白底实色容器，渐变文字由组件内 span 承载 */
   .btn-hero-primary {
-    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button border-0 bg-white px-5 py-0 text-sm font-semibold leading-none shadow-lift transition-all duration-200 ease-smooth hover:brightness-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button border-0 bg-surface px-5 py-0 text-sm font-semibold leading-none shadow-lift transition-all duration-200 ease-smooth hover:brightness-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-hero-primary:hover {
@@ -192,7 +200,8 @@ body {
   }
 
   .badge-success {
-    @apply inline-flex items-center rounded-pill bg-mint px-2.5 py-0.5 text-xs font-medium text-emerald-700;
+    @apply inline-flex items-center rounded-pill bg-mint px-2.5 py-0.5 text-xs font-medium;
+    color: color-mix(in srgb, var(--color-success) 78%, #000);
   }
 
   .tag-soft {
@@ -216,7 +225,7 @@ body {
   }
 
   .skeleton-soft {
-    @apply animate-shimmer rounded-card bg-gradient-to-r from-canvas via-white to-canvas bg-[length:200%_100%];
+    @apply animate-shimmer rounded-card bg-gradient-to-r from-canvas via-surface to-canvas bg-[length:200%_100%];
   }
 
   .modal-fresh {
@@ -236,7 +245,7 @@ body {
 input.ant-input.input-field:not(textarea),
 .ant-select.input-field .ant-select-selector,
 .ant-picker.input-field {
-  @apply box-border min-h-10 rounded-button border border-line bg-white/80 px-4 text-sm leading-normal text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
+  @apply box-border min-h-10 rounded-button border border-line bg-surface/80 px-4 text-sm leading-normal text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
 }
 
 input.ant-input.input-field:not(textarea) {
@@ -263,7 +272,7 @@ input.ant-input.input-field:not(textarea) {
 
 /* 基础：picker 完整外观（边框、圆角、背景、高度） */
 .ant-picker.input-field {
-  @apply flex h-10 items-center rounded-button border border-line bg-white/80 px-3 py-0 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
+  @apply flex h-10 items-center rounded-button border border-line bg-surface/80 px-3 py-0 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
   min-height: 2.5rem;
 }
 
@@ -287,7 +296,7 @@ input.ant-input.input-field:not(textarea) {
 /* picker 后缀图标（日历图标）：固定在右侧不溢出 */
 .ant-picker.input-field .ant-picker-suffix {
   @apply flex items-center justify-center ml-1 shrink-0;
-  color: rgba(0, 0, 0, 0.25);
+  color: var(--color-muted);
 }
 
 /* picker 聚焦态：品牌色边框 + 光晕 */
@@ -307,7 +316,7 @@ input.ant-input.input-field:not(textarea) {
 /* ====== 选择器（Select）样式 ====== */
 
 .input-field .ant-select-selector {
-  @apply rounded-button border border-line bg-white/80 px-4 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
+  @apply rounded-button border border-line bg-surface/80 px-4 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
 }
 
 .input-field .ant-select-focused .ant-select-selector,
@@ -320,7 +329,7 @@ input.ant-input.input-field:not(textarea) {
 /* affix-wrapper 与 input-field 同元素时须直接设边框（验证码等 suffix 输入框） */
 .ant-input-affix-wrapper.input-field,
 .input-field .ant-input-affix-wrapper {
-  @apply flex min-h-10 items-center rounded-button border border-line bg-white/80 px-4 py-0 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
+  @apply flex min-h-10 items-center rounded-button border border-line bg-surface/80 px-4 py-0 text-sm text-ink backdrop-blur-sm transition-colors duration-200 hover:border-brand/40;
 }
 
 /* large 尺寸：邮箱与验证码等保持同一高度 */
@@ -373,6 +382,107 @@ input.ant-input.input-field:not(textarea) {
   padding-top: 0;
   padding-bottom: 0;
   line-height: 1.25rem;
+}
+
+/* 自定义按钮与输入组件的交互状态全部引用主题令牌。 */
+.btn-primary:focus-visible,
+.btn-primary-sm:focus-visible,
+.btn-ghost:focus-visible,
+.btn-ghost-sm:focus-visible,
+.btn-ghost-dashed:focus-visible,
+.btn-hero-primary:focus-visible,
+.btn-hero-ghost:focus-visible,
+.btn-mint:focus-visible,
+.btn-danger:focus-visible,
+.input-field:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.btn-danger:hover {
+  background: var(--color-danger-hover);
+}
+
+.btn-danger:active {
+  background: var(--color-danger-active);
+}
+
+.btn-primary:disabled,
+.btn-primary-sm:disabled,
+.btn-ghost:disabled,
+.btn-ghost-sm:disabled,
+.btn-ghost-dashed:disabled,
+.btn-hero-primary:disabled,
+.btn-hero-ghost:disabled,
+.btn-mint:disabled,
+.btn-danger:disabled {
+  color: var(--color-disabled-text);
+  box-shadow: none;
+  filter: saturate(0.45);
+}
+
+.btn-ghost:disabled,
+.btn-ghost-sm:disabled,
+.btn-ghost-dashed:disabled {
+  border-color: var(--color-line);
+  background: var(--color-disabled-bg);
+}
+
+.input-field:disabled,
+.input-field[aria-disabled='true'] {
+  border-color: var(--color-line);
+  background: var(--color-disabled-bg);
+  color: var(--color-disabled-text);
+}
+
+/* ConfigProvider 之外的局部覆盖同样使用动态令牌，避免表格/分页/弹窗残留固定颜色。 */
+.system-ui-shell :where(.ant-card, .ant-modal-content, .ant-modal-header, .ant-drawer-content) {
+  background-color: var(--color-surface);
+}
+
+.system-ui-shell :where(.ant-card, .ant-modal-content, .ant-dropdown-menu, .ant-drawer-content) {
+  border-color: var(--color-line);
+  box-shadow: var(--shadow-card);
+}
+
+.system-ui-shell .ant-table-wrapper .ant-table {
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+.system-ui-shell .ant-table-wrapper .ant-table-thead > tr > th {
+  border-bottom-color: var(--color-line);
+  background: var(--color-canvas);
+  color: var(--color-ink-secondary);
+}
+
+.system-ui-shell .ant-table-wrapper .ant-table-tbody > tr > td {
+  border-bottom-color: var(--color-line);
+}
+
+.system-ui-shell .ant-table-wrapper .ant-table-tbody > tr.ant-table-row:hover > td,
+.system-ui-shell .ant-table-wrapper .ant-table-tbody > tr.ant-table-row-selected > td {
+  background: var(--color-brand-lighter);
+}
+
+.system-ui-shell .ant-pagination .ant-pagination-item {
+  border-color: var(--color-line);
+  background: var(--color-surface);
+}
+
+.system-ui-shell .ant-pagination .ant-pagination-item:hover,
+.system-ui-shell .ant-pagination .ant-pagination-item-active {
+  border-color: var(--color-brand);
+  background: var(--color-brand-lighter);
+}
+
+.system-ui-shell :where(.ant-layout-sider, .ant-menu) {
+  background: var(--color-sidebar);
+}
+
+.system-ui-shell :where(.ant-input-disabled, .ant-select-disabled .ant-select-selector) {
+  background: var(--color-disabled-bg) !important;
+  color: var(--color-disabled-text) !important;
 }
 
 /**

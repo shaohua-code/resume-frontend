@@ -1,11 +1,12 @@
 <script setup>
 /**
- * 全部模板预览页 - 20 套模板网格 + 弹窗完整简历预览
+ * 全部模板预览页 - 模板网格 + 弹窗完整简历预览
  */
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import PageHero from '@/components/PageHero.vue'
 import GradientButton from '@/components/GradientButton.vue'
+import LazyRender from '@/components/LazyRender.vue'
 import TemplateMiniPreview from '@/views/home/components/TemplateMiniPreview.vue'
 import { getDemoResume } from '@/views/home/utils/demoResume'
 import { TEMPLATE_LIST } from '@/constants/templateRegistry'
@@ -89,7 +90,7 @@ onUnmounted(() => {
           class="min-h-10 shrink-0 rounded-full border px-4 text-sm font-medium transition-all"
           :class="activeCategory === category
             ? 'border-brand-dark bg-brand-dark text-white shadow-soft'
-            : 'border-line bg-white/80 text-ink-secondary hover:border-brand/40 hover:text-brand-dark'"
+            : 'border-line bg-surface/80 text-ink-secondary hover:border-brand/40 hover:text-brand-dark'"
           @click="activeCategory = category"
         >
           {{ category }}
@@ -107,21 +108,26 @@ onUnmounted(() => {
         >
           <button
             type="button"
-            class="template-gallery-card group w-full overflow-hidden rounded-[20px] border border-line/60 bg-white/90 text-left shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-brand/25 hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+            class="template-gallery-card group w-full overflow-hidden rounded-[20px] border border-line/60 bg-surface/90 text-left shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-brand/25 hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
             :style="{ '--template-gradient': tpl.color }"
             :aria-label="`预览${tpl.name}模板`"
             @click="openPreview(tpl.id)"
           >
             <div class="template-preview-stage flex min-h-[318px] items-start justify-center overflow-hidden px-3 pt-5">
-              <TemplateMiniPreview
-                :template-id="tpl.id"
-                :resume="getDemoResume(tpl.id)"
-                :scale="cardPreviewScale"
-                preview-mode="page"
-                :show-label="false"
-              />
+              <!-- 仅在卡片接近视口时加载真实模板，50 套模板不会同时触发组件请求和 A4 渲染。 -->
+              <LazyRender min-height="282px" root-margin="360px 0px" class="w-full">
+                <div class="flex w-full justify-center">
+                  <TemplateMiniPreview
+                    :template-id="tpl.id"
+                    :resume="getDemoResume(tpl.id)"
+                    :scale="cardPreviewScale"
+                    preview-mode="page"
+                    :show-label="false"
+                  />
+                </div>
+              </LazyRender>
             </div>
-            <div class="relative border-t border-line/50 bg-white px-4 py-4">
+            <div class="relative border-t border-line/50 bg-surface px-4 py-4">
               <div class="mb-2 flex items-center justify-between gap-3">
                 <h2 class="truncate text-base font-semibold text-ink">{{ tpl.name }}</h2>
                 <span class="shrink-0 rounded-full bg-brand-lighter/70 px-2.5 py-1 text-[11px] font-medium text-brand-dark">

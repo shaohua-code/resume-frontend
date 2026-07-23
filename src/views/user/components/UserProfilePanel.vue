@@ -182,32 +182,32 @@ onMounted(loadProfile)
   <div class="flex flex-col gap-4">
     <a-spin :spinning="loading">
       <!-- 账户只读信息 -->
-      <div class="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm md:p-6">
+      <div class="flex flex-col gap-4 rounded-card border border-line/60 bg-surface p-5 shadow-card md:p-6">
         <div>
-          <p class="text-base font-semibold text-slate-900">基本信息</p>
-          <p class="mt-1 text-xs text-slate-500">登录账号与邮箱由系统管理，昵称可自行修改。</p>
+          <p class="text-base font-semibold text-ink">基本信息</p>
+          <p class="mt-1 text-xs text-muted">登录账号与邮箱由系统管理，昵称可自行修改。</p>
         </div>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div class="flex flex-col gap-1">
-            <span class="text-xs text-slate-500">登录账号</span>
-            <span class="text-sm font-medium text-slate-900">{{ profile.account || '—' }}</span>
+            <span class="text-xs text-muted">登录账号</span>
+            <span class="text-sm font-medium text-ink">{{ profile.account || '—' }}</span>
           </div>
           <div class="flex flex-col gap-1">
-            <span class="text-xs text-slate-500">角色 / 状态</span>
-            <span class="text-sm font-medium text-slate-900">
+            <span class="text-xs text-muted">角色 / 状态</span>
+            <span class="text-sm font-medium text-ink">
               {{ getRoleLabel(profile.role) }} · {{ getStatusLabel(profile.status) }}
             </span>
           </div>
           <div class="flex flex-col gap-2 sm:col-span-2">
-            <span class="text-xs text-slate-500">绑定邮箱</span>
+            <span class="text-xs text-muted">绑定邮箱</span>
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <span class="text-sm font-medium text-slate-900">
+              <span class="text-sm font-medium text-ink">
                 {{ profile.email || '暂未绑定邮箱' }}
               </span>
               <button
                 v-if="!isEmailBound"
                 type="button"
-                class="inline-flex min-h-9 w-fit items-center justify-center rounded-lg border border-slate-200 px-3 text-sm text-slate-700 transition hover:bg-slate-50"
+                class="inline-flex min-h-10 w-fit items-center justify-center rounded-button border border-line bg-surface px-3 text-sm text-ink-secondary transition hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark"
                 @click="handleBindEmail"
               >
                 绑定邮箱
@@ -218,10 +218,10 @@ onMounted(loadProfile)
       </div>
 
       <!-- 修改昵称 -->
-      <div class="mt-4 flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm md:p-6">
+      <div class="mt-4 flex flex-col gap-4 rounded-card border border-line/60 bg-surface p-5 shadow-card md:p-6">
         <div>
-          <p class="text-base font-semibold text-slate-900">修改昵称</p>
-          <p class="mt-1 text-xs text-slate-500">昵称将显示在用户中心与导航栏。</p>
+          <p class="text-base font-semibold text-ink">修改昵称</p>
+          <p class="mt-1 text-xs text-muted">昵称将显示在用户中心与导航栏。</p>
         </div>
         <a-form
           ref="nicknameFormRef"
@@ -240,7 +240,7 @@ onMounted(loadProfile)
           </a-form-item>
           <button
             type="submit"
-            class="inline-flex min-h-10 items-center justify-center rounded-lg bg-slate-900 px-4 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            class="btn-primary min-h-10"
             :disabled="savingNickname"
           >
             {{ savingNickname ? '保存中…' : '保存昵称' }}
@@ -249,10 +249,10 @@ onMounted(loadProfile)
       </div>
 
       <!-- 修改密码 -->
-      <div class="mt-4 flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm md:p-6">
+      <div class="mt-4 flex flex-col gap-4 rounded-card border border-line/60 bg-surface p-5 shadow-card md:p-6">
         <div>
-          <p class="text-base font-semibold text-slate-900">修改密码</p>
-          <p class="mt-1 text-xs text-slate-500">
+          <p class="text-base font-semibold text-ink">修改密码</p>
+          <p class="mt-1 text-xs text-muted">
             修改成功后其他设备需重新登录；忘记密码可走登录页邮箱重置。
           </p>
         </div>
@@ -286,7 +286,7 @@ onMounted(loadProfile)
           </a-form-item>
           <button
             type="submit"
-            class="inline-flex min-h-10 items-center justify-center rounded-lg bg-slate-900 px-4 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            class="btn-primary min-h-10"
             :disabled="savingPassword"
           >
             {{ savingPassword ? '提交中…' : '更新密码' }}

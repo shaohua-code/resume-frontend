@@ -11,6 +11,8 @@ import { LayoutHeader } from "ant-design-vue/es/layout";
 import {
   AppstoreOutlined,
   ArrowRightOutlined,
+  BgColorsOutlined,
+  CheckOutlined,
   DownOutlined,
   FileAddOutlined,
   HomeOutlined,
@@ -25,13 +27,22 @@ import { useUserStore } from "@/stores/user";
 import { useWalletStore } from "@/stores/wallet";
 import { formatBalanceText, getRoleLabel } from "@/constants/roles";
 import { useMediaQuery } from "@/composables/useMediaQuery";
+import { useTheme } from "@/composables/useTheme";
 
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 const walletStore = useWalletStore();
 const drawerOpen = ref(false);
+const accountThemePanelOpen = ref(false);
 const isMobile = useMediaQuery();
+const {
+  currentThemeKey,
+  currentTheme,
+  currentThemeName,
+  themeOptions,
+  setTheme,
+} = useTheme();
 
 const drawerWidth = computed(() =>
   typeof window === "undefined" ? 320 : Math.min(340, window.innerWidth),
@@ -85,6 +96,11 @@ const accountInitial = computed(
   () =>
     (userStore.userInfo.nickname || "U").trim().charAt(0).toUpperCase() || "U",
 );
+// 账户入口与下拉头像直接使用当前主题渐变，防止跨页面时保留默认主题色。
+const accountAvatarStyle = computed(() => ({
+  backgroundImage: currentTheme.value.gradients.hero,
+  boxShadow: currentTheme.value.shadows.soft,
+}));
 
 const selectedKeys = computed(() => {
   const path = route.path;
@@ -101,10 +117,10 @@ const selectedKeys = computed(() => {
 function desktopNavClass(item) {
   const active = selectedKeys.value.includes(item.key);
   return [
-    "relative inline-flex h-11 items-center justify-center gap-2 rounded-xl border-0 bg-transparent px-3 text-[15px] font-semibold leading-none text-[#667085] whitespace-nowrap transition-all duration-200 ease-smooth xl:px-4",
-    "hover:bg-[linear-gradient(110deg,rgba(0,212,255,0.09),rgba(168,85,247,0.08))] hover:text-brand-dark",
+    "relative inline-flex h-11 items-center justify-center gap-2 rounded-xl border-0 bg-transparent px-3 text-[15px] font-semibold leading-none whitespace-nowrap transition-all duration-200 ease-smooth xl:px-4",
+    "text-ink-secondary hover:bg-brand-lighter/55 hover:text-brand-dark",
     active
-      ? "bg-[linear-gradient(110deg,rgba(0,212,255,0.15),rgba(79,172,254,0.13)_52%,rgba(168,85,247,0.13))] text-[#2563eb] shadow-[inset_0_0_0_1px_rgba(79,172,254,0.09)]"
+      ? "bg-brand-lighter/75 text-brand-dark shadow-soft"
       : "",
   ];
 }
@@ -115,7 +131,7 @@ function mobileNavClass(item) {
   return [
     "grid w-full min-h-[58px] grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-2.5 rounded-[14px] border border-transparent bg-transparent py-1.5 pr-2.5 pl-1.5 text-left text-ink-secondary",
     active
-      ? "border-[rgba(79,172,254,0.24)] bg-[linear-gradient(110deg,rgba(0,212,255,0.1),rgba(79,172,254,0.08)_55%,rgba(168,85,247,0.08))]"
+      ? "border-brand/25 bg-brand-lighter/55"
       : "",
   ];
 }
@@ -123,9 +139,9 @@ function mobileNavClass(item) {
 function mobileNavIconClass(item) {
   const active = selectedKeys.value.includes(item.key);
   return [
-    "inline-flex h-[42px] w-[42px] items-center justify-center rounded-xl border border-line bg-white text-ink-secondary",
+    "inline-flex h-[42px] w-[42px] items-center justify-center rounded-xl border border-line bg-surface text-ink-secondary",
     active
-      ? "border-[rgba(79,172,254,0.24)] text-[#2563eb] shadow-[0_5px_14px_rgba(79,172,254,0.12)]"
+      ? "border-brand/25 text-brand-dark shadow-soft"
       : "",
   ];
 }
@@ -165,6 +181,11 @@ function navToMobile(path) {
   navTo(path);
 }
 
+function chooseTheme(themeKey) {
+  setTheme(themeKey);
+  accountThemePanelOpen.value = false;
+}
+
 function handleLogout() {
   drawerOpen.value = false;
   userStore.logout();
@@ -174,7 +195,7 @@ function handleLogout() {
 
 <template>
   <LayoutHeader
-    class="fixed inset-x-0 top-0 z-50 flex h-16 items-center border-0 bg-white/80 p-0 leading-none shadow-soft backdrop-blur-[22px] backdrop-saturate-[1.35]"
+    class="app-header-glass fixed inset-x-0 top-0 z-50 flex h-16 items-center border-0 p-0 leading-none shadow-soft"
   >
     <div
       class="relative mx-auto grid h-full w-full grid-cols-[auto_1fr_auto] items-center gap-2.5 px-3.5 sm:gap-4 sm:px-6 lg:grid-cols-[minmax(230px,1fr)_auto_minmax(230px,1fr)] lg:gap-6"
@@ -193,7 +214,7 @@ function handleLogout() {
         </div>
         <span class="block whitespace-nowrap max-[390px]:hidden">
           <span
-            class="block text-base font-extrabold tracking-tight text-[#172033] sm:text-[19px]"
+            class="block text-base font-extrabold tracking-tight text-ink sm:text-[19px]"
           >
             AI 简历
           </span>
@@ -224,11 +245,12 @@ function handleLogout() {
           <Dropdown v-if="!isMobile" trigger="click" placement="bottomRight">
             <button
               type="button"
-              class="grid h-11 min-w-[164px] grid-cols-[34px_minmax(0,1fr)_auto] items-center gap-2 rounded-[14px] border-0 bg-white/70 py-1 pr-2.5 pl-1.5 text-left text-ink transition duration-200 ease-smooth hover:bg-white hover:shadow-[0_8px_22px_rgba(79,172,254,0.14)]"
+              class="grid h-11 min-w-[164px] grid-cols-[34px_minmax(0,1fr)_auto] items-center gap-2 rounded-[14px] border-0 bg-surface/70 py-1 pr-2.5 pl-1.5 text-left text-ink transition duration-200 ease-smooth hover:bg-surface hover:shadow-soft"
               aria-label="打开账户菜单"
             >
               <span
-                class="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[11px] [background-image:var(--gradient-hero)] text-[13px] font-extrabold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
+                class="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[11px] text-[13px] font-extrabold text-white"
+                :style="accountAvatarStyle"
               >
                 {{ accountInitial }}
               </span>
@@ -237,7 +259,7 @@ function handleLogout() {
                   {{ userStore.userInfo.nickname || "用户" }}
                 </b>
                 <small
-                  class="mt-1 block max-w-[92px] truncate text-[11px] font-bold text-[#3b82f6]"
+                  class="mt-1 block max-w-[92px] truncate text-[11px] font-bold text-brand-dark"
                 >
                   {{ balanceText }}
                 </small>
@@ -247,11 +269,12 @@ function handleLogout() {
 
             <template #overlay>
               <div
-                class="w-[300px] rounded-[18px] border border-line/90 bg-white/95 p-3.5 shadow-[0_22px_54px_rgba(15,23,42,0.17)] backdrop-blur-[20px]"
+                class="w-[320px] rounded-[18px] border border-line/90 bg-surface/95 p-3.5 shadow-lift backdrop-blur-[var(--glass-blur)]"
               >
                 <div class="flex items-center gap-3 px-1.5 pt-2 pb-3">
                   <span
-                    class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[11px] [background-image:var(--gradient-hero)] text-base font-extrabold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
+                    class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[11px] text-base font-extrabold text-white"
+                    :style="accountAvatarStyle"
                   >
                     {{ accountInitial }}
                   </span>
@@ -268,21 +291,93 @@ function handleLogout() {
                 </div>
 
                 <div
-                  class="my-1 mb-2 flex items-center justify-between rounded-xl border border-[rgba(79,172,254,0.25)] bg-[linear-gradient(110deg,rgba(0,212,255,0.1),rgba(79,172,254,0.08)_52%,rgba(168,85,247,0.08))] p-3"
+                  class="my-1 mb-2 flex items-center justify-between rounded-xl border border-brand/25 bg-brand-lighter/55 p-3"
                 >
                   <span
                     class="inline-flex items-center gap-1.5 text-[13px] text-ink-secondary"
                   >
                     <WalletOutlined /> 账户余额
                   </span>
-                  <strong class="text-base text-[#2563eb]">{{
+                  <strong class="text-base text-brand-dark">{{
                     balanceText
                   }}</strong>
                 </div>
 
                 <button
                   type="button"
-                  class="grid w-full min-h-12 grid-cols-[20px_1fr_auto] items-center gap-2 rounded-[10px] border-0 bg-transparent px-2.5 text-left text-sm text-ink-secondary hover:bg-canvas hover:text-[#2563eb]"
+                  class="grid min-h-12 w-full grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-2 rounded-[10px] border-0 bg-transparent px-2.5 text-left text-ink-secondary transition-colors hover:bg-canvas hover:text-brand-dark"
+                  :aria-expanded="accountThemePanelOpen"
+                  aria-controls="desktop-account-theme-panel"
+                  @click.stop="accountThemePanelOpen = !accountThemePanelOpen"
+                >
+                  <BgColorsOutlined />
+                  <span class="min-w-0">
+                    <b class="block text-sm font-medium">界面主题</b>
+                    <small class="mt-0.5 block truncate text-[11px] text-muted">
+                      {{ currentThemeName }}
+                    </small>
+                  </span>
+                  <RightOutlined
+                    class="text-[10px] transition-transform"
+                    :class="accountThemePanelOpen ? 'rotate-90 text-brand-dark' : ''"
+                  />
+                </button>
+
+                <div
+                  v-if="accountThemePanelOpen"
+                  id="desktop-account-theme-panel"
+                  class="mb-2 grid max-h-[326px] gap-1.5 overflow-y-auto rounded-[14px] border border-line bg-canvas/65 p-2"
+                  role="group"
+                  aria-label="选择界面主题"
+                >
+                  <button
+                    v-for="theme in themeOptions"
+                    :key="theme.key"
+                    type="button"
+                    class="grid min-h-[58px] w-full grid-cols-[46px_minmax(0,1fr)_18px] items-center gap-2.5 rounded-xl border border-transparent bg-surface px-2.5 py-1.5 text-left transition-all hover:border-brand/25 hover:shadow-soft"
+                    :class="currentThemeKey === theme.key ? 'border-brand/35 bg-brand-lighter/65' : ''"
+                    :aria-pressed="currentThemeKey === theme.key"
+                    @click.stop="chooseTheme(theme.key)"
+                  >
+                    <span
+                      class="relative h-8 w-[42px] overflow-hidden border"
+                      :style="{
+                        background: theme.preview.background,
+                        borderColor: theme.preview.border,
+                        borderRadius: theme.preview.radius,
+                        boxShadow: theme.preview.shadow,
+                      }"
+                      aria-hidden="true"
+                    >
+                      <span
+                        class="absolute inset-x-1 top-1 h-1.5 rounded-full"
+                        :style="{ background: theme.preview.gradient }"
+                      />
+                      <span
+                        class="absolute bottom-1 left-1 h-3.5 w-6 border"
+                        :style="{
+                          background: theme.preview.surface,
+                          borderColor: theme.preview.border,
+                          borderRadius: theme.preview.radius,
+                        }"
+                      />
+                    </span>
+                    <span class="min-w-0">
+                      <b class="block truncate text-[13px] text-ink">{{ theme.name }}</b>
+                      <small class="mt-0.5 block truncate text-[10px] text-muted">
+                        {{ theme.description }}
+                      </small>
+                    </span>
+                    <CheckOutlined
+                      v-if="currentThemeKey === theme.key"
+                      class="text-xs text-brand-dark"
+                    />
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  class="grid w-full min-h-12 grid-cols-[20px_1fr_auto] items-center gap-2 rounded-[10px] border-0 bg-transparent px-2.5 text-left text-sm text-ink-secondary hover:bg-canvas hover:text-brand-dark"
                   @click="router.push('/user')"
                 >
                   <UserOutlined /><span>进入用户中心</span>
@@ -290,7 +385,7 @@ function handleLogout() {
                 </button>
                 <button
                   type="button"
-                  class="grid w-full min-h-12 grid-cols-[20px_1fr] items-center gap-2 rounded-[10px] border-0 bg-transparent px-2.5 text-left text-sm text-danger hover:bg-rose-50 hover:text-danger"
+                  class="grid w-full min-h-12 grid-cols-[20px_1fr] items-center gap-2 rounded-[10px] border-0 bg-transparent px-2.5 text-left text-sm text-danger hover:bg-danger/10 hover:text-danger"
                   @click="handleLogout"
                 >
                   <LogoutOutlined /><span>退出登录</span>
@@ -304,14 +399,14 @@ function handleLogout() {
           <!-- 窄屏登录按钮改为主色 CTA；宽屏保持文字链 -->
           <button
             type="button"
-            class="inline-flex h-11 min-w-[64px] items-center justify-center rounded-[13px] border border-white/55 [background-image:var(--gradient-primary)] px-4 text-[13px] font-bold text-white shadow-[0_9px_22px_rgba(79,172,254,0.24)] transition duration-200 ease-smooth hover:-translate-y-px hover:shadow-[0_12px_26px_rgba(79,172,254,0.32)] sm:min-w-[54px] sm:border-0 sm:bg-none sm:px-3 sm:shadow-none sm:text-ink-secondary sm:hover:translate-y-0 sm:hover:bg-transparent sm:hover:text-accent sm:hover:shadow-none"
+            class="inline-flex h-11 min-w-[64px] items-center justify-center rounded-[13px] border border-white/55 [background-image:var(--gradient-primary)] px-4 text-[13px] font-bold text-white shadow-float transition duration-200 ease-smooth hover:-translate-y-px hover:shadow-glow sm:min-w-[54px] sm:border-0 sm:bg-none sm:px-3 sm:shadow-none sm:text-ink-secondary sm:hover:translate-y-0 sm:hover:bg-transparent sm:hover:text-accent sm:hover:shadow-none"
             @click="router.push('/login')"
           >
             登录
           </button>
           <button
             type="button"
-            class="hidden h-11 items-center justify-center gap-2 rounded-[13px] border border-white/55 [background-image:var(--gradient-primary)] px-[17px] text-[13px] font-bold text-white shadow-[0_9px_22px_rgba(79,172,254,0.24)] transition duration-200 ease-smooth hover:-translate-y-px hover:shadow-[0_12px_26px_rgba(79,172,254,0.32)] sm:inline-flex"
+            class="hidden h-11 items-center justify-center gap-2 rounded-[13px] border border-white/55 [background-image:var(--gradient-primary)] px-[17px] text-[13px] font-bold text-white shadow-float transition duration-200 ease-smooth hover:-translate-y-px hover:shadow-glow sm:inline-flex"
             @click="router.push('/register')"
           >
             免费体验
@@ -321,7 +416,7 @@ function handleLogout() {
 
         <button
           type="button"
-          class="inline-flex h-11 w-11 items-center justify-center rounded-[13px] border border-line bg-white/80 text-lg text-ink lg:hidden"
+          class="inline-flex h-11 w-11 items-center justify-center rounded-[13px] border border-line bg-surface/80 text-lg text-ink lg:hidden"
           aria-label="打开导航菜单"
           @click="drawerOpen = true"
         >
@@ -347,17 +442,18 @@ function handleLogout() {
           >
             AI
           </div>
-          <b class="block text-[15px] text-[#172033]">AI 简历</b>
+          <b class="block text-[15px] text-ink">AI 简历</b>
         </div>
       </template>
 
       <div
         v-if="userStore.isLoggedIn"
-        class="mb-6 rounded-2xl border border-[rgba(79,172,254,0.25)] bg-[linear-gradient(120deg,rgba(0,212,255,0.11),rgba(79,172,254,0.09)_52%,rgba(168,85,247,0.09))] p-3"
+        class="mb-6 rounded-2xl border border-brand/25 bg-brand-lighter/55 p-3"
       >
         <div class="flex items-center gap-3 px-1.5 pt-2 pb-3">
           <span
-            class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[11px] [background-image:var(--gradient-hero)] text-base font-extrabold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
+            class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[11px] text-base font-extrabold text-white"
+            :style="accountAvatarStyle"
           >
             {{ accountInitial }}
           </span>
@@ -371,10 +467,80 @@ function handleLogout() {
           </div>
         </div>
         <div
-          class="mt-2 flex items-center justify-between rounded-[11px] bg-white/75 p-2.5"
+          class="mt-2 flex items-center justify-between rounded-[11px] bg-surface/75 p-2.5"
         >
           <span class="text-[11px] text-ink-secondary">账户余额</span>
-          <strong class="text-sm text-[#2563eb]">{{ balanceText }}</strong>
+          <strong class="text-sm text-brand-dark">{{ balanceText }}</strong>
+        </div>
+        <button
+          type="button"
+          class="mt-2 grid min-h-11 w-full grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-2 rounded-[11px] border border-line/70 bg-surface/75 px-2.5 text-left text-ink-secondary"
+          :aria-expanded="accountThemePanelOpen"
+          aria-controls="mobile-account-theme-panel"
+          @click="accountThemePanelOpen = !accountThemePanelOpen"
+        >
+          <BgColorsOutlined class="text-brand-dark" />
+          <span class="min-w-0">
+            <b class="block text-xs text-ink">界面主题</b>
+            <small class="mt-0.5 block truncate text-[10px] text-muted">
+              {{ currentThemeName }}
+            </small>
+          </span>
+          <RightOutlined
+            class="text-[10px] transition-transform"
+            :class="accountThemePanelOpen ? 'rotate-90 text-brand-dark' : ''"
+          />
+        </button>
+        <div
+          v-if="accountThemePanelOpen"
+          id="mobile-account-theme-panel"
+          class="mt-2 grid gap-1.5 rounded-[13px] border border-line bg-canvas/75 p-2"
+          role="group"
+          aria-label="选择界面主题"
+        >
+          <button
+            v-for="theme in themeOptions"
+            :key="theme.key"
+            type="button"
+            class="grid min-h-[58px] w-full grid-cols-[46px_minmax(0,1fr)_18px] items-center gap-2 rounded-[11px] border border-transparent bg-surface px-2 py-1.5 text-left"
+            :class="currentThemeKey === theme.key ? 'border-brand/35 bg-brand-lighter/65 shadow-soft' : ''"
+            :aria-pressed="currentThemeKey === theme.key"
+            @click="chooseTheme(theme.key)"
+          >
+            <span
+              class="relative h-8 w-[42px] overflow-hidden border"
+              :style="{
+                background: theme.preview.background,
+                borderColor: theme.preview.border,
+                borderRadius: theme.preview.radius,
+                boxShadow: theme.preview.shadow,
+              }"
+              aria-hidden="true"
+            >
+              <span
+                class="absolute inset-x-1 top-1 h-1.5 rounded-full"
+                :style="{ background: theme.preview.gradient }"
+              />
+              <span
+                class="absolute bottom-1 left-1 h-3.5 w-6 border"
+                :style="{
+                  background: theme.preview.surface,
+                  borderColor: theme.preview.border,
+                  borderRadius: theme.preview.radius,
+                }"
+              />
+            </span>
+            <span class="min-w-0">
+              <b class="block truncate text-xs text-ink">{{ theme.name }}</b>
+              <small class="mt-0.5 block truncate text-[9px] text-muted">
+                {{ theme.description }}
+              </small>
+            </span>
+            <CheckOutlined
+              v-if="currentThemeKey === theme.key"
+              class="text-xs text-brand-dark"
+            />
+          </button>
         </div>
       </div>
 
@@ -411,14 +577,14 @@ function handleLogout() {
       >
         <button
           type="button"
-          class="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-[11px] border border-blue-100 bg-indigo-50 text-xs font-bold text-indigo-600"
+          class="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-[11px] border border-brand/20 bg-brand-lighter/55 text-xs font-bold text-brand-dark"
           @click="navToMobile('/user')"
         >
           <UserOutlined /> 用户中心
         </button>
         <button
           type="button"
-          class="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-[11px] border border-rose-200 bg-white text-xs font-bold text-danger"
+          class="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-[11px] border border-danger/20 bg-surface text-xs font-bold text-danger hover:bg-danger/10"
           @click="handleLogout"
         >
           <LogoutOutlined /> 退出登录
@@ -428,7 +594,7 @@ function handleLogout() {
       <div v-else class="mt-6 grid gap-2 border-t border-line pt-[18px]">
         <button
           type="button"
-          class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[13px] border border-white/55 [background-image:var(--gradient-primary)] px-[17px] text-[13px] font-bold text-white shadow-[0_9px_22px_rgba(79,172,254,0.24)]"
+          class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[13px] border border-white/55 [background-image:var(--gradient-primary)] px-[17px] text-[13px] font-bold text-white shadow-float"
           @click="navToMobile('/register')"
         >
           免费开始创作
@@ -436,7 +602,7 @@ function handleLogout() {
         </button>
         <button
           type="button"
-          class="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-[11px] border border-line bg-white text-xs font-bold text-ink-secondary"
+          class="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-[11px] border border-line bg-surface text-xs font-bold text-ink-secondary"
           @click="navToMobile('/login')"
         >
           已有账号，立即登录

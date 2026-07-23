@@ -6,6 +6,8 @@ import { onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { getAdminTaskPrompts, saveAdminTaskPrompt } from '@/api/admin'
 import { getErrorMessage } from '@/utils/errorMessage'
+// 任务标题统一使用前端中文映射，避免接口标识直接暴露到界面。
+import { getAiTaskLabel } from '@/constants/aiTasks'
 
 const loading = ref(false)
 const savingTask = ref('')
@@ -35,7 +37,7 @@ async function saveTask(task) {
   savingTask.value = task.task_type
   try {
     await saveAdminTaskPrompt(task.task_type, instruction)
-    message.success(`${task.name}提示词已保存`)
+    message.success(`${getAiTaskLabel(task.task_type)}提示词已保存`)
     await loadConfig()
   } catch (e) {
     message.error(getErrorMessage(e))
@@ -70,7 +72,8 @@ onMounted(loadConfig)
         >
           <div class="space-y-3">
             <div>
-              <p class="font-semibold text-ink">{{ task.name }}</p>
+              <!-- 任务名称以统一映射为准，识别任务与其他 AI 任务保持一致。 -->
+              <p class="font-semibold text-ink">{{ getAiTaskLabel(task.task_type) }}</p>
               <p class="mt-1 text-xs text-muted">
                 来源 {{ sourceLabel(task.source) }}
               </p>

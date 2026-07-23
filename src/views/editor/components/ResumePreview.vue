@@ -670,7 +670,7 @@ defineExpose({
 
 /* 页面导航栏：sticky 固定在桌面预览滚动区顶部 */
 .page-nav-bar {
-  @apply sticky top-0 z-30 mb-4 flex w-full max-w-[210mm] shrink-0 items-center justify-between gap-2 rounded-card border border-line/60 bg-white/95 px-3 py-2 shadow-card backdrop-blur-md max-lg:hidden;
+  @apply sticky top-0 z-30 mb-4 flex w-full max-w-[210mm] shrink-0 items-center justify-between gap-2 rounded-card border border-line/60 bg-surface/95 px-3 py-2 shadow-card backdrop-blur-md max-lg:hidden;
 }
 
 .page-nav-info {

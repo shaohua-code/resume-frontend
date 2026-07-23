@@ -298,7 +298,7 @@ onMounted(async () => {
           <span
             v-for="item in emailTemplates.placeholders"
             :key="item"
-            class="mr-2 inline-block rounded bg-slate-100 px-1.5 py-0.5 text-xs text-muted"
+            class="mr-2 inline-block rounded bg-canvas px-1.5 py-0.5 text-xs text-muted"
           >
             {{ item }}
           </span>

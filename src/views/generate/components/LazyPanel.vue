@@ -546,7 +546,7 @@ defineExpose({ getResumeSnapshot, applyOptimizedResume })
 }
 
 :deep(.lazy-textarea textarea.ant-input) {
-  @apply min-h-[320px] resize-y rounded-button border border-line bg-white/80 px-4 py-3 pb-8 text-sm leading-relaxed text-ink placeholder:text-muted transition-colors hover:border-brand/40 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15;
+  @apply min-h-[320px] resize-y rounded-button border border-line bg-surface/80 px-4 py-3 pb-8 text-sm leading-relaxed text-ink placeholder:text-muted transition-colors hover:border-brand/40 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15;
 }
 
 :deep(.lazy-textarea.ant-input-textarea-show-count::after) {

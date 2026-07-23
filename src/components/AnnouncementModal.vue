@@ -5,6 +5,7 @@
  */
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import Modal from 'ant-design-vue/es/modal'
 import { getActiveAnnouncements } from '@/api/announcement'
 import { useUserStore } from '@/stores/user'
 import { hasSeenAnnouncement, markAnnouncementSeen } from '@/utils/announcementSeen'
@@ -61,7 +62,8 @@ watch(
 </script>
 
 <template>
-  <a-modal
+  <!-- 公告可能在轻量首页空闲阶段挂载，因此弹窗使用局部组件而不等待全局注册。 -->
+  <Modal
     v-model:open="open"
     :title="current?.title || '版本公告'"
     :footer="null"
@@ -80,5 +82,5 @@ watch(
         我知道了
       </button>
     </div>
-  </a-modal>
+  </Modal>
 </template>

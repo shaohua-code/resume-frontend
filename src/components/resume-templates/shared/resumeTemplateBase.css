@@ -10,7 +10,7 @@
   margin-bottom: var(--section-gap, 20px) !important;
 }
 
-.resume-template [class*='-header'] {
+.resume-template [class*='-header']:not(.rt-item-header) {
   margin-bottom: var(--section-gap, 20px) !important;
 }
 
@@ -31,7 +31,8 @@
 
 /* 顶栏/条目/基本信息/技能标签：背景与边框可自定义 */
 .resume-template .rt-banner {
-  background: var(--skin-header-bg, transparent) !important;
+  /* 模板可用更高优先级把顶栏切换到其他皮肤变量，用户自定义仍通过变量生效。 */
+  background: var(--skin-header-bg, transparent);
   border-bottom-color: var(--skin-header-border, #1f2937) !important;
 }
 

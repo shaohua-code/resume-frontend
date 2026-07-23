@@ -204,7 +204,7 @@ function removeCustomField(index) {
         >
           <a-input v-model:value="item.label" placeholder="名称，如：驾驶证" class="input-field sm:flex-1" />
           <a-input v-model:value="item.value" placeholder="内容，如：C1" class="input-field sm:flex-1" />
-          <button type="button" class="text-danger hover:text-red-500" @click="removeCustomField(index)">
+          <button type="button" class="text-danger hover:text-danger/80" @click="removeCustomField(index)">
             <DeleteOutlined />
           </button>
         </div>

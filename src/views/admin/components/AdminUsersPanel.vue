@@ -170,7 +170,10 @@ onMounted(loadUsers)
 <template>
   <div class="space-y-4">
     <a-card :bordered="false" class="card-base">
-      <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+      <!-- 中屏让操作区独占一行；宽屏按内容宽度分列，避免侧栏挤压时按钮文字竖排。 -->
+      <div
+        class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[minmax(180px,1.4fr)_minmax(136px,0.9fr)_minmax(136px,0.9fr)_max-content]"
+      >
         <a-input :value="query.keyword" placeholder="搜索邮箱/昵称" class="input-field"
           @update:value="query.keyword = $event" />
         <a-select :value="query.role" allow-clear placeholder="角色筛选" class="input-field w-full"
@@ -183,12 +186,12 @@ onMounted(loadUsers)
           <a-select-option value="ACTIVE">正常</a-select-option>
           <a-select-option value="BANNED">已封禁</a-select-option>
         </a-select>
-        <div class="flex gap-2">
-          <button class="btn-primary" @click="loadUsers">查询用户</button>
+        <div class="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-3 lg:justify-end xl:col-span-1 xl:flex-nowrap">
+          <button class="btn-primary shrink-0 whitespace-nowrap" @click="loadUsers">查询用户</button>
           <!-- 用户管理模式下显示添加用户和邀请链接入口 -->
           <template v-if="mode === 'users'">
-            <button class="btn-ghost" @click="openClaimModal">添加用户</button>
-            <button class="btn-ghost" @click="inviteDrawerOpen = true">邀请链接</button>
+            <button class="btn-ghost shrink-0 whitespace-nowrap" @click="openClaimModal">添加用户</button>
+            <button class="btn-ghost shrink-0 whitespace-nowrap" @click="inviteDrawerOpen = true">邀请链接</button>
           </template>
         </div>
       </div>
@@ -204,7 +207,7 @@ onMounted(loadUsers)
           </template>
           <!-- 管理人数列：仅在管理员模式下显示 -->
           <template v-if="column.key === 'managed_count'">
-            <span class="inline-flex items-center justify-center rounded-full bg-blue-50 px-2.5 py-0.5 text-sm font-medium text-blue-700">
+            <span class="inline-flex items-center justify-center rounded-pill bg-brand-lighter px-2.5 py-0.5 text-sm font-medium text-brand-dark">
               {{ record.managed_count || 0 }} 人
             </span>
           </template>

@@ -1,20 +1,28 @@
 /**
- * 管理后台 ECharts 色板 - 引用全局 theme.js
+ * 管理后台 ECharts 响应式色板
+ * 图表从系统主题状态派生，切换主题时 option 会自动重新计算。
  */
-import THEME from '@/constants/theme'
+import { computed } from 'vue'
+import { useTheme } from '@/composables/useTheme'
 
-export const CHART_COLORS = {
-  primary: THEME.chart.primary,
-  secondary: THEME.chart.secondary,
-  accent: THEME.chart.accent,
-  success: THEME.chart.success,
-  warning: THEME.chart.warning,
-  danger: THEME.chart.danger,
+export function useChartTheme() {
+  const { chartColors, colors } = useTheme()
+  const chartGradient = computed(() => ({
+    start: chartColors.value.primary,
+    end: chartColors.value.secondary,
+  }))
+  const chartUi = computed(() => ({
+    axis: colors.value.line,
+    splitLine: colors.value.canvas,
+    label: colors.value.muted,
+    text: colors.value.ink.DEFAULT,
+  }))
+
+  return {
+    chartColors,
+    chartGradient,
+    chartUi,
+  }
 }
 
-export const CHART_GRADIENT = {
-  start: THEME.chart.primary,
-  end: THEME.chart.secondary,
-}
-
-export default CHART_COLORS
+export default useChartTheme

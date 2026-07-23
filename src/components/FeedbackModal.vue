@@ -118,7 +118,7 @@ async function handleSubmit() {
       content-type="html"
       theme="snow"
       :options="editorOptions"
-      class="feedback-quill-editor min-h-[200px] rounded-card border border-line bg-white"
+      class="feedback-quill-editor min-h-[200px] rounded-card border border-line bg-surface"
     />
   </Modal>
 </template>

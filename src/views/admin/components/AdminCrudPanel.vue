@@ -252,7 +252,7 @@ onMounted(loadItems)
           <article
             v-for="record in displayItems"
             :key="record.id"
-            class="rounded-xl border border-slate-100 bg-white p-4 shadow-sm"
+            class="rounded-card border border-line/60 bg-surface p-4 shadow-card"
           >
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
@@ -298,10 +298,10 @@ onMounted(loadItems)
               </div>
             </dl>
 
-            <div class="mt-4 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4">
+            <div class="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-4">
               <button class="btn-ghost min-h-11" @click="openModal(record)">编辑</button>
               <a-popconfirm title="确定删除？" @confirm="removeItem(record.id)">
-                <button class="min-h-11 w-full rounded-lg border border-red-100 text-sm font-medium text-danger transition-colors hover:bg-red-50">删除</button>
+                <button class="min-h-11 w-full rounded-button border border-danger/20 text-sm font-medium text-danger transition-colors hover:bg-danger/10">删除</button>
               </a-popconfirm>
             </div>
           </article>
@@ -355,7 +355,7 @@ onMounted(loadItems)
             <a-space>
               <button class="link-text text-sm" @click="openModal(record)">编辑</button>
               <a-popconfirm title="确定删除？" @confirm="removeItem(record.id)">
-                <button class="text-sm font-medium text-danger transition-colors hover:text-red-500">删除</button>
+                <button class="text-sm font-medium text-danger transition-colors hover:text-danger/80">删除</button>
               </a-popconfirm>
             </a-space>
           </template>

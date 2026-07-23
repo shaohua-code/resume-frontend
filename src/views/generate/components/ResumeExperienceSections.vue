@@ -136,7 +136,7 @@ function addWorkExperience() {
 }
 
 :deep(.experience-description textarea.ant-input) {
-  @apply min-h-[110px] resize-y rounded-button border border-line bg-white/80 px-4 py-2.5 pb-8;
+  @apply min-h-[110px] resize-y rounded-button border border-line bg-surface/80 px-4 py-2.5 pb-8;
 }
 
 :deep(.experience-description.ant-input-textarea-show-count::after) {

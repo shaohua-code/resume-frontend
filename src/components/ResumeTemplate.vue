@@ -1,6 +1,6 @@
 <!--
   简历模板路由组件
-  根据 templateId 动态加载对应模板 chunk，避免 27 套组件同步打进首包
+  根据 templateId 动态加载对应模板 chunk，避免 50 套组件同步打进首包
 -->
 <script setup>
 import { computed, defineAsyncComponent } from 'vue'

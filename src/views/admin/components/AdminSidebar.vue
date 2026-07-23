@@ -4,6 +4,7 @@
  */
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useTheme } from '@/composables/useTheme'
 
 const emit = defineEmits(['navigate'])
 
@@ -20,6 +21,7 @@ const props = defineProps({
 
 const route = useRoute()
 const router = useRouter()
+const { currentTheme } = useTheme()
 
 const filteredMenus = computed(() => {
   const word = props.keyword.trim()
@@ -44,6 +46,31 @@ function isActive(item) {
   return route.path === item.path
 }
 
+/**
+ * 当前菜单直接读取响应式主题对象，避免组件样式优先级覆盖 Tailwind 主题类。
+ * 这里仅控制系统后台导航，不影响 A4 简历模板皮肤。
+ */
+function activeMenuStyle(item) {
+  if (!isActive(item)) return undefined
+  return {
+    backgroundColor: currentTheme.value.colors.brand.lighter,
+    color: currentTheme.value.colors.brand.dark,
+  }
+}
+
+function activeMarkerStyle(item) {
+  if (!isActive(item)) return undefined
+  return { backgroundColor: currentTheme.value.colors.brand.dark }
+}
+
+function menuIconStyle(item) {
+  if (!isActive(item)) return undefined
+  return {
+    backgroundImage: currentTheme.value.gradients.primary,
+    boxShadow: currentTheme.value.shadows.soft,
+  }
+}
+
 function selectMenu(item) {
   if (route.path !== item.path) {
     router.push(item.path)
@@ -53,7 +80,7 @@ function selectMenu(item) {
 </script>
 
 <template>
-  <div class="flex h-screen flex-col bg-white">
+  <div class="flex h-screen flex-col bg-sidebar">
     <div class="flex h-[72px] shrink-0 items-center gap-3 border-b border-line px-5">
       <div class="flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold text-white shadow-soft" style="background: var(--gradient-primary)">
         AI
@@ -73,17 +100,20 @@ function selectMenu(item) {
             :key="item.key"
             type="button"
             class="group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-ink-secondary transition-all duration-200 hover:bg-brand-lighter hover:text-brand-dark"
-            :class="isActive(item) ? 'bg-brand-lighter font-medium text-brand-dark' : ''"
+            :class="isActive(item) ? 'font-medium' : ''"
+            :style="activeMenuStyle(item)"
+            :aria-current="isActive(item) ? 'page' : undefined"
             @click="selectMenu(item)"
           >
             <span
-              class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-brand-dark transition-opacity"
+              class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full transition-opacity"
               :class="isActive(item) ? 'opacity-100' : 'opacity-0'"
+              :style="activeMarkerStyle(item)"
             />
             <span
               class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
-              :class="isActive(item) ? 'text-white' : 'bg-cream text-muted group-hover:bg-white group-hover:text-brand-dark'"
-              :style="isActive(item) ? { background: 'var(--gradient-primary)' } : {}"
+              :class="isActive(item) ? 'text-white' : 'bg-cream text-muted group-hover:bg-surface group-hover:text-brand-dark'"
+              :style="menuIconStyle(item)"
             >
               <component :is="item.icon" class="h-[18px] w-[18px]" />
             </span>

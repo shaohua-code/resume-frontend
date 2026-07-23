@@ -27,7 +27,7 @@
         <div
           v-for="record in walletStore.ledgerList"
           :key="record.id"
-          class="rounded-card border border-line/60 bg-white p-4 shadow-sm"
+          class="rounded-card border border-line/60 bg-surface p-4 shadow-card"
         >
           <div class="flex items-center justify-between gap-2">
             <span class="tag-soft">{{ getLedgerTypeLabel(record.type) }}</span>
@@ -102,7 +102,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useWalletStore } from '@/stores/wallet'
 import { formatDateTime } from '@/utils/date'
-import { getAiTaskLabel } from '@/constants/aiTasks'
+import { replaceAiTaskLabels } from '@/constants/aiTasks'
 import { useMediaQuery } from '@/composables/useMediaQuery'
 
 const walletStore = useWalletStore()
@@ -144,10 +144,9 @@ function getLedgerTypeLabel(type) {
 function formatRemark(remark, type) {
   if (!remark) return '-'
 
-  // 如果是 AI 消费类型，尝试将任务类型英文标识替换为中文
+  // AI 消费备注统一按任务映射表替换，自动覆盖识别任务及后续新增任务。
   if (type === 'AI_CONSUME') {
-    const taskTypePattern = /(resume_generate|project_optimize|summary_optimize|skills_optimize|internship_optimize|jd_match|jd_resume_optimize|score|pdf_optimize)/g
-    return remark.replace(taskTypePattern, (match) => getAiTaskLabel(match))
+    return replaceAiTaskLabels(remark)
   }
 
   return remark

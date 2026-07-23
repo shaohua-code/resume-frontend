@@ -41,7 +41,7 @@ const HOME_FLOW = [
   {
     icon: EditOutlined,
     title: "在线编辑排版",
-    description: "27 套模板，内容与样式随心调整",
+    description: "50 套模板，内容与样式随心调整",
   },
   {
     icon: FileDoneOutlined,
@@ -159,7 +159,7 @@ function handleFeatureClick(item) {
 }
 
 .flow-card {
-  @apply relative flex items-center gap-3 rounded-card border border-line/50 bg-white/60 p-3.5 sm:p-4 lg:flex-col lg:items-center lg:px-3 lg:py-5;
+  @apply relative flex items-center gap-3 rounded-card border border-line/50 bg-surface/60 p-3.5 sm:p-4 lg:flex-col lg:items-center lg:px-3 lg:py-5;
 }
 
 .flow-icon-wrap {
@@ -171,7 +171,7 @@ function handleFeatureClick(item) {
 }
 
 .feature-section {
-  @apply border-y border-line/40 bg-white/35;
+  @apply border-y border-line/40 bg-surface/35;
 }
 
 @media (min-width: 1024px) {

@@ -70,7 +70,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="fixed bottom-0 left-0 right-0 z-50 border-t border-line/60 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(31,41,55,0.06)]">
+  <div class="fixed bottom-0 left-0 right-0 z-50 border-t border-line/60 bg-surface pb-[env(safe-area-inset-bottom)] shadow-card">
     <div class="flex h-12 items-center bg-cream px-2">
       <div ref="tabScrollRef" class="flex-1 overflow-x-auto scrollbar-hide">
         <ul class="flex items-center gap-1 whitespace-nowrap px-2 py-0">
@@ -79,7 +79,7 @@ defineExpose({
             :key="mod.key"
             class="inline-flex cursor-pointer items-center gap-2 rounded-t-md border-b-2 border-transparent px-4 py-2 text-sm text-ink-secondary transition-all duration-200 hover:bg-brand-lighter hover:text-brand-dark max-lg:px-2 max-lg:text-xs"
             :class="{
-              'bg-white font-semibold text-brand-dark border-b-brand-dark': activeModule === mod.key,
+              'bg-surface font-semibold text-brand-dark border-b-brand-dark': activeModule === mod.key,
               'animate-pulse bg-brand-lighter': highlightModule === mod.key,
             }"
             @click="selectTab(mod.key)"

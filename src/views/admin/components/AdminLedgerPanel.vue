@@ -4,6 +4,7 @@ import { getAdminLedgers, getAdminUsers } from '@/api/admin'
 import AdminUserInfoCell from './AdminUserInfoCell.vue'
 import { formatDateTime } from '@/utils/date'
 import { getLedgerTypeLabel, getLedgerTypeOptions, hasPaidAmount } from '@/constants/roles'
+import { replaceAiTaskLabels } from '@/constants/aiTasks'
 
 const loading = ref(false)
 const ledgers = ref([])
@@ -60,6 +61,14 @@ function formatPaidAmount(record) {
   if (!hasPaidAmount(record.type)) return '-'
   const value = Number(record.paid_amount || 0)
   return value > 0 ? `¥${value.toFixed(2)}` : '-'
+}
+
+/** AI 消费流水中的任务标识统一转换为中文，管理端与用户端保持一致。 */
+function formatRemark(record) {
+  if (!record.remark) return '-'
+  return record.type === 'AI_CONSUME'
+    ? replaceAiTaskLabels(record.remark)
+    : record.remark
 }
 
 function handleTableChange(pagination) {
@@ -141,7 +150,7 @@ onMounted(() => {
             <span class="text-sm text-ink">{{ formatPaidAmount(record) }}</span>
           </template>
           <template v-if="column.key === 'remark'">
-            <span class="text-sm text-ink">{{ record.remark || '-' }}</span>
+            <span class="text-sm text-ink">{{ formatRemark(record) }}</span>
           </template>
           <template v-if="column.key === 'create_time'">
             {{ formatDateTime(record.create_time) }}

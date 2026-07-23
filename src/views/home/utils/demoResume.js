@@ -180,6 +180,30 @@ const PROFILE_BY_TEMPLATE = {
   25: CREATIVE_DEMO,
   26: CAMPUS_DEMO,
   27: CAMPUS_DEMO,
+  // 28–50 按模板目标场景分配演示画像，校招模板统一展示应届生经历，避免预览语义错位。
+  28: GENERAL_DEMO,
+  29: EXECUTIVE_DEMO,
+  30: GENERAL_DEMO,
+  31: CREATIVE_DEMO,
+  32: TECH_DEMO,
+  33: CREATIVE_DEMO,
+  34: GENERAL_DEMO,
+  35: GENERAL_DEMO,
+  36: TECH_DEMO,
+  37: EDUCATION_DEMO,
+  38: CREATIVE_DEMO,
+  39: TECH_DEMO,
+  40: FINANCE_DEMO,
+  41: CREATIVE_DEMO,
+  42: CREATIVE_DEMO,
+  43: CAMPUS_DEMO,
+  44: CREATIVE_DEMO,
+  45: GENERAL_DEMO,
+  46: TECH_DEMO,
+  47: GENERAL_DEMO,
+  48: CAMPUS_DEMO,
+  49: CAMPUS_DEMO,
+  50: CAMPUS_DEMO,
 }
 
 /**
@@ -189,7 +213,7 @@ const PROFILE_BY_TEMPLATE = {
 export const DEMO_AVATAR = '/demo-avatar.webp'
 
 /** @deprecated 旧逻辑：仅部分模板带头像；现已全量模板预览带头像 */
-export const DEMO_AVATAR_TEMPLATE_IDS = Array.from({ length: 27 }, (_, i) => i + 1)
+export const DEMO_AVATAR_TEMPLATE_IDS = Array.from({ length: 50 }, (_, i) => i + 1)
 
 function resolveDemoAvatar() {
   return DEMO_AVATAR

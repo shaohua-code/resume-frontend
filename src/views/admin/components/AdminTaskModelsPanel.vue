@@ -6,7 +6,8 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { getAiTaskModels, saveAiTaskModel } from '@/api/admin'
-import { getAiModelTypeLabel } from '@/constants/aiTasks'
+// 任务标题统一使用前端中文映射，避免接口标识直接暴露到界面。
+import { getAiModelTypeLabel, getAiTaskLabel } from '@/constants/aiTasks'
 
 const loading = ref(false)
 const savingTask = ref('')
@@ -97,7 +98,7 @@ async function saveTask(task) {
       modelId,
       thinkingSelections[task.task_type],
     )
-    message.success(`${task.name}已保存`)
+    message.success(`${getAiTaskLabel(task.task_type)}已保存`)
     await loadConfig()
   } finally {
     savingTask.value = ''
@@ -130,12 +131,12 @@ onMounted(loadConfig)
           <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div class="min-w-0">
               <div class="flex flex-wrap items-center gap-2">
-                <p class="font-semibold text-ink">{{ task.name }}</p>
+                <!-- 任务名称以统一映射为准，resume_extract 等任务不会显示英文值。 -->
+                <p class="font-semibold text-ink">{{ getAiTaskLabel(task.task_type) }}</p>
                 <span :class="task.required_model_type === 'vision' ? 'badge-success' : 'tag-soft'">
                   {{ getAiModelTypeLabel(task.required_model_type) }}
                 </span>
               </div>
-              <p class="mt-1 break-all text-xs text-muted">{{ task.task_type }}</p>
               <p class="mt-2 text-xs text-muted">
                 当前：{{ task.model ? `${task.model.name} · ${task.model.provider}` : '尚未配置，将使用环境变量回退模型' }}
               </p>

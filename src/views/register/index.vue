@@ -120,7 +120,7 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- 注册规则说明：非 AI 功能可直接使用，AI 能力会在首次调用时要求绑定邮箱。 -->
-      <div class="space-y-3 rounded-card border border-white/70 bg-white/55 p-4 shadow-soft backdrop-blur-sm sm:p-5">
+      <div class="space-y-3 rounded-card border border-line/70 bg-surface/55 p-4 shadow-soft backdrop-blur-sm sm:p-5">
         <div class="flex items-start gap-3">
           <span class="register-step">1</span>
           <div>

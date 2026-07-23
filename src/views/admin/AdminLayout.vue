@@ -6,6 +6,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { MenuOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
+import { useTheme } from '@/composables/useTheme'
 import { getRoleLabel } from '@/constants/roles'
 import { Search, Bell, Moon, User, LogOut } from 'lucide-vue-next'
 import AdminSidebar from './components/AdminSidebar.vue'
@@ -14,6 +15,7 @@ import { ADMIN_MENU_ITEMS, getMenuByPath } from './utils/menu'
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const { currentTheme } = useTheme()
 const searchKeyword = ref('')
 const drawerOpen = ref(false)
 
@@ -25,6 +27,11 @@ const currentMenu = computed(() => getMenuByPath(route.path, menuItems.value))
 
 const roleLabel = computed(() => getRoleLabel(userStore.role))
 const userInitial = computed(() => userStore.userInfo.nickname?.slice(0, 1) || '管')
+// 后台头像直接绑定当前系统主题，确保切换后不会残留默认青色。
+const adminAvatarStyle = computed(() => ({
+  backgroundImage: currentTheme.value.gradients.primary,
+  boxShadow: currentTheme.value.shadows.soft,
+}))
 
 // 子路由权限守卫：无权限时跳转到第一个可访问菜单
 watch(
@@ -55,13 +62,13 @@ function handleLogout() {
   <a-layout class="h-screen overflow-hidden font-sans bg-cream text-ink">
     <!-- 桌面端固定侧边栏：流式宽度为 0，避免与 ml 叠加产生空隙 -->
     <a-layout-sider :width="248" :collapsed-width="0"
-      class="admin-sider fixed left-0 top-0 z-30 hidden h-screen  overflow-hidden border-r border-line/60 !bg-white lg:block">
+      class="admin-sider fixed left-0 top-0 z-30 hidden h-screen overflow-hidden border-r border-line/60 !bg-sidebar lg:block">
       <AdminSidebar :menus="menuItems" :keyword="searchKeyword" @navigate="closeDrawer" />
     </a-layout-sider>
 
     <a-layout class="flex flex-col h-screen min-w-0 overflow-hidden ">
       <a-layout-header
-        class="z-20 flex !h-[72px]  !bg-white shrink-0 items-center justify-between gap-3 border-b border-line/60 bg-white px-4 shadow-sm sm:px-6">
+        class="z-20 flex !h-[72px] !bg-surface shrink-0 items-center justify-between gap-3 border-b border-line/60 px-4 shadow-card sm:px-6">
         <div class="flex items-center min-w-0 gap-3">
           <a-button type="text" class="lg:hidden" @click="drawerOpen = true">
             <MenuOutlined class="text-lg" />
@@ -97,7 +104,8 @@ function handleLogout() {
             <div
               class="flex items-center gap-2 py-1 pl-1 pr-2 transition-opacity rounded-full cursor-pointer hover:opacity-90 sm:pr-3">
               <div
-                class="flex items-center justify-center text-sm font-semibold rounded-full h-9 w-9 bg-brand-lighter text-brand-dark">
+                class="flex items-center justify-center text-sm font-semibold text-white rounded-full h-9 w-9"
+                :style="adminAvatarStyle">
                 {{ userInitial }}
               </div>
               <div class="hidden text-sm text-left sm:block">
@@ -150,7 +158,7 @@ function handleLogout() {
 
 :deep(.admin-search .ant-input-affix-wrapper:hover),
 :deep(.admin-search .ant-input-affix-wrapper-focused) {
-  @apply border-brand/40 bg-white;
+  @apply border-brand/40 bg-surface;
 }
 
 :deep(.admin-search .ant-input) {
@@ -172,25 +180,26 @@ function handleLogout() {
 <style>
 /* 用户下拉：文字鲜明，hover 无背景 */
 .admin-user-dropdown .ant-dropdown-menu {
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-button);
+  border: 1px solid var(--color-line);
   padding: 4px 0;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .admin-user-dropdown .ant-dropdown-menu-item {
   font-weight: 500;
-  color: #1a1a2e;
+  color: var(--color-ink);
 }
 
 .admin-user-dropdown .ant-dropdown-menu-item:hover,
 .admin-user-dropdown .ant-dropdown-menu-item-active {
-  background-color: transparent !important;
-  color: #0099cc;
+  background-color: var(--color-brand-lighter) !important;
+  color: var(--color-brand-dark);
 }
 
 :deep(.ant-layout-header) {
-  background-color: #fff;
+  background-color: var(--color-surface);
   height: 72px;
 }
 

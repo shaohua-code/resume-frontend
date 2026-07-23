@@ -1,6 +1,6 @@
 # AI 简历 · 前端项目
 
-面向全行业、全职业阶段求职者的响应式 AI 简历前端，提供 AI 生成简历、在线编辑、上传优化、岗位匹配分析、AI 评分、多格式导出与 27 套分类模板等完整能力。
+面向全行业、全职业阶段求职者的响应式 AI 简历前端，提供 AI 生成简历、在线编辑、上传优化、岗位匹配分析、AI 评分、多格式导出与 50 套分类模板等完整能力。
 
 ## 一、技术栈
 
@@ -42,16 +42,18 @@ src/
 
 不得把页面、接口、状态和服务揉进同一个目录；页面私有内容就近放在 `views/<page>/`，真正跨页面复用的内容才抽离到公共层。
 
-## 三、主题配置（改一处全局生效）
+## 三、系统界面主题
 
-编辑 [`src/constants/theme.js`](src/constants/theme.js) 即可同步：
+当前内置 5 套完整主题：清新渐变（默认）、简约风、商务风、经典黑白、雅致暖色。登录用户可在桌面账户下拉或移动端账户 Drawer 的“界面主题”高级面板中切换；偏好以 `ai-resume-ui-theme-v2` 保存在本地，无效值或存储不可用时回退默认主题。
 
-1. **Tailwind** — `tailwind.config.js` 引用 THEME.colors
-2. **CSS 变量** — `global.css :root` + `App.vue` 运行时注入
-3. **Ant Design Vue** — `App.vue` ConfigProvider `antdToken`
-4. **图表** — `src/views/admin/utils/chartTheme.js`
+[`src/constants/theme.js`](src/constants/theme.js) 是系统界面设计令牌的唯一来源，通过 [`src/composables/useTheme.js`](src/composables/useTheme.js) 同步：
 
-主色参考：青 `#00D4FF` → 蓝 `#4FACFE` → 紫 `#A855F7`
+1. **CSS / Tailwind** — 品牌色、页面、卡片、文字、边框、渐变、圆角、阴影、玻璃质感和各交互状态
+2. **Ant Design Vue** — `App.vue` 的响应式 ConfigProvider token，覆盖按钮、表格、表单、弹窗、分页、菜单等业务控件
+3. **图表** — 用户与管理数据图表的响应式色板
+4. **跨标签页** — 本地偏好变更会同步到同源页面
+
+系统主题只控制站点外壳和业务页面；简历 A4 的字体色、皮肤色与打印样式继续由模板独立配置，不随系统主题变化。
 
 ## 四、Glassmorphism 设计规范
 
@@ -86,16 +88,17 @@ src/
 | TrustOfferWall | Offer 数量 + 行业标签 + 匿名证言轮播 |
 | JdInputPanel | JD 输入模块 |
 
-模板预览页：`src/views/templates/index.vue`（`/templates`）展示全部 27 套模板。
+模板预览页：`src/views/templates/index.vue`（`/templates`）展示全部 50 套模板，并在卡片接近视口时按需加载真实 A4 预览。
 
 首页模块顺序：Hero → 核心功能 → 精选模板预览 → 信任背书 → 使用流程。
 
 ### 首屏加载策略
 
-- 首页与 404 路由使用 `meta.lightweight`，不等待完整 Ant Design Vue；其他业务页会在路由解析完成前异步注册完整组件库。
+- 首页与 404 路由使用 `meta.lightweight`；其他业务页会在路由解析完成前异步安装 `utils/installAntDesign.js` 中实际使用的 Ant Design Vue 组件清单，不再注册完整组件库。
 - `AppHeader` 异步加载，用户反馈与访问追踪在浏览器空闲阶段启动。
-- 首页模板预览和信任背书由 `LazyRender` 在接近视口时加载，避免模板注册表和轮播依赖进入首屏入口包。
+- 首页模板预览、信任背书及模板库真实 A4 卡片由 `LazyRender` 在接近视口时加载，避免模板组件和轮播依赖进入首屏入口包。
 - 未知地址统一进入 `/:pathMatch(.*)*`，展示轻量 404 页面并提供首页、上一页、模板库和生成页入口。
+- 当前生产构建入口 gzip 82.45kB、Ant 业务组件块 gzip 236.41kB；优化前基线分别为 124.77kB 和 318.72kB。新增全局 `a-*` 标签时必须同步按需注册清单并重新构建。
 
 ## 六、统一简历生成页
 
@@ -105,10 +108,13 @@ src/
 | --- | --- | --- |
 | 智能识别 | `RecognitionPanel.vue` | PDF/文字两种输入；PDF 可直接识别已存唯一文件；每种模式仅一个主识别按钮；识别期间锁定表单，完成后恢复编辑，仅回填原文事实，不触发生成、优化或保存 |
 | 统一表单 | `FormPanel.vue` | 基本信息 → 教育背景 → 经历信息 → AI 结果；仅姓名与意向岗位必填 |
+| 个人评价 | `ResumeBasicFieldsSection.vue` | `summary` 在基本信息中始终显示，选填；PDF/文字识别结果可回填，应用识别结果时不会丢失 |
 | 更多内容 | `ResumeBasicFieldsSection.vue` | 身高、体重、民族、籍贯、政治面貌、期望薪资和自定义信息默认收起 |
 | 最终结果 | `StreamResumePreview.vue` | 流式内容完成后继续保留，展示优化亮点，再提供进入编辑和重新生成 |
 
 旧 `?mode=form|lazy|upload` 和 `/upload-optimize` 仅用于兼容入口并选择默认识别方式，不再挂载三套独立生成状态。识别完成后由用户检查或编辑表单，只有显式点击最终“开始 AI 生成”或“按岗位优化简历”按钮才会发起下一次 AI 请求。表单、最终结果和最近操作使用按用户隔离的 `sessionStorage` 草稿恢复；刷新不会自动重放可能计费的 AI 请求。
+
+PDF/文字事实识别的任务值为 `resume_extract`；用户用量、管理流水、任务模型与任务提示词等前端界面统一通过 `constants/aiTasks.js` 显示为“简历信息识别”，禁止回退为原始英文值。
 
 Hero 数据背书（stat-glass）：紧凑胶囊 `min-w-[88px] px-4 py-2.5`，数字 `text-2xl sm:text-3xl`，标签 `text-xs sm:text-sm`。首项文案「AI / 智能一键生成」。
 

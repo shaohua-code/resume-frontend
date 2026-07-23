@@ -45,7 +45,7 @@ const guaranteeIcons = {
         <div
           v-for="stat in TRUST_MINI_STATS"
           :key="stat.label"
-          class="flex min-w-0 flex-col items-center gap-0.5 rounded-card border border-line/50 bg-white/80 px-1.5 py-3 shadow-sm sm:gap-1 sm:px-4 sm:py-5"
+          class="flex min-w-0 flex-col items-center gap-0.5 rounded-card border border-line/50 bg-surface/80 px-1.5 py-3 shadow-card sm:gap-1 sm:px-4 sm:py-5"
         >
           <span class="text-xl font-bold text-brand-dark sm:text-2xl">{{ stat.value }}</span>
           <span class="truncate text-[10px] font-medium text-ink-secondary sm:text-xs">{{ stat.label }}</span>
@@ -63,7 +63,7 @@ const guaranteeIcons = {
         <div
           v-for="item in TRUST_GUARANTEES"
           :key="item.title"
-          class="flex items-center gap-3 rounded-card border border-line/40 bg-white/50 p-3 text-left sm:flex-col sm:p-4 sm:text-center"
+          class="flex items-center gap-3 rounded-card border border-line/40 bg-surface/50 p-3 text-left sm:flex-col sm:p-4 sm:text-center"
         >
           <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-lighter text-lg text-brand-dark">
             <component :is="guaranteeIcons[item.icon]" />
@@ -80,7 +80,7 @@ const guaranteeIcons = {
         <span
           v-for="industry in TRUST_INDUSTRIES"
           :key="industry"
-          class="inline-flex shrink-0 items-center rounded-pill border border-line/50 bg-white/60 px-3 py-1 text-xs font-medium text-ink-secondary backdrop-blur-sm sm:px-4 sm:py-1.5 sm:text-sm"
+          class="inline-flex shrink-0 items-center rounded-pill border border-line/50 bg-surface/60 px-3 py-1 text-xs font-medium text-ink-secondary backdrop-blur-sm sm:px-4 sm:py-1.5 sm:text-sm"
         >
           {{ industry }}
         </span>
@@ -94,7 +94,7 @@ const guaranteeIcons = {
             :key="idx"
             class="px-2 pb-2"
           >
-            <div class="mx-auto max-w-lg rounded-card border border-line/40 bg-white/60 p-4">
+            <div class="mx-auto max-w-lg rounded-card border border-line/40 bg-surface/60 p-4">
               <div class="flex items-start gap-3 text-left">
                 <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-lighter text-sm font-semibold text-brand-dark">
                   {{ item.avatar }}
@@ -117,7 +117,7 @@ const guaranteeIcons = {
         <article
           v-for="(item, idx) in TRUST_TESTIMONIALS"
           :key="idx"
-          class="rounded-card border border-line/50 bg-white/70 p-5 text-left shadow-sm"
+          class="rounded-card border border-line/50 bg-surface/70 p-5 text-left shadow-card"
         >
           <div class="flex items-start gap-3">
             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-lighter text-sm font-semibold text-brand-dark">
@@ -140,7 +140,7 @@ const guaranteeIcons = {
           <h3 class="text-base font-semibold text-white sm:text-lg">准备好做一份更有竞争力的简历了吗？</h3>
           <p class="mt-1 text-xs text-white/75 sm:text-sm">现在开始，先生成、再修改，满意后再导出</p>
         </div>
-        <button class="h-11 w-full rounded-button bg-white px-6 text-sm font-semibold text-brand-dark shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl sm:w-auto" @click="router.push('/generate')">
+        <button class="h-11 w-full rounded-button bg-surface px-6 text-sm font-semibold text-brand-dark shadow-lift transition hover:-translate-y-0.5 hover:shadow-float sm:w-auto" @click="router.push('/generate')">
           免费开始创建 →
         </button>
       </div>

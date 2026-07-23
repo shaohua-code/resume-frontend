@@ -10,7 +10,7 @@ const footerLinks = [
 </script>
 
 <template>
-  <footer class="relative z-10 border-t border-line/60 bg-white/50 backdrop-blur-xl">
+  <footer class="relative z-10 border-t border-line/60 bg-surface/50 backdrop-blur-xl">
     <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 sm:flex-row sm:px-6 lg:px-8">
       <div class="flex items-center gap-2">
         <img src="/vite.svg" alt="AI简历" class="h-6 w-6" />

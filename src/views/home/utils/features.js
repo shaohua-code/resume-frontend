@@ -32,7 +32,7 @@ export const HOME_FEATURES = [
   },
   {
     icon: '🎨',
-    title: '20+ 套专业模板',
+    title: '50 套专业模板',
     path: '/templates',
     desc: '覆盖校招、社招与多行业场景，字体、间距均可自由调整',
     iconBg: 'bg-accent-lighter/60',

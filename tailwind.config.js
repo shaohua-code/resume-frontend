@@ -1,4 +1,8 @@
-import { THEME } from './src/constants/theme.js'
+import plugin from 'tailwindcss/plugin.js'
+import { THEME, createCssVariables } from './src/constants/theme.js'
+
+/** 通过 RGB 通道变量保留 Tailwind 的 /10、/60 等透明度修饰能力。 */
+const themeColor = (name) => `rgb(var(--color-${name}-rgb) / <alpha-value>)`
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -6,36 +10,48 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: THEME.colors.brand,
-        accent: THEME.colors.accent,
-        primary: THEME.colors.primary,
-        success: THEME.colors.success,
-        warning: THEME.colors.warning,
-        danger: THEME.colors.danger,
-        cream: THEME.colors.cream,
-        mint: THEME.colors.mint,
-        surface: THEME.colors.surface,
-        'surface-soft': THEME.colors['surface-soft'],
-        canvas: THEME.colors.canvas,
-        ink: THEME.colors.ink,
-        muted: THEME.colors.muted,
-        line: THEME.colors.line,
-        sidebar: THEME.colors.sidebar,
+        brand: {
+          DEFAULT: themeColor('brand'),
+          light: themeColor('brand-light'),
+          lighter: themeColor('brand-lighter'),
+          dark: themeColor('brand-dark'),
+        },
+        accent: {
+          DEFAULT: themeColor('accent'),
+          light: themeColor('accent-light'),
+          lighter: themeColor('accent-lighter'),
+        },
+        primary: themeColor('primary'),
+        success: themeColor('success'),
+        warning: themeColor('warning'),
+        danger: themeColor('danger'),
+        cream: themeColor('cream'),
+        mint: themeColor('mint'),
+        surface: themeColor('surface'),
+        'surface-soft': 'var(--color-surface-soft)',
+        canvas: themeColor('canvas'),
+        ink: {
+          DEFAULT: themeColor('ink'),
+          secondary: themeColor('ink-secondary'),
+        },
+        muted: themeColor('muted'),
+        line: themeColor('line'),
+        sidebar: themeColor('sidebar'),
       },
       borderRadius: {
-        card: THEME.radius.card,
-        banner: THEME.radius.banner,
-        button: THEME.radius.button,
-        pill: THEME.radius.pill,
+        card: 'var(--radius-card)',
+        banner: 'var(--radius-banner)',
+        button: 'var(--radius-button)',
+        pill: 'var(--radius-pill)',
       },
       boxShadow: {
-        card: THEME.shadows.card,
-        'card-hover': THEME.shadows.cardHover,
-        lift: THEME.shadows.lift,
-        glass: THEME.shadows.glass,
-        soft: THEME.shadows.soft,
-        float: THEME.shadows.float,
-        glow: THEME.shadows.glow,
+        card: 'var(--shadow-card)',
+        'card-hover': 'var(--shadow-card-hover)',
+        lift: 'var(--shadow-lift)',
+        glass: 'var(--shadow-glass)',
+        soft: 'var(--shadow-soft)',
+        float: 'var(--shadow-float)',
+        glow: 'var(--shadow-glow)',
       },
       fontFamily: {
         sans: ['Inter', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'],
@@ -89,5 +105,12 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    plugin(({ addBase }) => {
+      // 默认变量同样来自 theme.js，确保首屏无需等待 Vue 挂载且不存在第二份主题色表。
+      addBase({
+        ':root': createCssVariables(THEME),
+      })
+    }),
+  ],
 }

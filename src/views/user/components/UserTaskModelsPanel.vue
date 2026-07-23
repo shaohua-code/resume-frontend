@@ -5,7 +5,8 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { clearUserTaskModel, getUserTaskModels, saveUserTaskModel } from '@/api/userAi'
-import { getAiModelTypeLabel } from '@/constants/aiTasks'
+// 用户侧任务名称统一使用前端中文映射，避免接口标识直接暴露到界面。
+import { getAiModelTypeLabel, getAiTaskLabel } from '@/constants/aiTasks'
 import { getErrorMessage } from '@/utils/errorMessage'
 
 const loading = ref(false)
@@ -57,7 +58,7 @@ async function saveTask(task) {
   savingTask.value = task.task_type
   try {
     await saveUserTaskModel(task.task_type, modelId)
-    message.success(`${task.name}已切换模型`)
+    message.success(`${getAiTaskLabel(task.task_type)}已切换模型`)
     await loadConfig()
   } catch (e) {
     message.error(getErrorMessage(e))
@@ -110,7 +111,8 @@ onMounted(loadConfig)
           <div class="flex flex-col gap-4">
             <div class="min-w-0">
               <div class="flex flex-wrap items-center gap-2">
-                <p class="font-semibold text-ink">{{ task.name }}</p>
+                <!-- 识别任务等标题统一从任务映射读取，避免遗漏单个新增任务。 -->
+                <p class="font-semibold text-ink">{{ getAiTaskLabel(task.task_type) }}</p>
                 <span :class="task.required_model_type === 'vision' ? 'badge-success' : 'tag-soft'">
                   {{ getAiModelTypeLabel(task.required_model_type) }}
                 </span>

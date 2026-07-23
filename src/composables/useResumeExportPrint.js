@@ -5,7 +5,7 @@ import { message } from 'ant-design-vue'
 const PRINT_IFRAME_ID = 'resume-print-iframe'
 
 /**
- * 将主文档中的样式表克隆到 iframe，保证 20 套模板 scoped 样式在打印时生效
+ * 将主文档中的样式表克隆到 iframe，保证全部注册模板的 scoped 样式在打印时生效
  */
 function copyDocumentStyles(targetDoc) {
   const styleNodes = document.querySelectorAll('style, link[rel="stylesheet"]')

@@ -149,7 +149,7 @@ function updateField(key, value) {
             content-type="html"
             theme="snow"
             :options="announcementEditorOptions"
-            class="announcement-quill-editor min-h-[220px] rounded-card border border-line bg-white"
+            class="announcement-quill-editor min-h-[220px] rounded-card border border-line bg-surface"
             @update:content="updateField('content', $event)"
           />
         </a-form-item>

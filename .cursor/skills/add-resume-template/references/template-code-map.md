@@ -15,13 +15,13 @@
 | 文件 | 作用 | 新模板动作 |
 |---|---|---|
 | `src/components/resume-templates/TplNNName.vue` | 模板 DOM 与局部样式 | 新建；主要实现位置 |
-| `src/constants/templateRegistry.js` | 模板唯一注册表 | import、最大 ID、元数据、组件映射 |
+| `src/constants/templateRegistry.js` | 模板唯一注册表 | 最大 ID、元数据、动态组件加载器 |
 | `src/constants/templateFontColors.js` | 四类字体色默认值 | 增加同 ID 预设 |
 | `src/constants/templateSkinColors.js` | 11 类皮肤默认值 | 增加同 ID 预设 |
 
 `templateNames.js` 从 `TEMPLATE_LIST` 派生，不需要手工维护。
 
-默认不要改 `demoResume.js`。`getDemoResume(id)` 对未单独映射的模板自动使用 `GENERAL_DEMO`，因此新模板仍有完整预览数据。
+默认不要改 `demoResume.js`。`getDemoResume(id)` 对未单独映射的模板自动使用 `GENERAL_DEMO`，因此新模板仍有完整预览数据；只有模板分类需要特定人设时才补充 `PROFILE_BY_TEMPLATE`，例如校招模板必须映射 `CAMPUS_DEMO`，并同步保持全量头像 ID 范围。
 
 ## 2. 只读公共链路
 
@@ -43,7 +43,7 @@
 
 `views/templates/index.vue`：
 
-1. 点击卡片只设置 `previewId` 并打开完整预览。
+1. 卡片先由元数据渲染，真实 A4 在 `LazyRender` 接近视口时通过对应动态加载器挂载；点击卡片只设置 `previewId` 并打开完整预览。
 2. 点击“使用此模板生成”把 ID 写入 `resumeStore.currentTemplateId`。
 3. 跳转 `/generate?template_id=<id>`。
 
@@ -82,7 +82,38 @@ PDF 导出等待分页测量和浏览器绘制稳定后，只克隆同一批屏�
 
 ## 5. 现有实现类型
 
-- 共享标准 DOM + 模板私有布局：3、5、7、9、14、15、16、17、21、22、23、24、25、26、27。
+- 当前共 50 套模板，ID 连续为 1–50；`MAX_TEMPLATE_ID`、`TEMPLATE_LIST`、`TEMPLATE_LOADERS`、四类字体色和 11 类皮肤色映射必须保持同一集合。
+- 共享标准 DOM + 模板私有布局：3、5、7、9、14、15、16、17、21、22、23、24、25、26、27、28–50。
 - 独立定制 DOM：1、2、4、6、8、10、11、12、13、18、19、20。
 
 每个新模板必须有独立 `TplNNName.vue` 文件。仅需改变视觉结构时，可复用 `ResumeStandardContent` 并用模板根类与 scoped CSS 建立完全不同的版式；需要改变模块内部 DOM 时，再使用 `useResumeFields` 编写独立 DOM。不要为了一个新模板修改现有模板或共享标准 DOM。
+
+### 28–50 新增模板代码映射
+
+以下 23 套都复用 `ResumeStandardContent` 的标准字段与 `data-resume-module` 契约，只在各自 SFC 中定义独立布局和视觉；43、48、49、50 属于校招，其中 48–50 是用户追加的三套校招模板。
+
+| ID | 名称 | 分类 | 组件 |
+|---|---|---|---|
+| 28 | 瑞士网格 | 通用 | `Tpl28SwissGrid.vue` |
+| 29 | 黑金社论 | 职场 | `Tpl29EditorialNoir.vue` |
+| 30 | 海岸波纹 | 通用 | `Tpl30OceanWave.vue` |
+| 31 | 樱色手账 | 创意 | `Tpl31SakuraNote.vue` |
+| 32 | 工程蓝图 | 行业 | `Tpl32Blueprint.vue` |
+| 33 | 陶土卡片 | 创意 | `Tpl33TerraCards.vue` |
+| 34 | 城市路线 | 职场 | `Tpl34MetroRoute.vue` |
+| 35 | 北欧留白 | 通用 | `Tpl35NordicMinimal.vue` |
+| 36 | 霓虹终端 | 行业 | `Tpl36NeonTerminal.vue` |
+| 37 | 东方印鉴 | 通用 | `Tpl37HeritageSeal.vue` |
+| 38 | 丝带作品 | 创意 | `Tpl38RibbonPortfolio.vue` |
+| 39 | 水晶面板 | 创意 | `Tpl39QuartzPanel.vue` |
+| 40 | 纸本账册 | 传统行业 | `Tpl40PaperLedger.vue` |
+| 41 | 极光流线 | 创意 | `Tpl41AuroraFlow.vue` |
+| 42 | 包豪斯积木 | 创意 | `Tpl42BauhausBlocks.vue` |
+| 43 | 学院徽章 | 校招 | `Tpl43AcademicCrest.vue` |
+| 44 | 柑橘工作室 | 创意 | `Tpl44CitrusStudio.vue` |
+| 45 | 黑白索引 | 通用 | `Tpl45MonochromeIndex.vue` |
+| 46 | 深空坐标 | 行业 | `Tpl46DeepSpace.vue` |
+| 47 | 亚麻书信 | 通用 | `Tpl47LinenLetter.vue` |
+| 48 | 校园成长档案 | 校招 | `Tpl48CampusArchive.vue` |
+| 49 | 实践冲刺 | 校招 | `Tpl49PracticeSprint.vue` |
+| 50 | 新星作品集 | 校招 | `Tpl50GraduatePortfolio.vue` |

@@ -327,7 +327,7 @@ onUnmounted(() => {
       <a-spin :spinning="previewLoading">
         <div
           v-if="previewHtml"
-          class="max-h-[70vh] overflow-auto rounded-card border border-line/60 bg-white p-4"
+          class="max-h-[70vh] overflow-auto rounded-card border border-line/60 bg-surface p-4"
           v-html="previewHtml"
         />
         <div v-else class="py-8 text-center text-sm text-muted">暂无预览内容</div>
@@ -385,7 +385,7 @@ onUnmounted(() => {
             <a-spin :spinning="userConfirmPreviewLoading">
               <div
                 v-if="userConfirmHtml"
-                class="max-h-48 overflow-auto rounded-card border border-line/60 bg-white p-3"
+                class="max-h-48 overflow-auto rounded-card border border-line/60 bg-surface p-3"
                 v-html="userConfirmHtml"
               />
               <p v-else class="text-center text-sm text-muted">请输入实际充值金额后预览</p>
