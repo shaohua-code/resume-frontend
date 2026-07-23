@@ -80,14 +80,14 @@
     <!-- JD匹配弹窗 -->
     <a-modal
       v-model:open="showMatchModal"
-      title="JD岗位匹配分析"
+      title="岗位匹配分析"
       :confirm-loading="resumeStore.matching"
       :width="isMobile ? '95vw' : '600px'"
       class="editor-modal"
       @ok="handleMatch"
     >
       <a-form layout="vertical">
-        <a-form-item label="粘贴岗位JD内容">
+        <a-form-item label="粘贴岗位信息内容">
           <a-textarea :value="jdText" :rows="6" placeholder="请粘贴岗位的JD描述..." class="editor-modal-textarea" @update:value="jdText = $event" />
         </a-form-item>
       </a-form>
@@ -113,7 +113,7 @@
         </div>
         <!-- 经验差距 -->
         <p v-if="matchResult.experience_gap" class="mb-2"><strong>经验差距：</strong>{{ matchResult.experience_gap }}</p>
-        <p><strong>岗位关键词：</strong>{{ matchResult.keywords?.join('、') }}</p>
+        <p><strong>岗位关键词：</strong>{{ matchResult.keywords?.join('、') || '暂未提取' }}</p>
         <p><strong>缺失技能：</strong>{{ matchResult.missing_skills?.join('、') || '无' }}</p>
         <p><strong>优化建议：</strong></p>
         <ul class="pl-5 text-sm list-disc text-ink-secondary">
@@ -368,7 +368,7 @@ const scoreColor = computed(() => {
 
 async function handleMatch() {
   if (!jdText.value.trim()) {
-    message.warning('请输入岗位JD')
+    message.warning('请输入岗位信息')
     return
   }
   // 预保存静默执行，避免与 岗位匹配分析结果的提示混淆
@@ -410,6 +410,10 @@ async function handleScore() {
     })
     if (result?.success) {
       scoreResult.value = result.data
+      // 旧版自定义提示词只返回总分时，用后端归一化说明替代永不结束的等待态。
+      if (!scoreStreamingText.value) {
+        scoreStreamingText.value = result.data?.summary || result.data?.fallback_note || '评分已完成，请查看各维度结果。'
+      }
     } else if (!scoreStreamingText.value) {
       scoreStreamingText.value = result?.error || '评分失败，请检查模型配置或稍后重试。'
     }
