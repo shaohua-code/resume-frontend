@@ -3,111 +3,114 @@
   仅在服务端返回 EMAIL_BINDING_REQUIRED 后出现，绑定成功再释放原 AI 请求。
 -->
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import { message, Modal } from 'ant-design-vue'
-import { useUserStore } from '@/stores/user'
-import { createCountdown } from '@/views/login/utils/countdown'
+import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
+import { message, Modal } from "ant-design-vue";
+import { useUserStore } from "@/stores/user";
+import { createCountdown } from "@/views/login/utils/countdown";
 import {
   cancelEmailBinding,
   completeEmailBinding,
   emailBindingGateOpen,
-} from '@/utils/emailBindingGate'
+} from "@/utils/emailBindingGate";
 
-const userStore = useUserStore()
-const formRef = ref(null)
-const step = ref('email')
-const sending = ref(false)
-const binding = ref(false)
-const countdownValue = ref(0)
-const countdown = createCountdown(60)
+const userStore = useUserStore();
+const formRef = ref(null);
+const step = ref("email");
+const sending = ref(false);
+const binding = ref(false);
+const countdownValue = ref(0);
+const countdown = createCountdown(60);
 
 // 弹窗只保留本次绑定所需数据，关闭后立即清空，不写入任何持久化存储。
 const form = reactive({
-  email: '',
-  code: '',
-})
+  email: "",
+  code: "",
+});
 
-const busy = computed(() => sending.value || binding.value)
-const isCodeStep = computed(() => step.value === 'code')
+const busy = computed(() => sending.value || binding.value);
+const isCodeStep = computed(() => step.value === "code");
 
 // 每次门禁打开都创建干净流程；已有但未验证的邮箱仅用于减少重复输入。
 watch(
   emailBindingGateOpen,
   (open) => {
-    if (!open) return
-    countdown.stop()
-    countdownValue.value = 0
-    step.value = 'email'
-    form.email = userStore.userInfo.email || ''
-    form.code = ''
+    if (!open) return;
+    countdown.stop();
+    countdownValue.value = 0;
+    step.value = "email";
+    form.email = userStore.userInfo.email || "";
+    form.code = "";
   },
   { immediate: true },
-)
+);
 
 /** 校验邮箱后发送验证码，频率限制与有效期由后端统一控制。 */
 async function handleSendCode() {
-  if (busy.value || countdown.isRunning()) return
+  if (busy.value || countdown.isRunning()) return;
   // 在异步校验前同步占用互斥位，阻止双击或回车并发发送。
-  sending.value = true
+  sending.value = true;
   try {
-    await formRef.value?.validateFields(['email'])
+    await formRef.value?.validateFields(["email"]);
   } catch {
-    sending.value = false
-    return
+    sending.value = false;
+    return;
   }
 
   try {
-    await userStore.sendEmailBindingCode(form.email.trim())
-    step.value = 'code'
-    form.code = ''
+    await userStore.sendEmailBindingCode(form.email.trim());
+    step.value = "code";
+    form.code = "";
     countdown.start((value) => {
-      countdownValue.value = value
-    })
+      countdownValue.value = value;
+    });
   } finally {
-    sending.value = false
+    sending.value = false;
   }
 }
 
 /** 验证并绑定邮箱；成功后全局门禁会让此前被拦截的 AI 操作自动续接。 */
 async function handleBindEmail() {
-  if (busy.value) return
+  if (busy.value) return;
   // 与发送步骤相同，先锁定再校验，避免同一验证码被并发提交。
-  binding.value = true
+  binding.value = true;
   try {
-    await formRef.value?.validateFields(['email', 'code'])
+    await formRef.value?.validateFields(["email", "code"]);
   } catch {
-    binding.value = false
-    return
+    binding.value = false;
+    return;
   }
 
   try {
-    const boundUser = await userStore.bindAccountEmail(form.email.trim(), form.code.trim())
-    message.success('邮箱绑定成功，正在继续刚才的操作')
-    completeEmailBinding(boundUser)
+    const boundUser = await userStore.bindAccountEmail(
+      form.email.trim(),
+      form.code.trim(),
+    );
+    message.success("邮箱绑定成功，正在继续刚才的操作");
+    completeEmailBinding(boundUser);
   } finally {
-    binding.value = false
+    binding.value = false;
   }
 }
 
 /** 返回邮箱步骤时废弃当前验证码输入，避免验证码与新邮箱错配。 */
 function handleBack() {
-  if (busy.value) return
-  countdown.stop()
-  countdownValue.value = 0
-  form.code = ''
-  step.value = 'email'
+  if (busy.value) return;
+  countdown.stop();
+  countdownValue.value = 0;
+  form.code = "";
+  step.value = "email";
 }
 
 /** 关闭弹窗代表放弃本次 AI 操作，页面仍保留原始表单内容。 */
 function handleCancel() {
-  if (busy.value) return
-  countdown.stop()
-  countdownValue.value = 0
-  form.code = ''
-  cancelEmailBinding()
+  if (busy.value) return;
+  countdown.stop();
+  countdownValue.value = 0;
+  form.code = "";
+  cancelEmailBinding();
 }
 
-onBeforeUnmount(() => countdown.stop())
+onBeforeUnmount(() => countdown.stop());
 </script>
 
 <template>
@@ -125,20 +128,29 @@ onBeforeUnmount(() => countdown.stop())
     @cancel="handleCancel"
   >
     <!-- 明确说明邮箱只在 AI 能力前强制绑定，非 AI 功能不受影响。 -->
-    <div class="mb-5 rounded-card border border-brand/20 bg-brand-lighter/45 p-4">
+    <div
+      class="p-4 mb-5 border rounded-card border-brand/20 bg-brand-lighter/45"
+    >
       <p class="text-sm font-medium text-ink">
-        {{ isCodeStep ? '验证码已发送，请完成验证' : '当前账号尚未绑定邮箱' }}
+        {{ isCodeStep ? "验证码已发送，请完成验证" : "当前账号尚未绑定邮箱" }}
       </p>
       <p class="mt-1 text-xs leading-5 text-ink-secondary sm:text-sm">
-        完成绑定后会自动继续刚才的 AI 操作，无需重新填写内容。
+        绑定邮箱赠<span class="text-[red]"> 10 元余额</span>，绑定后自动继续 AI 操作
       </p>
     </div>
 
-    <a-form ref="formRef" :model="form" layout="vertical" @finish="isCodeStep ? handleBindEmail() : handleSendCode()">
+    <a-form
+      ref="formRef"
+      :model="form"
+      layout="vertical"
+      @finish="isCodeStep ? handleBindEmail() : handleSendCode()"
+    >
       <a-form-item
         label="邮箱"
         name="email"
-        :rules="[{ required: true, type: 'email', message: '请输入有效的邮箱地址' }]"
+        :rules="[
+          { required: true, type: 'email', message: '请输入有效的邮箱地址' },
+        ]"
         class="!mb-4"
       >
         <a-input
@@ -179,21 +191,28 @@ onBeforeUnmount(() => countdown.stop())
               :disabled="countdownValue > 0 || busy"
               @click="handleSendCode"
             >
-              {{ countdownValue > 0 ? `${countdownValue}s 后重发` : '重新发送' }}
+              {{
+                countdownValue > 0 ? `${countdownValue}s 后重发` : "重新发送"
+              }}
             </button>
           </template>
         </a-input>
       </a-form-item>
 
       <!-- 自定义底部在 375px 窄屏改为纵向，保证每个操作都有足够触控面积。 -->
-      <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <button type="button" class="btn-ghost w-full sm:w-auto" :disabled="busy" @click="handleCancel">
+      <div class="flex flex-col-reverse gap-2 mt-6 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          class="w-full btn-ghost sm:w-auto"
+          :disabled="busy"
+          @click="handleCancel"
+        >
           暂不绑定
         </button>
         <button
           v-if="isCodeStep"
           type="button"
-          class="btn-ghost w-full sm:w-auto"
+          class="w-full btn-ghost sm:w-auto"
           :disabled="busy"
           @click="handleBack"
         >
@@ -205,7 +224,15 @@ onBeforeUnmount(() => countdown.stop())
           :disabled="busy"
         >
           <span v-if="busy" class="email-binding-spinner" aria-hidden="true" />
-          {{ isCodeStep ? (binding ? '验证中…' : '验证并继续') : (sending ? '发送中…' : '发送验证码') }}
+          {{
+            isCodeStep
+              ? binding
+                ? "验证中…"
+                : "验证并继续"
+              : sending
+                ? "发送中…"
+                : "发送验证码"
+          }}
         </button>
       </div>
     </a-form>
