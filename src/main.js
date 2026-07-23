@@ -11,6 +11,8 @@ import router from './router'
 import 'ant-design-vue/dist/reset.css'
 import './styles/global.css'
 import { antDesignReady } from '@/utils/uiReady'
+// 全局 Markdown 渲染组件
+import MdRender from '@/components/MdRender.vue'
 
 dayjs.locale('zh-cn')
 

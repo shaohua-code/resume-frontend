@@ -175,11 +175,15 @@
       :width="isMobile ? '95vw' : '500px'"
       class="editor-modal"
     >
+      <!-- 顶部：AI 总结输出区（Markdown 渲染） -->
       <div class="score-stream">
-        <p class="mb-3 text-sm font-semibold text-ink">模型评分内容</p>
-        <div class="score-stream-body">
-          <pre v-if="scoreStreamingText">{{ scoreStreamingText }}</pre>
-          <span v-else class="text-sm text-muted">正在等待模型输出...</span>
+        <p class="mb-3 text-sm font-semibold text-ink">AI 评分总结</p>
+        <div ref="scoreStreamRef" class="score-stream-body">
+          <MdRender v-if="scoreStreamingText" :content="scoreStreamingText" />
+          <div v-else class="flex items-center gap-2 text-sm text-muted">
+            <a-spin size="small" />
+            <span>正在等待模型输出...</span>
+          </div>
         </div>
       </div>
       <div v-if="scoreResult" class="score-result">
@@ -201,7 +205,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { reactive, ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { DownloadOutlined, CheckOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
@@ -225,6 +229,8 @@ import EditorToolbar from './components/EditorToolbar.vue'
 import EditorEditPanel from './components/EditorEditPanel.vue'
 import ResumePreview from './components/ResumePreview.vue'
 import JdResumeOptimizeModal from '@/components/JdResumeOptimizeModal.vue'
+// Markdown 渲染组件（按需加载）
+import MdRender from '@/components/MdRender.vue'
 import { useResumeExportPrint } from '@/composables/useResumeExportPrint'
 import { useMediaQuery } from '@/composables/useMediaQuery'
 
@@ -384,6 +390,17 @@ async function handleMatch() {
 const showScoreModal = ref(false)
 const scoreResult = ref(null)
 const scoreStreamingText = ref('')
+// 流式输出容器引用，用于自动滚动
+const scoreStreamRef = ref(null)
+
+// 流式输出时自动滚动到底部
+watch(scoreStreamingText, () => {
+  if (scoreStreamRef.value) {
+    nextTick(() => {
+      scoreStreamRef.value.scrollTop = scoreStreamRef.value.scrollHeight
+    })
+  }
+})
 const scoreItems = [
   { key: 'content_completeness', label: '内容完整度', max: 20 },
   { key: 'skill_match', label: '技能匹配度', max: 20 },
