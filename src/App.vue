@@ -45,6 +45,7 @@ function runDeferredTasks() {
 
 // 主题立即生效；访客追踪和富文本反馈让出关键渲染阶段。
 onMounted(() => {
+  console.log('LG onMounted')
   applyCssVariables()
   if ('requestIdleCallback' in window) {
     deferredHandleType = 'idle'
@@ -63,9 +64,9 @@ onBeforeUnmount(() => {
 
 <template>
   <ConfigProvider :locale="zhCN" :theme="antdTheme">
-    <div class="system-ui-shell relative flex min-h-screen flex-col bg-cream font-sans text-ink antialiased">
+    <div class="relative flex flex-col min-h-screen font-sans antialiased system-ui-shell bg-cream text-ink">
       <!-- 全页背景装饰层 -->
-      <div class="page-bg pointer-events-none fixed inset-0 z-0" />
+      <div class="fixed inset-0 z-0 pointer-events-none page-bg" />
       <AppHeader v-if="!$route.meta.hideLayout" />
       <main
         class="relative z-10 flex-1 transition-all duration-300"
@@ -79,7 +80,7 @@ onBeforeUnmount(() => {
           role="status"
           aria-live="polite"
         >
-          <div class="flex items-center gap-3 rounded-banner border border-line/60 bg-surface/95 px-5 py-3 text-sm font-medium text-ink shadow-soft">
+          <div class="flex items-center gap-3 px-5 py-3 text-sm font-medium border rounded-banner border-line/60 bg-surface/95 text-ink shadow-soft">
             <Spin size="small" />
             <span>页面加载中，请稍候…</span>
           </div>
