@@ -114,7 +114,7 @@
               </button>
             </a-popconfirm>
             <GradientButton size="small" @click="handleCreate">
-              <PlusOutlined /> 新建简历
+              <PlusOutlined class="!text-white" /> 新建简历
             </GradientButton>
           </div>
         </header>
@@ -126,7 +126,7 @@
               <div class="empty-title">创建你的第一份简历</div>
               <div class="empty-desc">从模板开始，使用 AI 快速整理经历与内容。</div>
               <GradientButton class="mt-5" @click="handleCreate">
-                <PlusOutlined /> 新建简历
+                <PlusOutlined class="!text-white" /> 新建简历
               </GradientButton>
             </div>
 
