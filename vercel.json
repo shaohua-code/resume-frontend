@@ -3,11 +3,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://api.aijianli.tech/api/:path*"
+      "destination": "https://175.178.62.55.tech/api/:path*"
     },
     {
       "source": "/uploads/:path*",
-      "destination": "https://api.aijianli.tech/uploads/:path*"
+      "destination": "https://175.178.62.55.tech/uploads/:path*"
     },
     {
       "source": "/(.*)",
