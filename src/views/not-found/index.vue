@@ -173,13 +173,14 @@ h1 {
 .not-found-glow--left {
   top: 5%;
   left: -12%;
-  background: radial-gradient(circle, rgba(0, 212, 255, 0.2), transparent 68%);
+  /* 404 装饰光斑从当前主题取色，保持轻量路由与全站视觉一致。 */
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-brand) 20%, transparent), transparent 68%);
 }
 
 .not-found-glow--right {
   right: -10%;
   bottom: 0;
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.18), transparent 68%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-accent) 18%, transparent), transparent 68%);
 }
 
 @media (max-width: 640px) {

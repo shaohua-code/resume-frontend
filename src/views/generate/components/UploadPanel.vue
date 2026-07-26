@@ -92,7 +92,7 @@
             v-if="uploadPercent < 100 && !streamText"
             :percent="uploadPercent"
             status="active"
-            stroke-color="#00D4FF"
+            :stroke-color="currentTheme.colors.brand.DEFAULT"
           />
           <div v-if="uploadPercent < 100 && !streamText" class="mt-2 text-center text-sm text-muted">
             正在上传并连接 AI...
@@ -220,11 +220,14 @@ import GradientButton from '@/components/GradientButton.vue'
 import JdResumeOptimizeModal from '@/components/JdResumeOptimizeModal.vue'
 import StreamResumePreview from './StreamResumePreview.vue'
 import { useScrollToStreamPreview } from '@/composables/useScrollToStreamPreview'
+import { useTheme } from '@/composables/useTheme'
 import { normalizeResumeFields } from '@/constants/resumeFieldSchema'
 import { parsePartialResumeJson } from '../utils/streamResumeParser'
 
 const router = useRouter()
 const resumeStore = useResumeStore()
+// 上传进度读取响应式系统主题，切换主题时即时更新而不影响 A4 模板皮肤。
+const { currentTheme } = useTheme()
 const streamPreviewAnchorRef = ref(null)
 const { scrollToStreamPreview } = useScrollToStreamPreview(streamPreviewAnchorRef)
 

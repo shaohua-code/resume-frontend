@@ -168,12 +168,13 @@ const guaranteeIcons = {
 
 .trust-wall {
   @apply overflow-hidden;
+  /* 背书区背景与行动按钮共享系统主题，避免切换后仍显示默认青紫渐变。 */
   background:
-    radial-gradient(circle at 10% 0%, rgba(0, 212, 255, 0.11), transparent 20rem),
-    rgba(255, 255, 255, 0.78);
+    radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--color-brand) 11%, transparent), transparent 20rem),
+    color-mix(in srgb, var(--color-surface) 78%, transparent);
 }
 
 .trust-cta {
-  background: linear-gradient(120deg, #0891b2, #4f8cfe 55%, #8b5cf6);
+  background: var(--gradient-primary);
 }
 </style>

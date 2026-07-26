@@ -131,15 +131,16 @@ function handleFeatureClick(item) {
 
 <style scoped>
 .home-page {
+  /* 首页氛围光跟随系统主题，经典黑白等方案不残留默认青紫色。 */
   background:
     radial-gradient(
       circle at 8% 28%,
-      rgba(0, 212, 255, 0.08),
+      color-mix(in srgb, var(--color-brand) 8%, transparent),
       transparent 22rem
     ),
     radial-gradient(
       circle at 92% 62%,
-      rgba(168, 85, 247, 0.07),
+      color-mix(in srgb, var(--color-accent) 7%, transparent),
       transparent 24rem
     );
 }
