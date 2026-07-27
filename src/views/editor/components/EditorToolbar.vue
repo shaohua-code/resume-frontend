@@ -54,6 +54,7 @@
       <div class="items-center hidden gap-2 shrink-0 lg:flex">
         <button class="px-3 text-xs btn-ghost" @click="emit('match')"><AimOutlined /> JD匹配</button>
         <button class="px-3 text-xs btn-ghost" @click="emit('jd-optimize')"><ThunderboltOutlined /> 基于岗位优化</button>
+        <button class="px-3 text-xs btn-ghost" @click="emit('history')"><HistoryOutlined /> 历史</button>
         <button class="px-3 text-xs btn-ghost" :disabled="scoring" @click="emit('score')">
           <a-spin v-if="scoring" size="small" class="mr-1" />
           <BarChartOutlined v-else class="mr-1" /> 评分
@@ -90,6 +91,7 @@
               
               <a-menu-item @click="emit('match')">岗位匹配分析</a-menu-item>
               <a-menu-item @click="emit('jd-optimize')">岗位优化简历</a-menu-item>
+              <a-menu-item @click="emit('history')">历史版本</a-menu-item>
               <a-menu-item :disabled="scoring" @click="emit('score')">AI 评分</a-menu-item>
               <a-menu-divider />
               <a-menu-item v-if="!isMobile" @click="emit('export-pdf')">导出 PDF</a-menu-item>
@@ -137,7 +139,7 @@ import { useRouter } from 'vue-router'
 import {
   LeftOutlined, SaveOutlined, DownloadOutlined, MenuOutlined,
   AimOutlined, BarChartOutlined, ThunderboltOutlined,
-  AppstoreOutlined, ColumnWidthOutlined, FontSizeOutlined, BgColorsOutlined,
+  AppstoreOutlined, ColumnWidthOutlined, FontSizeOutlined, BgColorsOutlined, HistoryOutlined,
 } from '@ant-design/icons-vue'
 import GradientButton from '@/components/GradientButton.vue'
 import EditorSpacingPanel from './EditorSpacingPanel.vue'
@@ -164,7 +166,7 @@ defineProps({
 })
 
 const emit = defineEmits([
-  'settings-change', 'template', 'match', 'jd-optimize', 'score', 'save', 'export-pdf', 'export-word',
+  'settings-change', 'template', 'match', 'jd-optimize', 'history', 'score', 'save', 'export-pdf', 'export-word',
 ])
 
 const router = useRouter()

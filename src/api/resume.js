@@ -522,6 +522,16 @@ export function getResumeDetail(resumeId) {
   return request.get('/resume/detail', { params: { resume_id: resumeId } })
 }
 
+/** 获取某份简历最近 3 条 AI 生成/优化历史 */
+export function getResumeHistory(resumeId) {
+  return request.get(`/resume/${resumeId}/history`)
+}
+
+/** 一键应用历史版本到当前简历 */
+export function applyResumeHistory(resumeId, historyId) {
+  return request.post(`/resume/${resumeId}/history/${historyId}/apply`)
+}
+
 /** 删除简历 */
 export function deleteResume(resumeId) {
   return request.delete('/resume/delete', { params: { resume_id: resumeId } })

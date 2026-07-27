@@ -357,6 +357,7 @@ async function runJdOptimize(jdText) {
         resume_json: jdOptimizeResult.value.resume,
         template_id: resumeStore.currentTemplateId || 1,
         score: 0,
+        history_type: 'jd_resume_optimize',
       })
       if (createRes.success && createRes.data?.id) {
         resumeStore.currentResumeId = createRes.data.id

@@ -22,6 +22,7 @@
       @template="showTemplateDrawer = true"
       @match="showMatchModal = true"
       @jd-optimize="openJdOptimizeModal"
+      @history="openHistoryModal"
       @score="handleScore"
       @save="handleSave"
       @export-pdf="handleExportPDF"
@@ -74,7 +75,9 @@
       v-model:modules="modules"
       v-model:active-module="activeModule"
       :highlight-module="highlightModule"
+      :template-id="templateId"
       @collapsed-change="editPanelCollapsed = $event"
+      @ai-optimized="markAiHistoryPending"
     />
 
     <!-- JD匹配弹窗 -->
@@ -201,6 +204,51 @@
         </a-row>
       </div>
     </a-modal>
+
+    <!-- AI 历史版本：每条历史都用对应模板快照展示，可一键恢复 -->
+    <a-modal
+      v-model:open="showHistoryModal"
+      title="历史版本"
+      :footer="null"
+      :width="isMobile ? '95vw' : 980"
+      class="editor-modal"
+    >
+      <div v-if="historyLoading" class="flex items-center justify-center py-10 text-sm text-muted">
+        <a-spin size="small" class="mr-2" /> 正在加载历史版本...
+      </div>
+      <div v-else-if="!historyItems.length" class="rounded-card border border-line/50 bg-canvas p-6 text-center text-sm text-muted">
+        暂无 AI 生成或优化历史
+      </div>
+      <div v-else class="history-grid">
+        <article
+          v-for="item in historyItems"
+          :key="item.id"
+          class="history-card"
+        >
+          <div class="mb-3 flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="truncate text-sm font-semibold text-ink">{{ historySourceLabel(item.source_type) }}</p>
+              <p class="mt-0.5 text-xs text-muted">{{ formatHistoryTime(item.create_time) }}</p>
+            </div>
+            <button
+              type="button"
+              class="btn-ghost min-h-9 shrink-0 px-3 text-xs"
+              :disabled="historyApplyingId === item.id"
+              @click="applyHistory(item)"
+            >
+              <a-spin v-if="historyApplyingId === item.id" size="small" class="mr-1" />
+              应用
+            </button>
+          </div>
+          <ResumeTemplatePreviewPane
+            :resume="parseHistoryResume(item.resume_json)"
+            :template-id="item.template_id"
+            :scale="isMobile ? 0.36 : 0.28"
+            max-height="320px"
+          />
+        </article>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -229,6 +277,7 @@ import EditorToolbar from './components/EditorToolbar.vue'
 import EditorEditPanel from './components/EditorEditPanel.vue'
 import ResumePreview from './components/ResumePreview.vue'
 import JdResumeOptimizeModal from '@/components/JdResumeOptimizeModal.vue'
+import ResumeTemplatePreviewPane from '@/components/ResumeTemplatePreviewPane.vue'
 // Markdown 渲染组件（按需加载）
 import MdRender from '@/components/MdRender.vue'
 import { useResumeExportPrint } from '@/composables/useResumeExportPrint'
@@ -253,6 +302,8 @@ const autoSaveReady = ref(false)
 const autoSaving = ref(false)
 let autoSaveDebounceTimer = null
 let lastSavedSnapshot = ''
+// AI 优化应用后，下一次成功保存才写入历史；普通手动编辑保存不占用历史名额。
+const pendingHistoryType = ref('')
 
 const activeModule = ref('basic')
 const highlightModule = ref('')
@@ -317,10 +368,18 @@ const matchResult = ref(null)
 
 // 岗位优化简历弹窗显隐
 const showJdOptimizeModal = ref(false)
+const showHistoryModal = ref(false)
+const historyLoading = ref(false)
+const historyApplyingId = ref(null)
+const historyItems = ref([])
 
 /** 打开 岗位优化弹窗 */
 function openJdOptimizeModal() {
   showJdOptimizeModal.value = true
+}
+
+function markAiHistoryPending(type) {
+  pendingHistoryType.value = type || 'section_optimize'
 }
 
 /**
@@ -342,6 +401,7 @@ function handleJdOptimizeApply(payload) {
   const optimized = payload?.resume || payload
   if (!optimized || !Object.keys(optimized).length) return
   writeJdOptimizeResult(optimized, payload?.sectionKeys ?? null)
+  markAiHistoryPending('jd_resume_optimize')
   message.success('已应用岗位优化结果，记得保存简历')
 }
 
@@ -353,7 +413,72 @@ function handleJdOptimizeApplySection(payload) {
   const sectionKey = payload?.sectionKey
   if (!optimized || !sectionKey) return
   writeJdOptimizeResult(optimized, [sectionKey])
+  markAiHistoryPending('jd_resume_optimize')
   message.success('已应用该模块，可继续应用其他项或保存简历')
+}
+
+function parseHistoryResume(value) {
+  if (typeof value !== 'string') return normalizeResumeFields(value || {})
+  try {
+    return normalizeResumeFields(JSON.parse(value || '{}'))
+  } catch {
+    return {}
+  }
+}
+
+function historySourceLabel(type) {
+  return {
+    resume_generate: 'AI 生成',
+    jd_resume_optimize: '岗位优化',
+    section_optimize: '模块优化',
+    pdf_optimize: 'PDF 优化',
+    pdf_jd_optimize: 'PDF 岗位优化',
+  }[type] || 'AI 优化'
+}
+
+function formatHistoryTime(value) {
+  if (!value) return ''
+  return new Date(value).toLocaleString('zh-CN', { hour12: false })
+}
+
+async function openHistoryModal() {
+  if (!currentResumeId.value) {
+    message.warning('当前简历尚未保存，暂无历史版本')
+    return
+  }
+  showHistoryModal.value = true
+  historyLoading.value = true
+  try {
+    const result = await resumeStore.fetchResumeHistory(currentResumeId.value)
+    historyItems.value = result.items || []
+  } catch (e) {
+    message.error(e?.response?.data?.detail || e?.message || '历史版本加载失败')
+  } finally {
+    historyLoading.value = false
+  }
+}
+
+async function applyHistory(item) {
+  if (!currentResumeId.value || !item?.id) return
+  historyApplyingId.value = item.id
+  try {
+    const res = await resumeStore.applyHistoryVersion(currentResumeId.value, item.id)
+    const history = res.data?.history || item
+    const restored = parseHistoryResume(history.resume_json)
+    Object.keys(resume).forEach((key) => delete resume[key])
+    Object.assign(resume, restored)
+    templateId.value = clampTemplateId(history.template_id)
+    resumeStore.currentTemplateId = templateId.value
+    resumeStore.currentResume = { ...restored }
+    loadEditorSettings(resume)
+    lastSavedSnapshot = getAutoSaveSnapshot()
+    pendingHistoryType.value = ''
+    showHistoryModal.value = false
+  } catch (e) {
+    message.error(e?.response?.data?.detail || e?.message || '历史版本应用失败')
+  } finally {
+    historyApplyingId.value = null
+  }
 }
 
 // 根据匹配分数返回进度条颜色
@@ -492,6 +617,7 @@ async function saveResumeData({ silent = false, skipValidation = false } = {}) {
       resume_json: JSON.stringify(resume),
       template_id: templateId.value,
       score: scoreResult.value?.total || 0,
+      history_type: pendingHistoryType.value || undefined,
     },
     { silent }
   )
@@ -502,6 +628,7 @@ async function handleSave() {
   try {
     const saved = await saveResumeData()
     if (saved) {
+      pendingHistoryType.value = ''
       lastSavedSnapshot = getAutoSaveSnapshot()
     }
   } finally {
@@ -535,6 +662,7 @@ function queueAutoSaveAfterChange(snapshot) {
     try {
       const saved = await saveResumeData({ silent: true, skipValidation: true })
       if (saved) {
+        pendingHistoryType.value = ''
         lastSavedSnapshot = getAutoSaveSnapshot()
       }
     } catch (e) {
@@ -726,6 +854,15 @@ watch(
 /* 评分结果区 */
 .score-result {
   @apply text-center;
+}
+
+/* 历史卡片承载真实模板快照，移动端自动单列显示。 */
+.history-grid {
+  @apply grid grid-cols-1 gap-4 lg:grid-cols-3;
+}
+
+.history-card {
+  @apply min-w-0 rounded-card border border-line/60 bg-surface p-3 shadow-sm;
 }
 
 .score-total {

@@ -8,6 +8,7 @@ import { optimizeResumePartStream } from '@/api/resume'
 import { validateRequiredBasicFields } from '@/constants/resumeFieldSchema'
 import {
   applyModuleOptimizeResult,
+  snapshotResume,
   snapshotField,
 } from '@/utils/optimizeDiff'
 import { getErrorMessage } from '@/utils/errorMessage'
@@ -117,6 +118,8 @@ export function useResumeOptimizer({ resume }) {
     pendingDiff.value = {
       type,
       index,
+      // 冻结整份简历，模板对比左侧始终展示优化前版本。
+      beforeResume: snapshotResume(resume.value),
       beforeText: formatBeforeText(type, beforeValue),
       afterText: '',
       afterValue: type === 'skills' ? [] : '',

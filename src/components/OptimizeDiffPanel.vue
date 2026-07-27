@@ -8,6 +8,7 @@
 import { computed, ref, watch } from 'vue'
 import { useMediaQuery } from '@/composables/useMediaQuery'
 import GradientButton from '@/components/GradientButton.vue'
+import ResumeTemplatePreviewPane from '@/components/ResumeTemplatePreviewPane.vue'
 
 const open = defineModel({ type: Boolean, default: false })
 
@@ -23,6 +24,9 @@ const props = defineProps({
   afterSummary: { type: String, default: '' },
   notes: { type: Array, default: () => [] },
   applyAllLabel: { type: String, default: '一键应用' },
+  beforeResume: { type: Object, default: null },
+  afterResume: { type: Object, default: null },
+  templateId: { type: Number, default: 1 },
   // 流式阶段右侧用插槽展示预览
   showAfterSlot: { type: Boolean, default: false },
 })
@@ -66,6 +70,9 @@ const displayAfter = computed(() => {
 
 const useAfterSlot = computed(() => (
   props.showAfterSlot && props.loading && props.mode === 'resume'
+))
+const useTemplateCompare = computed(() => (
+  props.mode === 'resume' && props.beforeResume && (props.afterResume || props.showAfterSlot)
 ))
 
 function isApplied(key) {
@@ -119,6 +126,13 @@ function handleClose() {
         />
         <div class="min-h-[160px] rounded-card border border-line/50 bg-cream/40 p-3 text-sm leading-6 whitespace-pre-wrap text-ink">
           <slot v-if="mobileTab === 'after' && useAfterSlot" name="after" />
+          <ResumeTemplatePreviewPane
+            v-else-if="useTemplateCompare"
+            :resume="mobileTab === 'after' ? afterResume : beforeResume"
+            :template-id="templateId"
+            :scale="0.42"
+            max-height="none"
+          />
           <template v-else>
             {{ mobileTab === 'after' ? displayAfter : displayBefore }}
           </template>
@@ -127,14 +141,28 @@ function handleClose() {
       <div v-else class="grid grid-cols-2 gap-4">
         <div class="min-w-0">
           <p class="mb-2 text-xs font-semibold tracking-wide text-muted">优化前</p>
-          <div class="max-h-[42vh] overflow-y-auto rounded-card border border-line/50 bg-cream/40 p-3 text-sm leading-6 whitespace-pre-wrap text-ink">
-            {{ displayBefore }}
+          <div class="rounded-card border border-line/50 bg-cream/40 p-3 text-sm leading-6 whitespace-pre-wrap text-ink">
+            <ResumeTemplatePreviewPane
+              v-if="useTemplateCompare"
+              :resume="beforeResume"
+              :template-id="templateId"
+              :scale="0.38"
+              max-height="none"
+            />
+            <template v-else>{{ displayBefore }}</template>
           </div>
         </div>
         <div class="min-w-0">
           <p class="mb-2 text-xs font-semibold tracking-wide text-brand-dark">优化后</p>
-          <div class="max-h-[42vh] overflow-y-auto rounded-card border border-brand/30 bg-surface p-3 text-sm leading-6 whitespace-pre-wrap text-ink shadow-soft">
+          <div class="rounded-card border border-brand/30 bg-surface p-3 text-sm leading-6 whitespace-pre-wrap text-ink shadow-soft">
             <slot v-if="useAfterSlot" name="after" />
+            <ResumeTemplatePreviewPane
+              v-else-if="useTemplateCompare"
+              :resume="afterResume"
+              :template-id="templateId"
+              :scale="0.38"
+              max-height="none"
+            />
             <template v-else>{{ displayAfter }}</template>
           </div>
         </div>
@@ -192,6 +220,13 @@ function handleClose() {
       />
       <div class="min-h-[160px] rounded-card border border-line/50 bg-cream/40 p-3 text-sm leading-6 whitespace-pre-wrap text-ink">
         <slot v-if="mobileTab === 'after' && useAfterSlot" name="after" />
+        <ResumeTemplatePreviewPane
+          v-else-if="useTemplateCompare"
+          :resume="mobileTab === 'after' ? afterResume : beforeResume"
+          :template-id="templateId"
+          :scale="0.42"
+          max-height="none"
+        />
         <template v-else>
           {{ mobileTab === 'after' ? displayAfter : displayBefore }}
         </template>
@@ -200,14 +235,28 @@ function handleClose() {
     <div v-else class="grid grid-cols-2 gap-4">
       <div class="min-w-0">
         <p class="mb-2 text-xs font-semibold tracking-wide text-muted">优化前</p>
-        <div class="max-h-[36vh] overflow-y-auto rounded-card border border-line/50 bg-cream/40 p-3 text-sm leading-6 whitespace-pre-wrap text-ink">
-          {{ displayBefore }}
+        <div class="rounded-card border border-line/50 bg-cream/40 p-3 text-sm leading-6 whitespace-pre-wrap text-ink">
+          <ResumeTemplatePreviewPane
+            v-if="useTemplateCompare"
+            :resume="beforeResume"
+            :template-id="templateId"
+            :scale="0.36"
+            max-height="none"
+          />
+          <template v-else>{{ displayBefore }}</template>
         </div>
       </div>
       <div class="min-w-0">
         <p class="mb-2 text-xs font-semibold tracking-wide text-brand-dark">优化后</p>
-        <div class="max-h-[36vh] overflow-y-auto rounded-card border border-brand/30 bg-surface p-3 text-sm leading-6 whitespace-pre-wrap text-ink shadow-soft">
+        <div class="rounded-card border border-brand/30 bg-surface p-3 text-sm leading-6 whitespace-pre-wrap text-ink shadow-soft">
           <slot v-if="useAfterSlot" name="after" />
+          <ResumeTemplatePreviewPane
+            v-else-if="useTemplateCompare"
+            :resume="afterResume"
+            :template-id="templateId"
+            :scale="0.36"
+            max-height="none"
+          />
           <template v-else>{{ displayAfter }}</template>
         </div>
       </div>

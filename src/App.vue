@@ -6,7 +6,6 @@
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import ConfigProvider from 'ant-design-vue/es/config-provider'
-import Spin from 'ant-design-vue/es/spin'
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
 import { useTheme } from '@/composables/useTheme'
 import { useVisitTracker } from '@/composables/useVisitTracker'
@@ -80,9 +79,19 @@ onBeforeUnmount(() => {
           role="status"
           aria-live="polite"
         >
-          <div class="flex items-center gap-3 px-5 py-3 text-sm font-medium border rounded-banner border-line/60 bg-surface/95 text-ink shadow-soft">
-            <Spin size="small" />
-            <span>页面加载中，请稍候…</span>
+          <div class="w-full max-w-sm rounded-banner border border-line/60 bg-surface/95 px-5 py-4 text-sm font-medium text-ink shadow-soft">
+            <div class="mb-3 flex items-center justify-between gap-4">
+              <span>页面加载中，请稍候…</span>
+              <span class="text-xs text-muted">加载组件</span>
+            </div>
+            <!-- 非轻量业务页等待 Ant Design 按需组件注册完成，这里用非确定进度条表达加载中。 -->
+            <div
+              class="h-2 overflow-hidden rounded-full bg-brand-lighter/50"
+              role="progressbar"
+              aria-label="页面加载进度"
+            >
+              <div class="h-full w-1/2 animate-loading-progress rounded-full bg-gradient-to-r from-brand-light via-brand to-brand-dark" />
+            </div>
           </div>
         </div>
       </main>
@@ -104,3 +113,19 @@ onBeforeUnmount(() => {
     </div>
   </ConfigProvider>
 </template>
+
+<style scoped>
+@keyframes loading-progress {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+/* 根加载态没有真实百分比，使用循环位移动画保持轻量并避免阻塞首屏。 */
+.animate-loading-progress {
+  animation: loading-progress 1.15s ease-in-out infinite;
+}
+</style>

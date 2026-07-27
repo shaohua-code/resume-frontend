@@ -385,6 +385,7 @@ async function persistOptimizeResult(resultData) {
       resume_json: resultData.resume,
       template_id: resumeStore.currentTemplateId || 1,
       score: 0,
+      history_type: 'pdf_optimize',
     })
     if (createRes.success && createRes.data?.id) {
       resumeStore.currentResumeId = createRes.data.id

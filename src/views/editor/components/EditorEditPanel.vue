@@ -13,9 +13,10 @@ const modules = defineModel('modules', { type: Array, required: true })
 
 const props = defineProps({
   highlightModule: { type: String, default: '' },
+  templateId: { type: Number, default: 1 },
 })
 
-const emit = defineEmits(['collapsed-change'])
+const emit = defineEmits(['collapsed-change', 'ai-optimized'])
 
 const tabScrollRef = ref(null)
 const formRef = ref(null)
@@ -112,6 +113,8 @@ defineExpose({
         v-model="resume"
         v-model:modules="modules"
         :active-module="activeModule"
+        :template-id="templateId"
+        @ai-optimized="emit('ai-optimized', $event)"
       />
     </div>
   </div>

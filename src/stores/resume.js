@@ -14,6 +14,8 @@ import {
   updateResume as updateApi,
   getResumeList as getListApi,
   getResumeDetail as getDetailApi,
+  getResumeHistory as getHistoryApi,
+  applyResumeHistory as applyHistoryApi,
   deleteResume as deleteApi,
   batchDeleteResume as batchDeleteApi,
   getResumeCount as getCountApi,
@@ -60,7 +62,7 @@ export const useResumeStore = defineStore('resume', () => {
    * 将最终 AI 结果落到当前简历。
    * 已有 ID 时只更新同一条记录，重新生成不会不断新增简历。
    */
-  async function persistGeneratedResume(data, { clientRequestId = '' } = {}) {
+  async function persistGeneratedResume(data, { clientRequestId = '', historyType = 'resume_generate' } = {}) {
     if (!data || typeof data !== 'object' || !Object.keys(data).length) {
       throw new Error('AI 未返回有效简历')
     }
@@ -73,6 +75,8 @@ export const useResumeStore = defineStore('resume', () => {
       score: 0,
       // 首次创建携带稳定幂等键；服务端已提交但响应丢失时，重试会返回同一条简历。
       client_request_id: clientRequestId || undefined,
+      // 只有 AI 生成/优化保存才带历史来源；普通手动保存不会进入历史。
+      history_type: historyType,
     }
 
     if (currentResumeId.value) {
@@ -138,7 +142,7 @@ export const useResumeStore = defineStore('resume', () => {
           return { resume: normalized, optimizationNotes, persisted: false, cancelled: true }
         }
         try {
-          const persisted = await persistGeneratedResume(normalized, { clientRequestId })
+          const persisted = await persistGeneratedResume(normalized, { clientRequestId, historyType: 'resume_generate' })
           message.success('简历生成成功')
           return { resume: persisted, optimizationNotes, persisted: true }
         } catch (persistError) {
@@ -267,6 +271,25 @@ export const useResumeStore = defineStore('resume', () => {
     return res
   }
 
+  async function fetchResumeHistory(resumeId) {
+    const res = await getHistoryApi(resumeId)
+    return res.data || res
+  }
+
+  async function applyHistoryVersion(resumeId, historyId) {
+    const res = await applyHistoryApi(resumeId, historyId)
+    if (res.success) {
+      const history = res.data?.history
+      if (history) {
+        currentResume.value = JSON.parse(history.resume_json || '{}')
+        currentTemplateId.value = clampTemplateId(history.template_id)
+        currentResumeId.value = resumeId
+      }
+      message.success('已应用历史版本')
+    }
+    return res
+  }
+
   // 删除简历
   async function removeResume(resumeId) {
     const res = await deleteApi(resumeId)
@@ -317,6 +340,8 @@ export const useResumeStore = defineStore('resume', () => {
     fetchResumeList,
     fetchResumeCount,
     fetchResumeDetail,
+    fetchResumeHistory,
+    applyHistoryVersion,
     removeResume,
     batchRemoveResume,
   }

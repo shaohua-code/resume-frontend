@@ -564,6 +564,7 @@ async function persistJdOptimizeResult(resumeToSave) {
   try {
     const persisted = await resumeStore.persistGeneratedResume(normalized, {
       clientRequestId: draft.generation.saveRequestId,
+      historyType: 'jd_resume_optimize',
     })
     completeGeneration(persisted, draft.generation.notes)
     jdDiffOpen.value = false
@@ -611,6 +612,7 @@ async function retrySaveResult() {
     try {
       const persisted = await resumeStore.persistGeneratedResume(draft.generation.result, {
         clientRequestId: draft.generation.saveRequestId,
+        historyType: draft.generation.kind === 'jd' ? 'jd_resume_optimize' : 'resume_generate',
       })
       completeGeneration(persisted, draft.generation.notes)
       message.success('简历保存成功')
@@ -837,6 +839,9 @@ async function goToEditor() {
       title="岗位优化对比"
       :before-summary="jdBeforeSummary"
       :after-summary="jdAfterSummary"
+      :before-resume="jdBeforeSnapshot"
+      :after-resume="draft.generation.result"
+      :template-id="resumeStore.currentTemplateId"
       :sections="jdDiffSections"
       :notes="jdDiffNotes"
       apply-all-label="一键应用并保存"

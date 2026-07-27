@@ -10,13 +10,16 @@ import { useResumeOptimizer } from '@/composables/useResumeOptimizer'
 import ResumeBasicFieldsSection from '@/views/generate/components/ResumeBasicFieldsSection.vue'
 import ResumeEducationListSection from '@/views/generate/components/ResumeEducationListSection.vue'
 import { normalizeEducations, syncFlatEducationFields } from '@/constants/resumeFieldSchema'
+import { applyModuleOptimizeResult, snapshotResume } from '@/utils/optimizeDiff'
 
 const resume = defineModel({ type: Object, required: true })
 const modules = defineModel('modules', { type: Array, required: true })
 
 const props = defineProps({
   activeModule: { type: String, default: 'basic' },
+  templateId: { type: Number, default: 1 },
 })
+const emit = defineEmits(['ai-optimized'])
 
 const contentRef = ref(null)
 const basicFieldsRef = ref(null)
@@ -31,6 +34,21 @@ const {
   applyPendingDiff,
   discardDiff,
 } = useResumeOptimizer({ resume })
+
+const pendingBeforeResume = computed(() => pendingDiff.value?.beforeResume || null)
+const pendingAfterResume = computed(() => {
+  const pending = pendingDiff.value
+  if (!pending?.beforeResume) return null
+  const draft = snapshotResume(pending.beforeResume)
+  // 模板对比右侧只在副本上应用当前模块结果，不提前污染真实编辑数据。
+  applyModuleOptimizeResult(draft, pending.type, pending.index, pending.afterValue)
+  return draft
+})
+
+function handleApplyPendingDiff() {
+  applyPendingDiff()
+  emit('ai-optimized', 'section_optimize')
+}
 
 function focusModule(key) {
   if (key) {
@@ -327,10 +345,13 @@ const educationsModel = computed({
       mode="field"
       title="模块优化对比"
       :loading="diffLoading"
+      :before-resume="pendingBeforeResume"
+      :after-resume="pendingAfterResume"
+      :template-id="props.templateId"
       :before-text="pendingDiff?.beforeText || ''"
       :after-text="pendingDiff?.afterText || ''"
       apply-all-label="应用优化"
-      @apply-all="applyPendingDiff"
+      @apply-all="handleApplyPendingDiff"
       @discard="discardDiff"
       @close="discardDiff"
     />
