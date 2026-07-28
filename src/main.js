@@ -12,8 +12,11 @@ import 'ant-design-vue/dist/reset.css'
 import './styles/global.css'
 import { antDesignReady } from '@/utils/uiReady'
 import { initializeSystemTheme } from '@/composables/useTheme'
+import { activateServiceSwitchRedirect } from '@/utils/serviceRedirect'
 
 dayjs.locale('zh-cn')
+
+const serviceSwitchRedirectActive = activateServiceSwitchRedirect()
 
 // 在 Vue 挂载前恢复界面主题，避免首屏先显示浏览器默认白底。
 initializeSystemTheme()
@@ -42,4 +45,6 @@ router.beforeEach((to) => {
 app.use(createPinia()) // Pinia 状态管理
 app.use(router) // Vue Router 路由
 
-app.mount('#app')
+if (!serviceSwitchRedirectActive) {
+  app.mount('#app')
+}
