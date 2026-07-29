@@ -4,7 +4,7 @@ const REDIRECT_DELAY_MS = 2600
 
 function isServiceSwitchWindow(date = new Date()) {
   const hour = date.getHours()
-  return hour >= 20 || hour < 1
+  return hour >= 20 || hour < 24
 }
 
 function shouldSwitchServiceLocation() {
