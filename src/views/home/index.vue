@@ -8,7 +8,12 @@ import {
   CloudUploadOutlined,
   EditOutlined,
   FileDoneOutlined,
+  ChromeOutlined,
   ThunderboltOutlined,
+  ArrowRightOutlined,
+  CheckCircleFilled,
+  FolderOpenOutlined,
+  SafetyCertificateOutlined,
 } from "@ant-design/icons-vue";
 import { useUserStore } from "@/stores/user";
 import PageHero from "@/components/PageHero.vue";
@@ -50,8 +55,24 @@ const HOME_FLOW = [
   },
 ];
 
+// 首页只展示用户能直接感知的 Agent 结果，避免暴露插件内部技术步骤。
+const AGENT_OUTCOMES = [
+  { index: "01", title: "识别当前岗位", description: "岗位、公司、薪资与要求自动归位" },
+  { index: "02", title: "判断真实匹配", description: "只依据你选中的真实简历给出证据" },
+  { index: "03", title: "收藏继续准备", description: "回到我的求职，材料和岗位不再散落" },
+];
+
 function handleFeatureClick(item) {
   navTo(item.path);
+}
+
+function openExtension() {
+  router.push('/extension');
+}
+
+// 收藏入口沿用首页登录拦截，未登录用户先完成账号连接。
+function openSavedJobs() {
+  navTo('/user?tab=saved-jobs');
 }
 </script>
 
@@ -81,6 +102,95 @@ function handleFeatureClick(item) {
           </p>
         </div>
         <FeatureGrid :features="HOME_FEATURES" @click="handleFeatureClick" />
+      </div>
+    </section>
+
+    <!-- Browser Agent 作为首页差异化核心场景，展示结果而不是只罗列功能。 -->
+    <section class="browser-agent-feature" aria-labelledby="browser-agent-title">
+      <div class="page-container browser-agent-container">
+        <div class="browser-agent-layout">
+          <div class="browser-agent-copy">
+            <span class="browser-agent-kicker">
+              <ChromeOutlined /> AI 求职副驾
+            </span>
+            <h2 id="browser-agent-title">看到岗位的这一刻，准备就已经开始</h2>
+            <p class="browser-agent-lead">
+              无需复制整页 JD。主动打开插件，即可识别当前岗位，用选定简历判断机会与缺口，并保存到“我的求职”。
+            </p>
+
+            <div class="browser-agent-outcomes" aria-label="浏览器 Agent 工作结果">
+              <article v-for="item in AGENT_OUTCOMES" :key="item.index" class="browser-agent-outcome">
+                <span>{{ item.index }}</span>
+                <div>
+                  <h3>{{ item.title }}</h3>
+                  <p>{{ item.description }}</p>
+                </div>
+              </article>
+            </div>
+
+            <div class="browser-agent-actions">
+              <button type="button" class="browser-agent-primary" @click="openExtension">
+                安装浏览器 Agent <ArrowRightOutlined />
+              </button>
+              <button type="button" class="browser-agent-secondary" @click="openSavedJobs">
+                <FolderOpenOutlined /> 查看我的收藏
+              </button>
+            </div>
+
+            <p class="browser-agent-privacy">
+              <SafetyCertificateOutlined />
+              只处理你主动触发的岗位与选定简历，不会自动提交申请。
+            </p>
+          </div>
+
+          <!-- 产品场景预览复用扩展真实三步流程，示例数据仅用于解释结果形态。 -->
+          <div class="browser-agent-showcase" aria-label="浏览器 Agent 岗位准备效果预览">
+            <div class="agent-browser-bar" aria-hidden="true">
+              <span></span><span></span><span></span>
+              <div>招聘网站 / 岗位详情</div>
+            </div>
+            <div class="agent-browser-body">
+              <div class="agent-job-page" aria-hidden="true">
+                <div class="agent-job-eyebrow">当前查看</div>
+                <div class="agent-job-heading">
+                  <div>
+                    <h3>高级产品运营</h3>
+                    <p>星云科技 · 杭州</p>
+                  </div>
+                  <strong>18-25K</strong>
+                </div>
+                <div class="agent-job-tags">
+                  <span>增长策略</span><span>数据分析</span><span>用户运营</span>
+                </div>
+                <div class="agent-job-lines"><i></i><i></i><i></i><i></i></div>
+              </div>
+
+              <aside class="agent-side-panel">
+                <div class="agent-panel-brand">
+                  <span><ThunderboltOutlined /></span>
+                  <div><strong>AI 简历</strong><small>投递副驾 Agent</small></div>
+                  <CheckCircleFilled />
+                </div>
+                <div class="agent-panel-steps" aria-label="准备进度">
+                  <div class="is-done"><b>1</b><span>识别岗位</span></div>
+                  <div class="is-done"><b>2</b><span>真实经历判断</span></div>
+                  <div class="is-done"><b>3</b><span>收藏并准备</span></div>
+                </div>
+                <div class="agent-result-heading">
+                  <div><small>当前岗位</small><strong>高级产品运营</strong></div>
+                  <span>匹配 82</span>
+                </div>
+                <div class="agent-result-list">
+                  <p><CheckCircleFilled /> 3 项岗位要求已有经历支持</p>
+                  <p><CheckCircleFilled /> 2 项优势可在简历中更清楚呈现</p>
+                </div>
+                <div class="agent-saved-state">
+                  <FolderOpenOutlined /> 已收藏到“我的求职”
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -173,6 +283,271 @@ function handleFeatureClick(item) {
 
 .feature-section {
   @apply border-y border-line/40 bg-surface/35;
+}
+
+/* Browser Agent 使用主题令牌构建真实产品场景，五套系统主题下均保持信息层级。 */
+.browser-agent-feature {
+  @apply border-y border-line/60;
+  background: color-mix(in srgb, var(--color-surface-soft) 78%, var(--color-canvas));
+}
+
+.browser-agent-container {
+  @apply py-10 sm:py-14 lg:py-16;
+}
+
+.browser-agent-layout {
+  @apply grid min-w-0 items-center gap-9 lg:grid-cols-[minmax(0,0.82fr)_minmax(34rem,1.18fr)] lg:gap-12;
+}
+
+.browser-agent-copy {
+  @apply min-w-0;
+}
+
+.browser-agent-kicker {
+  @apply inline-flex items-center gap-2 text-xs font-bold text-brand-dark;
+  letter-spacing: 0;
+}
+
+.browser-agent-kicker :deep(svg) {
+  @apply text-base;
+}
+
+.browser-agent-copy h2 {
+  @apply mt-4 max-w-xl text-[28px] font-bold leading-tight text-ink sm:text-4xl;
+  letter-spacing: 0;
+}
+
+.browser-agent-lead {
+  @apply mt-4 max-w-xl text-sm leading-7 text-ink-secondary sm:text-base;
+}
+
+.browser-agent-outcomes {
+  @apply mt-7 grid gap-0 border-y border-line/70;
+}
+
+.browser-agent-outcome {
+  @apply grid grid-cols-[2.25rem_minmax(0,1fr)] gap-3 border-b border-line/60 py-3.5 last:border-b-0;
+}
+
+.browser-agent-outcome > span {
+  @apply pt-0.5 text-xs font-bold text-brand-dark;
+}
+
+.browser-agent-outcome h3 {
+  @apply text-sm font-semibold text-ink;
+}
+
+.browser-agent-outcome p {
+  @apply mt-1 text-xs leading-5 text-ink-secondary sm:text-sm;
+}
+
+.browser-agent-actions {
+  @apply mt-7 flex flex-col gap-3 sm:flex-row;
+}
+
+.browser-agent-primary,
+.browser-agent-secondary {
+  @apply inline-flex min-h-11 items-center justify-center gap-2 px-5 text-sm font-bold transition;
+  border-radius: 8px;
+}
+
+.browser-agent-primary {
+  @apply border border-brand bg-brand text-white shadow-soft hover:bg-brand-dark;
+}
+
+.browser-agent-secondary {
+  @apply border border-line bg-surface text-ink hover:border-brand/40 hover:text-brand-dark;
+}
+
+.browser-agent-privacy {
+  @apply mt-4 flex items-start gap-2 text-xs leading-5 text-muted;
+}
+
+.browser-agent-privacy :deep(svg) {
+  @apply mt-0.5 shrink-0 text-brand-dark;
+}
+
+.browser-agent-showcase {
+  @apply min-w-0 overflow-hidden border border-line bg-surface shadow-float;
+  border-radius: 8px;
+}
+
+.agent-browser-bar {
+  @apply grid h-11 grid-cols-[auto_auto_auto_minmax(0,1fr)] items-center gap-2 border-b border-line/70 px-4;
+  background: var(--color-surface-soft);
+}
+
+.agent-browser-bar > span {
+  @apply block h-2 w-2 rounded-full bg-line;
+}
+
+.agent-browser-bar > span:nth-child(2) {
+  background: color-mix(in srgb, var(--color-warning) 55%, var(--color-line));
+}
+
+.agent-browser-bar > span:nth-child(3) {
+  background: color-mix(in srgb, var(--color-success) 55%, var(--color-line));
+}
+
+.agent-browser-bar > div {
+  @apply ml-2 truncate border border-line/70 bg-surface px-3 py-1.5 text-[11px] text-muted;
+  border-radius: 6px;
+}
+
+.agent-browser-body {
+  @apply grid min-h-[410px] grid-cols-[minmax(0,1fr)_minmax(17rem,0.78fr)];
+}
+
+.agent-job-page {
+  @apply min-w-0 border-r border-line/70 p-7;
+  background: color-mix(in srgb, var(--color-canvas) 88%, var(--color-surface));
+}
+
+.agent-job-eyebrow {
+  @apply text-[10px] font-bold text-brand-dark;
+  letter-spacing: 0;
+}
+
+.agent-job-heading {
+  @apply mt-5 flex items-start justify-between gap-4;
+}
+
+.agent-job-heading h3 {
+  @apply text-xl font-bold text-ink;
+}
+
+.agent-job-heading p {
+  @apply mt-1 text-xs text-ink-secondary;
+}
+
+.agent-job-heading strong {
+  @apply shrink-0 text-base text-warning;
+}
+
+.agent-job-tags {
+  @apply mt-5 flex flex-wrap gap-2;
+}
+
+.agent-job-tags span {
+  @apply bg-surface px-2 py-1 text-[11px] text-ink-secondary;
+  border-radius: 5px;
+}
+
+.agent-job-lines {
+  @apply mt-7 grid gap-3;
+}
+
+.agent-job-lines i {
+  @apply block h-2 bg-line/70;
+  border-radius: 2px;
+}
+
+.agent-job-lines i:nth-child(2) { width: 88%; }
+.agent-job-lines i:nth-child(3) { width: 94%; }
+.agent-job-lines i:nth-child(4) { width: 72%; }
+
+.agent-side-panel {
+  @apply min-w-0 bg-surface p-4;
+}
+
+.agent-panel-brand {
+  @apply grid grid-cols-[2.25rem_minmax(0,1fr)_auto] items-center gap-2.5 border-b border-line/70 pb-3;
+}
+
+.agent-panel-brand > span {
+  @apply grid h-9 w-9 place-items-center bg-brand text-white;
+  border-radius: 7px;
+}
+
+.agent-panel-brand strong,
+.agent-panel-brand small {
+  @apply block;
+}
+
+.agent-panel-brand strong {
+  @apply text-sm text-ink;
+}
+
+.agent-panel-brand small {
+  @apply mt-0.5 text-[10px] text-muted;
+}
+
+.agent-panel-brand > :deep(svg:last-child) {
+  @apply text-base text-success;
+}
+
+.agent-panel-steps {
+  @apply grid grid-cols-3 gap-1 border-b border-line/70 py-4;
+}
+
+.agent-panel-steps > div {
+  @apply grid justify-items-center gap-1 text-center text-[9px] leading-3 text-muted;
+}
+
+.agent-panel-steps b {
+  @apply grid h-5 w-5 place-items-center border border-line bg-surface text-[9px] text-muted;
+  border-radius: 50%;
+}
+
+.agent-panel-steps .is-done {
+  @apply text-brand-dark;
+}
+
+.agent-panel-steps .is-done b {
+  @apply border-brand/40 bg-brand-lighter text-brand-dark;
+}
+
+.agent-result-heading {
+  @apply mt-4 flex items-start justify-between gap-3;
+}
+
+.agent-result-heading small,
+.agent-result-heading strong {
+  @apply block;
+}
+
+.agent-result-heading small {
+  @apply text-[10px] text-muted;
+}
+
+.agent-result-heading strong {
+  @apply mt-1 text-sm text-ink;
+}
+
+.agent-result-heading > span {
+  @apply shrink-0 bg-brand-lighter px-2 py-1 text-xs font-bold text-brand-dark;
+  border-radius: 5px;
+}
+
+.agent-result-list {
+  @apply mt-4 grid gap-2.5 border-y border-line/70 py-3;
+}
+
+.agent-result-list p {
+  @apply flex items-start gap-2 text-[11px] leading-4 text-ink-secondary;
+}
+
+.agent-result-list :deep(svg) {
+  @apply mt-0.5 shrink-0 text-success;
+}
+
+.agent-saved-state {
+  @apply mt-4 flex items-center gap-2 bg-brand-lighter px-3 py-2.5 text-[11px] font-semibold text-brand-dark;
+  border-radius: 6px;
+}
+
+@media (max-width: 639px) {
+  .agent-browser-body {
+    @apply min-h-0 grid-cols-1;
+  }
+
+  .agent-job-page {
+    @apply hidden;
+  }
+
+  .agent-side-panel {
+    @apply p-5;
+  }
 }
 
 @media (min-width: 1024px) {

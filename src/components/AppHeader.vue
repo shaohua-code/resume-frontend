@@ -73,8 +73,8 @@ const navItems = [
   },
   {
     key: "user",
-    label: "我的简历",
-    description: "管理简历与用量",
+    label: "我的求职",
+    description: "简历、收藏与求职进度",
     path: "/user",
     icon: UserOutlined,
   },

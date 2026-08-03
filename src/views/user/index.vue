@@ -205,6 +205,11 @@
         <section v-else-if="activeTab === 'usage'" class="workspace-content-body">
           <UsagePanel />
         </section>
+        <section v-else-if="activeTab === 'saved-jobs'" class="workspace-content-body">
+          <a-card class="workspace-panel" :bordered="false">
+            <SavedJobsPanel />
+          </a-card>
+        </section>
         <section v-else-if="activeTab === 'profile'" class="workspace-content-body">
           <UserProfilePanel />
         </section>
@@ -239,7 +244,7 @@
 
 <script setup>
 import { computed, ref, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   PlusOutlined,
   DeleteOutlined,
@@ -249,6 +254,7 @@ import {
   FormOutlined,
   ThunderboltOutlined,
   UserOutlined,
+  BookOutlined,
 } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useWalletStore } from '@/stores/wallet'
@@ -263,11 +269,13 @@ import UserTaskModelsPanel from './components/UserTaskModelsPanel.vue'
 import UserTaskPromptsPanel from './components/UserTaskPromptsPanel.vue'
 import ResumeCardList from './components/ResumeCardList.vue'
 import RechargeModal from './components/RechargeModal.vue'
+import SavedJobsPanel from './components/SavedJobsPanel.vue'
 import { formatDateTime } from '@/utils/date'
 import { useMediaQuery } from '@/composables/useMediaQuery'
 import { getUserTaskModels, getUserTaskPrompts } from '@/api/userAi'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const walletStore = useWalletStore()
 const resumeStore = useResumeStore()
@@ -295,6 +303,14 @@ const workspaceGroups = computed(() => {
           longDescription: '集中管理简历版本、模板、评分与最近更新时间。',
           eyebrow: 'RESUME LIBRARY',
           icon: FileTextOutlined,
+        },
+        {
+          key: 'saved-jobs',
+          label: '我的收藏',
+          description: '浏览器识别的岗位',
+          longDescription: '查看由浏览器 Agent 识别、分析并保存的岗位，随时回到原招聘页继续准备。',
+          eyebrow: 'SAVED JOBS',
+          icon: BookOutlined,
         },
         {
           key: 'usage',
@@ -392,6 +408,15 @@ watch(
       activeTab.value = 'resumes'
     }
   },
+)
+
+// 支持从首页和扩展直接跳转到“我的收藏”。
+watch(
+  () => route.query.tab,
+  (tab) => {
+    if (tab === 'saved-jobs') activeTab.value = 'saved-jobs'
+  },
+  { immediate: true },
 )
 
 onMounted(async () => {

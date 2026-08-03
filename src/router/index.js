@@ -48,6 +48,18 @@ const routes = [
     redirect: (to) => ({ path: '/generate', query: { ...to.query, mode: 'upload' } }),
   },
   {
+    path: '/extension',
+    name: 'BrowserExtension',
+    component: () => import('@/views/extension/index.vue'),
+    meta: { title: '浏览器扩展', lightweight: true },
+  },
+  {
+    path: '/extension/connect',
+    name: 'ExtensionConnect',
+    component: () => import('@/views/extension/connect.vue'),
+    meta: { title: '连接浏览器扩展', requireAuth: true, lightweight: true },
+  },
+  {
     path: '/editor/:id?',
     name: 'Editor',
     component: () => import('@/views/editor/index.vue'),
