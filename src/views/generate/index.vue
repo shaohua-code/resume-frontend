@@ -23,7 +23,7 @@ onMounted(() => {
     <PageHero
       compact
       title="AI 智能生成简历"
-      subtitle="PDF 或文字可辅助识别，也可以直接填写表单后生成"
+      subtitle="PDF、Word 或文字可辅助识别，也可以直接填写表单后生成"
     />
     <!-- 移动端收紧左右边距，避免识别区两侧空白过大 -->
     <div class="relative z-10 mx-auto -mt-6 max-w-6xl px-2 sm:px-4 lg:px-6">

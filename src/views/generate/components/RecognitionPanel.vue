@@ -1,6 +1,6 @@
 <!--
   统一生成页顶部的辅助识别区。
-  PDF / 文字两种模式各自只保留一个主识别按钮；PDF 支持复用已存唯一文件。
+  PDF/Word 与文字两种模式各自只保留一个主识别按钮；支持复用已存唯一源文件。
 -->
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -17,6 +17,7 @@ import {
   DeleteOutlined,
   CloudUploadOutlined,
   EyeOutlined,
+  DownloadOutlined,
   DownOutlined,
   UpOutlined,
 } from '@ant-design/icons-vue'
@@ -31,6 +32,12 @@ import {
   deleteUploadedResume,
 } from '@/api/resume'
 import { getErrorMessage } from '@/utils/errorMessage'
+import {
+  RESUME_UPLOAD_ACCEPT,
+  getResumeFileExt,
+  isPdfResumeFile,
+  validateResumeUploadFile,
+} from '@/utils/resumeUploadFile'
 import {
   normalizeResumeFields,
   extractTargetPositionFromText,
@@ -66,15 +73,15 @@ if (state.phase === 'running') {
 
 const pdfFile = ref(null)
 const fileList = ref([])
-// 服务端已保存的唯一 PDF 元信息（size / mtime）
+// 服务端已保存的唯一简历源文件元信息（size / mtime / ext）
 const existingFile = ref(null)
 const deleting = ref(false)
-// 已有云端 PDF 时默认收起替换区，避免与主识别 CTA 抢注意力。
+// 已有云端文件时默认收起替换区，避免与主识别 CTA 抢注意力。
 const showReplaceUpload = ref(false)
 const previewOpen = ref(false)
 const previewUrl = ref('')
 const previewLoading = ref(false)
-/** 仅移动端：折叠 PDF/文字识别下方的流式结果；PC 始终展开 */
+/** 仅移动端：折叠文件/文字识别下方的流式结果；PC 始终展开 */
 const isMobile = useMediaQuery('(max-width: 639px)')
 const streamExpanded = ref(false)
 /** 流式预览区，增量输出时滚到底部 */
@@ -82,6 +89,19 @@ const streamPreRef = ref(null)
 const streamBoxRef = ref(null)
 let activeRecognitionController = null
 let localPreviewUrl = ''
+
+/** 当前可预览对象：仅 PDF 走 iframe；Word 走下载 */
+const canInlinePreview = computed(() => {
+  if (pdfFile.value) return isPdfResumeFile(pdfFile.value)
+  if (existingFile.value) {
+    return isPdfResumeFile({
+      name: existingFile.value.filename || '',
+      filename: existingFile.value.filename || '',
+    }) || existingFile.value.ext === '.pdf'
+  }
+  return false
+})
+const previewActionLabel = computed(() => (canInlinePreview.value ? '预览' : '下载'))
 
 /** 流式文本更新后，预览区始终贴底 */
 async function scrollStreamToBottom() {
@@ -102,28 +122,55 @@ function revokePreviewUrl() {
   }
 }
 
-/** 预览本地新选文件或服务端已存 PDF */
+/** 触发浏览器下载 blob（Word 不内嵌预览时使用） */
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename || 'resume.docx'
+  link.rel = 'noopener'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+/** 预览本地/已存 PDF，或下载 Word（.docx） */
 async function openPdfPreview() {
   if (previewLoading.value) return
   previewLoading.value = true
   try {
     revokePreviewUrl()
     if (pdfFile.value) {
-      // 本地尚未上传的文件直接用 blob URL
+      if (!isPdfResumeFile(pdfFile.value)) {
+        // Word：直接下载本地已选文件，避免 iframe 无法渲染
+        downloadBlob(pdfFile.value, pdfFile.value.name || 'resume.docx')
+        message.success('已开始下载 Word 文件')
+        return
+      }
       previewUrl.value = URL.createObjectURL(pdfFile.value)
       previewOpen.value = true
       return
     }
     if (!existingFile.value) {
-      message.warning('请先选择或上传 PDF')
+      message.warning('请先选择或上传简历文件')
       return
     }
     const blob = await getUploadedResumeContent()
-    const fileBlob = blob instanceof Blob ? blob : new Blob([blob], { type: 'application/pdf' })
+    const ext = existingFile.value.ext || getResumeFileExt(existingFile.value.filename) || '.pdf'
+    const mime = ext === '.docx'
+      ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      : 'application/pdf'
+    const fileBlob = blob instanceof Blob ? blob : new Blob([blob], { type: mime })
+    if (ext === '.docx') {
+      downloadBlob(fileBlob, existingFile.value.filename || 'resume.docx')
+      message.success('已开始下载 Word 文件')
+      return
+    }
     previewUrl.value = URL.createObjectURL(fileBlob)
     previewOpen.value = true
   } catch (e) {
-    message.error(getErrorMessage(e) || 'PDF 预览失败')
+    message.error(getErrorMessage(e) || '文件预览失败')
   } finally {
     previewLoading.value = false
   }
@@ -177,7 +224,7 @@ const statusType = computed(() => {
 const pdfPrimaryLabel = computed(() => {
   if (pdfFile.value) return '上传并识别'
   if (existingFile.value) return '识别已上传简历'
-  return '开始 PDF 识别'
+  return '开始文件识别'
 })
 const canStartPdf = computed(() => !!(pdfFile.value || existingFile.value))
 /** PC 始终展示结果正文；移动端受 streamExpanded 控制 */
@@ -203,7 +250,7 @@ watch(
   },
 )
 
-/** 拉取当前用户已保存的唯一 PDF，供直接识别。 */
+/** 拉取当前用户已保存的唯一简历源文件，供直接识别。 */
 async function fetchExisting() {
   try {
     const res = await getUploadedResume()
@@ -228,14 +275,11 @@ function formatTime(ts) {
   return new Date(ts).toLocaleString()
 }
 
-/** 选择 PDF，仅保留当前文件；实际上传由主识别按钮触发并覆盖服务端旧文件。 */
+/** 选择 PDF/Word，仅保留当前文件；实际上传由主识别按钮触发并覆盖服务端旧文件。 */
 function beforePdfUpload(file) {
-  if (file.size > 10 * 1024 * 1024) {
-    message.warning('PDF 文件不能超过 10MB')
-    return false
-  }
-  if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-    message.warning('请选择 PDF 文件')
+  const errMsg = validateResumeUploadFile(file)
+  if (errMsg) {
+    message.warning(errMsg)
     return false
   }
   pdfFile.value = file
@@ -256,7 +300,7 @@ function removePdf() {
 }
 
 
-/** 删除服务端已保存的唯一 PDF。 */
+/** 删除服务端已保存的唯一简历源文件。 */
 async function handleDeleteExisting() {
   if (loading.value || props.disabled || deleting.value) return
   deleting.value = true
@@ -342,12 +386,12 @@ async function runRecognition(operation, startStatus) {
   }
 }
 
-/** 唯一 PDF 识别入口：新选文件优先上传覆盖，否则复用已上传文件。 */
+/** 唯一文件识别入口：新选文件优先上传覆盖，否则复用已上传文件。 */
 async function recognizePdf() {
   if (pdfFile.value) {
     await runRecognition(
       (handlers) => uploadRecognizeResumeStream(pdfFile.value, handlers),
-      '正在上传并识别 PDF 原文事实...'
+      '正在上传并识别简历原文事实...'
     )
     if (state.phase === 'complete') {
       await fetchExisting()
@@ -360,11 +404,11 @@ async function recognizePdf() {
   if (existingFile.value) {
     await runRecognition(
       (handlers) => uploadRecognizeExistingStream(handlers),
-      '正在识别已上传 PDF 原文事实...'
+      '正在识别已上传简历原文事实...'
     )
     return
   }
-  message.warning(state.fileName ? '刷新后请重新选择 PDF 文件' : '请先选择 PDF 文件')
+  message.warning(state.fileName ? '刷新后请重新选择简历文件' : '请先选择 PDF 或 Word（.docx）文件')
 }
 
 async function recognizeText() {
@@ -415,7 +459,7 @@ onBeforeUnmount(() => {
       v-model:value="state.method"
       :disabled="loading || disabled"
       :options="[
-        { label: '智能 PDF 识别', value: 'pdf' },
+        { label: '智能文件识别', value: 'pdf' },
         { label: '智能文字识别', value: 'text' },
       ]"
       block
@@ -423,7 +467,7 @@ onBeforeUnmount(() => {
       class="mb-3 w-full"
     />
 
-    <!-- PDF：已存状态 + 可选替换区 + 唯一主按钮 -->
+    <!-- 文件识别：已存状态 + 可选替换区 + 唯一主按钮 -->
     <div v-if="state.method === 'pdf'" class="space-y-3">
       <div
         v-if="existingFile"
@@ -432,11 +476,12 @@ onBeforeUnmount(() => {
         <div class="min-w-0 space-y-1">
           <div class="flex items-center gap-2 text-sm font-medium text-ink">
             <FileDoneOutlined class="shrink-0 text-success" />
-            <span>已保存一份 PDF，可直接识别</span>
+            <span>已保存一份简历文件，可直接识别</span>
           </div>
           <div class="flex flex-wrap text-xs gap-x-4 gap-y-1 text-muted">
             <span>{{ formatSize(existingFile.size) }}</span>
             <span>{{ formatTime(existingFile.mtime) }}</span>
+            <span v-if="existingFile.ext">{{ existingFile.ext.toUpperCase() }}</span>
             <span v-if="pdfFile" class="text-brand-dark">已选新文件，识别时将覆盖</span>
           </div>
         </div>
@@ -447,7 +492,9 @@ onBeforeUnmount(() => {
             :loading="previewLoading"
             @click="openPdfPreview"
           >
-            <EyeOutlined /> 预览
+            <EyeOutlined v-if="canInlinePreview" />
+            <DownloadOutlined v-else />
+            {{ previewActionLabel }}
           </a-button>
           <a-button
             class="w-full min-h-10 sm:w-auto sm:min-h-11"
@@ -474,14 +521,14 @@ onBeforeUnmount(() => {
           :before-upload="beforePdfUpload"
           :remove="removePdf"
           :disabled="loading || disabled"
-          accept="application/pdf,.pdf"
+          :accept="RESUME_UPLOAD_ACCEPT"
           :max-count="1"
         >
           <p class="ant-upload-drag-icon"><InboxOutlined /></p>
           <p class="ant-upload-text">
-            {{ existingFile ? '选择新 PDF 以覆盖已有文件' : '点击或拖拽 PDF 到这里' }}
+            {{ existingFile ? '选择新 PDF/Word 以覆盖已有文件' : '点击或拖拽 PDF / Word 到这里' }}
           </p>
-          <p class="ant-upload-hint">含可复制文字 · 最大 10MB · 每人仅保留一份</p>
+          <p class="ant-upload-hint">支持 PDF、.docx · 最大 10MB · 每人仅保留一份（.doc 请另存为 .docx）</p>
         </a-upload-dragger>
         <div v-if="pdfFile" class="flex justify-end">
           <a-button
@@ -490,11 +537,13 @@ onBeforeUnmount(() => {
             :loading="previewLoading"
             @click="openPdfPreview"
           >
-            <EyeOutlined /> 预览已选文件
+            <EyeOutlined v-if="canInlinePreview" />
+            <DownloadOutlined v-else />
+            {{ canInlinePreview ? '预览已选文件' : '下载已选文件' }}
           </a-button>
         </div>
         <p class="text-xs leading-5 text-muted">
-          扫描件需先 OCR；识别失败可切换到「智能文字识别」。
+          扫描件 PDF 需先 OCR；识别失败可切换到「智能文字识别」。
         </p>
       </div>
 
@@ -509,7 +558,7 @@ onBeforeUnmount(() => {
         </GradientButton>
       </div>
 
-      <!-- PDF 预览：本地 blob 或鉴权拉取后的 blob -->
+      <!-- PDF 预览：本地 blob 或鉴权拉取后的 blob；Word 走下载不进此弹窗 -->
       <a-modal
         v-model:open="previewOpen"
         title="PDF 预览"

@@ -230,9 +230,9 @@ async function readSSEStream(response, handlers = {}) {
 }
 
 /**
- * 上传 PDF 并流式提取其中已有的简历字段。
+ * 上传 PDF/Word 并流式提取其中已有的简历字段。
  * 与 PDF 优化接口保持独立，避免用户点击“识别”时提前改写原简历内容。
- * 上传成功后会覆盖用户名下唯一保留的那份 PDF，供下次直接识别。
+ * 上传成功后会覆盖用户名下唯一保留的那份源文件，供下次直接识别。
  */
 export async function uploadRecognizeResumeStream(file, handlers = {}, model = '') {
   const formData = new FormData()
@@ -246,7 +246,7 @@ export async function uploadRecognizeResumeStream(file, handlers = {}, model = '
   }), { signal: handlers.signal })
 
   if (!response.ok) {
-    let detail = 'PDF 识别失败，请重试'
+    let detail = '简历文件识别失败，请重试'
     try {
       const errJson = await response.json()
       detail = errJson.detail || detail
@@ -260,7 +260,7 @@ export async function uploadRecognizeResumeStream(file, handlers = {}, model = '
 }
 
 /**
- * 使用已上传 PDF 流式纯识别（无需重新选择文件）。
+ * 使用已上传简历源文件流式纯识别（无需重新选择文件）。
  */
 export async function uploadRecognizeExistingStream(handlers = {}, model = '') {
   const response = await fetchSSEWithEmailGate(() => authorizedSSEFetch(`${API_BASE}/api/pdf/uploadRecognize/existing/stream`, {
@@ -273,7 +273,7 @@ export async function uploadRecognizeExistingStream(handlers = {}, model = '') {
   }), { signal: handlers.signal })
 
   if (!response.ok) {
-    let detail = 'PDF 识别失败，请重试'
+    let detail = '简历文件识别失败，请重试'
     try {
       const errJson = await response.json()
       detail = errJson.detail || detail
@@ -574,17 +574,17 @@ export function uploadOptimizeResume(file, targetPosition = '', onProgress, mode
   })
 }
 
-/** 获取当前用户已上传的 PDF 元信息（仅保留一份） */
+/** 获取当前用户已上传的简历源文件元信息（仅保留一份，pdf/docx） */
 export function getUploadedResume() {
   return request.get('/pdf/uploadedFile')
 }
 
-/** 拉取已上传 PDF 二进制，供预览（需登录，不走公开 URL） */
+/** 拉取已上传简历源文件二进制，供 PDF 预览或 Word 下载（需登录，不走公开 URL） */
 export function getUploadedResumeContent() {
   return request.get('/pdf/uploadedFile/content', { responseType: 'blob' })
 }
 
-/** 删除当前用户已上传的 PDF */
+/** 删除当前用户已上传的简历源文件 */
 export function deleteUploadedResume() {
   return request.delete('/pdf/uploadedFile')
 }

@@ -1,6 +1,6 @@
 <!--
-  上传 PDF 简历并 AI 优化面板
-  支持：新上传 PDF、引用已上传简历直接优化
+  上传 PDF / Word 简历并 AI 优化面板
+  支持：新上传文件、引用已上传简历直接优化
 -->
 <template>
   <div class="mx-auto max-w-3xl">
@@ -63,7 +63,7 @@
     <a-card class="card-base mb-4" :bordered="false">
       <template #title>
         <span class="flex items-center gap-2 text-base font-semibold text-ink">
-          <CloudUploadOutlined class="text-brand-dark" /> {{ existingFile ? '替换上传（覆盖已有）' : '选择 PDF 简历' }}
+          <CloudUploadOutlined class="text-brand-dark" /> {{ existingFile ? '替换上传（覆盖已有）' : '选择 PDF / Word 简历' }}
         </span>
       </template>
 
@@ -72,15 +72,15 @@
           v-model:fileList="fileList"
           :before-upload="beforeUpload"
           :max-count="1"
-          accept="application/pdf"
+          :accept="RESUME_UPLOAD_ACCEPT"
           :disabled="uploading"
           class="upload-dragger-custom rounded-card border border-dashed border-line/60 bg-surface/50 transition-colors hover:border-brand/40"
         >
           <p class="ant-upload-drag-icon text-brand-dark">
             <InboxOutlined class="text-5xl" />
           </p>
-          <p class="ant-upload-text text-base font-medium text-ink">点击或拖拽 PDF 文件到此处</p>
-          <p class="ant-upload-hint text-sm text-muted">仅支持 PDF 格式，单个文件不超过 10MB</p>
+          <p class="ant-upload-text text-base font-medium text-ink">点击或拖拽 PDF / Word 文件到此处</p>
+          <p class="ant-upload-hint text-sm text-muted">支持 PDF、.docx，单个文件不超过 10MB（.doc 请另存为 .docx）</p>
         </a-upload-dragger>
 
         <div
@@ -222,6 +222,7 @@ import StreamResumePreview from './StreamResumePreview.vue'
 import { useScrollToStreamPreview } from '@/composables/useScrollToStreamPreview'
 import { useTheme } from '@/composables/useTheme'
 import { normalizeResumeFields } from '@/constants/resumeFieldSchema'
+import { RESUME_UPLOAD_ACCEPT, validateResumeUploadFile } from '@/utils/resumeUploadFile'
 import { parsePartialResumeJson } from '../utils/streamResumeParser'
 
 const router = useRouter()
@@ -262,7 +263,7 @@ const canShowJdOptimize = computed(() => !!(existingFile.value || fileList.value
 /** 打开 JD 输入弹窗 */
 function openJdOptimize() {
   if (!existingFile.value && !fileList.value.length) {
-    message.warning('请先上传或选择 PDF 简历')
+    message.warning('请先上传或选择 PDF / Word 简历')
     return
   }
   jdOptimizeOpen.value = true
@@ -279,7 +280,7 @@ async function handleJdConfirmStart({ jdText }) {
   // 优先使用已上传 PDF；否则使用当前选择的文件
   const useExisting = !!existingFile.value && !fileList.value.length
   if (!useExisting && !fileList.value.length) {
-    message.warning('请先上传或选择 PDF 简历')
+    message.warning('请先上传或选择 PDF / Word 简历')
     return
   }
 
@@ -315,12 +316,9 @@ async function focusTargetPosition() {
 }
 
 function beforeUpload(file) {
-  if (file.size > 10 * 1024 * 1024) {
-    message.error('文件大小不能超过 10MB')
-    return false
-  }
-  if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-    message.error('仅支持 PDF 文件')
+  const errMsg = validateResumeUploadFile(file)
+  if (errMsg) {
+    message.error(errMsg)
     return false
   }
   fileList.value = [file]
@@ -414,7 +412,7 @@ async function handleSubmit() {
     return
   }
   if (!fileList.value.length) {
-    message.warning('请先选择 PDF 文件')
+    message.warning('请先选择 PDF 或 Word（.docx）文件')
     return
   }
   const file = fileList.value[0]
