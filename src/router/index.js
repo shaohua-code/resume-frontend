@@ -177,6 +177,12 @@ const routes = [
         component: () => import('@/views/admin/components/AdminVisitLogsPanel.vue'),
         meta: { title: '访客记录', permission: 'admin:view_visits' },
       },
+      {
+        path: 'share-links',
+        name: 'AdminShareLinks',
+        component: () => import('@/views/admin/components/AdminShareLinksPanel.vue'),
+        meta: { title: '分享链接', permission: 'admin:view_visits' },
+      },
     ],
   },
   {

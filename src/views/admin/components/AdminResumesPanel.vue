@@ -1,9 +1,12 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { getAdminResumeDetail, getAdminResumes } from '@/api/admin'
+import ResumeTemplatePreviewPane from '@/components/ResumeTemplatePreviewPane.vue'
+import { useMediaQuery } from '@/composables/useMediaQuery'
+import { getTemplateName } from '@/constants/templateNames'
 import { useUserStore } from '@/stores/user'
-import AdminUserInfoCell from './AdminUserInfoCell.vue'
 import { formatDateTime } from '@/utils/date'
+import AdminUserInfoCell from './AdminUserInfoCell.vue'
 
 const userStore = useUserStore()
 const loading = ref(false)
@@ -12,9 +15,13 @@ const total = ref(0)
 const detailOpen = ref(false)
 const resumeDetail = ref(null)
 const query = reactive({ page: 1, size: 10, user_id: '' })
+// 管理端弹窗在小屏缩小 A4 缩放，避免横向撑破视口
+const isMobile = useMediaQuery('(max-width: 639px)')
 
 // 普通管理员仅能看到归属用户简历
 const isSuperAdmin = computed(() => userStore.role === 'SUPER_ADMIN')
+const previewScale = computed(() => (isMobile.value ? 0.38 : 0.55))
+const previewTemplateName = computed(() => getTemplateName(resumeDetail.value?.template_id))
 
 const columns = [
   { title: '标题', dataIndex: 'title', key: 'title' },
@@ -35,6 +42,7 @@ async function loadResumes() {
   }
 }
 
+/** 拉取详情并用用户所选模板做只读预览 */
 async function showResumeDetail(record) {
   const res = await getAdminResumeDetail(record.id)
   resumeDetail.value = res.data
@@ -92,8 +100,29 @@ onMounted(loadResumes)
       </a-table>
     </a-card>
 
-    <a-modal :open="detailOpen" title="简历详情" width="900px" :footer="null" @update:open="detailOpen = $event">
-      <pre class="max-h-[60vh] overflow-auto rounded-2xl bg-cream p-4 text-xs text-ink">{{ resumeDetail }}</pre>
+    <a-modal
+      :open="detailOpen"
+      title="简历预览"
+      :width="isMobile ? '96vw' : 900"
+      :footer="null"
+      destroy-on-close
+      @update:open="detailOpen = $event"
+    >
+      <div v-if="resumeDetail" class="space-y-3">
+        <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
+          <span>标题：{{ resumeDetail.title || '-' }}</span>
+          <span>评分：{{ resumeDetail.score ?? '-' }}</span>
+          <span>模板：{{ previewTemplateName }}（ID {{ resumeDetail.template_id || 1 }}）</span>
+        </div>
+        <ResumeTemplatePreviewPane
+          :resume="resumeDetail.resume_json"
+          :template-id="resumeDetail.template_id || 1"
+          :scale="previewScale"
+          max-height="60vh"
+          scrollable
+          fullscreen-title="简历预览"
+        />
+      </div>
     </a-modal>
   </div>
 </template>

@@ -1,15 +1,18 @@
 <script setup>
-import { onMounted, reactive, ref, computed } from 'vue'
+import { onMounted, reactive, ref, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import MarkdownIt from 'markdown-it'
 import DOMPurify from 'dompurify'
 import { getAdminFeedbacks, getAdminFeedbackDetail } from '@/api/admin'
 import { resolveUploadUrl } from '@/api/upload'
+import { useUserStore } from '@/stores/user'
 import AdminUserInfoCell from './AdminUserInfoCell.vue'
 import { formatDateTime } from '@/utils/date'
 
 // 配置 markdown-it：禁止解析 HTML 标签（防止 XSS）
 const md = new MarkdownIt({ html: false, linkify: true, breaks: true })
-
+const route = useRoute()
+const userStore = useUserStore()
 const loading = ref(false)
 const feedbacks = ref([])
 const total = ref(0)
@@ -18,6 +21,7 @@ const query = reactive({ page: 1, size: 10 })
 const detailOpen = ref(false)
 const detailLoading = ref(false)
 const detail = ref(null)
+const isSuperAdmin = computed(() => userStore.role === 'SUPER_ADMIN')
 
 const columns = [
   { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
@@ -64,7 +68,18 @@ function handleTableChange(pagination) {
   loadFeedbacks()
 }
 
-onMounted(loadFeedbacks)
+// 铃铛跳转带 id 时打开对应反馈详情
+watch(
+  () => route.query.id,
+  (id) => {
+    if (id) openDetail({ id })
+  },
+)
+
+onMounted(() => {
+  loadFeedbacks()
+  if (route.query.id) openDetail({ id: route.query.id })
+})
 </script>
 
 <template>
@@ -73,7 +88,9 @@ onMounted(loadFeedbacks)
       <div class="flex items-center justify-between gap-3">
         <div>
           <h2 class="text-lg font-semibold text-ink">用户反馈</h2>
-          <p class="text-sm text-muted">仅超级管理员可见，内容以 Markdown 形式预览</p>
+          <p class="text-sm text-muted">
+            {{ isSuperAdmin ? '可查看全部用户反馈' : '仅展示您名下归属用户的反馈' }}，内容以 Markdown 形式预览
+          </p>
         </div>
         <button class="btn-primary" @click="loadFeedbacks">刷新列表</button>
       </div>

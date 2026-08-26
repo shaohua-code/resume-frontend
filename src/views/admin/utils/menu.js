@@ -3,7 +3,7 @@
  */
 import {
   LayoutDashboard, ShieldCheck, Users, Wallet, Bot, FileText,
-  Megaphone, Cpu, Settings, MessageSquare, Receipt, Eye, QrCode, ClipboardList,
+  Megaphone, Cpu, Settings, MessageSquare, Receipt, Eye, QrCode, ClipboardList, Share2,
 } from 'lucide-vue-next'
 
 export const ADMIN_MENU_ITEMS = [
@@ -23,6 +23,7 @@ export const ADMIN_MENU_ITEMS = [
   { key: 'task-prompts', path: '/admin/task-prompts', label: '任务提示词', desc: '默认业务指令（不含输出格式）', group: 'AI模型管理', permission: 'admin:ai_model', icon: FileText },
   { key: 'configs', path: '/admin/configs', label: '系统配置', desc: '平台运行参数', group: '系统管理', permission: 'admin:system_config', icon: Settings },
   { key: 'visits', path: '/admin/visits', label: '访客记录', desc: '近30天访问日志', group: '系统管理', permission: 'admin:view_visits', icon: Eye },
+  { key: 'share-links', path: '/admin/share-links', label: '分享链接', desc: '按平台复制追踪链接', group: '系统管理', permission: 'admin:view_visits', icon: Share2 },
 ]
 
 export function getMenuByPath(path, menus) {

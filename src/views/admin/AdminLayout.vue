@@ -8,8 +8,9 @@ import { MenuOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useTheme } from '@/composables/useTheme'
 import { getRoleLabel } from '@/constants/roles'
-import { Search, Bell, Moon, User, LogOut } from 'lucide-vue-next'
+import { Search, Moon, User, LogOut } from 'lucide-vue-next'
 import AdminSidebar from './components/AdminSidebar.vue'
+import AdminNotificationBell from './components/AdminNotificationBell.vue'
 import { ADMIN_MENU_ITEMS, getMenuByPath } from './utils/menu'
 
 const route = useRoute()
@@ -88,12 +89,7 @@ function handleLogout() {
           >
           
           </a-input>
-          <a-badge :count="3" size="small" class="hidden sm:inline-flex">
-            <button type="button"
-              class="flex items-center justify-center transition-colors rounded-full h-9 w-9 text-muted hover:bg-brand-lighter hover:text-brand-dark">
-              <Bell class="w-4 h-4" />
-            </button>
-          </a-badge>
+          <AdminNotificationBell />
           <a-tooltip title="暗黑模式即将上线">
             <button type="button"
               class="items-center justify-center hidden transition-colors rounded-full h-9 w-9 text-muted hover:bg-brand-lighter hover:text-brand-dark sm:flex">

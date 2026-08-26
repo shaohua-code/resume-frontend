@@ -3,18 +3,19 @@
  * 进入网站时上报一次，离开时更新停留时长
  */
 import { createVisit, sendVisitDuration } from '@/api/visit'
+import { VISIT_PLATFORM_KEYS } from '@/constants/visitPlatforms'
 
 const VISIT_ID_KEY = 'visit_id'
 const VISIT_ENTER_KEY = 'visit_enter_at'
 
 /**
- * 解析访问渠道来源
+ * 解析访问渠道：分享链接 from/utm_source 优先，其次用 document.referrer
  */
 function resolveVisitSource() {
   const params = new URLSearchParams(window.location.search)
-  const utm = params.get('utm_source')
-  if (utm) {
-    return `utm:${utm}`
+  const from = String(params.get('from') || params.get('utm_source') || '').trim().toLowerCase()
+  if (VISIT_PLATFORM_KEYS.includes(from)) {
+    return `platform:${from}`
   }
   return document.referrer || ''
 }

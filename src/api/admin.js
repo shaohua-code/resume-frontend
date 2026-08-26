@@ -153,6 +153,23 @@ export function getAdminFeedbackDetail(id) {
   return request.get(`/admin/feedbacks/${id}`)
 }
 
+/** 当前管理员收件箱 */
+export function getAdminNotifications(params = {}) {
+  return request.get('/admin/notifications', { params })
+}
+
+export function getAdminNotificationUnreadCount() {
+  return request.get('/admin/notifications/unread-count')
+}
+
+export function markAdminNotificationRead(id) {
+  return request.patch(`/admin/notifications/${id}/read`)
+}
+
+export function markAllAdminNotificationsRead() {
+  return request.post('/admin/notifications/read-all')
+}
+
 export function getAdminConfigs() {
   return request.get('/admin/configs')
 }
