@@ -1,124 +1,108 @@
 <script setup>
 /**
- * 数据统计卡片
+ * 核心业务指标卡：累计规模与所选周期增量分开呈现，比较值始终与同长度上一周期对齐。
  */
 import { computed } from 'vue'
-import {
-  Users,
-  Wallet,
-  TrendingDown,
-  TrendingUp,
-  UserPlus,
-  Bot,
-  Activity,
-  ArrowUp,
-  ArrowDown,
-} from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { Activity, ArrowDown, ArrowUp, Bot, FileText, UserPlus, Users } from 'lucide-vue-next'
 import CountUp from './CountUp.vue'
+import { useUserStore } from '@/stores/user'
 
 const props = defineProps({
-  data: {
-    type: Object,
-    default: () => ({}),
-  },
+  data: { type: Object, default: () => ({}) },
+  range: { type: String, default: '年度' },
 })
 
-const systemHealthy = computed(() => {
-  const status = props.data.system_status || {}
-  const values = Object.values(status)
-  if (!values.length) return true
-  return values.every((value) => value === 'ok')
+const router = useRouter()
+const userStore = useUserStore()
+
+// 将后端同环比字段转成可读文案；基期为零时不展示误导性的百分比。
+function comparisonText(comparison) {
+  if (!comparison) return '暂无对比数据'
+  const sign = comparison.change > 0 ? '+' : ''
+  if (comparison.previous === 0) return '上期 0 · 暂无可比基数'
+  const rate = comparison.change_rate === null ? '' : `（${sign}${comparison.change_rate}%）`
+  return `较上期 ${sign}${comparison.change}${rate}`
+}
+
+// 指标卡中的总量只使用累计值，区间增量才参与周期对比。
+const cards = computed(() => {
+  const summary = props.data.period_summary || {}
+  const activeUsers = Number(summary.active_users || 0)
+  return [
+    {
+      key: 'users', label: '累计用户', value: Number(props.data.user_count || 0), icon: Users,
+      tone: 'brand', note: '当前权限范围内的用户总量', path: '/admin/users', permission: 'admin:manage_users',
+    },
+    {
+      key: 'new-users', label: `新增用户 · ${props.range}`, value: Number(summary.users?.value || 0),
+      comparison: summary.users, icon: UserPlus, tone: 'mint', note: comparisonText(summary.users),
+      path: '/admin/users', permission: 'admin:manage_users',
+    },
+    {
+      key: 'resumes', label: `新建简历 · ${props.range}`, value: Number(summary.resumes?.value || 0),
+      comparison: summary.resumes, icon: FileText, tone: 'cream', note: comparisonText(summary.resumes),
+      path: '/admin/resumes', permission: 'admin:view_resumes',
+    },
+    {
+      key: 'ai-calls', label: `AI 调用 · ${props.range}`, value: Number(summary.ai_calls?.value || 0),
+      comparison: summary.ai_calls, icon: Bot, tone: 'brand',
+      note: `${activeUsers} 位用户使用 · ${comparisonText(summary.ai_calls)}`,
+      path: '/admin/ai-calls', permission: 'admin:view_ai_calls',
+    },
+  ]
 })
 
-const cards = computed(() => [
-  {
-    label: '用户总数',
-    value: props.data.user_count || 0,
-    icon: Users,
-    iconBg: 'bg-brand-lighter text-brand-dark',
-    trend: props.data.user_growth ?? null,
-    trendLabel: '较昨日',
-  },
-  {
-    label: '我的可用额度',
-    value: Number(props.data.my_balance || 0),
-    icon: Wallet,
-    iconBg: 'bg-mint text-emerald-700',
-    prefix: '¥',
-    note: '可分配余额',
-  },
-  {
-    label: '累计消费',
-    value: Number(props.data.my_consumed || 0),
-    icon: TrendingDown,
-    iconBg: 'bg-cream text-warning',
-    prefix: '¥',
-    note: '我的 AI 调用扣费',
-  },
-  {
-    label: '累计发放',
-    value: Number(props.data.my_granted || 0),
-    icon: TrendingUp,
-    iconBg: 'bg-mint text-emerald-700',
-    prefix: '¥',
-    note: '我转出的额度合计',
-  },
-  {
-    label: '今日新增用户',
-    value: props.data.today_new_users || 0,
-    icon: UserPlus,
-    iconBg: 'bg-mint text-emerald-700',
-    trend: props.data.user_growth ?? null,
-    trendLabel: '较昨日',
-  },
-  {
-    label: 'AI调用次数(所有用户)',
-    value: props.data.ai_call_count || 0,
-    icon: Bot,
-    iconBg: 'bg-brand-lighter text-brand-dark',
-    note: '所选时间范围累计',
-  },
-  {
-    label: '系统运行状态',
-    text: systemHealthy.value ? '正常' : '异常',
-    icon: Activity,
-    iconBg: systemHealthy.value ? 'bg-mint text-emerald-700' : 'bg-red-50 text-danger',
-    note: systemHealthy.value ? '所有服务正常' : '存在异常服务',
-  },
-])
+// 卡片只在用户本身拥有目标菜单权限时导航，避免用前端展示扩大后台权限。
+function openMetric(item) {
+  if (item.path && userStore.hasPermission(item.permission)) router.push(item.path)
+}
 </script>
 
 <template>
-  <div class="grid grid-cols-2 gap-4 lg:grid-cols-3 2xl:grid-cols-4">
-    <div
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-4">
+    <button
       v-for="item in cards"
-      :key="item.label"
-      class="card-hover flex min-h-[116px] items-center justify-between gap-3 p-4"
+      :key="item.key"
+      type="button"
+      class="card-hover group flex min-h-[142px] items-start justify-between gap-3 p-4 text-left transition sm:p-5"
+      :class="userStore.hasPermission(item.permission) ? 'cursor-pointer hover:-translate-y-0.5' : 'cursor-default'"
+      :aria-label="`${item.label}：${item.value}。${item.note}`"
+      @click="openMetric(item)"
     >
       <div class="min-w-0">
-        <p class="text-sm text-muted">{{ item.label }}</p>
-        <p class="mt-2 text-2xl font-bold text-ink">
-          <CountUp
-            v-if="item.text === undefined"
-            :value="item.value"
-            :prefix="item.prefix || ''"
-            :decimals="item.prefix ? 2 : 0"
+        <div class="flex items-center gap-2">
+          <p class="text-sm font-medium text-muted">{{ item.label }}</p>
+          <ArrowUp
+            v-if="item.comparison?.change > 0"
+            class="h-3.5 w-3.5 shrink-0 text-success"
+            aria-label="增加"
           />
-          <span v-else>{{ item.text }}</span>
+          <ArrowDown
+            v-else-if="item.comparison?.change < 0"
+            class="h-3.5 w-3.5 shrink-0 text-danger"
+            aria-label="减少"
+          />
+        </div>
+        <p class="mt-3 text-3xl font-semibold tracking-tight text-ink">
+          <CountUp :value="item.value" />
         </p>
-        <p class="flex items-center gap-1 mt-2 text-xs">
-          <template v-if="item.trend !== null && item.trend !== undefined">
-            <ArrowUp v-if="item.trend >= 0" class="h-3.5 w-3.5 text-success" />
-            <ArrowDown v-else class="h-3.5 w-3.5 text-danger" />
-            <span :class="item.trend >= 0 ? 'text-success' : 'text-danger'">{{ Math.abs(item.trend) }}</span>
-            <span class="text-muted">{{ item.trendLabel }}</span>
-          </template>
-          <span v-else class="text-muted">{{ item.note }}</span>
-        </p>
+        <p class="mt-2 text-xs leading-5 text-muted">{{ item.note }}</p>
       </div>
-      <span class="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl" :class="item.iconBg">
-        <component :is="item.icon" class="w-5 h-5" />
+      <span
+        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-transform group-hover:scale-105"
+        :class="{
+          'bg-brand-lighter text-brand-dark': item.tone === 'brand',
+          'bg-mint text-emerald-700': item.tone === 'mint',
+          'bg-cream text-warning': item.tone === 'cream',
+        }"
+      >
+        <component :is="item.icon" class="h-5 w-5" />
       </span>
-    </div>
+    </button>
   </div>
+  <p class="flex items-center gap-1.5 text-xs text-muted">
+    <Activity class="h-3.5 w-3.5" />
+    用户、简历和 AI 指标遵循当前管理员的数据范围；卡片可跳转到对应明细。
+  </p>
 </template>

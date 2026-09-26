@@ -20,37 +20,54 @@ import { message } from 'ant-design-vue'
 import {
   analyzeExtensionJob,
   deleteExtensionJob,
+  getExtensionJobProgressHistory,
   getExtensionJob,
   getExtensionJobs,
+  updateExtensionJobProgress,
 } from '@/api/extensionJobs'
 import { formatDateTime } from '@/utils/date'
+import { getCareerGoals } from '@/api/user'
 
 const jobs = ref([])
+const careerGoals = ref([])
 const loading = ref(false)
-const status = ref('all')
+const applicationStageFilter = ref('all')
 const loadError = ref('')
 const detailOpen = ref(false)
 const detailLoading = ref(false)
 const analysisLoading = ref(false)
 const deleting = ref(false)
+const progressSaving = ref(false)
+const historyLoading = ref(false)
+const progressHistory = ref([])
+// 详情弹窗独立维护进度草稿，取消关闭或保存失败时不污染岗位卡片数据。
+const progressDraft = ref({ application_stage: 'saved', applied_at: '', next_action_at: '', progress_note: '', career_goal_id: null })
 const selectedJob = ref(null)
 
-const statusMeta = {
+// 求职阶段与扩展 status 分离，避免“AI 已分析”被误当成“用户已投递”。
+const applicationStageMeta = {
   saved: { label: '\u5df2\u6536\u85cf', color: 'blue' },
-  ready: { label: '\u5df2\u5206\u6790', color: 'green' },
+  preparing: { label: '\u51c6\u5907\u4e2d', color: 'cyan' },
   applied: { label: '\u5df2\u6295\u9012', color: 'purple' },
+  interviewing: { label: '\u9762\u8bd5\u4e2d', color: 'orange' },
+  offer: { label: '\u5df2\u5f55\u7528', color: 'green' },
+  rejected: { label: '\u672a\u901a\u8fc7', color: 'red' },
+  withdrawn: { label: '\u5df2\u64a4\u56de', color: 'default' },
   archived: { label: '\u5df2\u5f52\u6863', color: 'default' },
 }
 
+// 阶段选项和筛选器共用同一组文案，防止出现界面可选但后端不接受的状态。
+const applicationStageOptions = Object.entries(applicationStageMeta).map(([value, item]) => ({ value, label: item.label }))
+
+// 下拉筛选覆盖全部求职阶段，避免窄屏横向铺开多个阶段按钮。
 const filters = [
-  { label: '\u5168\u90e8', value: 'all' },
-  { label: '\u5df2\u5206\u6790', value: 'ready' },
-  { label: '\u5df2\u6536\u85cf', value: 'saved' },
+  { label: '\u5168\u90e8\u9636\u6bb5', value: 'all' },
+  ...Object.entries(applicationStageMeta).map(([value, item]) => ({ value, label: item.label })),
 ]
 
-const visibleJobs = computed(() => status.value === 'all'
+const visibleJobs = computed(() => applicationStageFilter.value === 'all'
   ? jobs.value
-  : jobs.value.filter((job) => job.status === status.value))
+  : jobs.value.filter((job) => (job.application_stage || 'saved') === applicationStageFilter.value))
 
 // 兼容扩展历史结果与后端标准字段，保证旧收藏也能看到完整分析。
 function stringList(...values) {
@@ -97,8 +114,9 @@ async function loadJobs() {
   loading.value = true
   loadError.value = ''
   try {
-    const data = await getExtensionJobs()
+    const [data, goalsData] = await Promise.all([getExtensionJobs(), getCareerGoals().catch(() => ({ goals: [] }))])
     jobs.value = data.jobs || []
+    careerGoals.value = goalsData.goals || []
   } catch (error) {
     jobs.value = []
     loadError.value = error?.message || '\u6682\u65f6\u65e0\u6cd5\u52a0\u8f7d\u6536\u85cf\u5c97\u4f4d'
@@ -116,9 +134,12 @@ async function openDetail(job) {
   detailOpen.value = true
   detailLoading.value = true
   selectedJob.value = job
+  progressHistory.value = []
   try {
     const data = await getExtensionJob(job.id)
     selectedJob.value = data.job || job
+    syncProgressDraft(selectedJob.value)
+    await loadProgressHistory(selectedJob.value.id)
   } catch (error) {
     message.error(error?.message || '暂时无法加载岗位详情')
   } finally {
@@ -126,9 +147,58 @@ async function openDetail(job) {
   }
 }
 
+function goalName(goalId) {
+  return careerGoals.value.find((goal) => String(goal.id) === String(goalId))?.name || ''
+}
+
+// 数据库 DATE 可能被驱动序列化为 ISO 字符串，日期输入统一使用 YYYY-MM-DD。
+function dateInputValue(value) {
+  return value ? String(value).slice(0, 10) : ''
+}
+
+// 旧岗位缺少新增字段时用“已收藏”作中性默认值，不推断投递事实。
+function syncProgressDraft(job) {
+  progressDraft.value = {
+    application_stage: job?.application_stage || 'saved',
+    applied_at: dateInputValue(job?.applied_at),
+    next_action_at: dateInputValue(job?.next_action_at),
+    progress_note: job?.progress_note || '',
+    career_goal_id: job?.career_goal_id || null,
+  }
+}
+
+// 阶段历史单独加载，避免岗位详情接口随时间线增长而变大。
+async function loadProgressHistory(jobId) {
+  historyLoading.value = true
+  try {
+    const data = await getExtensionJobProgressHistory(jobId)
+    progressHistory.value = data.history || []
+  } catch {
+    progressHistory.value = []
+  } finally {
+    historyLoading.value = false
+  }
+}
+
 function replaceJob(updatedJob) {
   jobs.value = jobs.value.map((job) => job.id === updatedJob.id ? updatedJob : job)
   selectedJob.value = updatedJob
+}
+
+// 阶段、日期和备注由一次服务端事务保存；失败时保留草稿供用户重试。
+async function saveProgress() {
+  if (!selectedJob.value?.id) return
+  progressSaving.value = true
+  try {
+    const data = await updateExtensionJobProgress(selectedJob.value.id, progressDraft.value)
+    if (data.job) replaceJob(data.job)
+    await loadProgressHistory(selectedJob.value.id)
+    message.success('\u6c42\u804c\u8fdb\u5ea6\u5df2\u4fdd\u5b58')
+  } catch {
+    // 全局请求层负责展示统一错误；页面保留编辑内容。
+  } finally {
+    progressSaving.value = false
+  }
 }
 
 async function analyzeCurrentJob() {
@@ -168,7 +238,7 @@ onMounted(loadJobs)
 <template>
   <section class="saved-jobs-panel">
     <div class="saved-jobs-toolbar">
-      <a-segmented v-model:value="status" :options="filters" size="small" />
+      <a-select v-model:value="applicationStageFilter" class="saved-jobs-stage-filter" :options="filters" />
       <a-button type="text" size="small" :loading="loading" @click="loadJobs">
         <ReloadOutlined />刷新
       </a-button>
@@ -188,7 +258,7 @@ onMounted(loadJobs)
             <span class="saved-job-card__icon"><BookOutlined /></span>
             <div class="saved-job-card__tags">
               <a-tag v-if="needsRefresh(job)" color="orange">待重新识别</a-tag>
-              <a-tag :color="statusMeta[job.status]?.color">{{ statusMeta[job.status]?.label || '已收藏' }}</a-tag>
+              <a-tag :color="applicationStageMeta[job.application_stage || 'saved']?.color">{{ applicationStageMeta[job.application_stage || 'saved']?.label || '已收藏' }}</a-tag>
             </div>
           </div>
           <h3>{{ job.title }}</h3>
@@ -199,6 +269,8 @@ onMounted(loadJobs)
             <span v-if="job.salary">{{ job.salary }}</span>
           </div>
           <p v-if="job.address" class="saved-job-card__address">{{ job.address }}</p>
+          <p v-if="job.next_action_at" class="saved-job-card__next-action">下一步：{{ dateInputValue(job.next_action_at) }}</p>
+          <p v-if="goalName(job.career_goal_id)" class="saved-job-card__goal">目标：{{ goalName(job.career_goal_id) }}</p>
           <div v-if="skillsOf(job).length" class="saved-job-skills">
             <a-tag v-for="skill in skillsOf(job).slice(0, 5)" :key="skill">{{ skill }}</a-tag>
           </div>
@@ -213,11 +285,13 @@ onMounted(loadJobs)
           </div>
         </article>
       </div>
-      <a-empty v-else description="还没有收藏的岗位">
+      <!-- 阶段筛选无结果时解释当前筛选为空，不误导用户以为岗位已被删除。 -->
+      <a-empty v-else :description="applicationStageFilter === 'all' ? '还没有收藏的岗位' : '当前阶段没有岗位'">
         <template #description>
           <div class="saved-jobs-empty">
-            <b>还没有收藏的岗位</b>
-            <span>在招聘页面打开 AI 简历 Agent，即可识别、分析并保存。</span>
+            <b>{{ applicationStageFilter === 'all' ? '还没有收藏的岗位' : '当前阶段没有岗位' }}</b>
+            <span v-if="applicationStageFilter === 'all'">在招聘页面打开 AI 简历 Agent，即可识别、分析并保存。</span>
+            <span v-else>选择其他阶段查看岗位，或在招聘页面继续收藏新岗位。</span>
           </div>
         </template>
       </a-empty>
@@ -229,8 +303,8 @@ onMounted(loadJobs)
           <a-alert v-if="needsRefresh(selectedJob)" class="saved-job-detail__warning" type="warning" show-icon message="该岗位由旧版插件保存，返回原招聘页重新识别后会自动补全字段。" />
           <div class="saved-job-detail__heading">
             <div><h2>{{ selectedJob.title }}</h2><p>{{ selectedJob.company || '暂未识别公司' }}</p></div>
-            <span class="saved-job-status" :data-status="selectedJob.status || 'saved'">
-              <CheckCircleOutlined />{{ statusMeta[selectedJob.status]?.label || '已收藏' }}
+            <span class="saved-job-status" :data-status="progressDraft.application_stage">
+              <CheckCircleOutlined />{{ applicationStageMeta[progressDraft.application_stage]?.label || '已收藏' }}
             </span>
           </div>
           <div class="saved-job-detail__meta">
@@ -241,6 +315,31 @@ onMounted(loadJobs)
             <span v-if="scoreOf(selectedJob)"><ThunderboltOutlined /> 匹配 {{ scoreOf(selectedJob) }}</span>
           </div>
           <div v-if="selectedJob.address" class="saved-job-detail__address"><EnvironmentOutlined />{{ selectedJob.address }}</div>
+          <!-- 求职进度由用户明确维护，与扩展的岗位分析状态分开呈现。 -->
+          <div class="saved-job-detail__block saved-job-progress">
+            <b>求职进度</b>
+            <label>当前阶段<a-select v-model:value="progressDraft.application_stage" :options="applicationStageOptions" /></label>
+            <label>所属求职目标<a-select v-model:value="progressDraft.career_goal_id" allow-clear placeholder="暂不关联" :options="careerGoals.filter((goal) => goal.status === 'active').map((goal) => ({ value: goal.id, label: goal.name }))" /></label>
+            <div class="saved-job-progress__dates">
+              <label>投递日期<input v-model="progressDraft.applied_at" type="date" /></label>
+              <label>下一步日期<input v-model="progressDraft.next_action_at" type="date" /></label>
+            </div>
+            <label>进度备注<a-textarea v-model:value="progressDraft.progress_note" :maxlength="1000" :rows="3" show-count placeholder="记录投递渠道、面试反馈或下一步准备事项" /></label>
+            <a-button type="primary" :loading="progressSaving" @click="saveProgress">保存求职进度</a-button>
+            <div class="saved-job-progress__history">
+              <b>阶段变化</b>
+              <a-spin :spinning="historyLoading">
+                <ol v-if="progressHistory.length">
+                  <li v-for="item in progressHistory" :key="item.id">
+                    <span>{{ applicationStageMeta[item.from_stage]?.label || item.from_stage }} → {{ applicationStageMeta[item.to_stage]?.label || item.to_stage }}</span>
+                    <small>{{ formatDateTime(item.create_time) }}</small>
+                    <p v-if="item.note">{{ item.note }}</p>
+                  </li>
+                </ol>
+                <span v-else class="saved-job-progress__empty">阶段更新后会显示在这里</span>
+              </a-spin>
+            </div>
+          </div>
           <div v-if="skillsOf(selectedJob).length" class="saved-job-detail__block">
             <b>岗位技能</b>
             <div class="saved-job-skills"><a-tag v-for="skill in skillsOf(selectedJob)" :key="skill">{{ skill }}</a-tag></div>
@@ -301,4 +400,23 @@ onMounted(loadJobs)
 
 /* 收藏状态与 AI 分析保持稳定尺寸，避免 Ant Tag 被标题区拉伸。 */
 .saved-job-status{display:inline-flex;flex:0 0 auto;align-items:center;gap:6px;min-height:30px;padding:4px 10px;border:1px solid #b7dfd3;border-radius:6px;background:#eef8f4;color:#14745f;font-size:13px;font-weight:600;line-height:20px;white-space:nowrap}.saved-job-status[data-status="saved"]{border-color:#c7d8ec;background:#f1f6fb;color:#42698e}.saved-job-status[data-status="applied"]{border-color:#d9cbea;background:#f8f2fb;color:#76588f}.saved-job-detail__analysis{display:grid;gap:12px;margin-top:20px;padding:16px;border:1px solid var(--color-line);border-radius:8px;background:#fbfdfc}.saved-job-detail__analysis-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}.saved-job-detail__analysis-heading>div>span{display:block;color:var(--color-brand-dark);font-size:14px;font-weight:700}.saved-job-detail__analysis-heading b{display:block;margin-top:5px;color:var(--color-ink);font-size:28px;line-height:1}.saved-job-detail__analysis-heading b small{font-size:12px;font-weight:500;color:var(--color-muted)}.saved-job-detail__analysis-heading p{margin:7px 0 0;color:var(--color-muted);font-size:12px}.saved-job-detail__analysis-heading>span{color:var(--color-brand);font-size:24px}.saved-job-insight{padding:12px 13px;border-left:3px solid var(--color-brand);background:#f3f8f6}.saved-job-insight--warning{border-left-color:#d28c2d;background:#fff8ec}.saved-job-insight--advice{border-left-color:#7085b5;background:#f4f6fb}.saved-job-insight b{display:flex;align-items:center;gap:6px;margin-bottom:7px;color:var(--color-ink);font-size:13px}.saved-job-insight p{margin:4px 0;color:var(--color-ink-secondary);font-size:13px;line-height:1.6}.saved-job-detail__actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}.saved-job-detail__actions :deep(.ant-btn){min-height:38px}.saved-job-detail__actions :deep(.ant-popconfirm-buttons){white-space:nowrap}@media(max-width:720px){.saved-jobs-grid{grid-template-columns:1fr}.saved-job-detail__heading{align-items:flex-start}.saved-job-detail__actions{display:grid}.saved-job-detail__actions :deep(.ant-btn){width:100%}}
+</style>
+
+<style scoped>
+/* 求职进度表单以系统色彩令牌显示日期、备注和阶段历史，并在窄屏保持单列可操作。 */
+.saved-job-card__next-action{margin:7px 0 0;color:var(--color-brand-dark);font-size:12px;font-weight:600}
+.saved-job-card__goal{margin:6px 0 0;color:var(--color-brand);font-size:12px;font-weight:600}
+.saved-jobs-stage-filter{width:180px}
+.saved-job-progress{display:grid;gap:12px}
+.saved-job-progress label{display:grid;gap:6px;color:var(--color-ink-secondary);font-size:13px}
+.saved-job-progress :deep(.ant-select){width:100%}
+.saved-job-progress input{min-height:38px;padding:6px 10px;border:1px solid var(--color-line);border-radius:6px;background:var(--color-surface);color:var(--color-ink)}
+.saved-job-progress__dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.saved-job-progress__history{display:grid;gap:8px;padding-top:12px;border-top:1px solid var(--color-line)}
+.saved-job-progress__history ol{display:grid;gap:10px;margin:0;padding-left:20px}
+.saved-job-progress__history li{color:var(--color-ink-secondary);font-size:13px}
+.saved-job-progress__history li small{display:block;color:var(--color-muted)}
+.saved-job-progress__history li p{margin:3px 0;white-space:pre-wrap}
+.saved-job-progress__empty{color:var(--color-muted);font-size:12px}
+@media(max-width:560px){.saved-jobs-stage-filter{width:160px}.saved-job-progress__dates{grid-template-columns:1fr}}
 </style>

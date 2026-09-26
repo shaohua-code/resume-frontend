@@ -5,12 +5,15 @@
 import { computed } from 'vue'
 import BaseChart from '@/components/charts/BaseChart.vue'
 import { useChartTheme } from '../../utils/chartTheme.js'
+import EmptyState from './EmptyState.vue'
+import SkeletonCard from './SkeletonCard.vue'
 
 const props = defineProps({
-  months: {
+  labels: {
     type: Array,
     default: () => [],
   },
+  range: { type: String, default: '年度' },
   consumeTrend: {
     type: Array,
     default: () => [],
@@ -26,7 +29,8 @@ const props = defineProps({
 })
 
 const { chartColors, chartUi } = useChartTheme()
-const axisLabels = computed(() => props.months.map((item) => `${Number(item.split('-')[1])}月`))
+// 两条个人钱包流水都为零时显示明确空态，避免把空白图误认为加载失败。
+const hasData = computed(() => [...props.consumeTrend, ...props.grantTrend].some((value) => Number(value) > 0))
 
 const option = computed(() => ({
   tooltip: { trigger: 'axis' },
@@ -35,9 +39,9 @@ const option = computed(() => ({
   xAxis: {
     type: 'category',
     boundaryGap: false,
-    data: axisLabels.value,
+    data: props.labels,
     axisLine: { lineStyle: { color: chartUi.value.axis } },
-    axisLabel: { color: chartUi.value.label },
+    axisLabel: { color: chartUi.value.label, hideOverlap: true, rotate: props.range === '30日' ? 35 : 0 },
   },
   yAxis: {
     type: 'value',
@@ -69,11 +73,13 @@ const option = computed(() => ({
   <div class="card-base">
     <div class="mb-2 flex items-center justify-between">
       <div>
-        <h3 class="text-base font-semibold text-ink">余额变动趋势</h3>
-        <!-- 与卡片「累计消费 / 额度发放」同口径：仅当前登录账号自己的流水 -->
-        <p class="mt-1 text-xs text-muted">仅统计我自己的 AI 消费与额度发放</p>
+        <h3 class="text-base font-semibold text-ink">个人额度变化</h3>
+        <!-- 所选周期和趋势一致，避免将当前管理员的个人钱包流水误读为全站收入。 -->
+        <p class="mt-1 text-xs text-muted">{{ props.range }} · 仅统计本人 AI 消费和发放 · 单位：额度</p>
       </div>
     </div>
-    <BaseChart :option="option" :loading="loading" height="280px" />
+    <SkeletonCard v-if="loading && !hasData" height="280px" />
+    <BaseChart v-else-if="hasData" :option="option" :loading="loading" height="280px" />
+    <EmptyState v-else text="所选时间范围内暂无个人额度变动" />
   </div>
 </template>

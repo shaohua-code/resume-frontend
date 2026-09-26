@@ -22,6 +22,18 @@ export async function analyzeExtensionJob(jobId) {
   return response?.data || response
 }
 
+// 网页端更新求职阶段及下一步资料，扩展识别/分析状态仍由原接口管理。
+export async function updateExtensionJobProgress(jobId, progress) {
+  const response = await request.patch(`/extension/jobs/${encodeURIComponent(jobId)}/progress`, progress)
+  return response?.data || response
+}
+
+// 获取当前账号对该岗位的阶段变化时间线。
+export async function getExtensionJobProgressHistory(jobId) {
+  const response = await request.get(`/extension/jobs/${encodeURIComponent(jobId)}/progress-history`)
+  return response?.data || response
+}
+
 /** 取消当前账号中的岗位收藏。 */
 export async function deleteExtensionJob(jobId) {
   const response = await request.delete(`/extension/jobs/${encodeURIComponent(jobId)}`)

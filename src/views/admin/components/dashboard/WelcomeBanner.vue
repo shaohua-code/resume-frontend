@@ -1,10 +1,9 @@
 <script setup>
 /**
- * 欢迎横幅
- * 蓝紫渐变背景，左侧问候语与今日数据文案，右侧机器人插画浮动动效，并提供时间筛选。
+ * 数据中心标题与筛选栏：展示数据归属、更新时间，并承载统一周期筛选与手动刷新。
  */
 import { computed } from 'vue'
-import { Bot } from 'lucide-vue-next'
+import { RefreshCw } from 'lucide-vue-next'
 
 const activeRange = defineModel({ type: String, default: '年度' })
 
@@ -13,21 +12,34 @@ const props = defineProps({
     type: String,
     default: '管理员',
   },
-  todayNewUsers: {
-    type: Number,
-    default: 0,
+  scopeLabel: {
+    type: String,
+    default: '当前数据范围',
+  },
+  lastUpdated: {
+    type: String,
+    default: '',
+  },
+  loading: {
+    type: Boolean,
+    default: false,
   },
 })
 
+const emit = defineEmits(['refresh'])
+
+// 前端标签保持易读，接口仍使用兼容原有调用方的“年度”范围值。
 const timeRanges = [
   { label: '今日', value: '今日' },
   { label: '昨日', value: '昨日' },
   { label: '7日', value: '7日' },
   { label: '30日', value: '30日' },
-  { label: '年度', value: '年度' },
+  { label: '近12个月', value: '年度' },
 ]
 
-// 根据当前小时给出问候语
+const rangeLabel = computed(() => activeRange.value === '年度' ? '近12个月' : activeRange.value)
+
+// 根据当前小时给出问候语，时间筛选描述统一放在页面标题区。
 const greeting = computed(() => {
   const hour = new Date().getHours()
   if (hour < 6) return '凌晨好'
@@ -39,55 +51,42 @@ const greeting = computed(() => {
 </script>
 
 <template>
-  <div
-    class="relative flex min-h-[180px] items-center overflow-hidden rounded-banner bg-gradient-to-br from-brand via-brand-light to-mint p-7 text-white shadow-lift"
-  >
-    <div class="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/20" />
-    <div class="absolute -bottom-16 right-40 h-44 w-44 rounded-full bg-white/10" />
-
-    <div class="relative z-10 flex-1">
-      <h2 class="text-2xl font-semibold">👋 {{ greeting }}，{{ nickname }}</h2>
-      <p class="mt-3 text-sm text-white/95">欢迎回来！今天共有 {{ todayNewUsers }} 位用户生成了 AI 简历。</p>
-      <p class="mt-1 text-sm text-white/95">继续保持，让更多用户拿到 Offer 🚀</p>
+  <div class="card-base flex flex-col gap-5 !p-5 sm:flex-row sm:items-center sm:justify-between sm:!p-6">
+    <div class="min-w-0">
+      <p class="text-xs font-medium text-brand-dark">{{ scopeLabel }} · {{ rangeLabel }}</p>
+      <h2 class="mt-1 text-2xl font-semibold text-ink">{{ greeting }}，{{ nickname }}</h2>
+      <p class="mt-2 text-sm text-muted">查看用户增长、产品使用和个人额度变化。数据范围会随时间筛选同步调整。</p>
+      <p v-if="lastUpdated" class="mt-2 text-xs text-muted">最近更新：{{ lastUpdated }}</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
       <a-segmented
         :value="activeRange"
         :options="timeRanges"
-        class="welcome-segmented mt-5"
+        class="stats-range-selector"
+        aria-label="选择统计时间范围"
         @change="activeRange = $event"
       />
-    </div>
-
-    <div class="relative z-10 hidden md:block">
-      <div class="flex h-28 w-28 animate-float items-center justify-center rounded-3xl bg-white/20 backdrop-blur">
-        <Bot class="h-16 w-16 text-white" />
-      </div>
+      <!-- 使用原生横向按钮，避免 Ant 按钮在窄弹性布局中把图标和文案拆成两行。 -->
+      <button
+        type="button"
+        class="btn-ghost !h-10 !min-h-10 !shrink-0 !whitespace-nowrap !px-4"
+        :disabled="loading"
+        aria-label="刷新数据中心统计"
+        @click="emit('refresh')"
+      >
+        <RefreshCw class="h-4 w-4 shrink-0" :class="loading ? 'animate-spin' : ''" />
+        <span class="whitespace-nowrap">刷新</span>
+      </button>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* 时间筛选器：未选中白字，选中白底深字 */
-.welcome-segmented :deep(.ant-segmented) {
-  @apply rounded-full bg-white/15 p-1 backdrop-blur;
+/* 时间范围控件使用常规表面色，确保和页面中其余筛选表单一致且主题可读。 */
+.stats-range-selector :deep(.ant-segmented) {
+  @apply rounded-xl bg-canvas p-1;
 }
-
-.welcome-segmented :deep(.ant-segmented-item) {
-  @apply text-white/90 transition-colors hover:text-white;
-}
-
-.welcome-segmented :deep(.ant-segmented-item-selected) {
-  @apply bg-white font-medium text-brand-dark shadow-sm;
-}
-
-.welcome-segmented :deep(.ant-segmented-item-selected .ant-segmented-item-label) {
-  @apply text-brand-dark;
-
-}
-
-.welcome-segmented :deep(.ant-segmented-item-label) {
-  color: #000;
-}
-.welcome-segmented :deep(.ant-segmented-thumb) {
-  @apply rounded-full bg-white shadow-sm;
+.stats-range-selector :deep(.ant-segmented-item-selected) {
+  @apply rounded-lg bg-surface font-medium text-brand-dark shadow-sm;
 }
 </style>

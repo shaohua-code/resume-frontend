@@ -20,3 +20,23 @@ export function changeUserPassword(oldPassword, newPassword) {
     new_password: newPassword,
   })
 }
+
+export async function getCareerGoals() {
+  const response = await request.get('/user/career-goals')
+  return response?.data || response
+}
+
+export async function createCareerGoal(payload) {
+  const response = await request.post('/user/career-goals', payload)
+  return response?.data || response
+}
+
+export async function updateCareerGoal(goalId, payload) {
+  const response = await request.patch(`/user/career-goals/${encodeURIComponent(goalId)}`, payload)
+  return response?.data || response
+}
+
+export async function deleteCareerGoal(goalId) {
+  const response = await request.delete(`/user/career-goals/${encodeURIComponent(goalId)}`)
+  return response?.data || response
+}

@@ -1,17 +1,19 @@
 <script setup>
 /**
- * AI 调用趋势图
- * 面积折线，展示近 12 个月 AI 调用次数，主色蓝紫渐变。
+ * AI 调用趋势图：跟随所选范围切换小时、日期或月份粒度。
  */
 import { computed } from 'vue'
 import BaseChart from '@/components/charts/BaseChart.vue'
 import { useChartTheme } from '../../utils/chartTheme.js'
+import EmptyState from './EmptyState.vue'
+import SkeletonCard from './SkeletonCard.vue'
 
 const props = defineProps({
-  months: {
+  labels: {
     type: Array,
     default: () => [],
   },
+  range: { type: String, default: '年度' },
   aiTrend: {
     type: Array,
     default: () => [],
@@ -23,18 +25,19 @@ const props = defineProps({
 })
 
 const { chartColors, chartUi } = useChartTheme()
-const axisLabels = computed(() => props.months.map((item) => `${Number(item.split('-')[1])}月`))
+// 当前区间没有调用量时呈现直白的空数据说明，不以空坐标轴代替信息。
+const hasData = computed(() => props.aiTrend.some((value) => Number(value) > 0))
 
 const option = computed(() => ({
   tooltip: { trigger: 'axis' },
-  legend: { data: ['AI调用'], right: 0, top: 0, icon: 'roundRect' },
+  legend: { data: ['AI 调用'], right: 0, top: 0, icon: 'roundRect' },
   grid: { left: 8, right: 12, bottom: 8, top: 36, containLabel: true },
   xAxis: {
     type: 'category',
     boundaryGap: false,
-    data: axisLabels.value,
+    data: props.labels,
     axisLine: { lineStyle: { color: chartUi.value.axis } },
-    axisLabel: { color: chartUi.value.label },
+    axisLabel: { color: chartUi.value.label, hideOverlap: true, rotate: props.range === '30日' ? 35 : 0 },
   },
   yAxis: {
     type: 'value',
@@ -43,7 +46,7 @@ const option = computed(() => ({
   },
   series: [
     {
-      name: 'AI调用',
+      name: 'AI 调用（次）',
       type: 'line',
       smooth: true,
       showSymbol: false,
@@ -67,8 +70,13 @@ const option = computed(() => ({
 <template>
   <div class="card-base">
     <div class="flex items-center justify-between mb-2">
-      <h3 class="text-base font-semibold text-ink">AI 调用趋势（所有用户）</h3>
+      <div>
+        <h3 class="text-base font-semibold text-ink">AI 使用趋势</h3>
+        <p class="mt-1 text-xs text-muted">按 {{ props.range === '近12个月' ? '月份' : props.range === '今日' || props.range === '昨日' ? '小时' : '日期' }}统计 · 单位：次</p>
+      </div>
     </div>
-    <BaseChart :option="option" :loading="loading" height="300px" />
+    <SkeletonCard v-if="loading && !hasData" height="300px" />
+    <BaseChart v-else-if="hasData" :option="option" :loading="loading" height="300px" />
+    <EmptyState v-else text="所选时间范围内暂无 AI 调用记录" />
   </div>
 </template>

@@ -5,12 +5,15 @@
 import { computed } from 'vue'
 import BaseChart from '@/components/charts/BaseChart.vue'
 import { useChartTheme } from '../../utils/chartTheme.js'
+import EmptyState from './EmptyState.vue'
+import SkeletonCard from './SkeletonCard.vue'
 
 const props = defineProps({
-  months: {
+  labels: {
     type: Array,
     default: () => [],
   },
+  range: { type: String, default: '年度' },
   userTrend: {
     type: Array,
     default: () => [],
@@ -22,7 +25,8 @@ const props = defineProps({
 })
 
 const { chartColors, chartUi } = useChartTheme()
-const axisLabels = computed(() => props.months.map((item) => `${Number(item.split('-')[1])}月`))
+// 当前区间没有新用户时以空态说明，避免空坐标轴造成加载异常的错觉。
+const hasData = computed(() => props.userTrend.some((value) => Number(value) > 0))
 
 const option = computed(() => ({
   tooltip: { trigger: 'axis' },
@@ -31,9 +35,9 @@ const option = computed(() => ({
   xAxis: {
     type: 'category',
     boundaryGap: false,
-    data: axisLabels.value,
+    data: props.labels,
     axisLine: { lineStyle: { color: chartUi.value.axis } },
-    axisLabel: { color: chartUi.value.label },
+    axisLabel: { color: chartUi.value.label, hideOverlap: true, rotate: props.range === '30日' ? 35 : 0 },
   },
   yAxis: {
     type: 'value',
@@ -42,7 +46,7 @@ const option = computed(() => ({
   },
   series: [
     {
-      name: '新增用户',
+      name: '新增用户（人）',
       type: 'line',
       smooth: true,
       showSymbol: false,
@@ -66,8 +70,13 @@ const option = computed(() => ({
 <template>
   <div class="card-base">
     <div class="mb-2 flex items-center justify-between">
-      <h3 class="text-base font-semibold text-ink">用户增长趋势</h3>
+      <div>
+        <h3 class="text-base font-semibold text-ink">新增用户趋势</h3>
+        <p class="mt-1 text-xs text-muted">按 {{ props.range === '近12个月' ? '月份' : props.range === '今日' || props.range === '昨日' ? '小时' : '日期' }}统计 · 单位：人</p>
+      </div>
     </div>
-    <BaseChart :option="option" :loading="loading" height="300px" />
+    <SkeletonCard v-if="loading && !hasData" height="300px" />
+    <BaseChart v-else-if="hasData" :option="option" :loading="loading" height="300px" />
+    <EmptyState v-else text="所选时间范围内暂无新增用户" />
   </div>
 </template>

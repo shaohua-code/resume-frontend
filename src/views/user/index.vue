@@ -210,6 +210,11 @@
             <SavedJobsPanel />
           </a-card>
         </section>
+        <section v-else-if="activeTab === 'career-goals'" class="workspace-content-body">
+          <a-card class="workspace-panel" :bordered="false">
+            <CareerGoalsPanel />
+          </a-card>
+        </section>
         <section v-else-if="activeTab === 'profile'" class="workspace-content-body">
           <UserProfilePanel />
         </section>
@@ -255,6 +260,7 @@ import {
   ThunderboltOutlined,
   UserOutlined,
   BookOutlined,
+  AimOutlined,
 } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useWalletStore } from '@/stores/wallet'
@@ -270,6 +276,7 @@ import UserTaskPromptsPanel from './components/UserTaskPromptsPanel.vue'
 import ResumeCardList from './components/ResumeCardList.vue'
 import RechargeModal from './components/RechargeModal.vue'
 import SavedJobsPanel from './components/SavedJobsPanel.vue'
+import CareerGoalsPanel from './components/CareerGoalsPanel.vue'
 import { formatDateTime } from '@/utils/date'
 import { useMediaQuery } from '@/composables/useMediaQuery'
 import { getUserTaskModels, getUserTaskPrompts } from '@/api/userAi'
@@ -297,6 +304,14 @@ const workspaceGroups = computed(() => {
       label: '工作台',
       items: [
         {
+          key: 'career-goals',
+          label: '求职目标',
+          description: '明确方向，持续推进',
+          longDescription: '维护当前求职方向，并把岗位进度聚合到长期目标中。',
+          eyebrow: 'CAREER DIRECTION',
+          icon: AimOutlined,
+        },
+        {
           key: 'resumes',
           label: '我的简历',
           description: '创建、编辑与管理',
@@ -306,10 +321,10 @@ const workspaceGroups = computed(() => {
         },
         {
           key: 'saved-jobs',
-          label: '我的收藏',
-          description: '浏览器识别的岗位',
-          longDescription: '查看由浏览器 Agent 识别、分析并保存的岗位，随时回到原招聘页继续准备。',
-          eyebrow: 'SAVED JOBS',
+          label: '求职进度',
+          description: '跟进收藏、投递与面试',
+          longDescription: '管理岗位阶段、投递信息和下一步行动，回来后继续上次的求职准备。',
+          eyebrow: 'JOB PROGRESS',
           icon: BookOutlined,
         },
         {

@@ -3,7 +3,7 @@
  * 余额消费概览
  */
 import { computed } from 'vue'
-import { Wallet, TrendingDown, TrendingUp, Bot } from 'lucide-vue-next'
+import { Wallet, TrendingDown, TrendingUp } from 'lucide-vue-next'
 import CountUp from './CountUp.vue'
 
 const props = defineProps({
@@ -13,17 +13,18 @@ const props = defineProps({
   },
 })
 
+// 该区块只解释当前登录管理员本人的钱包数据，不与全站用户指标混在一起。
 const metrics = computed(() => [
   {
-    label: '我的可用额度',
+    label: '当前可用额度',
     value: Number(props.data.my_balance || 0),
     icon: Wallet,
     iconClass: 'bg-brand-lighter text-brand-dark',
     prefix: '¥',
-    note: '可分配余额',
+    note: '个人账户当前余额',
   },
   {
-    label: '累计发放',
+    label: '累计发放额度',
     value: Number(props.data.my_granted || 0),
     icon: TrendingUp,
     iconClass: 'bg-mint text-emerald-700',
@@ -31,19 +32,12 @@ const metrics = computed(() => [
     note: '我转出的额度合计',
   },
   {
-    label: '累计消费',
+    label: '累计 AI 消费',
     value: Number(props.data.my_consumed || 0),
     icon: TrendingDown,
     iconClass: 'bg-cream text-warning',
     prefix: '¥',
     note: '我的 AI 调用扣费',
-  },
-  {
-    label: 'AI 调用次数',
-    value: props.data.ai_call_count || 0,
-    icon: Bot,
-    iconClass: 'bg-brand-lighter text-brand-dark',
-    prefix: '',
   },
 ])
 </script>
@@ -51,8 +45,11 @@ const metrics = computed(() => [
 <template>
   <div class="card-base">
     <div class="mb-5 flex items-center justify-between">
-      <h3 class="text-base font-semibold text-ink">余额消费概览</h3>
-      <span class="badge">实时统计</span>
+      <div>
+        <h3 class="text-base font-semibold text-ink">我的额度账户</h3>
+        <p class="mt-1 text-xs text-muted">当前可用余额与个人累计流水</p>
+      </div>
+      <span class="badge">个人账户</span>
     </div>
     <div class="grid grid-cols-2 gap-4">
       <div
