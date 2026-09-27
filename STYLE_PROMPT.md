@@ -1,149 +1,70 @@
-# AI 简历 · Glassmorphism 风格提示词
+# AI 简历 · C 端产品视觉规范
 
-> 本文档供 AI 辅助开发 / 设计师参考，确保新增页面与现有 Glassmorphism 视觉一致。
-> 所有色值以 [`src/constants/theme.js`](src/constants/theme.js) 为唯一来源。
+> 本文用于重做产品页面、组件与视觉交互。系统主题的唯一令牌来源是 `src/constants/theme.js`；简历 A4 模板与皮肤使用独立变量。
 
----
+## 产品气质
 
-## 一、Keywords（双语）
+**定位：** 帮用户把经历、简历和求职进度连成一件顺手的事。界面要有消费级产品的亲和力和设计感，不做企业后台换皮。
 
-**English:** Glassmorphism, Frosted Glass, Backdrop Blur, Soft Gradients, Cyan to Purple, Neon Glow Border, Rounded Corners, Modern UI, Futuristic Tech, Clean White Space, Subtle Grid Background, Ant Design Vue, Mobile-first Responsive
+**设计方向：** 暖纸白作为阅读底色，深色正文负责清晰，靛紫/青绿主题色负责识别，少量陶土或金色作温度点缀。首页可以使用主题渐变作为品牌舞台，配真实的产品效果示意；业务内容页回到舒适的纸面层次。通过字体、构图、产品预览和节奏建立个性，不把全站堆成相同的白卡片网格。
 
-**中文：** 玻璃拟态、磨砂玻璃、背景模糊、青紫渐变、霓虹发光边框、大圆角、现代 UI、未来科技感、留白、 subtle 网格背景、Ant Design Vue、移动优先响应式
+**主题：** 保留 `fresh-gradient`、`minimal`、`business`、`classic-monochrome`、`elegant-warm` 五种主题 ID 与切换入口。`business` 使用象牙白、靛紫与陶土辅助色。所有主题令牌驱动 Tailwind、CSS、Ant Design Vue 和图表。
 
----
+## 色彩与空间
 
-## 二、色彩与 Token（来自 theme.js）
+- 页面底色用 `cream`，内容面板用 `surface`，编辑控件和次级区域用 `canvas`；主要文字用 `ink` 与 `ink.secondary`。
+- 品牌强调用 `brand`、`brand.dark`、`brand.lighter`；状态色使用成功、警告、危险语义令牌。避免同一页面出现多种互相竞争的高饱和色。
+- 品牌渐变只用于首页 Hero、明确的下一步行动或品牌标识。其余卡片保持实底和轻阴影，避免每个区块同时叠加大圆角、描边、渐变与模糊。
+- `PageHero`、`GlassCard`、`.card-base` 等共享组件提供基础表面；局部样式只承担该页面独有的信息层级和个性。
+- 留白服务于阅读与操作。不要用过宽空白面板包一小块内容，也不要把简历缩略图缩到难以辨认。
 
-| Token | 色值 | 用途 |
-| --- | --- | --- |
-| brand | `#00D4FF` | 主色、按钮、高亮 |
-| brand.light | `#4FACFE` | 渐变中间色 |
-| brand.lighter | `#E0F7FA` | 选中背景、标签 |
-| brand.dark | `#0891B2` | hover、链接 |
-| accent | `#A855F7` | 辅助紫、渐变终点 |
-| cream | `#F8FAFC` | 页面底色 |
-| surface | `#FFFFFF` | 卡片底（可配合 70% 透明度） |
-| ink | `#1E293B` | 标题、正文 |
-| ink.secondary | `#64748B` | 描述、辅助文字 |
+## 排版与组件
 
-**渐变：**
-- 主按钮 / 主渐变：`linear-gradient(90deg, #00D4FF, #4FACFE, #A855F7)`
-- Hero 背景：`linear-gradient(135deg, #00D4FF 0%, #4FACFE 50%, #A855F7 100%)`
+- 桌面主标题 30–40px，首页可达 56px；移动主标题 30–36px。正文 14–16px，辅助说明通常不小于 12px。
+- 页面标题左对齐到内容网格，段落控制行宽；避免每个模块重复使用同级标题、英文眉题和步骤导航。
+- 每个区块最多一个主按钮。主操作高对比，次操作采用描边或文字样式；触控目标至少 44px。
+- 图标沿用 Ant Design 图标组件，不以 Emoji 作为主要功能入口。产品示意不得遮住正文和操作。
+- 卡片圆角和阴影遵循系统主题令牌；数据密集区优先用对齐和分隔线建立秩序。
 
-**圆角：** 卡片 16px · 按钮 10px · Banner 20px · 胶囊 9999px
+## 页面方向
 
-**阴影：** 卡片双层浅阴影 · 按钮外发光 `0 0 20px rgba(0,212,255,0.3)`
+### 首页
 
----
+- 首屏清楚说明用户得到的实际帮助，以主题渐变作为品牌主视觉；旁边展示纸张式简历效果，让访客快速理解产物。
+- 首屏突出一个主要行动和一个浏览模板的次行动；费用说明、内容确认和隐私边界清楚但不过度抢眼。
+- 功能入口使用统一图标。三列桌面、两列平板、一列手机；求职 Agent、模板和使用流程分开组织。
 
-## 三、组件描述模板
+### 模板中心
 
-### Header（顶栏）
-Semi-transparent frosted glass header (`backdrop-blur-xl`, `bg-white/70`, `border-white/60`). Logo left, horizontal `a-menu` center on desktop, `a-drawer` on mobile. Right: search icon + gradient CTA button「免费开户」.
+- 让真实 A4 简历成为视觉中心。使用轻量搜索/筛选工具栏，扩大可读预览，配舒适的纸感衬底。
+- 模板名称、场景、简介与预览入口保持清晰顺序；完整预览支持视口适配和直接使用。
 
-### Hero（首屏）
-Full-width gradient hero (`--gradient-hero`). Large bold title, subtitle, **stat-glass** compact pill badges (`min-w-[88px] px-4 py-2.5`, numbers `text-2xl sm:text-3xl`, labels `text-xs sm:text-sm`), dual CTA slot via **HeroActions** (primary: white bg + gradient text `heroPrimary`; secondary: frosted ghost). Mobile compact: `py-6`, title `text-xl`. Optional JD input below.
+### AI 创作
 
-### HeroActions（双 CTA）
-Primary「立即开始」/「开始生成简历」：`GradientButton variant="heroPrimary"`。Secondary「上传 PDF 优化」：`btn-ghost-sm` white border glass. No login button on hero (login stays in AppHeader).
+- 识别、核对、生成和保存的边界保持明确；不要让大号全局流程条重复占据创作区首屏。
+- 上传区表达“放入已有材料”，表单分段要容易扫读；固定操作栏不得遮挡输入内容。
+- 加载、错误、成功和计费说明与表单区分开；不虚构经历、不在用户确认前改写或保存。
 
-### stat-glass（数据背书）
-`.stat-glass` — `rounded-full bg-white/25 backdrop-blur-xl border-white/40 min-w-[88px] px-4 py-2.5`. Number: `text-2xl sm:text-3xl font-extrabold text-white drop-shadow-sm`. Label: `text-xs sm:text-sm text-white/95`. First stat:「AI / 智能一键生成」.
+### 用户工作台
 
-### FeatureCard（功能卡片）
-Responsive grid `xs=24 md=12 lg=8 xl=4`. Icon in rounded square, title, description, **「立即体验 →」** link (`text-brand-dark`). Hover: `hover:-translate-y-2 hover:shadow-card-hover`.
+- 首屏聚焦欢迎标题、账户摘要和下一步行动。工作台总标题与当前页标题不要重复展示。
+- 目标、简历、岗位和用量用清晰导航组织；统计卡传达真实状态，不靠堆叠多层容器增加体量。
 
-### TemplatePreview（精选模板轮播）
-`a-carousel` centerMode 三列透视（桌面 `slidesToShow: 3`，移动端 1 列）。中心 slide `scale(1) opacity-100`，左右相邻 `scale(0.75) opacity-50` 略微下沉。主预览 scale 提升至 0.42~0.48。真实模板组件 + 固定演示数据（张三）。Link to `/templates` for full gallery.
+### 编辑器与管理员
 
-### TrustOfferWall（信任背书）
-Centered copy with bold offer count. Industry tag wall（互联网·金融·教育等通用词，无商标，`opacity-60`）。Bottom `a-carousel` 2~3 条匿名评价，首字母圆形头像占位。
+- 编辑器外壳清楚，简历 A4 必须保留 794×1123px、分页、点击定位和打印契约。
+- 管理页面可以信息密集，但范围、时间、指标口径和操作层级必须清楚。
 
-### Generate Page（生成页双模式）
-`/generate` 容器页 + `a-segmented` 切换 upload/form。`UploadPanel`：PDF 上传 + 已上传简历直接优化。`FormPanel`：步骤表单，项目经历选填。URL `?mode=upload|form`。
+## 响应式与可访问性
 
-### Templates Gallery（全部模板）
-`/templates` page — grid of all 20 templates with same demo resume data, click → `/generate`.
+- 375px 为手机验收宽度，768px 为平板断点复核；页面不能横向溢出。卡片和表单按空间单列或网格重排，分类筛选可在自身容器横滑。
+- 关键操作触控面积至少 44×44px；键盘焦点和文字对比明确，图标按钮具备无障碍名称。
+- 反馈浮钮在窄屏避开表单输入与固定操作栏。尊重 `prefers-reduced-motion`，动效只作短促状态反馈。
 
-### GlassCard（磨砂卡片）
-Semi-transparent white card (`bg-surface/80`, `backdrop-blur-sm`, `border-line/60`, `rounded-card`, `shadow-card`). Optional `glass-glow` neon gradient border wrapper.
+## 实现约束
 
-### JD Input Module（JD 输入）
-Wide container with gradient glow border. Label「JD 输入模块」, `a-textarea` + gradient「开始生成」button. Mobile: stack vertically.
-
-### Generate Stream UI（流式生成）
-Step3 shows SSE typewriter in `pre` monospace box (`max-h-48 overflow-y-auto`), blinking cursor while generating. Progress steps advance with `streamText` length.
-
-### Footer
-Glass footer bar. Brand + links (关于/协议/隐私) + copyright.
-
----
-
-## 四、响应式要求
-
-```
-mobile (default): 单列、Drawer 导航、表格 scroll x
-md (768px):       功能卡 2 列（md=12）、表单 2 列、Steps 横向
-lg (1024px):      功能卡 3 列（lg=8）、水平菜单、Admin Sider 展开
-xl (1280px):      功能卡 6 列（xl=4）
-```
-
-Ant Design 用法示例：
-- `a-col :xs="24" :md="12" :lg="8" :xl="4"`
-- `a-layout-sider :breakpoint="'lg'" :collapsed-width="0"`
-- `a-table :scroll="{ x: 'max-content' }"`
-
----
-
-## 五、Ant Design Vue 组件映射
-
-| 场景 | 组件 |
-| --- | --- |
-| 布局 | `a-layout`, `a-layout-header`, `a-layout-sider`, `a-layout-content` |
-| 导航 | `a-menu`, `a-drawer` |
-| 表单 | `a-form`, `a-input`, `a-select`, `a-upload-dragger` |
-| 数据 | `a-table`, `a-descriptions`, `a-tag`, `a-progress` |
-| 反馈 | `a-modal`, `a-drawer`, `a-spin`, `a-result` |
-| 引导 | `a-steps`, `a-empty` |
-
-样式由 Tailwind 公共类负责：`glass`, `card-base`, `btn-primary`, `page-container` 等。
-
----
-
-## 六、新增页面标准 Prompt 模板
-
-复制以下模板，替换 `{页面名称}` 和 `{功能描述}`：
-
-```
-为全行业 AI 简历新增 {页面名称} 页面。
-
-风格：Glassmorphism UI。浅底 (#F8FAFC) + 青紫径向渐变光斑 + 网格纹理背景。
-组件：半透明磨砂面板 (backdrop-blur-xl, bg-white/70)。主按钮青蓝→紫渐变 + 外发光。
-圆角 16px，字体 Inter / PingFang SC。
-
-技术：Vue 3 script setup + TailwindCSS 工具类 + Ant Design Vue 4。
-目录：views/{page}/index.vue，页面组件放 views/{page}/components/，工具放 views/{page}/utils/。
-全局组件仅用 src/components/ 下的 GlassCard、GradientButton、PageHero 等。
-
-功能：{功能描述}
-
-响应式：mobile-first，375px 可用，md 以上双列表单。
-禁止硬编码色值，统一使用 theme.js token（text-ink、bg-surface、card-base）。
-```
-
-### 完整英文 Prompt 示例
-
-```
-Glassmorphism UI for AI Resume Assistant campus edition. Light background (#F8FAFC) with soft cyan-to-purple radial gradients and subtle grid texture. Frosted glass panels (backdrop-blur-xl, bg-white/70). Neon gradient borders on primary inputs. Rounded corners 16px. Primary button: linear-gradient(90deg, #00D4FF, #4FACFE, #A855F7) with soft glow. Use Ant Design Vue 4 with TailwindCSS utility classes only. Mobile-first responsive layout. Page structure: views/{page}/index.vue with local components/ and utils/ folders.
-```
-
----
-
-## 七、修改主题色
-
-只需编辑 [`src/constants/theme.js`](src/constants/theme.js) 一处，将同步至：
-- Tailwind（`tailwind.config.js`）
-- CSS 变量（`global.css :root` + 运行时注入）
-- Ant Design Vue（`App.vue` ConfigProvider token）
-- 管理后台图表（`views/admin/utils/chartTheme.js`）
+- 使用 Vue 3 `<script setup>`、现有页面分层、主题令牌和共享组件；不复制导航、账户状态或业务状态。
+- 新增或改写代码附近需要中文注释，说明其业务目的、约束或视觉意图。
+- 视觉重排保留现有路由、字段、权限、确认步骤、加载/错误状态和事件白名单。
+- 简历模板 DOM、分页或皮肤变更必须遵循独立 `add-resume-template` Skill；外层系统样式不得修改 A4 模板皮肤。
+- 前端验收至少检查桌面、375px 和 768px 布局，并运行现有 Vite 生产构建。

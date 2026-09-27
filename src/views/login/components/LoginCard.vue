@@ -24,7 +24,8 @@ import GlassCard from '@/components/GlassCard.vue'
     <GlassCard glow class="relative w-full max-w-[420px] animate-scale-in max-sm:max-w-[100%]">
       <!-- Logo 和标题区：移动端缩小尺寸 -->
       <div class="mb-5 text-center sm:mb-6">
-        <img src="/vite.svg" alt="Logo" class="mx-auto mb-2.5 h-10 w-10 sm:mb-3 sm:h-12 sm:w-12" />
+        <!-- 认证页复用全站品牌渐变，避免把脚手架默认图标暴露给用户。 -->
+        <div aria-hidden="true" class="mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-full [background-image:var(--gradient-primary)] text-base font-bold text-white shadow-soft sm:mb-3 sm:h-12 sm:w-12 sm:text-lg">AI</div>
         <h2 class="mb-0.5 text-xl font-bold text-ink sm:mb-1 sm:text-2xl">AI 简历</h2>
         <p class="text-xs text-ink-secondary sm:text-sm">专业简历，让求职更简单</p>
       </div>

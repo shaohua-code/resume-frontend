@@ -14,7 +14,11 @@ export function getAdminStats() {
  */
 export function getAdminDashboard(timeRange) {
   const params = timeRange ? { range: timeRange } : {}
-  return request.get('/admin/dashboard', { params })
+  return request.get('/admin/dashboard', { params, suppressGlobalErrorMessage: true })
+}
+
+export function getAdminRetentionSummary(days = 30) {
+  return request.get('/admin/retention', { params: { days }, suppressGlobalErrorMessage: true })
 }
 
 export function getAdminUsers(params = {}) {

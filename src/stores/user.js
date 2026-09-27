@@ -18,6 +18,7 @@ import { useWalletStore } from '@/stores/wallet'
 import { roleHasPermission } from '@/constants/permissions'
 import { cancelEmailBinding } from '@/utils/emailBindingGate'
 import { markNewUserGuidePending } from '@/utils/newUserGuide'
+import { emitProductEvent } from '@/utils/productEvents'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref(localStorage.getItem('token') || '')
@@ -107,6 +108,7 @@ export const useUserStore = defineStore('user', () => {
   async function login(email, code) {
     const res = await loginApi(email, code)
     saveSession(res)
+    void emitProductEvent('login_completed', { login_method: 'email_code' })
     message.success('登录成功')
     return res
   }
@@ -114,6 +116,7 @@ export const useUserStore = defineStore('user', () => {
   async function loginWithPassword(identifier, password) {
     const res = await loginPasswordApi(identifier, password)
     saveSession(res)
+    void emitProductEvent('login_completed', { login_method: 'password' })
     message.success('登录成功')
     return res
   }
@@ -121,6 +124,7 @@ export const useUserStore = defineStore('user', () => {
   async function register(inviteCode = '') {
     const res = await registerApi(inviteCode)
     saveSession(res)
+    void emitProductEvent('signup_completed', { signup_method: 'random', source_channel: 'direct' })
     markNewUserGuidePending(userInfo.value)
     message.success('注册成功')
     return res
@@ -142,6 +146,7 @@ export const useUserStore = defineStore('user', () => {
       email_verified: data.email_verified ?? true,
       email_bound: data.email_bound ?? true,
     })
+    void emitProductEvent('email_bound', { entry_point: 'ai_gate' })
     return data
   }
 

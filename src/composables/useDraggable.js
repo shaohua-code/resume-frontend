@@ -46,6 +46,11 @@ export function useDraggable(options = {}) {
   function clampPosition() {
     const el = elRef.value
     if (!el) return
+    // 窄屏统一停在安全区，避免桌面保存的漂浮坐标压住手机表单或主操作。
+    if (window.innerWidth <= 640 && !dragging.value) {
+      pos.value = { right: 16, bottom: 88 }
+      return
+    }
     const rect = el.getBoundingClientRect()
     const maxRight = Math.max(0, window.innerWidth - rect.width)
     const maxBottom = Math.max(0, window.innerHeight - rect.height)

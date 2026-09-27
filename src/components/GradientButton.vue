@@ -1,6 +1,6 @@
 <script setup>
 /**
- * 渐变主按钮 - 原生按钮 + Glassmorphism 渐变样式
+ * 主题主按钮 - 原生按钮沿用全站颜色、焦点与禁用状态令牌
  * 全站统一 40px（h-10）高度
  */
 import { computed } from 'vue'
@@ -26,7 +26,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  // 按钮视觉变体：heroPrimary 用于首页 Hero 白底渐变字主 CTA
+  // 保留 Hero 兼容变体；当前统一使用实色主题主按钮，避免文字渐变降低对比度。
   variant: {
     type: String,
     default: 'primary',
@@ -61,7 +61,7 @@ const btnClass = computed(() => {
     <span v-if="loading" class="gradient-button-spinner" aria-hidden="true" />
     <template v-if="variant === 'heroPrimary'">
       <slot name="prefix" />
-      <span class="bg-gradient-to-r from-brand via-brand-light to-accent bg-clip-text text-transparent">
+      <span class="text-white">
         <slot />
       </span>
       <slot name="suffix" />

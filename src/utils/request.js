@@ -136,11 +136,13 @@ request.interceptors.response.use(
       } else {
         // 统一友好提示，避免直接展示 detail 中的技术原文
         const tip = getErrorMessage(error)
-        if (tip) message.error(tip)
+        // 页面已提供局部错误和重试入口时不再重复弹全局 toast，避免遮挡操作。
+        if (tip && !originalRequest?.suppressGlobalErrorMessage) message.error(tip)
       }
     } else {
       const tip = getErrorMessage(error)
-      if (tip) message.error(tip)
+      // 网络不可用时由发起页面展示上下文错误，避免全局与局部提示叠加。
+      if (tip && !error.config?.suppressGlobalErrorMessage) message.error(tip)
     }
     return Promise.reject(error)
   }

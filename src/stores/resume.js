@@ -26,6 +26,11 @@ import { useWalletStore } from '@/stores/wallet'
 import { normalizeResumeFields } from '@/constants/resumeFieldSchema'
 import { getCurrentSessionOwner } from '@/utils/emailBindingGate'
 import { resolveOptimizationNotes } from '@/utils/optimizationNotes'
+import { emitProductEvent } from '@/utils/productEvents'
+
+function reportAiTask(taskType, result) {
+  void emitProductEvent('ai_task_finished', { task_type: taskType, result, cost_bucket: 'unknown' })
+}
 
 // AI 调用成功后刷新账户余额
 async function refreshWalletBalance() {
@@ -79,6 +84,7 @@ export const useResumeStore = defineStore('resume', () => {
       history_type: historyType,
     }
 
+    const isFirstSavedResume = !currentResumeId.value
     if (currentResumeId.value) {
       const updateRes = await updateApi(currentResumeId.value, payload)
       if (!updateRes?.success) throw new Error('简历更新失败')
@@ -91,6 +97,11 @@ export const useResumeStore = defineStore('resume', () => {
       }
     }
     currentResume.value = normalized
+    void emitProductEvent('resume_saved', {
+      is_first: isFirstSavedResume ? 'true' : 'false',
+      source_type: historyType === 'resume_generate' ? 'ai' : 'manual',
+    })
+    if (isFirstSavedResume) void emitProductEvent('onboarding_step_completed', { step_id: 'resume' })
     return normalized
   }
 
@@ -123,6 +134,7 @@ export const useResumeStore = defineStore('resume', () => {
         : resumeData
 
       if (rawResume && Object.keys(rawResume).length) {
+        reportAiTask('generate', 'success')
         // 兜底：确保 target_position 不丢失（AI 可能不返回该字段）
         if (!rawResume.target_position && formData?.target_position) {
           console.warn('[generateResume] AI 未返回 target_position，已从输入回填:', formData.target_position)
@@ -150,6 +162,7 @@ export const useResumeStore = defineStore('resume', () => {
           return { resume: normalized, optimizationNotes, persisted: false, persistError }
         }
       }
+      reportAiTask('generate', 'failed')
       message.error('生成失败，请重试')
       return { resume: null, persisted: false }
     } catch (e) {
@@ -157,6 +170,7 @@ export const useResumeStore = defineStore('resume', () => {
       if (e?.silent) {
         return { resume: null, persisted: false, cancelled: true, error: e }
       }
+      reportAiTask('generate', 'failed')
       // 拦截器已提示过的 axios 错误不再重复弹窗
       if (!e?.response?.data?.detail) {
         message.error(msg)
@@ -173,11 +187,15 @@ export const useResumeStore = defineStore('resume', () => {
     try {
       const res = await matchApi(resumeId, jdText)
       if (res?.success) {
+        reportAiTask('match', 'success')
         await refreshWalletBalance()
+      } else {
+        reportAiTask('match', 'failed')
       }
       return res
     } catch (e) {
       if (e?.silent) return null
+      reportAiTask('match', 'failed')
       const msg = e?.response?.data?.detail || e?.message || '匹配分析失败'
       if (!e?.response?.data?.detail) {
         message.error(msg)
@@ -193,11 +211,15 @@ export const useResumeStore = defineStore('resume', () => {
     try {
       const res = await scoreApi(resumeId)
       if (res?.success) {
+        reportAiTask('score', 'success')
         await refreshWalletBalance()
+      } else {
+        reportAiTask('score', 'failed')
       }
       return res
     } catch (e) {
       if (e?.silent) return null
+      reportAiTask('score', 'failed')
       const msg = e?.response?.data?.detail || e?.message || '评分失败'
       if (!e?.response?.data?.detail) {
         message.error(msg)
@@ -220,11 +242,14 @@ export const useResumeStore = defineStore('resume', () => {
     try {
       const data = await scoreStreamApi(resumeId, handlers)
       if (data) {
+        reportAiTask('score', 'success')
         await refreshWalletBalance()
         return { success: true, data }
       }
+      reportAiTask('score', 'failed')
     } catch (e) {
       if (e?.silent) return { success: false, cancelled: true }
+      reportAiTask('score', 'failed')
       const msg = e?.response?.data?.detail || e?.message || '评分失败'
       if (!e?.response?.data?.detail) {
         message.error(msg)
@@ -247,6 +272,7 @@ export const useResumeStore = defineStore('resume', () => {
     data.id = currentResumeId.value
     const res = await saveApi(data)
     if (res.success) {
+      if (!silent) void emitProductEvent('resume_saved', { is_first: 'false', source_type: 'manual' })
       if (!silent) message.success('保存成功')
       return res.data
     }

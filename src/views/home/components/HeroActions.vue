@@ -10,6 +10,10 @@ defineProps({
     type: Boolean,
     default: false,
   },
+  actionLabel: {
+    type: String,
+    default: '',
+  },
 })
 
 const emit = defineEmits(['start'])
@@ -18,15 +22,15 @@ const emit = defineEmits(['start'])
 <template>
   <GradientButton
     variant="heroPrimary"
-    class="inline-flex h-10 min-w-[160px] items-center justify-center gap-2 shadow-lift transition-all duration-200 hover:shadow-float"
+    class="inline-flex h-11 min-w-[176px] items-center justify-center gap-2"
     @click="emit('start')"
   >
     <template #prefix>
-      <RocketOutlined class="text-base text-brand" />
+      <RocketOutlined class="text-base text-white" />
     </template>
-    {{ isLoggedIn ? '开始生成简历' : '立即开始' }}
+    {{ actionLabel || (isLoggedIn ? '开始生成简历' : '立即开始') }}
     <template #suffix>
-      <ThunderboltOutlined class="text-base text-accent" />
+      <ThunderboltOutlined class="text-base text-white/80" />
     </template>
   </GradientButton>
 </template>

@@ -2,10 +2,8 @@
 import { computed } from 'vue'
 
 /**
- * 通用磨砂玻璃卡片
- * glow: 是否显示霓虹渐变边框
- * hoverable: 是否启用悬浮上浮效果
- * padding: 是否显示内边距
+ * 通用实体卡片兼容组件；旧 glow 调用仍可工作，但不会额外叠加霓虹边框。
+ * hoverable: 是否显示轻微悬停反馈；padding: 是否保留卡片内边距。
  */
 const props = defineProps({
   glow: {

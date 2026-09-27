@@ -14,6 +14,7 @@ import WalletOverview from './dashboard/WalletOverview.vue'
 import NoticeCard from './dashboard/NoticeCard.vue'
 import SkeletonCard from './dashboard/SkeletonCard.vue'
 import DataGlossary from './dashboard/DataGlossary.vue'
+import AdminRetentionSummary from './AdminRetentionSummary.vue'
 import { AlertCircle } from 'lucide-vue-next'
 
 const userStore = useUserStore()
@@ -75,9 +76,12 @@ onMounted(() => loadDashboard(activeRange.value))
       @refresh="loadDashboard(activeRange)"
     />
 
-    <div v-if="loadError" class="flex items-start gap-3 rounded-2xl border border-danger/20 bg-danger/5 p-4 text-sm text-danger" role="alert">
-      <AlertCircle class="mt-0.5 h-4 w-4 shrink-0" />
-      <span>{{ loadError }}</span>
+    <div v-if="loadError" class="flex items-start justify-between gap-3 rounded-2xl border border-danger/20 bg-danger/5 p-4 text-sm text-danger" role="alert">
+      <div class="flex min-w-0 flex-1 items-start gap-3">
+        <AlertCircle class="mt-0.5 h-4 w-4 shrink-0" />
+        <span class="min-w-0">{{ loadError }}</span>
+      </div>
+      <a-button class="shrink-0" size="small" :loading="loading" @click="loadDashboard(activeRange)">重试</a-button>
     </div>
 
     <div v-if="loading && !hasLoaded" class="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-4">
@@ -125,5 +129,7 @@ onMounted(() => loadDashboard(activeRange.value))
       <NoticeCard :announcements="dashboard.recent_announcements || []" />
       <DataGlossary />
     </div>
+
+    <AdminRetentionSummary />
   </div>
 </template>

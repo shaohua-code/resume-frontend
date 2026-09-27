@@ -81,7 +81,7 @@ const showReplaceUpload = ref(false)
 const previewOpen = ref(false)
 const previewUrl = ref('')
 const previewLoading = ref(false)
-/** 仅移动端：折叠文件/文字识别下方的流式结果；PC 始终展开 */
+/** 识别过程自动展开；完成后收起原文预览，给表单留出首屏空间。 */
 const isMobile = useMediaQuery('(max-width: 639px)')
 const streamExpanded = ref(false)
 /** 流式预览区，增量输出时滚到底部 */
@@ -227,19 +227,19 @@ const pdfPrimaryLabel = computed(() => {
   return '开始文件识别'
 })
 const canStartPdf = computed(() => !!(pdfFile.value || existingFile.value))
-/** PC 始终展示结果正文；移动端受 streamExpanded 控制 */
-const showStreamBody = computed(() => !isMobile.value || streamExpanded.value)
+/** 所有屏宽都可手动展开识别原文；完成时默认收起。 */
+const showStreamBody = computed(() => streamExpanded.value)
 
 function toggleStreamExpanded() {
-  // 仅移动端可折叠；识别进行中不允许收起
-  if (!isMobile.value || loading.value) return
+  // 识别进行中保持可见；结束后让用户决定是否展开原文核对。
+  if (loading.value) return
   streamExpanded.value = !streamExpanded.value
 }
 
 watch(loading, (value) => {
   emit('loading-change', value)
-  // 移动端开始识别时展开下方流式结果
-  if (value && isMobile.value) streamExpanded.value = true
+  if (value) streamExpanded.value = true
+  else if (state.phase === 'complete') streamExpanded.value = false
 }, { immediate: true })
 
 // 流式增量与可读预览变化时滚到底部
@@ -341,7 +341,7 @@ async function runRecognition(operation, startStatus) {
   activeRecognitionController?.abort()
   const controller = new AbortController()
   activeRecognitionController = controller
-  // 移动端识别开始时展开下方结果区
+  // 各屏宽在识别开始时展开结果区，方便用户即时核对流式内容。
   if (isMobile.value) streamExpanded.value = true
   state.phase = 'running'
   state.status = startStatus
@@ -445,13 +445,13 @@ onBeforeUnmount(() => {
 <template>
   <!-- 不用 card-base 的 p-5，避免与 ant-card-body 双重内边距导致两侧空白过大 -->
   <a-card
-    class="mb-3 rounded-card border border-line/60 bg-surface/80 shadow-card backdrop-blur-sm sm:mb-4"
+    class="recognition-panel mb-3 rounded-card border border-line/60 bg-surface shadow-card sm:mb-4"
     :bordered="false"
   >
     <template #title>
       <div class="flex flex-col gap-0.5">
         <span class="text-base font-semibold text-ink">辅助识别</span>
-        <span class="text-xs font-normal text-muted">只提取原文事实并回填，不生成、不润色；也可跳过识别直接填写下方表单</span>
+        <span class="text-xs font-normal text-muted">只提取并回填原文，不生成简历；AI 生成会单独确认并按页面规则计费。</span>
       </div>
     </template>
 
@@ -462,13 +462,12 @@ onBeforeUnmount(() => {
         { label: '智能文件识别', value: 'pdf' },
         { label: '智能文字识别', value: 'text' },
       ]"
-      block
-      size="large"
-      class="mb-3 w-full"
+      size="middle"
+      class="mb-3 w-full sm:w-auto"
     />
 
     <!-- 文件识别：已存状态 + 可选替换区 + 唯一主按钮 -->
-    <div v-if="state.method === 'pdf'" class="space-y-3">
+    <div v-if="state.method === 'pdf'" class="space-y-2.5">
       <div
         v-if="existingFile"
         class="flex flex-col gap-2 rounded-lg border border-line/30 bg-cream/50 p-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-3"
@@ -515,8 +514,9 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div v-if="!existingFile || showReplaceUpload || pdfFile" class="space-y-2">
+      <div v-if="!existingFile || showReplaceUpload || pdfFile" class="space-y-1.5">
         <a-upload-dragger
+          class="resume-upload-dropzone"
           :file-list="fileList"
           :before-upload="beforePdfUpload"
           :remove="removePdf"
@@ -524,11 +524,14 @@ onBeforeUnmount(() => {
           :accept="RESUME_UPLOAD_ACCEPT"
           :max-count="1"
         >
-          <p class="ant-upload-drag-icon"><InboxOutlined /></p>
-          <p class="ant-upload-text">
-            {{ existingFile ? '选择新 PDF/Word 以覆盖已有文件' : '点击或拖拽 PDF / Word 到这里' }}
-          </p>
-          <p class="ant-upload-hint">支持 PDF、.docx · 最大 10MB · 每人仅保留一份（.doc 请另存为 .docx）</p>
+          <div class="resume-upload-inner">
+            <span class="resume-upload-icon"><InboxOutlined /></span>
+            <span class="resume-upload-copy">
+              <strong>{{ existingFile ? '选择新文件，替换当前简历材料' : '上传已有简历' }}</strong>
+              <span>拖到这里，或从设备选择 · PDF / DOCX · 最大 10MB</span>
+            </span>
+            <span class="resume-upload-action" aria-hidden="true">浏览文件&nbsp; →</span>
+          </div>
         </a-upload-dragger>
         <div v-if="pdfFile" class="flex justify-end">
           <a-button
@@ -543,11 +546,11 @@ onBeforeUnmount(() => {
           </a-button>
         </div>
         <p class="text-xs leading-5 text-muted">
-          扫描件 PDF 需先 OCR；识别失败可切换到「智能文字识别」。
+          扫描件需先 OCR；也可以切换「智能文字识别」，粘贴可复制的简历内容。
         </p>
       </div>
 
-      <div class="flex justify-center sm:justify-end">
+      <div v-if="canStartPdf" class="flex justify-end border-t border-line/40 pt-3">
         <GradientButton
           class="min-h-10 w-full justify-center sm:min-h-11 sm:w-auto sm:min-w-[180px]"
           :loading="loading"
@@ -617,7 +620,7 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- 流式结果：仅移动端可折叠正文；PC 始终展开 -->
+    <!-- 流式结果：识别期间展开，完成后默认收起，避免长原文挤压下方表单。 -->
     <div
       v-if="hasRun"
       ref="streamBoxRef"
@@ -628,7 +631,7 @@ onBeforeUnmount(() => {
         class="flex w-full items-center gap-2 px-2.5 py-2 text-left text-sm font-medium sm:px-3 sm:py-2.5"
         :class="showStreamBody ? 'border-b border-line/25' : ''"
         :aria-expanded="showStreamBody"
-        :disabled="!isMobile || loading"
+        :disabled="loading"
         @click="toggleStreamExpanded"
       >
         <a-spin v-if="loading" size="small" />
@@ -636,8 +639,8 @@ onBeforeUnmount(() => {
         <ExclamationCircleOutlined v-else class="text-warning" />
         <ThunderboltOutlined v-if="statusType === 'processing' && !loading" class="text-brand" />
         <span class="min-w-0 flex-1 truncate">{{ state.status || '等待识别' }}</span>
-        <!-- 折叠控件仅移动端显示 -->
-        <span v-if="isMobile" class="shrink-0 text-muted">
+        <span v-if="!loading" class="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-muted">
+          {{ showStreamBody ? '收起原文' : '查看识别原文' }}
           <UpOutlined v-if="showStreamBody" />
           <DownOutlined v-else />
         </span>
@@ -655,18 +658,83 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* 收紧卡片头/内容区内边距，消除两侧过大留白 */
+/* 识别模块是创作流程的起点，用清爽实体卡片和主题色文件投递区建立亲和感。 */
+:deep(.recognition-panel.ant-card) { overflow: hidden; border-radius: 21px; }
 :deep(.ant-card-head) {
-  @apply min-h-0 border-b border-line/40 px-3 py-3 sm:px-4;
+  @apply min-h-0 border-b border-line/40 px-4 py-4 sm:px-6 sm:py-5;
 }
 :deep(.ant-card-body) {
-  @apply px-3 py-3 sm:px-4 sm:py-4;
+  @apply px-4 py-4 sm:px-6 sm:py-5;
 }
 :deep(.ant-card-head-title) {
   @apply overflow-visible whitespace-normal;
 }
-:deep(.ant-upload-drag-icon) {
-  @apply mb-2 text-brand-dark;
+:deep(.resume-upload-dropzone.ant-upload-wrapper .ant-upload-drag) {
+  min-height: 102px;
+  padding: 19px 20px;
+  border-radius: 17px;
+  border-color: var(--color-line);
+  background: var(--color-cream);
+  transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+:deep(.resume-upload-dropzone.ant-upload-wrapper .ant-upload-drag:hover) {
+  border-color: var(--color-brand);
+  background: color-mix(in srgb, var(--color-brand-lighter) 36%, var(--color-surface));
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--color-brand) 10%, transparent);
+}
+:deep(.resume-upload-dropzone .ant-upload-btn) {
+  padding: 0 !important;
+}
+.resume-upload-inner {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+}
+.resume-upload-icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-brand) 12%, var(--color-line));
+  border-radius: 14px;
+  background: var(--color-accent-lighter);
+  color: var(--color-brand-dark);
+}
+.resume-upload-icon :deep(.anticon) { font-size: 21px; }
+.resume-upload-copy { display: grid; min-width: 0; gap: 5px; }
+.resume-upload-copy strong { color: var(--color-ink); font-size: 14px; font-weight: 700; }
+.resume-upload-copy > span { color: var(--color-ink-secondary); font-size: 12px; line-height: 1.5; }
+.resume-upload-action {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--color-brand);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+@media (max-width: 640px) {
+  :deep(.resume-upload-dropzone.ant-upload-wrapper .ant-upload-drag) {
+    min-height: 84px;
+    padding: 13px 12px;
+  }
+  .resume-upload-inner {
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 10px;
+  }
+  .resume-upload-icon {
+    width: 38px;
+    height: 38px;
+  }
+  :deep(.ant-card-head) { padding-right: 15px; padding-left: 15px; }
+  :deep(.ant-card-body) { padding: 15px; }
+  .resume-upload-action { display: none; }
 }
 @media (max-width: 375px) {
   :deep(.ant-segmented-item-label) {

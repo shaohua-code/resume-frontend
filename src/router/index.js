@@ -4,6 +4,7 @@
  * 需要登录的页面通过 meta.requireAuth 标记，路由守卫自动跳转登录
  */
 import { createRouter, createWebHistory } from 'vue-router'
+import { trackPageView } from '@/utils/productEvents'
 
 const routes = [
   {
@@ -196,6 +197,11 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+// 只记录路由白名单类别，不记录查询参数、简历 ID 或用户输入内容。
+router.afterEach((to, from, failure) => {
+  if (!failure && to.name !== from.name) trackPageView(to.name)
 })
 
 // 路由守卫：未登录时跳转到登录页

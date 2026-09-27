@@ -19,15 +19,23 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-[calc(100vh-64px)] animate-fade-in pb-16">
+  <div class="generate-page min-h-[calc(100vh-64px)] animate-fade-in pb-16">
     <PageHero
       compact
-      title="AI 智能生成简历"
-      subtitle="PDF、Word 或文字可辅助识别，也可以直接填写表单后生成"
+      eyebrow="简历工作室 · AI 辅助整理"
+      title="把真实经历，变成一份好简历"
+      subtitle="先整理真实材料，再逐项核对；AI 帮你梳理表达，最终内容由你决定。"
     />
-    <!-- 移动端收紧左右边距，避免识别区两侧空白过大 -->
-    <div class="relative z-10 mx-auto -mt-6 max-w-6xl px-2 sm:px-4 lg:px-6">
+    <!-- 标题和工作区共享页面宽度；桌面端由表单旁的实时准备卡补充状态。 -->
+    <div class="relative z-10 mx-auto mt-2 max-w-[1500px] px-[18px] sm:px-6 xl:px-0">
       <FormPanel />
     </div>
   </div>
 </template>
+
+<style scoped>
+/* 创作页与下方双栏工作区保持同一左边界，减少窄标题列带来的漂浮感。 */
+.generate-page :deep(.page-hero__inner) {
+  width: min(100%, 1500px);
+}
+</style>

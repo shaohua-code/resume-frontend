@@ -7,8 +7,8 @@
     <section class="workspace-hero">
       <div class="workspace-hero-copy">
         <span class="workspace-eyebrow">ACCOUNT WORKSPACE</span>
-        <h1>用户中心</h1>
-        <p>集中管理你的简历、账户用量与个性化 AI 配置。</p>
+        <h1>把求职准备放在一条线上</h1>
+        <p>从确定方向、打磨简历到跟进岗位，回到这里继续上次的进度。</p>
       </div>
       <GradientButton class="workspace-create-button" @click="handleCreate">
         <PlusOutlined /> 新建简历
@@ -97,7 +97,7 @@
       </aside>
 
       <main class="workspace-main">
-        <header class="workspace-content-header">
+        <header v-if="activeTab !== 'overview'" class="workspace-content-header">
           <div>
             <span>{{ activeMeta.eyebrow }}</span>
             <h2>{{ activeMeta.label }}</h2>
@@ -119,7 +119,11 @@
           </div>
         </header>
 
-        <section v-if="activeTab === 'resumes'" class="workspace-content-body">
+        <section v-if="activeTab === 'overview'" class="workspace-content-body">
+          <WorkspaceOverviewPanel />
+        </section>
+
+        <section v-else-if="activeTab === 'resumes'" class="workspace-content-body">
           <a-card class="workspace-panel" :bordered="false">
             <div v-if="isMobile && !loading && !resumeStore.resumeList.length" class="py-12 empty-state">
               <div class="empty-visual" aria-hidden="true"><FileTextOutlined /></div>
@@ -277,6 +281,7 @@ import ResumeCardList from './components/ResumeCardList.vue'
 import RechargeModal from './components/RechargeModal.vue'
 import SavedJobsPanel from './components/SavedJobsPanel.vue'
 import CareerGoalsPanel from './components/CareerGoalsPanel.vue'
+import WorkspaceOverviewPanel from './components/WorkspaceOverviewPanel.vue'
 import { formatDateTime } from '@/utils/date'
 import { useMediaQuery } from '@/composables/useMediaQuery'
 import { getUserTaskModels, getUserTaskPrompts } from '@/api/userAi'
@@ -289,7 +294,7 @@ const resumeStore = useResumeStore()
 const isMobile = useMediaQuery()
 const { chartColors } = useTheme()
 const loading = ref(false)
-const activeTab = ref('resumes')
+const activeTab = ref('overview')
 const mobilePage = ref(1)
 const rechargeOpen = ref(false)
 const selectedRowKeys = ref([])
@@ -303,6 +308,14 @@ const workspaceGroups = computed(() => {
     {
       label: '工作台',
       items: [
+        {
+          key: 'overview',
+          label: '求职工作台',
+          description: '继续上次的求职准备',
+          longDescription: '集中查看目标、简历和岗位进度，快速继续下一步。',
+          eyebrow: 'YOUR WORKSPACE',
+          icon: AimOutlined,
+        },
         {
           key: 'career-goals',
           label: '求职目标',
@@ -429,7 +442,9 @@ watch(
 watch(
   () => route.query.tab,
   (tab) => {
-    if (tab === 'saved-jobs') activeTab.value = 'saved-jobs'
+    if (['overview', 'resumes', 'saved-jobs', 'career-goals', 'usage', 'profile', 'models', 'prompts'].includes(tab)) {
+      activeTab.value = tab
+    }
   },
   { immediate: true },
 )
@@ -495,19 +510,15 @@ function handleLogout() {
 }
 
 .workspace-hero {
+  /* 账户页标题退回纸面层级，避免和下方的下一步行动卡争夺第一视觉。 */
   position: relative;
   display: flex;
-  min-height: 205px;
+  min-height: 108px;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  overflow: hidden;
-  padding: 42px 44px 72px;
-  border: 1px solid rgb(var(--color-brand-light-rgb) / .28);
-  border-radius: var(--radius-banner);
-  background: var(--gradient-hero);
-  box-shadow: var(--shadow-lift);
-  color: white;
+  gap: 20px;
+  padding: 6px 2px 20px;
+  color: var(--color-ink);
 }
 
 .workspace-hero-copy {
@@ -517,25 +528,25 @@ function handleLogout() {
 
 .workspace-eyebrow {
   display: inline-flex;
-  margin-bottom: 12px;
-  color: rgba(255, 255, 255, .9);
+  margin-bottom: 8px;
+  color: var(--color-brand-dark);
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: .22em;
+  letter-spacing: .12em;
 }
 
 .workspace-hero h1 {
   margin: 0;
-  font-size: clamp(30px, 4vw, 44px);
+  font-size: clamp(29px, 3vw, 38px);
   font-weight: 800;
-  line-height: 1.12;
-  letter-spacing: -.03em;
+  line-height: 1.2;
+  letter-spacing: -.04em;
 }
 
 .workspace-hero p {
-  margin: 12px 0 0;
-  color: rgba(255, 255, 255, .78);
-  font-size: 15px;
+  margin: 8px 0 0;
+  color: var(--color-ink-secondary);
+  font-size: 14px;
 }
 
 .workspace-create-button {
@@ -545,10 +556,7 @@ function handleLogout() {
 }
 
 .hero-orbit {
-  position: absolute;
-  border: 1px solid rgb(var(--color-brand-light-rgb) / .3);
-  border-radius: 50%;
-  pointer-events: none;
+  display: none;
 }
 
 .hero-orbit-one {
@@ -568,19 +576,19 @@ function handleLogout() {
 }
 
 .account-overview {
+  /* 账户身份和指标作为独立摘要区，避免在英雄横幅上半透明悬浮。 */
   position: relative;
-  z-index: 3;
+  z-index: 1;
   display: grid;
   grid-template-columns: minmax(260px, 1.15fr) minmax(350px, 1fr) auto;
   align-items: center;
-  gap: 28px;
-  margin: -42px 24px 24px;
-  padding: 22px 24px;
-  border: 1px solid rgb(var(--color-line-rgb) / .82);
-  border-radius: var(--radius-banner);
-  background: var(--glass-background);
-  box-shadow: var(--shadow-lift);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  gap: 24px;
+  margin: 0 0 22px;
+  padding: 17px 21px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .account-identity {
@@ -594,7 +602,7 @@ function handleLogout() {
   flex: 0 0 auto;
   border: 4px solid var(--color-surface);
   background: var(--gradient-hero);
-  box-shadow: var(--shadow-float);
+  box-shadow: var(--shadow-soft);
   color: white;
   font-size: 24px;
   font-weight: 800;
@@ -740,7 +748,7 @@ function handleLogout() {
 
 .metric-card--balance {
   border-color: rgb(var(--color-brand-rgb) / .28);
-  background: linear-gradient(135deg, rgb(var(--color-brand-lighter-rgb) / .92), rgb(var(--color-accent-lighter-rgb) / .82));
+  background: color-mix(in srgb, var(--color-brand-lighter) 50%, var(--color-surface));
 }
 
 .logout-button {
@@ -779,9 +787,8 @@ function handleLogout() {
   padding: 16px;
   border: 1px solid rgb(var(--color-line-rgb) / .8);
   border-radius: var(--radius-card);
-  background: var(--glass-background);
+  background: var(--color-surface);
   box-shadow: var(--shadow-card);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
 }
 
 .workspace-nav-group + .workspace-nav-group {
@@ -922,9 +929,8 @@ function handleLogout() {
   padding: 20px 24px;
   border: 1px solid rgb(var(--color-line-rgb) / .8);
   border-radius: var(--radius-card);
-  background: var(--glass-background);
+  background: var(--color-surface);
   box-shadow: var(--shadow-card);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
 }
 
 .workspace-content-header span {
@@ -1065,20 +1071,20 @@ function handleLogout() {
 
 @media (max-width: 860px) {
   .workspace-hero {
-    min-height: 188px;
-    padding: 32px 28px 66px;
+    min-height: 98px;
+    padding: 3px 2px 17px;
   }
 
   .account-overview {
     grid-template-columns: 1fr;
     gap: 18px;
-    margin-right: 14px;
-    margin-left: 14px;
+    margin-right: 0;
+    margin-left: 0;
     padding: 20px;
   }
 
   .account-metrics {
-    padding-right: 52px;
+    padding-right: 0;
   }
 
   .workspace-layout {
@@ -1118,14 +1124,13 @@ function handleLogout() {
   }
 
   .workspace-hero {
-    min-height: 170px;
-    align-items: flex-start;
-    padding: 25px 20px 62px;
-    border-radius: 18px;
+    min-height: 0;
+    align-items: center;
+    padding: 8px 0 16px;
   }
 
   .workspace-hero p {
-    max-width: 235px;
+    max-width: 290px;
     font-size: 13px;
     line-height: 1.6;
   }
@@ -1135,7 +1140,7 @@ function handleLogout() {
   }
 
   .account-overview {
-    margin-top: -36px;
+    margin-top: 0;
     padding: 17px;
     border-radius: 16px;
   }

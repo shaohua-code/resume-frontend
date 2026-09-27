@@ -38,6 +38,11 @@ const props = defineProps({
     type: String,
     default: 'AI 正在生成你的简历...',
   },
+  // 生成完成后可自然延长页面，让用户用页面滚动检查完整简历，避免预览框内二次滚动。
+  expandCompletedPreview: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const containerRef = ref(null)
@@ -73,6 +78,7 @@ const scaledHeight = computed(() => Math.ceil(rawContentHeight.value * effective
 const scaledWidth = computed(() => Math.ceil(A4_WIDTH_PX * effectiveScale.value))
 const maxPreviewHeightPx = computed(() => Math.floor(window.innerHeight * MAX_PREVIEW_VH))
 const exceedsMaxHeight = computed(() => scaledHeight.value > maxPreviewHeightPx.value)
+const expandedCompletedPreview = computed(() => props.expandCompletedPreview && !props.loading)
 
 /** 测量内容原始高度，修正 transform scale 的布局占位 */
 function updateScaledHeight() {
@@ -85,9 +91,10 @@ const wrapperStyle = computed(() => {
   const height = scaledHeight.value || undefined
   return {
     width: `${scaledWidth.value}px`,
-    height: height ? `${Math.min(height, maxPreviewHeightPx.value)}px` : 'auto',
-    maxHeight: `${maxPreviewHeightPx.value}px`,
-    overflow: exceedsMaxHeight.value ? 'auto' : 'hidden',
+    height: height ? `${expandedCompletedPreview.value ? height : Math.min(height, maxPreviewHeightPx.value)}px` : 'auto',
+    maxHeight: expandedCompletedPreview.value ? 'none' : `${maxPreviewHeightPx.value}px`,
+    overflowX: 'hidden',
+    overflowY: !expandedCompletedPreview.value && exceedsMaxHeight.value ? 'auto' : 'hidden',
   }
 })
 

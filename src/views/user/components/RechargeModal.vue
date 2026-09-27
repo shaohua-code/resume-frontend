@@ -10,6 +10,7 @@ import { getRechargeInfo, submitRechargeRequest } from '@/api/wallet'
 import { uploadFile, resolveUploadUrl } from '@/api/upload'
 import { useMediaQuery } from '@/composables/useMediaQuery'
 import GradientButton from '@/components/GradientButton.vue'
+import { emitProductEvent } from '@/utils/productEvents'
 
 const open = defineModel('open', { type: Boolean, default: false })
 
@@ -143,6 +144,8 @@ async function handleSubmit() {
       proof_url: proofUrl.value,
       paid_amount: amount,
     })
+    const amountBucket = amount < 10 ? 'under_10' : amount < 50 ? '10_50' : amount < 200 ? '50_200' : 'over_200'
+    void emitProductEvent('recharge_flow_step', { step: 'submitted', amount_bucket: amountBucket, result: 'pending' })
     rechargeInfo.value = {
       ...rechargeInfo.value,
       contact_qrcode_url: res.data?.contact_qrcode_url || rechargeInfo.value.contact_qrcode_url,
@@ -161,6 +164,7 @@ async function handleSubmit() {
 watch(open, (visible) => {
   if (visible) {
     resetForm()
+    void emitProductEvent('recharge_flow_step', { step: 'opened', amount_bucket: 'unknown', result: 'pending' })
     fetchRechargeInfo()
   }
 })

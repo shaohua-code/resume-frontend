@@ -9,7 +9,8 @@ export function createHomeNavigator(router, userStore) {
     if (userStore.isLoggedIn || PUBLIC_PATHS.includes(pathname)) {
       router.push(path)
     } else {
-      router.push('/login')
+      // 直接跳登录会丢失目标页；经受保护路由让守卫保存原始任务位置。
+      router.push(path)
     }
   }
 }

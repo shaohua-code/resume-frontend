@@ -114,7 +114,8 @@ onBeforeUnmount(() => {
     <GlassCard glow class="relative w-full max-w-[460px] animate-scale-in max-sm:max-w-[100%]">
       <!-- Logo 和标题区：移动端缩小 -->
       <div class="mb-5 text-center sm:mb-6">
-        <img src="/vite.svg" alt="Logo" class="mx-auto mb-2.5 h-10 w-10 sm:mb-3 sm:h-12 sm:w-12" />
+        <!-- 注册页沿用导航栏的品牌渐变标识，保持认证流程视觉连续。 -->
+        <div aria-hidden="true" class="mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-full [background-image:var(--gradient-primary)] text-base font-bold text-white shadow-soft sm:mb-3 sm:h-12 sm:w-12 sm:text-lg">AI</div>
         <h2 class="mb-0.5 text-xl font-bold text-ink sm:mb-1 sm:text-2xl">注册账号</h2>
         <p class="text-xs text-ink-secondary sm:text-sm">无需填写邮箱，系统为你生成安全登录凭据</p>
       </div>

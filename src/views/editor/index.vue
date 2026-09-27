@@ -4,6 +4,7 @@
 -->
 <template>
   <div class="editor-page">
+    <JourneyPath current="create" />
     <EditorToolbar
       v-model:spacing="spacing"
       v-model:font-size="fontSize"
@@ -254,6 +255,8 @@
 
 <script setup>
 import { reactive, ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+// 编辑器提供回到目标和岗位进度的入口，避免保存后的简历与后续求职任务断开。
+import JourneyPath from '@/components/JourneyPath.vue'
 import { useRoute } from 'vue-router'
 import { DownloadOutlined, CheckOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'

@@ -82,7 +82,8 @@ onMounted(loadGoals)
 <template>
   <section class="career-goals">
     <header class="career-goals__header">
-      <div><span>CAREER DIRECTION</span><h3>求职目标</h3><p>把岗位进度放进明确的求职方向，回来时知道该继续推进什么。</p></div>
+      <!-- 用户中心外层已经展示当前栏目标题；这里保留目标数量与说明，避免重复标题占用移动端首屏。 -->
+      <div class="career-goals__intro"><span>目标概览 · {{ goals.length }} 个方向</span><p>把岗位进度归入求职方向，回来时知道下一步继续推进什么。</p></div>
       <a-button type="primary" @click="openCreate"><PlusOutlined />新建目标</a-button>
     </header>
     <a-spin :spinning="loading">
@@ -92,10 +93,15 @@ onMounted(loadGoals)
       </a-empty>
       <div v-else class="career-goals__grid">
         <article v-for="goal in goals" :key="goal.id" class="career-goal-card" :class="{ 'career-goal-card--primary': goal.is_primary }">
-          <div class="career-goal-card__top"><span class="career-goal-card__icon"><AimOutlined /></span><a-tag :color="goal.status === 'active' ? 'green' : goal.status === 'paused' ? 'orange' : 'default'">{{ goal.status === 'active' ? '进行中' : goal.status === 'paused' ? '已暂停' : '已完成' }}</a-tag></div>
-          <h4>{{ goal.name }}</h4>
-          <p>{{ [goal.job_direction, goal.target_city, goal.career_stage].filter(Boolean).join(' · ') || '补充方向和城市，让目标更清晰' }}</p>
-          <div class="career-goal-card__counts"><b>{{ goal.job_count || 0 }}</b><span>个关联岗位</span><b>{{ goal.in_progress_count || 0 }}</b><span>个进行中</span></div>
+          <div class="career-goal-card__identity">
+            <div class="career-goal-card__top"><span class="career-goal-card__icon"><AimOutlined /></span><a-tag :color="goal.status === 'active' ? 'green' : goal.status === 'paused' ? 'orange' : 'default'">{{ goal.status === 'active' ? '进行中' : goal.status === 'paused' ? '已暂停' : '已完成' }}</a-tag></div>
+            <h4>{{ goal.name }}</h4>
+            <p>{{ [goal.job_direction, goal.target_city, goal.career_stage].filter(Boolean).join(' · ') || '补充方向和城市，让目标更清晰' }}</p>
+          </div>
+          <div class="career-goal-card__counts" aria-label="目标关联岗位统计">
+            <span class="career-goal-card__metric"><b>{{ goal.job_count || 0 }}</b><span>个关联岗位</span></span>
+            <span class="career-goal-card__metric"><b>{{ goal.in_progress_count || 0 }}</b><span>个进行中</span></span>
+          </div>
           <div class="career-goal-card__actions">
             <a-button v-if="!goal.is_primary && goal.status === 'active'" type="link" size="small" @click="makePrimary(goal)"><StarFilled />设为当前</a-button>
             <span v-else-if="goal.is_primary" class="career-goal-card__primary"><StarFilled />当前目标</span>
@@ -127,25 +133,44 @@ onMounted(loadGoals)
 
 <style scoped>
 .career-goals { display: grid; gap: 22px; }
-.career-goals__header { display:flex; justify-content:space-between; align-items:flex-start; gap:18px; }
-.career-goals__header span { color:var(--color-brand); font-size:10px; font-weight:800; letter-spacing:.18em; }
-.career-goals__header h3 { margin:5px 0; color:var(--color-ink); font-size:22px; font-weight:800; }
+.career-goals__header { display:flex; justify-content:space-between; align-items:center; gap:18px; }
+.career-goals__intro { min-width:0; }
+.career-goals__intro span { color:var(--color-brand); font-size:11px; font-weight:800; letter-spacing:.08em; }
 .career-goals__header p,.career-goals__tip { margin:0; color:var(--color-ink-secondary); font-size:13px; }
-.career-goals__grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px; }
-.career-goal-card { min-width:0; padding:18px; border:1px solid var(--color-line); border-radius:18px; background:var(--color-surface); }
+/* auto-fit 折叠没有内容的轨道，让单个目标也能使用宽屏空间；多个目标保持宽卡片双列布局。 */
+.career-goals__grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,580px),1fr)); gap:14px; }
+.career-goal-card { display:grid; grid-template-columns:minmax(0,1fr) minmax(190px,240px) minmax(185px,auto); grid-template-areas:'identity counts actions'; align-items:center; gap:18px; min-width:0; padding:20px 22px; border:1px solid var(--color-line); border-radius:18px; background:var(--color-surface); }
 .career-goal-card--primary { border-color:rgb(var(--color-brand-rgb) / .5); box-shadow:0 8px 24px rgb(var(--color-brand-rgb) / .08); }
+.career-goal-card__identity { grid-area:identity; min-width:0; }
 .career-goal-card__top,.career-goal-card__actions { display:flex; align-items:center; gap:8px; }
 .career-goal-card__top { justify-content:space-between; }
 .career-goal-card__icon { display:grid; place-items:center; width:36px; height:36px; border-radius:12px; background:var(--color-brand-lighter); color:var(--color-brand); }
 .career-goal-card h4 { margin:15px 0 5px; color:var(--color-ink); font-size:17px; font-weight:800; }
-.career-goal-card p { min-height:20px; margin:0; color:var(--color-ink-secondary); font-size:12px; }
-.career-goal-card__counts { display:flex; align-items:baseline; gap:6px; margin-top:18px; color:var(--color-ink-secondary); font-size:11px; }
-.career-goal-card__counts b { color:var(--color-ink); font-size:19px; }
-.career-goal-card__counts b:nth-of-type(2) { margin-left:12px; }
-.career-goal-card__actions { justify-content:flex-end; margin-top:12px; padding-top:10px; border-top:1px solid var(--color-line); }
-.career-goal-card__actions :deep(.ant-btn-link) { padding-inline:5px; }
-.career-goal-card__primary { margin-right:auto; color:var(--color-brand); font-size:12px; }
+.career-goal-card__identity p { min-height:20px; margin:0; color:var(--color-ink-secondary); font-size:12px; overflow-wrap:anywhere; }
+.career-goal-card__counts { grid-area:counts; display:grid; grid-template-columns:1fr 1fr; gap:12px; color:var(--color-ink-secondary); font-size:11px; }
+.career-goal-card__metric { display:grid; gap:2px; }
+.career-goal-card__metric b { color:var(--color-ink); font-size:20px; line-height:1.2; }
+.career-goal-card__actions { grid-area:actions; justify-content:flex-end; flex-wrap:wrap; min-width:0; }
+.career-goal-card__actions :deep(.ant-btn-link) { min-height:44px; padding-inline:7px; }
+.career-goal-card__primary { margin-right:auto; color:var(--color-brand); font-size:12px; white-space:nowrap; }
 .career-goals__tip { padding:12px 14px; border-radius:12px; background:var(--color-brand-lighter); }
 .career-goal-form__row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-@media(max-width:600px) { .career-goals__header { flex-direction:column; } .career-goals__header .ant-btn { width:100%; } .career-goal-form__row { grid-template-columns:1fr; gap:0; } }
+/* 平板与手机将卡片改为纵向信息层级，并让操作按钮占满易触达区域。 */
+@media(max-width:900px) {
+  .career-goal-card { grid-template-columns:minmax(0,1fr) auto; grid-template-areas:'identity identity' 'counts actions'; gap:14px 10px; padding:17px; }
+  .career-goal-card__counts { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+}
+@media(max-width:600px) {
+  .career-goals { gap:16px; }
+  .career-goals__header { align-items:stretch; flex-direction:column; gap:12px; }
+  .career-goals__header .ant-btn { width:100%; min-height:44px; }
+  .career-goals__grid { grid-template-columns:minmax(0,1fr); gap:12px; }
+  .career-goal-card { grid-template-columns:minmax(0,1fr); grid-template-areas:'identity' 'counts' 'actions'; gap:14px; padding:15px; }
+  .career-goal-card__counts { padding-top:12px; border-top:1px solid var(--color-line); }
+  .career-goal-card__actions { justify-content:space-between; padding-top:8px; border-top:1px solid var(--color-line); }
+  .career-goal-card__actions :deep(.ant-btn-link) { padding-inline:5px; }
+  .career-goal-card__primary { margin-right:auto; }
+  .career-goals__tip { padding:11px 12px; line-height:1.6; }
+  .career-goal-form__row { grid-template-columns:1fr; gap:0; }
+}
 </style>

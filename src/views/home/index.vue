@@ -2,7 +2,7 @@
 /**
  * 首页 - Hero + 使用流程 + 功能卡 + 模板预览 + 信任背书
  */
-import { defineAsyncComponent } from "vue";
+import { defineAsyncComponent, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import {
   CloudUploadOutlined,
@@ -21,8 +21,10 @@ import GlassCard from "@/components/GlassCard.vue";
 import LazyRender from "@/components/LazyRender.vue";
 import HeroActions from "./components/HeroActions.vue";
 import FeatureGrid from "./components/FeatureGrid.vue";
-import { HOME_FEATURES, HOME_STATS } from "./utils/features";
+import { HOME_FEATURES } from "./utils/features";
 import { createHomeNavigator } from "./utils/navigate";
+import { emitProductEvent } from "@/utils/productEvents";
+import { getWorkspaceSummary } from "@/api/workspace";
 
 // 首屏以下的模板注册表与轮播组件在接近视口时再请求。
 const TemplatePreview = defineAsyncComponent(() => import("./components/TemplatePreview.vue"));
@@ -31,6 +33,7 @@ const TrustOfferWall = defineAsyncComponent(() => import("./components/TrustOffe
 const router = useRouter();
 const userStore = useUserStore();
 const navTo = createHomeNavigator(router, userStore);
+const nextAction = ref(null);
 
 const HOME_FLOW = [
   {
@@ -66,6 +69,25 @@ function handleFeatureClick(item) {
   navTo(item.path);
 }
 
+function startPrimaryAction() {
+  const isLoggedIn = userStore.isLoggedIn
+  void emitProductEvent('home_primary_cta_clicked', {
+    visitor_state: isLoggedIn ? 'logged_in' : 'anonymous',
+    cta_id: isLoggedIn && nextAction.value?.type !== 'create_resume' ? 'continue_work' : 'start_resume',
+  })
+  navTo(isLoggedIn ? (nextAction.value?.path || '/user') : '/generate')
+}
+
+onMounted(async () => {
+  if (!userStore.isLoggedIn) return
+  try {
+    const summary = await getWorkspaceSummary()
+    nextAction.value = summary?.next_action || null
+  } catch {
+    // 首页 CTA 保持可用；工作台摘要不可用时回退到用户中心。
+  }
+})
+
 function openExtension() {
   router.push('/extension');
 }
@@ -79,16 +101,51 @@ function openSavedJobs() {
 <template>
   <div class="home-page animate-fade-in">
     <PageHero
-      compact
-      title="让每一段经历，都成为你的求职优势"
-      subtitle="AI 帮你梳理经历、匹配岗位、优化表达，零基础也能快速完成专业简历"
-      :stats="HOME_STATS"
+      variant="home"
+      eyebrow="AI 简历 · 求职准备工作台"
+      title="让每段经历，都为下一份工作加分"
+      subtitle="AI 协助提炼表达和对照岗位要求；内容由你确认，进度留在自己的工作台里。"
     >
       <template #actions>
         <HeroActions
           :is-logged-in="userStore.isLoggedIn"
-          @start="navTo('/generate')"
+          :action-label="userStore.isLoggedIn ? (nextAction?.label || '继续求职准备') : '免费开始整理简历'"
+          @start="startPrimaryAction"
         />
+        <button type="button" class="home-secondary-action" @click="router.push('/templates')">
+          先浏览适合我的模板 <ArrowRightOutlined />
+        </button>
+      </template>
+      <template #default>
+        <!-- 收费与内容确认边界留在首屏内，让用户行动前就能安心了解规则。 -->
+        <p class="home-trust-note"><SafetyCertificateOutlined /> AI 建议由你确认 · 使用收费功能前会清楚说明规则</p>
+      </template>
+      <template #visual>
+        <!-- 用简历纸张示意替代空白色块，让首屏直接说明产品成果。 -->
+        <div class="resume-hero-art" aria-label="简历样式预览示意">
+          <div class="resume-hero-orbit resume-hero-orbit--one"></div>
+          <div class="resume-hero-orbit resume-hero-orbit--two"></div>
+          <article class="resume-hero-sheet">
+            <header class="resume-hero-person">
+              <span class="resume-hero-monogram">林</span>
+              <div><strong>林知夏</strong><small>产品设计师 · 杭州</small></div>
+              <span class="resume-hero-ready"><CheckCircleFilled /> 已整理</span>
+            </header>
+            <div class="resume-hero-tags"><span>用户研究</span><span>体验策略</span><span>Figma</span></div>
+            <section class="resume-hero-section">
+              <b>工作经历</b>
+              <strong>澄野科技 <i>产品设计师</i></strong>
+              <span>梳理核心流程，将新用户关键任务完成率提升 28%</span>
+              <span>与产品、研发协作，推动设计规范落地至 3 条业务线</span>
+            </section>
+            <section class="resume-hero-section resume-hero-section--last">
+              <b>项目亮点</b>
+              <div class="resume-hero-bars"><i></i><i></i><i></i></div>
+            </section>
+          </article>
+          <div class="resume-hero-note"><span><ThunderboltOutlined /></span><div><b>为目标岗位优化</b><small>重点与表达一目了然</small></div></div>
+          <div class="resume-hero-spark" aria-hidden="true">✳</div>
+        </div>
       </template>
     </PageHero>
 
@@ -147,7 +204,7 @@ function openSavedJobs() {
           <div class="browser-agent-showcase" aria-label="浏览器 Agent 岗位准备效果预览">
             <div class="agent-browser-bar" aria-hidden="true">
               <span></span><span></span><span></span>
-              <div>招聘网站 / 岗位详情</div>
+              <div>界面演示 · 示例岗位</div>
             </div>
             <div class="agent-browser-body">
               <div class="agent-job-page" aria-hidden="true">
@@ -241,19 +298,105 @@ function openSavedJobs() {
 
 <style scoped>
 .home-page {
-  /* 首页氛围光跟随系统主题，经典黑白等方案不残留默认青紫色。 */
-  background:
-    radial-gradient(
-      circle at 8% 28%,
-      color-mix(in srgb, var(--color-brand) 8%, transparent),
-      transparent 22rem
-    ),
-    radial-gradient(
-      circle at 92% 62%,
-      color-mix(in srgb, var(--color-accent) 7%, transparent),
-      transparent 24rem
-    );
+  background: var(--color-cream);
 }
+
+/* 首页用完成态简历做视觉主角，说明产品结果与使用边界。 */
+.home-trust-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 18px 0 0;
+  color: rgb(255 255 255 / .68);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.resume-hero-art {
+  position: relative;
+  display: grid;
+  min-height: 340px;
+  place-items: center;
+  isolation: isolate;
+}
+
+.resume-hero-orbit {
+  position: absolute;
+  z-index: -1;
+  border: 1px solid rgb(255 255 255 / .16);
+  border-radius: 50%;
+}
+
+.resume-hero-orbit--one { width: 330px; height: 330px; }
+.resume-hero-orbit--two { width: 410px; height: 410px; border-color: rgb(255 255 255 / .09); }
+
+.resume-hero-sheet {
+  position: relative;
+  width: min(100%, 350px);
+  min-height: 310px;
+  padding: 25px 27px;
+  transform: rotate(2deg);
+  border: 1px solid rgb(255 255 255 / .8);
+  border-radius: 14px;
+  background: #fffefa;
+  box-shadow: 0 28px 70px rgb(15 12 42 / .28);
+  color: #26213a;
+}
+
+.resume-hero-person { display: flex; align-items: center; gap: 11px; }
+.resume-hero-monogram { display: grid; width: 43px; height: 43px; place-items: center; border-radius: 13px; background: #eee9ff; color: #5945c5; font-size: 18px; font-weight: 800; }
+.resume-hero-person strong,.resume-hero-person small { display: block; }
+.resume-hero-person strong { font-size: 16px; }
+.resume-hero-person small { margin-top: 3px; color: #817c90; font-size: 10px; }
+.resume-hero-ready { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; padding: 5px 8px; border-radius: 99px; background: #e7f6ed; color: #268752; font-size: 9px; font-weight: 700; }
+.resume-hero-tags { display: flex; gap: 6px; margin: 16px 0 17px; }
+.resume-hero-tags span { padding: 5px 8px; border-radius: 99px; background: #f2eff8; color: #655c7c; font-size: 9px; }
+.resume-hero-section { display: grid; gap: 7px; margin-top: 13px; }
+.resume-hero-section > b { padding-bottom: 6px; border-bottom: 1px solid #eae7ef; color: #5847a9; font-size: 10px; }
+.resume-hero-section > strong { font-size: 10px; }
+.resume-hero-section > strong i { margin-left: 6px; color: #817c90; font-size: 9px; font-style: normal; font-weight: 500; }
+.resume-hero-section > span { color: #777286; font-size: 8px; line-height: 1.5; }
+.resume-hero-section--last { margin-top: 16px; }
+.resume-hero-bars { display: grid; gap: 5px; }
+.resume-hero-bars i { width: 100%; height: 4px; border-radius: 5px; background: #ebe8f0; }
+.resume-hero-bars i:nth-child(2) { width: 88%; }
+.resume-hero-bars i:nth-child(3) { width: 63%; }
+
+.resume-hero-note {
+  position: absolute;
+  right: -8px;
+  bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 15px 12px 12px;
+  border: 1px solid rgb(255 255 255 / .76);
+  border-radius: 14px;
+  background: rgb(255 255 255 / .96);
+  box-shadow: 0 12px 34px rgb(15 12 42 / .2);
+  color: #28243a;
+}
+
+.resume-hero-note > span { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 10px; background: #faeddf; color: #b56836; }
+.resume-hero-note b,.resume-hero-note small { display: block; }
+.resume-hero-note b { font-size: 10px; }
+.resume-hero-note small { margin-top: 3px; color: #807b8d; font-size: 9px; }
+.resume-hero-spark { position: absolute; top: 18px; right: 16px; color: #f3c075; font-size: 28px; }
+
+.home-secondary-action {
+  min-height: 42px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-button);
+  background: var(--color-surface);
+  color: var(--color-ink-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  transition: border-color .2s ease, color .2s ease, background .2s ease;
+}
+
+.home-secondary-action:hover { border-color: var(--color-brand-light); color: var(--color-brand-dark); }
+.home-secondary-action:focus-visible { outline: 3px solid var(--color-focus-ring); outline-offset: 2px; }
 
 .section-kicker {
   @apply mb-2 inline-block text-[10px] font-bold tracking-[0.22em] text-brand-dark sm:text-xs;
@@ -537,6 +680,15 @@ function openSavedJobs() {
 }
 
 @media (max-width: 639px) {
+  .resume-hero-art { min-height: 258px; }
+  .resume-hero-orbit--one { width: 230px; height: 230px; }
+  .resume-hero-orbit--two { width: 288px; height: 288px; }
+  .resume-hero-sheet { width: min(100% - 20px, 320px); min-height: 252px; padding: 17px 19px; }
+  .resume-hero-tags { margin: 11px 0; }
+  .resume-hero-section { gap: 5px; margin-top: 9px; }
+  .resume-hero-section--last { margin-top: 11px; }
+  .resume-hero-note { right: -2px; bottom: 2px; }
+  .resume-hero-spark { top: 0; right: 10px; }
   .agent-browser-body {
     @apply min-h-0 grid-cols-1;
   }

@@ -2,6 +2,8 @@
 import { computed } from 'vue'
 import AImage from 'ant-design-vue/es/image'
 import { ArrowRight, Check, Download, MousePointer2, ShieldCheck, Sparkles } from 'lucide-vue-next'
+// 扩展是岗位准备的可选入口，沿用网站同一条简历到岗位跟进路径。
+import JourneyPath from '@/components/JourneyPath.vue'
 
 const extensionVersion = import.meta.env.VITE_EXTENSION_VERSION || '2.0.0'
 // 下载统一走后端 API，本地和线上复用既有 /api 代理，不在前端保存第二份安装包。
@@ -40,6 +42,8 @@ const installSteps = [
         </div>
       </div>
     </section>
+
+    <JourneyPath current="follow" />
 
     <section class="install-section">
       <div class="section-title"><p>安装扩展</p><h2>四步，进入你的岗位侧边栏</h2></div>

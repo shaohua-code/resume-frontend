@@ -172,7 +172,31 @@ if (draft.generation.phase === 'save_error' && !draft.generation.saveRequestId) 
 
 const generationLoading = computed(() => draft.generation.phase === 'streaming')
 const formLocked = computed(() => recognitionLoading.value || generationLoading.value || operationStarting.value)
-const hasGenerationPanel = computed(() => draft.generation.phase !== 'idle' || !!draft.generation.streamText)
+const hasGenerationPanel = computed(() => !['idle', 'cancelled'].includes(draft.generation.phase) || !!draft.generation.streamText)
+const profileReadiness = computed(() => {
+  const nameReady = !!String(draft.basic.name || '').trim()
+  const positionReady = !!String(draft.basic.target_position || '').trim()
+  const hasRecordContent = (record) => Object.values(record || {}).some((value) => (
+    Array.isArray(value)
+      ? value.some((item) => String(item ?? '').trim())
+      : String(value ?? '').trim()
+  ))
+  const educationCount = draft.educations.filter(hasRecordContent).length
+  const experienceCount = [
+    ...draft.workExperiences,
+    ...draft.internships,
+    ...draft.projects,
+  ].filter(hasRecordContent).length
+
+  return {
+    nameReady,
+    positionReady,
+    requiredCount: Number(nameReady) + Number(positionReady),
+    percent: (Number(nameReady) + Number(positionReady)) * 50,
+    educationCount,
+    experienceCount,
+  }
+})
 const previewStreamText = computed(() => {
   // 完成或保存失败后以最终结构为权威预览；原始流仍在下方独立保留供核对。
   if (draft.generation.result && draft.generation.phase !== 'streaming') {
@@ -640,7 +664,9 @@ async function goToEditor() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl pb-28 sm:pb-24">
+  <div class="mx-auto max-w-[1500px] pb-28 sm:pb-24">
+    <div class="generate-workspace" :class="{ 'has-result': hasGenerationPanel }">
+      <main class="generate-main min-w-0">
     <RecognitionPanel
       ref="recognitionRef"
       :disabled="generationLoading || operationStarting"
@@ -670,7 +696,7 @@ async function goToEditor() {
             data-form-tab
             role="tab"
             :aria-selected="activeFormTab === tab.key"
-            class="flex min-h-12 flex-1 cursor-pointer flex-col items-center justify-center border-b-2 border-transparent px-2 py-2.5 text-sm text-ink-secondary transition-colors duration-200 hover:text-brand-dark sm:px-4"
+            class="resume-form-tab flex min-h-12 flex-1 cursor-pointer flex-col items-center justify-center border-b-2 border-transparent px-2 py-2.5 text-sm text-ink-secondary transition-colors duration-200 hover:text-brand-dark sm:px-4"
             :class="{
               'is-active border-b-brand-dark font-semibold text-brand-dark': activeFormTab === tab.key,
             }"
@@ -686,7 +712,8 @@ async function goToEditor() {
           </li>
         </ul>
       </div>
-    </div>
+      </div>
+
     <!-- fixed 后保留原高度，避免表单内容上窜 -->
     <div
       v-if="tabsStuck"
@@ -755,28 +782,59 @@ async function goToEditor() {
       </div>
     </div>
 
-    <!-- 吸底操作栏：两按钮始终横排 -->
+    <!-- 吸底操作栏按生成状态呈现下一步动作，避免完成后继续误点付费生成。 -->
     <div
       class="fixed bottom-0 left-0 right-0 z-40 border-t border-line/50 bg-surface/95 pb-[env(safe-area-inset-bottom)] shadow-card backdrop-blur-sm"
     >
-      <div class="mx-auto flex max-w-3xl flex-row items-center justify-center gap-2 px-3 py-3 sm:gap-3 sm:px-6">
-        <GradientButton
-          class="min-h-11 min-w-0 flex-1 justify-center px-2 text-sm sm:flex-none sm:min-w-[170px] sm:px-4 sm:text-base"
-          :loading="generationLoading && draft.generation.kind === 'generate'"
-          :disabled="formLocked && !(generationLoading && draft.generation.kind === 'generate')"
-          @click="handleGenerate"
-        >
-          <ThunderboltOutlined v-if="!generationLoading || draft.generation.kind !== 'generate'" />
-          开始 AI 生成
-        </GradientButton>
-        <button
-          type="button"
-          class="btn-ghost min-h-11 min-w-0 flex-1 px-2 text-sm sm:flex-none sm:min-w-[180px] sm:px-4 sm:text-base"
-          :disabled="formLocked"
-          @click="openJdOptimize"
-        >
-          <AimOutlined /> 按岗位优化简历
-        </button>
+      <div class="generate-action-bar">
+        <p v-if="!hasGenerationPanel">填写姓名和意向岗位即可开始，生成后仍可逐项核对</p>
+        <div class="flex flex-row items-center justify-center gap-2 sm:gap-3">
+          <template v-if="draft.generation.phase === 'complete'">
+            <GradientButton class="min-h-11 min-w-0 flex-1 justify-center px-2 text-sm sm:flex-none sm:min-w-[170px] sm:px-4 sm:text-base" @click="goToEditor">
+              <EditOutlined /> 进入编辑
+            </GradientButton>
+            <button type="button" class="btn-ghost min-h-11 min-w-0 flex-1 px-2 text-sm sm:flex-none sm:min-w-[150px] sm:px-4 sm:text-base" @click="restartGeneration">
+              <ReloadOutlined /> 重新生成
+            </button>
+          </template>
+          <template v-else-if="draft.generation.phase === 'review'">
+            <GradientButton class="min-h-11 min-w-0 flex-1 justify-center px-2 text-sm sm:flex-none sm:min-w-[190px] sm:px-4 sm:text-base" @click="jdDiffOpen = true">
+              查看优化对比
+            </GradientButton>
+            <button type="button" class="btn-ghost min-h-11 min-w-0 flex-1 px-2 text-sm sm:flex-none sm:min-w-[140px] sm:px-4 sm:text-base" @click="discardJdDiff">
+              放弃结果
+            </button>
+          </template>
+          <template v-else-if="draft.generation.phase === 'save_error'">
+            <GradientButton class="min-h-11 min-w-0 flex-1 justify-center px-2 text-sm sm:flex-none sm:min-w-[190px] sm:px-4 sm:text-base" @click="retrySaveResult">
+              <ReloadOutlined /> 重试保存结果
+            </GradientButton>
+          </template>
+          <template v-else-if="['error', 'interrupted'].includes(draft.generation.phase)">
+            <GradientButton class="min-h-11 min-w-0 flex-1 justify-center px-2 text-sm sm:flex-none sm:min-w-[190px] sm:px-4 sm:text-base" @click="restartGeneration">
+              <ReloadOutlined /> 重新尝试本次操作
+            </GradientButton>
+          </template>
+          <template v-else>
+            <GradientButton
+              class="min-h-11 min-w-0 flex-1 justify-center px-2 text-sm sm:flex-none sm:min-w-[170px] sm:px-4 sm:text-base"
+              :loading="generationLoading && draft.generation.kind === 'generate'"
+              :disabled="formLocked && !(generationLoading && draft.generation.kind === 'generate')"
+              @click="handleGenerate"
+            >
+              <ThunderboltOutlined v-if="!generationLoading || draft.generation.kind !== 'generate'" />
+              开始 AI 生成
+            </GradientButton>
+            <button
+              type="button"
+              class="btn-ghost min-h-11 min-w-0 flex-1 px-2 text-sm sm:flex-none sm:min-w-[180px] sm:px-4 sm:text-base"
+              :disabled="formLocked"
+              @click="openJdOptimize"
+            >
+              <AimOutlined /> 按岗位优化简历
+            </button>
+          </template>
+        </div>
       </div>
     </div>
 
@@ -792,44 +850,99 @@ async function goToEditor() {
         <span>{{ draft.generation.status || 'AI 处理结果' }}</span>
       </div>
 
-      <div class="rounded-lg bg-cream/50 p-2 sm:p-4">
-        <StreamResumePreview
-          :stream-text="previewStreamText"
-          :loading="generationLoading"
-          :template-id="resumeStore.currentTemplateId"
-          :loading-hint="draft.generation.status || 'AI 正在处理...'"
-        />
-      </div>
+      <div class="generation-result-grid">
+        <section class="generation-preview-card" aria-label="简历预览">
+          <div v-if="!generationLoading && !previewStreamText" class="generation-empty-preview">
+            <span aria-hidden="true">!</span>
+            <strong>{{ draft.generation.status || '暂时没有可预览内容' }}</strong>
+            <p>已填写的信息仍然保留，可以重新尝试本次操作。</p>
+          </div>
+          <StreamResumePreview
+            v-else
+            class="generate-stream-preview"
+            :stream-text="previewStreamText"
+            :loading="generationLoading"
+            :scale="0.68"
+            :template-id="resumeStore.currentTemplateId"
+            :expand-completed-preview="true"
+            :loading-hint="generationLoading ? (draft.generation.status || 'AI 正在处理...') : '简历预览'"
+          />
+        </section>
 
-      <div
-        v-if="displayOptimizationNotes.length"
-        class="mt-5 rounded-card bg-emerald-50/50 p-4"
-      >
-        <h3 class="mb-3 flex items-center gap-2 font-semibold text-ink"><BulbOutlined class="text-warning" /> 本次优化亮点</h3>
-        <ul class="space-y-2 text-sm text-ink-secondary">
-          <li v-for="(note, index) in displayOptimizationNotes" :key="index" class="flex gap-2"><span class="text-success">✓</span><span>{{ note }}</span></li>
-        </ul>
+        <aside class="generation-summary-card" aria-label="结果说明">
+          <template v-if="['error', 'interrupted'].includes(draft.generation.phase)">
+            <p class="generation-summary-card__eyebrow">操作未完成</p>
+            <h3>你的填写内容已保留</h3>
+            <p class="generation-summary-card__copy">检查网络后，可以从底部重新尝试；不会清空已填写的简历信息。</p>
+          </template>
+          <template v-else-if="displayOptimizationNotes.length">
+            <p class="generation-summary-card__eyebrow">本次优化</p>
+            <h3>表达调整一览</h3>
+            <ul class="generation-notes">
+              <li v-for="(note, index) in displayOptimizationNotes" :key="index"><span>✓</span><span>{{ note }}</span></li>
+            </ul>
+          </template>
+          <template v-else>
+            <p class="generation-summary-card__eyebrow">下一步建议</p>
+            <h3>先核对，再完善</h3>
+            <p class="generation-summary-card__copy">预览用于快速检查整体结构。请确认联系方式、任职时间和项目成果准确，再进入编辑继续调整。</p>
+            <ol class="generation-review-steps">
+              <li><span>01</span>检查个人信息</li>
+              <li><span>02</span>核对经历与成果</li>
+              <li><span>03</span>进入编辑调整样式</li>
+            </ol>
+          </template>
+          <div class="generation-trust-note"><BulbOutlined /><span>AI 负责整理表达，最终内容由你确认。</span></div>
+        </aside>
       </div>
+    </div>
+    </main>
 
-      <div v-if="draft.generation.phase === 'complete'" class="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[150px]" @click="goToEditor"><EditOutlined /> 进入编辑</GradientButton>
-        <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[150px]" @click="restartGeneration"><ReloadOutlined /> 重新生成</button>
-      </div>
-      <!-- 岗位优化待对比：可重新打开对比面板 -->
-      <div v-else-if="draft.generation.phase === 'review'" class="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[160px]" @click="jdDiffOpen = true">
-          查看优化对比
-        </GradientButton>
-        <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[150px]" @click="discardJdDiff">放弃结果</button>
-      </div>
-      <div v-else-if="draft.generation.phase === 'save_error'" class="mt-5 flex justify-center">
-        <GradientButton class="min-h-11 w-full justify-center sm:w-auto sm:min-w-[170px]" @click="retrySaveResult">
-          <ReloadOutlined /> 重试保存结果
-        </GradientButton>
-      </div>
-      <div v-else-if="['error', 'interrupted'].includes(draft.generation.phase)" class="mt-5 flex justify-center">
-        <button type="button" class="btn-ghost min-h-11 w-full sm:w-auto sm:min-w-[160px]" @click="restartGeneration"><ReloadOutlined /> 重新生成</button>
-      </div>
+      <aside class="generate-aside" aria-label="简历准备情况">
+        <section class="readiness-card">
+          <div class="readiness-card__top">
+            <div>
+              <p class="readiness-card__eyebrow">创作进度</p>
+              <h2>让简历从真实信息开始</h2>
+            </div>
+            <span class="readiness-card__count">{{ profileReadiness.requiredCount }}<small>/2</small></span>
+          </div>
+          <p class="readiness-card__caption">填写两项必需信息即可开始；其他经历可以稍后补充。</p>
+          <div class="readiness-progress" role="progressbar" :aria-valuenow="profileReadiness.percent" aria-valuemin="0" aria-valuemax="100" aria-label="必填信息完成度">
+            <span :style="{ width: `${profileReadiness.percent}%` }" />
+          </div>
+          <div class="readiness-list">
+            <div class="readiness-row">
+              <span class="readiness-row__mark" :class="{ 'is-ready': profileReadiness.nameReady }"><CheckCircleFilled v-if="profileReadiness.nameReady" /><i v-else /></span>
+              <span>姓名</span>
+              <span class="readiness-row__status">{{ profileReadiness.nameReady ? '已填写' : '待填写' }}</span>
+            </div>
+            <div class="readiness-row">
+              <span class="readiness-row__mark" :class="{ 'is-ready': profileReadiness.positionReady }"><CheckCircleFilled v-if="profileReadiness.positionReady" /><i v-else /></span>
+              <span>意向岗位</span>
+              <span class="readiness-row__status">{{ profileReadiness.positionReady ? '已填写' : '待填写' }}</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="experience-card">
+          <p class="readiness-card__eyebrow">可选补充</p>
+          <h2>让经历更完整</h2>
+          <div class="experience-counts">
+            <div><strong>{{ profileReadiness.educationCount }}</strong><span>段教育经历</span></div>
+            <div><strong>{{ profileReadiness.experienceCount }}</strong><span>段工作或项目</span></div>
+          </div>
+          <p>暂时没有也没关系，生成后仍可在编辑器里继续完善。</p>
+        </section>
+
+        <section class="trust-card">
+          <span class="trust-card__spark"><BulbOutlined /></span>
+          <div>
+            <h2>内容由你做主</h2>
+            <p>识别只回填原文。AI 整理完成后，你可以先核对，再决定是否保存。</p>
+          </div>
+        </section>
+      </aside>
     </div>
 
     <!-- 岗位优化前后对比：桌面左右栏，移动端 Tab；确认后才落库 -->
@@ -872,5 +985,75 @@ async function goToEditor() {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* 三段表单导航使用轻量胶囊态，清楚标记进度又不做成后台标签栏。 */
+.resume-form-tab { min-height: 62px; margin: 5px 3px; border: 0; border-radius: 13px; }
+.resume-form-tab.is-active { border: 0; background: var(--color-brand-lighter); color: var(--color-brand-dark); }
+.resume-form-tab > span:last-child { color: var(--color-ink-secondary); font-size: 10px; }
+
+/* 桌面创作页采用工作区与真实表单准备度双栏；小屏完整保留单栏填写流。 */
+.generate-workspace { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 20px; }
+.generate-workspace.has-result { grid-template-columns: minmax(0, 1fr); }
+.generate-aside { display: none; }
+.generate-workspace.has-result .generate-aside { display: none; }
+.generate-action-bar { display: flex; max-width: 1452px; margin: 0 auto; align-items: center; justify-content: space-between; gap: 20px; padding: 10px 24px; }
+.generate-action-bar > p { margin: 0; color: var(--color-ink-secondary); font-size: 13px; }
+.readiness-card, .experience-card { padding: 20px; border: 1px solid var(--color-line); border-radius: 18px; background: var(--color-surface); box-shadow: 0 10px 28px color-mix(in srgb, var(--color-ink) 5%, transparent); }
+.readiness-card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.readiness-card__eyebrow { margin: 0 0 7px; color: var(--color-brand-dark); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.readiness-card h2, .experience-card h2, .trust-card h2 { margin: 0; color: var(--color-ink); font-size: 16px; font-weight: 750; line-height: 1.4; }
+.readiness-card__count { color: var(--color-brand-dark); font-size: 28px; font-weight: 800; line-height: 1; }
+.readiness-card__count small { color: var(--color-muted); font-size: 13px; font-weight: 650; }
+.readiness-card__caption { margin: 11px 0 14px; color: var(--color-ink-secondary); font-size: 12px; line-height: 1.65; }
+.readiness-progress { height: 5px; overflow: hidden; border-radius: 999px; background: var(--color-brand-lighter); }
+.readiness-progress > span { display: block; height: 100%; border-radius: inherit; background: var(--color-brand); transition: width 180ms ease; }
+.readiness-list { display: grid; gap: 12px; margin-top: 18px; }
+.readiness-row { display: flex; align-items: center; gap: 9px; color: var(--color-ink); font-size: 13px; }
+.readiness-row__mark { display: grid; width: 18px; height: 18px; place-items: center; border: 1px solid var(--color-line); border-radius: 50%; color: var(--color-success); font-size: 17px; }
+.readiness-row__mark i { width: 5px; height: 5px; border-radius: 50%; background: var(--color-muted); }
+.readiness-row__mark.is-ready { border-color: transparent; }
+.readiness-row__status { margin-left: auto; color: var(--color-muted); font-size: 11px; }
+.experience-card { margin-top: 14px; }
+.experience-counts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0 13px; }
+.experience-counts > div { display: grid; gap: 3px; padding: 12px; border-radius: 12px; background: var(--color-cream); }
+.experience-counts strong { color: var(--color-ink); font-size: 22px; line-height: 1.1; }
+.experience-counts span { color: var(--color-ink-secondary); font-size: 10px; }
+.experience-card > p:last-child { margin: 0; color: var(--color-ink-secondary); font-size: 11px; line-height: 1.7; }
+.trust-card { display: flex; gap: 11px; margin-top: 14px; padding: 16px; border: 1px solid color-mix(in srgb, var(--color-brand) 16%, var(--color-line)); border-radius: 16px; background: color-mix(in srgb, var(--color-brand-lighter) 62%, var(--color-surface)); }
+.trust-card__spark { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: var(--color-surface); color: var(--color-brand-dark); }
+.trust-card h2 { font-size: 13px; }
+.trust-card p { margin: 5px 0 0; color: var(--color-ink-secondary); font-size: 11px; line-height: 1.7; }
+.generation-result-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.generation-preview-card { min-width: 0; overflow: hidden; padding: 14px; border: 1px solid var(--color-line); border-radius: 16px; background: color-mix(in srgb, var(--color-cream) 48%, var(--color-surface)); }
+.generation-empty-preview { display: grid; min-height: 240px; align-content: center; justify-items: center; gap: 11px; padding: 26px; text-align: center; }
+.generation-empty-preview > span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--color-warning) 12%, white); color: var(--color-warning); font-size: 20px; font-weight: 800; }
+.generation-empty-preview strong { color: var(--color-ink); font-size: 16px; }
+.generation-empty-preview p { max-width: 360px; margin: 0; color: var(--color-ink-secondary); font-size: 12px; line-height: 1.7; }
+.generation-summary-card { padding: 20px; border: 1px solid var(--color-line); border-radius: 16px; background: var(--color-surface); }
+.generation-summary-card__eyebrow { margin: 0 0 8px; color: var(--color-brand-dark); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.generation-summary-card h3 { margin: 0; color: var(--color-ink); font-size: 17px; font-weight: 750; }
+.generation-summary-card__copy { margin: 10px 0 0; color: var(--color-ink-secondary); font-size: 12px; line-height: 1.8; }
+.generation-notes { display: grid; gap: 13px; margin: 17px 0 0; padding: 0; list-style: none; }
+.generation-notes li { display: flex; gap: 9px; color: var(--color-ink-secondary); font-size: 12px; line-height: 1.7; }
+.generation-notes li > span:first-child { display: grid; width: 18px; height: 18px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--color-success) 12%, white); color: var(--color-success); font-size: 11px; font-weight: 800; }
+.generation-review-steps { display: grid; gap: 11px; margin: 17px 0 0; padding: 0; list-style: none; }
+.generation-review-steps li { display: flex; align-items: center; gap: 10px; color: var(--color-ink-secondary); font-size: 12px; }
+.generation-review-steps li > span { color: var(--color-brand-dark); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.generation-trust-note { display: flex; gap: 8px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--color-line); color: var(--color-muted); font-size: 11px; line-height: 1.6; }
+.generation-trust-note :deep(.anticon) { flex: 0 0 auto; color: var(--color-brand-dark); }
+
+@media (min-width: 1280px) {
+  .generate-workspace { grid-template-columns: minmax(0, 1fr) 294px; gap: 22px; }
+  .generate-aside { position: sticky; top: 86px; display: block; }
+  .generation-result-grid { grid-template-columns: minmax(0, 794px) 286px; justify-content: center; gap: 18px; }
+  .generation-preview-card { padding: 18px; }
+}
+
+@media (max-width: 767px) {
+  .generate-action-bar { padding: 9px 12px; }
+  .generate-action-bar > p { display: none; }
+  .generation-preview-card { padding: 8px; }
+  .generation-summary-card { padding: 16px; }
 }
 </style>

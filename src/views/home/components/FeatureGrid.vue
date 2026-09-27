@@ -30,7 +30,8 @@ function handleClick(item) {
           class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-xl sm:mx-auto sm:mb-4 sm:h-14 sm:w-14 sm:text-2xl"
           :class="item.iconBg || 'bg-brand-lighter/60'"
         >
-          {{ item.icon }}
+          <!-- 功能入口使用同一图标笔画体系，彩色强调由主题令牌控制。 -->
+          <component :is="item.icon" />
         </div>
         <div class="min-w-0 flex-1">
           <h3 class="mb-1.5 text-sm font-semibold text-ink sm:mb-2 sm:text-lg">{{ item.title }}</h3>
@@ -46,16 +47,16 @@ function handleClick(item) {
 
 <style scoped>
 .feature-grid {
-  @apply grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6;
+  @apply grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3;
 }
 
 .feature-card {
-  @apply flex h-full min-h-11 cursor-pointer flex-col rounded-card border border-line/40 bg-surface/80 p-4 text-left shadow-card backdrop-blur-sm transition-all duration-300 hover:border-brand/30 hover:shadow-card-hover sm:p-6;
+  @apply flex h-full min-h-11 cursor-pointer flex-col rounded-card border border-line/80 bg-surface p-4 text-left shadow-card transition-all duration-200 hover:border-brand/30 hover:shadow-card-hover sm:p-6;
 }
 
 @media (hover: hover) {
   .feature-card:hover {
-    transform: translateY(-6px);
+    transform: translateY(-2px);
   }
 }
 </style>
