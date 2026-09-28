@@ -6,7 +6,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import ResumeTemplate from '@/components/ResumeTemplate.vue'
 import { DEFAULT_MODULES, fontColorsToCssVars } from '@/constants/editorSettings'
-import { skinThemeToCssVars, EMPTY_SKIN_OVERRIDES } from '@/constants/skin'
+import { skinThemeToCssVars, EMPTY_SKIN_OVERRIDES, getSkinOverrideClassNames } from '@/constants/skin'
 import { DEFAULT_TEMPLATE_ID, getTemplateName } from '@/constants/templateRegistry'
 
 const props = defineProps({
@@ -32,9 +32,26 @@ const props = defineProps({
     default: 'thumb',
     validator: (value) => ['thumb', 'page', 'full'].includes(value),
   },
+  // 统一预览草稿设置，使 60 套模板缩略图与编辑器 A4 页面使用同一组变量。
+  appearance: {
+    type: Object,
+    default: () => ({}),
+  },
+  visibleModules: {
+    type: Array,
+    default: () => DEFAULT_MODULES.map((module) => ({ ...module })),
+  },
 })
 
-const visibleModules = DEFAULT_MODULES.filter((m) => m.visible).map((m) => m.key)
+// 新旧调用都规整为模块对象，兼容历史上只传模块 key 的预览入口。
+const resolvedVisibleModules = computed(() => {
+  if (!props.visibleModules?.length) return DEFAULT_MODULES.map((module) => ({ ...module }))
+  const byKey = new Map(props.visibleModules.map((item) => [typeof item === 'string' ? item : item.key, item]))
+  return DEFAULT_MODULES.map((module) => {
+    const selected = byKey.get(module.key)
+    return { ...module, ...(typeof selected === 'object' ? selected : {}), visible: selected == null ? false : typeof selected === 'string' ? true : selected.visible !== false }
+  })
+})
 
 // A4 纸张尺寸（与编辑器预览一致）
 const A4_WIDTH = 794
@@ -75,14 +92,37 @@ const wrapperClass = computed(() => {
   return 'overflow-hidden'
 })
 
+// 缩略图和完整预览也使用与 A4 主预览相同的显式颜色覆盖标记。
+const skinOverrideClasses = computed(() => getSkinOverrideClassNames(props.appearance?.skinTheme))
+
 // 按 templateId 注入模板默认字体色 + 皮肤色 CSS 变量（与编辑器预览一致）
-const templatePreviewStyle = computed(() => ({
-  ...fontColorsToCssVars({ templateId: props.templateId }),
-  ...skinThemeToCssVars(EMPTY_SKIN_OVERRIDES, props.templateId),
-}))
+// 预览变量沿用编辑器的字体、字号、行距、页边距、颜色和模板专属皮肤。
+const templatePreviewStyle = computed(() => {
+  const appearance = props.appearance || {}
+  const spacing = appearance.spacing || {}
+  return {
+    ...fontColorsToCssVars({
+      templateId: props.templateId,
+      labelColor: appearance.labelColor,
+      basicContentColor: appearance.basicContentColor,
+      nameColor: appearance.nameColor,
+      contentColor: appearance.contentColor,
+    }),
+    ...skinThemeToCssVars(appearance.skinTheme || EMPTY_SKIN_OVERRIDES, props.templateId),
+    '--font-family': appearance.fontFamily || "'Microsoft YaHei', sans-serif",
+    '--font-size': `${appearance.fontSize || 13}px`,
+    '--line-height': spacing.lineHeight ?? 1.6,
+    '--section-gap': `${spacing.sectionGap ?? 5}px`,
+    '--preview-padding': `${spacing.padding ?? 0}px`,
+    paddingTop: `${spacing.pageTopGap ?? 0}px`,
+    paddingRight: `${spacing.padding ?? 0}px`,
+    paddingBottom: `${spacing.pageBottomGap ?? 0}px`,
+    paddingLeft: `${spacing.padding ?? 0}px`,
+  }
+})
 
 watch(
-  () => [props.resume, props.templateId, props.previewMode, props.scale],
+  () => [props.resume, props.templateId, props.previewMode, props.scale, props.appearance, props.visibleModules],
   () => {
     if (props.previewMode === 'full') measureContentHeight()
   },
@@ -112,13 +152,14 @@ onUnmounted(() => {
       <div class="origin-top-left bg-white pointer-events-none" :style="innerStyle">
         <div
           ref="contentRef"
-          class="w-[794px] px-8 py-8 text-sm leading-relaxed text-ink"
+          class="w-[794px] text-[var(--font-size,13px)] leading-[var(--line-height,1.6)] text-ink"
+          :class="skinOverrideClasses"
           :style="templatePreviewStyle"
         >
           <ResumeTemplate
             :resume="resume"
             :template-id="templateId"
-            :visible-modules="visibleModules"
+            :visible-modules="resolvedVisibleModules"
           />
         </div>
       </div>

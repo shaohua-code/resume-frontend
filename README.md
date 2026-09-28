@@ -53,7 +53,7 @@ src/
 3. **图表** — 用户与管理数据图表的响应式色板
 4. **跨标签页** — 本地偏好变更会同步到同源页面
 
-系统主题只控制站点外壳和业务页面；简历 A4 的字体色、皮肤色与打印样式继续由模板独立配置，不随系统主题变化。
+系统主题只控制站点外壳和业务页面；简历 A4 的字体色、皮肤色、排版和打印样式通过编辑器的“模板与样式”面板配置，按模板保存，不随系统主题变化。
 
 ## 四、Glassmorphism 设计规范
 
@@ -88,7 +88,7 @@ src/
 | TrustOfferWall | Offer 数量 + 行业标签 + 匿名证言轮播 |
 | JdInputPanel | JD 输入模块 |
 
-模板预览页：`src/views/templates/index.vue`（`/templates`）展示全部 60 套模板，并在卡片接近视口时按需加载真实 A4 预览。新建简历默认使用 ID 56「轻简通用」；已有简历仍按保存的模板 ID 展示。
+模板预览页：`src/views/templates/index.vue`（`/templates`）展示全部 60 套模板，并在卡片接近视口时按需加载真实 A4 预览。新建简历默认使用 ID 56「轻简通用」；已有简历仍按保存的模板 ID 展示。编辑器顶部“模板与样式”面板统一选择模板、配置配色和排版，60 套模板共用配置字段，并按模板记忆外观；预览草稿可应用、取消或撤销。
 
 首页模块顺序：Hero → 核心功能 → 精选模板预览 → 信任背书 → 使用流程。
 
@@ -166,7 +166,11 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 | `/api/upload` | `api/upload.js` | `routers/upload.js` | 通用文件上传 |
 | `/api/feedback` | `api/feedback.js` | `routers/feedback.js` | 用户反馈 |
 
-## 九、简历编辑器 AI 优化
+## 九、模板与样式编辑器
+
+编辑器顶部“模板与样式”面板统一处理 60 套模板的选择、字体色、皮肤色、排版密度和页面留白；更换模板时保留各自外观配置，应用后兼容保存到简历 JSON。编辑器、历史版本和 PDF 打印共用同一外观变量。样式先以草稿预览，可应用、取消或撤销最近一次应用。
+
+## 十、简历编辑器 AI 优化
 
 编辑器（`src/views/editor/`）支持对简历五类模块进行 AI 流式优化，基于「意向岗位 + 完整简历内容」生成更专业的描述。
 
@@ -183,7 +187,7 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 - **流式回填**：文本类字段实时回填到对应输入框；技能类先在临时输入框展示打印机效果，完成后解析为数组
 - **前置校验**：若 `resume.target_position` 为空会提示「请先填写意向岗位」
 
-## 十、PDF 导出
+## 十一、PDF 导出
 
 使用 `useResumeExportPrint` 组合式函数，基于浏览器打印 API：
 
@@ -191,7 +195,7 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 - 用户需在打印对话框选择「另存为 PDF」
 - 导出前自动保存简历并记录 `export_record`（无 VIP 限制）
 
-## 十一、Token 计费（钱包）
+## 十二、Token 计费（钱包）
 
 | 模块 | 路径 | 说明 |
 | --- | --- | --- |
@@ -202,7 +206,7 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 
 AI 调用成功后 `resume` store 自动刷新余额。
 
-## 十二、用户反馈
+## 十三、用户反馈
 
 | 端 | 组件 | 说明 |
 | --- | --- | --- |
@@ -211,7 +215,7 @@ AI 调用成功后 `resume` store 自动刷新余额。
 | 管理端 | `src/views/admin/components/AdminFeedbackPanel.vue` | 仅 SUPER_ADMIN 可见，Markdown 预览 |
 | 接口 | `src/api/feedback.js` | `POST /api/feedback` |
 
-## 十三、新页面开发 Checklist
+## 十四、新页面开发 Checklist
 
 1. 在 `src/views/{page}/` 创建 `index.vue`
 2. 页面私有组件放该页面的 `components/`，工具放该页面的 `utils/`
@@ -220,7 +224,7 @@ AI 调用成功后 `resume` store 自动刷新余额。
 5. 375px 宽度下验证布局
 6. 参考 [`STYLE_PROMPT.md`](STYLE_PROMPT.md) 获取 AI 风格提示词
 
-## 十四、开发与构建
+## 十五、开发与构建
 
 ```bash
 npm install
@@ -231,7 +235,7 @@ npm run preview  # 预览构建
 
 提交代码前阅读 [`CONTRIBUTING.md`](CONTRIBUTING.md)。输入 `--提交` 时，项目的 `commit-ai-resume` Skill 会审查当前差异、运行必要验证，并按规范创建本地提交；不会自动推送。
 
-## 十五、注意事项
+## 十六、注意事项
 
 1. **简历模板**（`src/components/resume-templates/`）使用独立 CSS（`rt-*`），保证 PDF/打印友好
 2. **编辑器组件**位于 `src/views/editor/components/`
@@ -239,7 +243,7 @@ npm run preview  # 预览构建
 4. **计费与门禁**：AI 按账户余额扣费，余额不足时接口返回 402；未绑定邮箱时返回 `EMAIL_BINDING_REQUIRED` 并由全局弹窗完成绑定后重试一次；导出对登录用户免费
 5. 全功能说明见项目根目录 [`AI简历-项目全功能说明.md`](../AI简历-项目全功能说明.md)
 
-## 十六、风格提示词
+## 十七、风格提示词
 
 新增页面或模块时，请复制 [`STYLE_PROMPT.md`](STYLE_PROMPT.md) 中的 Prompt 模板，确保视觉一致。
 

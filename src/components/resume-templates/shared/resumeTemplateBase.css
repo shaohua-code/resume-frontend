@@ -152,6 +152,26 @@
   background: linear-gradient(90deg, var(--skin-title-color, #1677ff), var(--skin-skill-border, #69b1ff)) !important;
 }
 
+/* 用户主动选颜色时覆盖模板的透明装饰底色；未覆盖时保留各模板原本的留白设计。 */
+.skin-override-header-bg.skin-override-header-bg .resume-template .rt-header,
+.skin-override-header-bg.skin-override-header-bg .resume-template .rt-banner,
+.skin-override-header-bg.skin-override-header-bg .resume-template header[data-resume-module="basic"] {
+  background-color: var(--skin-header-bg) !important;
+}
+
+.skin-override-item-bg.skin-override-item-bg .resume-template .rt-item {
+  background-color: var(--skin-item-bg) !important;
+}
+
+.skin-override-basic-row-bg.skin-override-basic-row-bg .resume-template .rt-basic-row,
+.skin-override-basic-row-bg.skin-override-basic-row-bg .resume-template .contact-item {
+  background-color: var(--skin-basic-row-bg) !important;
+}
+
+.skin-override-skill-bg.skin-override-skill-bg .resume-template .rt-skill {
+  background-color: var(--skin-skill-bg) !important;
+}
+
 /* 仅指定字段保留用户输入的换行与连续空格，break-all 强制长数字/字母串换行 */
 .resume-template .rt-preserve-text {
   white-space: pre-wrap;

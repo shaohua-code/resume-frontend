@@ -60,8 +60,9 @@ const dateRange = (item) => [item.start_date, item.end_date].filter(Boolean).joi
         <h2 class="rt-title editorial-title"><span>技能特长</span><small>KEYWORDS</small></h2><div class="rt-skills editorial-skills"><span v-for="(skill, index) in f.skills" :key="skill" class="rt-skill"><b>{{ String(index + 1).padStart(2, '0') }}</b>{{ skill }}</span></div>
       </section>
 
+      <!-- 荣誉正文继承统一内容色，避免模板内固定白色遮蔽用户设置。 -->
       <section v-if="showModule('awards') && f.honorList.length" data-resume-module="awards" class="rt-section editorial-section">
-        <h2 class="rt-title editorial-title"><span>荣誉证书</span><small>RECOGNITION</small></h2><ul class=" editorial-honors"><li v-for="item in f.honorList" :key="item" class="rt-preserve-text !text-[#ffffff]">{{ item }}</li></ul>
+        <h2 class="rt-title editorial-title"><span>荣誉证书</span><small>RECOGNITION</small></h2><ul class=" editorial-honors"><li v-for="item in f.honorList" :key="item" class="rt-preserve-text">{{ item }}</li></ul>
       </section>
     </main>
   </div>

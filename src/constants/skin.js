@@ -223,6 +223,14 @@ export function normalizeSkinTheme(skin) {
   return { ...EMPTY_SKIN_OVERRIDES }
 }
 
+// 仅当用户显式覆盖颜色时标记预览根节点，让简约模板里的透明留白也能响应填充设置。
+export function getSkinOverrideClassNames(skinTheme) {
+  const raw = skinTheme && typeof skinTheme === 'object' ? skinTheme : {}
+  return SKIN_THEME_KEYS
+    .filter((key) => raw[key] != null)
+    .map((key) => `skin-override-${key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`)
+}
+
 /** 将 skinTheme 转为预览 CSS 变量；null 字段合并 templateSkinColors 当前模板预设 */
 export function skinThemeToCssVars(theme, templateId = DEFAULT_TEMPLATE_ID) {
   const t = mergeSkinThemeWithTemplate(theme, templateId)

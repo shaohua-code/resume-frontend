@@ -12,56 +12,20 @@
         <button
           type="button"
           class="inline-flex h-10 min-w-0 max-w-[148px] items-center gap-1.5 rounded-xl border border-brand/20 bg-brand-lighter/60 px-2 text-left text-brand-dark shadow-sm transition-colors hover:border-brand/40 hover:bg-brand-lighter sm:max-w-none sm:gap-2 sm:px-2.5"
-          :aria-label="`更换简历模板，当前使用${currentTemplateName}`"
-          title="更换简历模板"
-          @click="emit('template')"
+          :aria-label="`编辑简历样式，当前使用${currentTemplateName}`"
+          title="模板、配色与排版"
+          @click="emit('appearance')"
         >
           <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white text-brand shadow-sm">
             <AppstoreOutlined />
           </span>
           <span class="min-w-0 flex-1 leading-tight">
-            <span class="block text-[9px] font-medium tracking-wide text-muted">更换模板</span>
+            <span class="block text-[9px] font-medium tracking-wide text-muted">模板与样式</span>
             <span class="block truncate text-[11px] font-semibold text-brand-dark sm:text-xs">{{ currentTemplateName }}</span>
           </span>
           <DownOutlined class="shrink-0 text-[10px] text-muted" />
         </button>
       </div>
-
-      <!-- 桌面端：间距/字体/皮肤 -->
-      <ul class="items-center justify-center flex-1 hidden gap-1 p-0 mx-auto list-none lg:flex">
-        <li v-for="item in settingItems" :key="item.key" class="inline-block">
-          <a-popover v-model:open="item.open.value" trigger="click" placement="bottom">
-            <template #content>
-              <EditorSpacingPanel v-if="item.key === 'spacing'" :spacing="spacing" :page-count="pageCount" @change="onSettingsChange" />
-              <EditorFontPanel
-                v-else-if="item.key === 'font'"
-                :template-id="templateId"
-                v-model:font-family="fontFamily"
-                v-model:font-size="fontSize"
-                v-model:label-color="labelColor"
-                v-model:basic-content-color="basicContentColor"
-                v-model:name-color="nameColor"
-                v-model:content-color="contentColor"
-                @change="onSettingsChange"
-              />
-              <EditorSkinPanel
-                v-else
-                v-model:skin-theme="skinTheme"
-                :template-id="templateId"
-                @change="onSettingsChange"
-                @select="onSkinSelect"
-              />
-            </template>
-            <div
-              class="inline-flex select-none items-center gap-1.5 rounded-button px-3 py-2 text-sm font-medium text-ink-secondary transition-all duration-200 hover:bg-brand-lighter hover:text-brand-dark"
-              :class="{ 'bg-brand-lighter text-brand-dark': item.open.value }"
-            >
-              <component :is="item.icon" />
-              <b class="hidden font-semibold xl:inline">{{ item.label }}</b>
-            </div>
-          </a-popover>
-        </li>
-      </ul>
 
       <!-- 桌面端：右侧操作 -->
       <div class="items-center hidden gap-2 shrink-0 lg:flex">
@@ -97,9 +61,7 @@
           <button class="px-2 text-xs btn-ghost"><MenuOutlined /></button>
           <template #overlay>
             <a-menu>
-              <a-menu-item @click="openMobilePanel('spacing')">间距设置</a-menu-item>
-              <a-menu-item @click="openMobilePanel('font')">字体设置</a-menu-item>
-              <!-- <a-menu-item @click="openMobilePanel('skin')">皮肤设置</a-menu-item> -->
+              <a-menu-item @click="emit('appearance')"><BgColorsOutlined /> 模板与样式</a-menu-item>
               <a-menu-divider />
               
               <a-menu-item @click="emit('match')">岗位匹配分析</a-menu-item>
@@ -115,106 +77,31 @@
       </div>
     </div>
 
-    <!-- 小屏设置弹窗：移动端全宽展示 -->
-    <a-modal
-      v-model:open="mobilePanelOpen"
-      :title="mobilePanelTitle"
-      :footer="null"
-      :width="isMobile ? '95vw' : undefined"
-      class="modal-fresh"
-    >
-      <EditorSpacingPanel v-if="mobilePanel === 'spacing'" :spacing="spacing" :page-count="pageCount" @change="onSettingsChange" />
-      <EditorFontPanel
-        v-else-if="mobilePanel === 'font'"
-        :template-id="templateId"
-        v-model:font-family="fontFamily"
-        v-model:font-size="fontSize"
-        v-model:label-color="labelColor"
-        v-model:basic-content-color="basicContentColor"
-        v-model:name-color="nameColor"
-        v-model:content-color="contentColor"
-        @change="onSettingsChange"
-      />
-      <EditorSkinPanel
-        v-else-if="mobilePanel === 'skin'"
-        v-model:skin-theme="skinTheme"
-        :template-id="templateId"
-        @change="onSettingsChange"
-        @select="onSkinSelect"
-      />
-    </a-modal>
   </header>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   LeftOutlined, SaveOutlined, DownloadOutlined, MenuOutlined, DownOutlined,
   AimOutlined, BarChartOutlined, ThunderboltOutlined,
-  AppstoreOutlined, ColumnWidthOutlined, FontSizeOutlined, BgColorsOutlined, HistoryOutlined,
+  AppstoreOutlined, BgColorsOutlined, HistoryOutlined,
 } from '@ant-design/icons-vue'
 import GradientButton from '@/components/GradientButton.vue'
-import EditorSpacingPanel from './EditorSpacingPanel.vue'
-import EditorFontPanel from './EditorFontPanel.vue'
-import EditorSkinPanel from './EditorSkinPanel.vue'
 import { useMediaQuery } from '@/composables/useMediaQuery'
-
-const spacing = defineModel('spacing', { type: Object, required: true })
-const fontSize = defineModel('fontSize', { type: Number, required: true })
-const fontFamily = defineModel('fontFamily', { type: String, required: true })
-const labelColor = defineModel('labelColor', { type: String, default: null })
-const basicContentColor = defineModel('basicContentColor', { type: String, default: null })
-const nameColor = defineModel('nameColor', { type: String, default: null })
-const contentColor = defineModel('contentColor', { type: String, required: true })
-const skinTheme = defineModel('skinTheme', { type: Object, required: true })
 
 defineProps({
   templateId: { type: Number, default: 56 },
   currentTemplateName: { type: String, default: '轻简通用' },
-  pageCount: { type: Number, default: 1 },
   saving: { type: Boolean, default: false },
   exporting: { type: Boolean, default: false },
   scoring: { type: Boolean, default: false },
 })
 
 const emit = defineEmits([
-  'settings-change', 'template', 'match', 'jd-optimize', 'history', 'score', 'save', 'export-pdf', 'export-word',
+  'appearance', 'match', 'jd-optimize', 'history', 'score', 'save', 'export-pdf', 'export-word',
 ])
 
 const router = useRouter()
 const isMobile = useMediaQuery()
-const showSpacing = ref(false)
-const showFont = ref(false)
-const showSkin = ref(false)
-const mobilePanelOpen = ref(false)
-const mobilePanel = ref('spacing')
-
-const mobilePanelTitle = computed(() => ({
-  spacing: '间距设置',
-  font: '字体设置',
-  skin: '皮肤设置',
-}[mobilePanel.value] || '设置'))
-
-// 小屏打开设置面板弹窗
-function openMobilePanel(key) {
-  mobilePanel.value = key
-  mobilePanelOpen.value = true
-}
-
-// 桌面端设置项配置
-const settingItems = [
-  { key: 'spacing', label: '间距设置', icon: ColumnWidthOutlined, open: showSpacing },
-  { key: 'font', label: '字体', icon: FontSizeOutlined, open: showFont },
-  // { key: 'skin', label: '皮肤设置', icon: BgColorsOutlined, open: showSkin },
-]
-
-function onSettingsChange() {
-  emit('settings-change')
-}
-
-function onSkinSelect() {
-  showSkin.value = false
-  onSettingsChange()
-}
 </script>

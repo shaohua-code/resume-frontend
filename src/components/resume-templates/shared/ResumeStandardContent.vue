@@ -171,8 +171,10 @@ function formatDateRange(item = {}) {
 .rt-skill { padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; border-width: 1px; border-style: solid; }
 .rt-list { margin: 0; padding-left: 20px; }
 .rt-list li { margin-bottom: 5px; font-size: 13px; line-height: 1.7; }
-.rt-skill-bar-item { margin-bottom: 12px; padding: 10px 12px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; }
+/* 技能进度卡片跟随模板外观变量，保证底色和边框可由编辑器统一调整。 */
+.rt-skill-bar-item { margin-bottom: 12px; padding: 10px 12px; background: var(--skin-skill-bg, #f8fafc); border: 1px solid var(--skin-skill-border, #e5e7eb); border-radius: 8px; }
 .rt-skill-bar-head { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; font-weight: 700; }
-.rt-skill-bar-track { height: 8px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
+/* 技能条轨道沿用可配置分隔色，保持与技能卡片外观一致。 */
+.rt-skill-bar-track { height: 8px; background: var(--skin-divider-color, #e5e7eb); border-radius: 999px; overflow: hidden; }
 .rt-skill-bar-fill { height: 100%; background: linear-gradient(90deg, #1677ff, #69b1ff); border-radius: 4px; }
 </style>

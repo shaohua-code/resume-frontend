@@ -6,21 +6,13 @@
   <div class="editor-page">
     <JourneyPath current="create" />
     <EditorToolbar
-      v-model:spacing="spacing"
-      v-model:font-size="fontSize"
-      v-model:font-family="fontFamily"
-      v-model:label-color="labelColor"
-      v-model:basic-content-color="basicContentColor"
-      v-model:name-color="nameColor"
-      v-model:content-color="contentColor"
-      v-model:skin-theme="skinTheme"
       :template-id="templateId"
       :current-template-name="currentTemplateName"
       :page-count="pageCount"
       :saving="saving"
       :exporting="exporting"
       :scoring="resumeStore.scoring"
-      @template="showTemplateDrawer = true"
+      @appearance="openAppearancePanel"
       @match="showMatchModal = true"
       @jd-optimize="openJdOptimizeModal"
       @history="openHistoryModal"
@@ -35,15 +27,15 @@
         <ResumePreview
           ref="previewRef"
           :resume="resume"
-          :template-id="templateId"
-          :spacing="spacing"
-          :font-size="fontSize"
-          :font-family="fontFamily"
-          :label-color="labelColor"
-          :basic-content-color="basicContentColor"
-          :name-color="nameColor"
-          :content-color="contentColor"
-          :skin-theme="skinTheme"
+          :template-id="displayedAppearance.templateId"
+          :spacing="displayedAppearance.spacing"
+          :font-size="displayedAppearance.fontSize"
+          :font-family="displayedAppearance.fontFamily"
+          :label-color="displayedAppearance.labelColor"
+          :basic-content-color="displayedAppearance.basicContentColor"
+          :name-color="displayedAppearance.nameColor"
+          :content-color="displayedAppearance.contentColor"
+          :skin-theme="displayedAppearance.skinTheme"
           :visible-modules="modules"
           :edit-panel-collapsed="editPanelCollapsed"
           @section-click="handleSectionClick"
@@ -136,85 +128,31 @@
       @apply-section="handleJdOptimizeApplySection"
     />
 
-    <!-- 模板选择抽屉 -->
+    <!-- 模板、配色和排版共用一个草稿面板；应用后才进入自动保存快照。 -->
     <a-drawer
-      v-model:open="showTemplateDrawer"
-      title="选择简历模板"
+      v-model:open="showAppearanceDrawer"
+      title="模板与样式"
       placement="right"
-      :width="isMobile ? '100%' : 760"
-      root-class-name="template-drawer"
+      :width="isMobile ? '100%' : 1180"
+      root-class-name="appearance-drawer"
+      destroy-on-close
+      @close="closeAppearancePanel"
     >
-      <div class="template-scroll">
-        <div class="template-browser">
-          <div class="template-browser__intro">
-            <div>
-              <p class="template-browser__eyebrow">{{ filteredTemplateList.length }} 款真实简历预览</p>
-              <p class="template-browser__hint">先看版式，再点击卡片切换；简历内容不会改变。</p>
-            </div>
-            <span class="template-current"><CheckOutlined /> 当前：{{ currentTemplateName }}</span>
-          </div>
-
-          <label class="template-search">
-            <SearchOutlined aria-hidden="true" />
-            <input v-model="templateSearch" type="search" autocomplete="off" placeholder="搜索模板名称或风格" aria-label="搜索简历模板名称或风格" />
-            <span>{{ filteredTemplateList.length }} 款</span>
-          </label>
-
-          <div class="template-categories" role="group" aria-label="按模板类别筛选">
-            <button
-              v-for="category in templateCategories"
-              :key="category"
-              type="button"
-              class="template-category-filter"
-              :class="{ 'template-category-filter--active': activeTemplateCategory === category }"
-              :aria-pressed="activeTemplateCategory === category"
-              @click="activeTemplateCategory = category"
-            >
-              {{ category }}
-            </button>
-          </div>
-
-          <div v-if="!filteredTemplateList.length" class="template-empty">
-            <p>没有找到匹配的模板</p>
-            <button type="button" class="template-empty__reset" @click="resetTemplateFilters">清除搜索和分类</button>
-          </div>
-
-          <div v-else class="template-grid">
-            <button
-              v-for="t in filteredTemplateList"
-              :key="t.id"
-              type="button"
-              class="template-card"
-              :class="{ 'template-card--active': templateId === t.id }"
-              :aria-pressed="templateId === t.id"
-              :aria-label="`切换到${t.name}模板，${t.category}，${t.desc}`"
-              @click="selectTemplate(t.id)"
-            >
-              <div class="template-card__preview">
-                <LazyRender :min-height="templatePreviewMinHeight" root-margin="240px 0px">
-                  <TemplateMiniPreview
-                    :resume="resume"
-                    :template-id="t.id"
-                    :scale="templatePreviewScale"
-                    preview-mode="page"
-                    :show-label="false"
-                  />
-                </LazyRender>
-              </div>
-              <div class="template-info">
-                <span class="template-info__category">{{ t.category }}</span>
-                <span class="template-name">{{ t.name }}</span>
-                <span class="template-desc">{{ t.desc }}</span>
-                <span class="template-card__action">
-                  <CheckOutlined v-if="templateId === t.id" />
-                  {{ templateId === t.id ? '当前使用' : '点击切换' }}
-                </span>
-              </div>
-              <span v-if="templateId === t.id" class="template-check"><CheckOutlined /></span>
-            </button>
-          </div>
-        </div>
-      </div>
+      <EditorAppearancePanel
+        v-if="showAppearanceDrawer"
+        :key="currentResumeId || 'new-resume'"
+        :initial-appearance="appearanceInitial"
+        :template-list="templateList"
+        :resume="resume"
+        :visible-modules="modules"
+        :page-count="pageCount"
+        :can-undo="Boolean(lastAppearanceUndo)"
+        :mobile="isMobile"
+        @preview="previewAppearance = $event"
+        @apply="applyAppearance"
+        @cancel="closeAppearancePanel"
+        @undo="undoAppearance"
+      />
     </a-drawer>
 
     <!-- 评分弹窗 -->
@@ -304,7 +242,7 @@ import { reactive, ref, computed, onMounted, onBeforeUnmount, watch, nextTick } 
 // 编辑器提供回到目标和岗位进度的入口，避免保存后的简历与后续求职任务断开。
 import JourneyPath from '@/components/JourneyPath.vue'
 import { useRoute } from 'vue-router'
-import { DownloadOutlined, CheckOutlined, SearchOutlined } from '@ant-design/icons-vue'
+import { DownloadOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { useResumeStore } from '@/stores/resume'
 import { useUserStore } from '@/stores/user'
@@ -319,17 +257,13 @@ import {
 } from '@/constants/editorSettings'
 import { EMPTY_SKIN_OVERRIDES } from '@/constants/skin'
 import { TEMPLATE_LIST, getTemplateName, clampTemplateId } from '@/constants/templateRegistry'
-import { applyTemplateFontColorDefaults } from '@/constants/templateFontColors'
-import { applyTemplateSkinDefaults } from '@/constants/templateSkinColors'
 import { normalizeResumeFields, syncFlatEducationFields, validateRequiredBasicFields, mergeOptimizedResume } from '@/constants/resumeFieldSchema'
 import EditorToolbar from './components/EditorToolbar.vue'
 import EditorEditPanel from './components/EditorEditPanel.vue'
 import ResumePreview from './components/ResumePreview.vue'
 import JdResumeOptimizeModal from '@/components/JdResumeOptimizeModal.vue'
 import ResumeTemplatePreviewPane from '@/components/ResumeTemplatePreviewPane.vue'
-import LazyRender from '@/components/LazyRender.vue'
-// 编辑器使用全局模板缩略图，保持模板选择与首页展示共用同一渲染能力。
-import TemplateMiniPreview from '@/components/TemplateMiniPreview.vue'
+import EditorAppearancePanel from './components/EditorAppearancePanel.vue'
 // Markdown 渲染组件（按需加载）
 import MdRender from '@/components/MdRender.vue'
 import { useResumeExportPrint } from '@/composables/useResumeExportPrint'
@@ -368,14 +302,20 @@ const basicContentColor = ref(null)
 const nameColor = ref(null)
 const contentColor = ref(null)
 const skinTheme = ref({ ...EMPTY_SKIN_OVERRIDES })
+// 每套模板单独记住配色；字号、字体和间距仍是当前简历的共享设置。
+const templateAppearances = ref({})
 const modules = ref(DEFAULT_MODULES.map((m) => ({ ...m })))
+const showAppearanceDrawer = ref(false)
+const previewAppearance = ref(null)
+const appearanceInitial = ref(null)
+const lastAppearanceUndo = ref(null)
 
 // 预览页数（从 ResumePreview expose 读取）
 const pageCount = computed(() => previewRef.value?.getPageCount?.() ?? 1)
 
 // 恢复编辑器设置
-function loadEditorSettings(source) {
-  const settings = extractEditorSettings(source)
+function loadEditorSettings(source, sourceTemplateId = templateId.value) {
+  const settings = extractEditorSettings(source, sourceTemplateId)
   Object.assign(spacing, settings.spacing)
   fontSize.value = settings.fontSize
   fontFamily.value = settings.fontFamily
@@ -384,7 +324,71 @@ function loadEditorSettings(source) {
   nameColor.value = settings.nameColor
   contentColor.value = settings.contentColor
   skinTheme.value = { ...settings.skinTheme }
+  templateAppearances.value = { ...settings.templateAppearances }
   modules.value = settings.modules.map((m) => ({ ...m }))
+}
+
+// 应用态快照供面板初始化、撤销和分页预览复用，避免分散维护十余个字段。
+function currentAppearance() {
+  return {
+    templateId: templateId.value,
+    spacing: { ...spacing },
+    fontSize: fontSize.value,
+    fontFamily: fontFamily.value,
+    labelColor: labelColor.value,
+    basicContentColor: basicContentColor.value,
+    nameColor: nameColor.value,
+    contentColor: contentColor.value,
+    skinTheme: { ...skinTheme.value },
+    templateAppearances: { ...templateAppearances.value },
+  }
+}
+
+const displayedAppearance = computed(() => previewAppearance.value || currentAppearance())
+
+// 打开样式面板时从已应用配置重新起草，确保上次取消的内容不会残留。
+function openAppearancePanel() {
+  previewAppearance.value = null
+  appearanceInitial.value = currentAppearance()
+  showAppearanceDrawer.value = true
+}
+
+// 抽屉通过按钮、遮罩或取消关闭时一并丢弃未应用的预览草稿。
+function closeAppearancePanel() {
+  previewAppearance.value = null
+  showAppearanceDrawer.value = false
+}
+
+// 把一个完整样式快照写回编辑器响应式状态，供应用和撤销共用。
+function setAppliedAppearance(value) {
+  templateId.value = clampTemplateId(value.templateId)
+  resumeStore.currentTemplateId = templateId.value
+  Object.assign(spacing, value.spacing || DEFAULT_SPACING)
+  fontSize.value = value.fontSize
+  fontFamily.value = value.fontFamily
+  labelColor.value = value.labelColor ?? null
+  basicContentColor.value = value.basicContentColor ?? null
+  nameColor.value = value.nameColor ?? null
+  contentColor.value = value.contentColor ?? null
+  skinTheme.value = { ...value.skinTheme }
+  templateAppearances.value = { ...(value.templateAppearances || {}) }
+}
+
+// 应用动作仅改变模板外观，不改简历正文，并进入现有自动保存流程。
+function applyAppearance(value) {
+  lastAppearanceUndo.value = currentAppearance()
+  setAppliedAppearance(value)
+  closeAppearancePanel()
+  message.success(`已应用「${getTemplateName(templateId.value)}」样式`)
+}
+
+// 保留最近一次应用前的外观快照，允许用户在同一编辑会话中撤销一次。
+function undoAppearance() {
+  if (!lastAppearanceUndo.value) return
+  setAppliedAppearance(lastAppearanceUndo.value)
+  lastAppearanceUndo.value = null
+  closeAppearancePanel()
+  message.success('已撤销上次样式应用')
 }
 
 // 点击预览模块，定位到底部 Tab
@@ -397,46 +401,7 @@ function handleSectionClick(moduleKey) {
 
 const templateList = TEMPLATE_LIST
 
-const showTemplateDrawer = ref(false)
 const currentTemplateName = computed(() => getTemplateName(templateId.value))
-// 模板面板使用真实模板组件做 A4 缩略预览，并按视口尺寸控制缩放比例。
-const templatePreviewScale = computed(() => (isMobile.value ? 0.135 : 0.16))
-const templatePreviewMinHeight = computed(() => `${Math.ceil(1123 * templatePreviewScale.value)}px`)
-// 60 款模板按分类与可见文案筛选，当前款固定排在筛选结果最前方便用户识别。
-const templateSearch = ref('')
-const activeTemplateCategory = ref('全部')
-const templateCategories = computed(() => [
-  '全部',
-  ...new Set(templateList.map((item) => item.category).filter(Boolean)),
-])
-const filteredTemplateList = computed(() => {
-  const query = templateSearch.value.trim().toLocaleLowerCase()
-  return templateList
-    .filter((item) => activeTemplateCategory.value === '全部' || item.category === activeTemplateCategory.value)
-    .filter((item) => !query || `${item.name} ${item.category} ${item.desc}`.toLocaleLowerCase().includes(query))
-    .sort((a, b) => Number(b.id === templateId.value) - Number(a.id === templateId.value))
-})
-
-// 空结果时一键恢复完整模板列表，避免筛选后无法继续浏览。
-function resetTemplateFilters() {
-  templateSearch.value = ''
-  activeTemplateCategory.value = '全部'
-}
-
-function selectTemplate(id) {
-  templateId.value = clampTemplateId(id)
-  resumeStore.currentTemplateId = templateId.value
-  // 切换模板时重置字体色为该套模板默认（走 CSS fallback + content 预设）
-  applyTemplateFontColorDefaults(
-    { labelColor, basicContentColor, nameColor, contentColor },
-    templateId.value,
-  )
-  // 切换模板时重置皮肤为该套模板默认
-  applyTemplateSkinDefaults(skinTheme, templateId.value)
-  showTemplateDrawer.value = false
-  message.success(`已切换到「${getTemplateName(templateId.value)}」`)
-}
-
 const showMatchModal = ref(false)
 const jdText = ref('')
 const matchResult = ref(null)
@@ -545,7 +510,7 @@ async function applyHistory(item) {
     templateId.value = clampTemplateId(history.template_id)
     resumeStore.currentTemplateId = templateId.value
     resumeStore.currentResume = { ...restored }
-    loadEditorSettings(resume)
+    loadEditorSettings(resume, templateId.value)
     lastSavedSnapshot = getAutoSaveSnapshot()
     pendingHistoryType.value = ''
     showHistoryModal.value = false
@@ -681,8 +646,9 @@ async function saveResumeData({ silent = false, skipValidation = false } = {}) {
     nameColor: nameColor.value,
     contentColor: contentColor.value,
     skinTheme: skinTheme.value,
+    templateAppearances: templateAppearances.value,
     modules: modules.value,
-  })
+  }, templateId.value)
   // 保存前同步 educations 首条到扁平字段，兼容旧逻辑
   syncFlatEducationFields(resume)
   return await resumeStore.saveResume(
@@ -723,6 +689,7 @@ function getAutoSaveSnapshot() {
     nameColor: nameColor.value,
     contentColor: contentColor.value,
     skinTheme: skinTheme.value,
+    templateAppearances: templateAppearances.value,
     modules: modules.value,
   })
 }
@@ -1097,11 +1064,11 @@ watch(
 }
 
 /* 抽屉标题 */
-:global(.template-drawer .ant-drawer-header) {
+:global(.appearance-drawer .ant-drawer-header) {
   @apply border-b border-line/60;
 }
 
-:global(.template-drawer .ant-drawer-title) {
+:global(.appearance-drawer .ant-drawer-title) {
   @apply text-base font-semibold text-ink;
 }
 </style>

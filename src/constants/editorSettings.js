@@ -4,7 +4,7 @@
  */
 import { EMPTY_SKIN_OVERRIDES, SKIN_THEME_KEYS, normalizeSkinTheme } from '@/constants/skin'
 import { getTemplateFontColorDefaults } from '@/constants/templateFontColors'
-import { DEFAULT_TEMPLATE_ID } from '@/constants/templateRegistry'
+import { clampTemplateId, DEFAULT_TEMPLATE_ID } from '@/constants/templateRegistry'
 
 export const DEFAULT_SPACING = {
   sectionGap: 5,
@@ -65,6 +65,8 @@ export const DEFAULT_EDITOR_SETTINGS = {
   nameColor: null,
   contentColor: null,
   skinTheme: { ...EMPTY_SKIN_OVERRIDES },
+  // 配色覆盖按模板记录，字体与间距继续由当前简历共享。
+  templateAppearances: {},
   modules: DEFAULT_MODULES.map((m) => ({ ...m })),
 }
 
@@ -86,19 +88,38 @@ export function fontColorsToCssVars({
 }
 
 /** 从 resume_json 中提取并剥离 _editorSettings */
-export function extractEditorSettings(resume) {
+export function extractEditorSettings(resume, templateId = resume?.template_id ?? DEFAULT_TEMPLATE_ID) {
   const raw = resume._editorSettings
     ? { ...DEFAULT_EDITOR_SETTINGS, ...resume._editorSettings, spacing: { ...DEFAULT_SPACING, ...resume._editorSettings?.spacing } }
     : { ...DEFAULT_EDITOR_SETTINGS, spacing: { ...DEFAULT_SPACING } }
   const savedModules = raw.modules || []
+  // 旧简历只有顶层颜色时，把它们兼容为当前模板的首份配色记录。
+  const currentTemplateId = clampTemplateId(templateId)
+  // 先校验原始 key 再归一化模板 ID，避免越界编号被 clamp 成有效模板并覆盖配色。
+  const templateAppearances = Object.fromEntries(
+    Object.entries(raw.templateAppearances || {})
+      .filter(([id]) => Number.isInteger(Number(id)) && Number(id) >= 1 && Number(id) <= 60)
+      .map(([id, profile]) => [clampTemplateId(id), profile]),
+  )
+  if (!templateAppearances[currentTemplateId]) {
+    templateAppearances[currentTemplateId] = {
+      labelColor: raw.labelColor ?? null,
+      basicContentColor: raw.basicContentColor ?? null,
+      nameColor: raw.nameColor ?? null,
+      contentColor: raw.contentColor ?? null,
+      skinTheme: normalizeSkinTheme(raw.skinTheme ?? raw.skin),
+    }
+  }
+  const currentAppearance = templateAppearances[currentTemplateId]
   const settings = {
     ...raw,
     spacing: { ...DEFAULT_SPACING, ...raw.spacing },
-    labelColor: raw.labelColor ?? null,
-    basicContentColor: raw.basicContentColor ?? null,
-    nameColor: raw.nameColor ?? null,
-    contentColor: raw.contentColor ?? null,
-    skinTheme: normalizeSkinTheme(raw.skinTheme ?? raw.skin),
+    labelColor: currentAppearance.labelColor ?? null,
+    basicContentColor: currentAppearance.basicContentColor ?? null,
+    nameColor: currentAppearance.nameColor ?? null,
+    contentColor: currentAppearance.contentColor ?? null,
+    skinTheme: normalizeSkinTheme(currentAppearance.skinTheme ?? raw.skinTheme ?? raw.skin),
+    templateAppearances,
     modules: DEFAULT_MODULES.map((mod) => ({
       ...mod,
       ...(savedModules.find((item) => item.key === mod.key) || {}),
@@ -108,19 +129,32 @@ export function extractEditorSettings(resume) {
 }
 
 /** 保存前写入 _editorSettings 到 resume 对象 */
-export function applyEditorSettingsToResume(resume, editorSettings) {
+export function applyEditorSettingsToResume(resume, editorSettings, templateId = resume?.template_id ?? DEFAULT_TEMPLATE_ID) {
+  const currentTemplateId = clampTemplateId(templateId)
+  const currentSkin = normalizeSkinTheme(editorSettings.skinTheme)
+  const templateAppearances = { ...(editorSettings.templateAppearances || {}) }
+  // 保存时同步当前模板快照，兼容旧字段并保证历史版本可完整恢复。
+  templateAppearances[currentTemplateId] = {
+    labelColor: editorSettings.labelColor || null,
+    basicContentColor: editorSettings.basicContentColor || null,
+    nameColor: editorSettings.nameColor || null,
+    contentColor: editorSettings.contentColor || null,
+    skinTheme: { ...currentSkin },
+  }
   resume._editorSettings = {
     spacing: { ...editorSettings.spacing },
     fontSize: editorSettings.fontSize,
     fontFamily: editorSettings.fontFamily,
+    templateAppearances,
     modules: (editorSettings.modules || DEFAULT_MODULES).map((m) => ({ ...m })),
   }
   // 皮肤：仅保存 preset + 用户非 null 覆盖项
-  const skin = normalizeSkinTheme(editorSettings.skinTheme)
-  resume._editorSettings.skinTheme = { preset: skin.preset || 'template' }
+  resume._editorSettings.skinTheme = { preset: currentSkin.preset || 'template' }
+  // 推荐色板标记用于面板重开时还原当前选中状态，不参与样式变量计算。
+  if (currentSkin.palette) resume._editorSettings.skinTheme.palette = currentSkin.palette
   SKIN_THEME_KEYS.forEach((key) => {
-    if (skin[key] != null) {
-      resume._editorSettings.skinTheme[key] = skin[key]
+    if (currentSkin[key] != null) {
+      resume._editorSettings.skinTheme[key] = currentSkin[key]
     }
   })
   // 仅保存用户自定义字体色，null 表示使用 templateFontColors.js 模板默认

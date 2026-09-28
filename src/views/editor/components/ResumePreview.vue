@@ -54,7 +54,7 @@
           ref="contentRef"
           id="resume-preview-content"
           class="resume-preview"
-          :class="'template-' + templateId"
+          :class="['template-' + templateId, ...skinOverrideClasses]"
           :style="previewStyle"
         >
           <ResumeTemplate
@@ -89,7 +89,7 @@
             >
               <div
                 class="resume-preview"
-                :class="'template-' + templateId"
+                :class="['template-' + templateId, ...skinOverrideClasses]"
                 :style="{ ...previewStyle, marginTop: -(pageBreaks[n - 1] || 0) + 'px' }"
                 @click="handleSectionClick"
               >
@@ -111,7 +111,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
-import { skinThemeToCssVars, EMPTY_SKIN_OVERRIDES } from '@/constants/skin'
+import { skinThemeToCssVars, EMPTY_SKIN_OVERRIDES, getSkinOverrideClassNames } from '@/constants/skin'
 import {
   DEFAULT_SPACING,
   fontColorsToCssVars,
@@ -191,6 +191,8 @@ function getPageOuterStyle(n) {
 
 // 皮肤 CSS 变量（仅 .rt-title 使用 titleColor，其余控制背景/边框）
 const skinCssVars = computed(() => skinThemeToCssVars(props.skinTheme, props.templateId))
+// 根据显式自定义项标注预览根节点，确保透明风格模板仍响应用户设置。
+const skinOverrideClasses = computed(() => getSkinOverrideClassNames(props.skinTheme))
 
 const fontSizeMap = {
   small: '12px',

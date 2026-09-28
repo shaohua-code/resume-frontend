@@ -30,11 +30,15 @@
 | `src/components/ResumeTemplate.vue` | 根据 `templateId` 从 `TEMPLATE_MAP` 动态渲染 | 注册正确即可，无需增加分支 |
 | `src/components/resume-templates/shared/useResumeFields.js` | 模板字段归一化 | 模板通过它取展示字段 |
 | `src/components/resume-templates/shared/resumeTemplateBase.css` | 字体、颜色、皮肤和常用语义类 | 使用 CSS 变量与 `rt-*` 类接入 |
-| `src/views/home/components/TemplateMiniPreview.vue` | 模板库真实缩略图与完整预览 | 自动读取注册表和模板默认色 |
+| `src/components/TemplateMiniPreview.vue` | 模板库、编辑器候选卡片、缩略图和完整预览 | 使用同一模板组件、外观变量和 `visibleModules` 对象 |
 | `src/views/templates/index.vue` | 分类、卡片、弹窗、使用模板 | `TEMPLATE_LIST` 自动驱动 |
-| `src/views/editor/index.vue` | 模板抽屉、设置、保存、自动保存 | `TEMPLATE_LIST` 自动驱动；保存 `template_id` |
-| `src/views/editor/components/ResumePreview.vue` | A4 测量、分页、点击定位、打印页克隆 | 模板 DOM 必须满足其选择器契约 |
-| `src/constants/editorSettings.js` | 设置默认值、范围、持久化 | 模板不得新增私有编辑设置 |
+| `src/views/editor/index.vue` | 外观草稿、应用/取消/撤销、编辑器保存与自动保存 | 设置只在应用后写入当前编辑器状态 |
+| `src/views/editor/components/EditorAppearancePanel.vue` | 模板、配色、排版集中面板 | 候选模板通过真实模板组件预览；所有 60 套共用入口 |
+| `src/views/editor/components/ResumePreview.vue` | A4 测量、分页、点击定位、打印页克隆 | 同一外观变量传给测量页与分页页 |
+| `src/components/ResumeTemplatePreviewPane.vue` | 历史/对比预览窗格 | 通过快照与当前 `template_id` 提取模板专属外观 |
+| `src/constants/editorSettings.js` | 设置默认值、范围、旧简历兼容与持久化 | 四类文字色和皮肤档案按 ID 保存在 `_editorSettings.templateAppearances` |
+| `src/constants/skin.js` | 11 类皮肤合并、CSS 变量和显式覆盖标记 | 未自定义保留模板留白；显式覆盖可覆盖透明底色 |
+| `src/constants/templateAppearancePresets.js` | 外观面板推荐色板 | 保留模板文字色和底色，只替换安全强调色 |
 | `src/composables/useResumeExportPrint.js` | 克隆逐页 DOM 到 iframe 打印 | 屏幕预览 DOM 即打印 DOM |
 
 ## 3. 模板选择与持久化
@@ -55,7 +59,9 @@
 
 - 新生成简历继续使用 store 中的模板 ID。
 - 已保存简历通过详情接口读取 `template_id` 并写回 store。
-- 编辑器抽屉由 `TEMPLATE_LIST` 渲染，选择后更新 `templateId` 并重置为该模板的字体/皮肤默认值。
+- 编辑器“模板与样式”抽屉由 `TEMPLATE_LIST` 渲染，提供模板、配色、排版三个区；候选设置实时驱动草稿预览，应用后才写入当前状态，取消丢弃草稿，撤销恢复上次应用前样式。
+- 字体族、字号、行距和间距属于简历级设置；四类文字色与 11 类皮肤色按模板 ID 记忆。切回模板会恢复它的配色档案，首次进入使用该模板默认值。
+- `_editorSettings.templateAppearances` 是 `resume_json` 内按模板 ID 键控的外观档案。旧简历缺少此字段时，从旧文字色/皮肤字段为当前模板建档，不新增数据库字段。
 - 自动保存与手动保存都提交 `template_id`。
 
 ID 56「轻简通用」是应用默认模板。前端注册表导出 `DEFAULT_TEMPLATE_ID`，store 初始选择、无效/缺失 ID 回退、创建请求及各预览组件均使用该常量；后端仓库层在 API 未传、传非整数或越界模板 ID 时也回退到 56。已有简历读取已保存的有效 ID，不受默认值变化影响。数据库列定义保留旧默认值 1，但应用创建接口会显式传入模板 ID。
@@ -67,7 +73,7 @@ ID 56「轻简通用」是应用默认模板。前端注册表导出 `DEFAULT_TE
 - 固定内容宽 794px。
 - `page` 模式固定高 1123px并裁切为单页展示。
 - `full` 模式测量 `scrollHeight`，至少一页高。
-- 注入模板默认字体色和皮肤色。
+- 注入当前草稿或已应用的文字色、皮肤变量、字体、间距和模块可见性；旧调用仍走默认值。
 
 `ResumePreview` 负责编辑器：
 
@@ -78,7 +84,7 @@ ID 56「轻简通用」是应用默认模板。前端注册表导出 `DEFAULT_TE
 
 PDF 导出等待分页测量和浏览器绘制稳定后，只克隆同一批屏幕分页窗口；不使用另一套测量层重新生成打印页。因而屏幕与 PDF 的断点、负偏移、页边距和裁切高度完全同源。
 
-因此模板必须是确定性的正常文档流。不要基于“当前是第几页”渲染不同 DOM，也不要让正文高度依赖父级裁切窗口。
+因此模板必须是确定性的正常文档流。候选预览、编辑器 A4 和打印必须接收同一份外观配置及模块对象；历史预览从快照和对应 `template_id` 提取模板配色。不要基于“当前是第几页”渲染不同 DOM，也不要让正文高度依赖父级裁切窗口。
 
 ## 5. 现有实现类型
 

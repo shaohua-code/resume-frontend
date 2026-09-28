@@ -11,7 +11,7 @@ import {
   extractEditorSettings,
   fontColorsToCssVars,
 } from '@/constants/editorSettings'
-import { EMPTY_SKIN_OVERRIDES, skinThemeToCssVars } from '@/constants/skin'
+import { EMPTY_SKIN_OVERRIDES, getSkinOverrideClassNames, skinThemeToCssVars } from '@/constants/skin'
 import { clampTemplateId, DEFAULT_TEMPLATE_ID } from '@/constants/templateRegistry'
 import { normalizeResumeFields } from '@/constants/resumeFieldSchema'
 import { useMediaQuery } from '@/composables/useMediaQuery'
@@ -47,11 +47,12 @@ const resolvedResume = computed(() => {
 })
 
 const resolvedTemplateId = computed(() => clampTemplateId(props.templateId))
-const settings = computed(() => extractEditorSettings(resolvedResume.value))
+// 按历史记录所属模板提取其专属配色，并以模块对象传递显示状态。
+const settings = computed(() => extractEditorSettings(resolvedResume.value, resolvedTemplateId.value))
 const visibleModules = computed(() => (
   settings.value.modules?.length
-    ? settings.value.modules.filter((item) => item.visible !== false).map((item) => item.key)
-    : DEFAULT_MODULES.filter((item) => item.visible).map((item) => item.key)
+    ? settings.value.modules.map((item) => ({ ...item }))
+    : DEFAULT_MODULES.map((item) => ({ ...item }))
 ))
 
 const previewStyle = computed(() => ({
@@ -70,7 +71,15 @@ const previewStyle = computed(() => ({
   '--font-size': `${settings.value.fontSize}px`,
   '--line-height': settings.value.spacing?.lineHeight,
   '--section-gap': `${settings.value.spacing?.sectionGap}px`,
+  '--preview-padding': `${settings.value.spacing?.padding}px`,
+  paddingTop: `${settings.value.spacing?.pageTopGap}px`,
+  paddingRight: `${settings.value.spacing?.padding}px`,
+  paddingBottom: `${settings.value.spacing?.pageBottomGap}px`,
+  paddingLeft: `${settings.value.spacing?.padding}px`,
 }))
+
+// 历史与对比窗格同样标记显式皮肤覆盖，避免预览结果与编辑器不一致。
+const skinOverrideClasses = computed(() => getSkinOverrideClassNames(settings.value.skinTheme))
 
 const spacerStyle = computed(() => ({
   width: `${Math.ceil(A4_WIDTH_PX * props.scale)}px`,
@@ -124,7 +133,7 @@ onBeforeUnmount(() => {
       <span>全屏查看</span>
     </button>
     <div class="template-preview-pane__spacer" :style="spacerStyle">
-      <div ref="paperRef" class="template-preview-pane__paper" :style="previewStyle">
+      <div ref="paperRef" class="template-preview-pane__paper" :class="skinOverrideClasses" :style="previewStyle">
         <ResumeTemplate
           :resume="resolvedResume"
           :template-id="resolvedTemplateId"
@@ -174,6 +183,6 @@ onBeforeUnmount(() => {
 }
 
 .template-preview-pane__paper {
-  @apply absolute left-0 top-0 bg-white px-8 py-8 text-sm text-ink;
+  @apply absolute left-0 top-0 bg-white text-[var(--font-size,13px)] leading-[var(--line-height,1.6)] text-ink;
 }
 </style>

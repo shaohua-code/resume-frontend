@@ -26,14 +26,15 @@ defineProps({
 .rt-custom-22 :deep(.rt-header) { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: 1.25em; margin-bottom: var(--section-gap); padding: 1.15em; border: 1px solid var(--skin-header-border); border-radius: 2.8em 0 2.8em 0; background: var(--skin-header-bg); }
 .rt-custom-22 :deep(.rt-banner) { display: grid; grid-template-columns: auto 1fr; align-content: center; margin: 0; padding: 0 1em 0 0; border: 0; border-right: 1px solid var(--skin-header-border); text-align: left; }
 .rt-custom-22 :deep(.rt-banner-avatar) { grid-row: 1 / 3; width: 5em; height: 6.2em; margin: 0 .9em 0 0; border: 4px solid var(--skin-top-band-bg); border-radius: 50% 50% 6px 6px; object-fit: cover; }
-.rt-custom-22 :deep(.rt-name) { align-self: end; margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 2.25em !important; letter-spacing: .08em; }
+/* 姓名和栏目标题跟随编辑器的字体选择，其他植物主题装饰继续保留。 */
+.rt-custom-22 :deep(.rt-name) { align-self: end; margin: 0; font-family: var(--font-family, Georgia, 'Times New Roman', serif); font-size: 2.25em !important; letter-spacing: .08em; }
 .rt-custom-22 :deep(.rt-slogan) { align-self: start; margin: .35em 0 0; }
 .rt-custom-22 :deep(.rt-basic-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45em; }
 .rt-custom-22 :deep(.rt-basic-row) { padding: .46em .6em; border: 0; border-bottom: 1px solid var(--skin-basic-row-border); border-radius: 0; background: transparent !important; }
 .rt-custom-22 :deep(.rt-basic-wide) { grid-column: auto; }
 .rt-custom-22 :deep(.rt-label) { min-width: 0; font-size: .76em; }
 .rt-custom-22 :deep(.rt-section) { margin-bottom: var(--section-gap); padding: .9em 1em; border: 1px solid var(--skin-item-border); border-radius: 0 1.8em 0 1.8em; background: var(--skin-item-bg); }
-.rt-custom-22 :deep(.rt-title) { gap: .6em; margin: 0 0 .65em; font-family: Georgia, 'Times New Roman', serif; letter-spacing: .08em; }
+.rt-custom-22 :deep(.rt-title) { gap: .6em; margin: 0 0 .65em; font-family: var(--font-family, Georgia, 'Times New Roman', serif); letter-spacing: .08em; }
 .rt-custom-22 :deep(.rt-title::before) { width: 1.15em; height: .68em; border-radius: 100% 0 100% 0; background: var(--skin-top-band-bg) !important; transform: rotate(-18deg); }
 .rt-custom-22 :deep(.rt-title::after) { height: 1px; background: linear-gradient(90deg, var(--skin-divider-color), transparent) !important; }
 .rt-custom-22 :deep(.rt-item) { margin: 0; padding: .68em 0; border: 0; border-bottom: 1px dashed var(--skin-divider-color); border-radius: 0; background: transparent !important; }
