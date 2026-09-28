@@ -6,10 +6,10 @@ export const TRUST_OFFER_COUNT = '12,000+'
 /** 主 Offer 文案 */
 export const TRUST_OFFER_HEADLINE = '已帮助 12,000+ 位求职者优化简历并斩获 Offer'
 
-/** 背书区 mini stats - 与 Hero 能力数据互补 */
+/** 背书区 mini stats - 与 Hero 能力数据互补；模板数需与 templateRegistry 同步。 */
 export const TRUST_MINI_STATS = [
   { value: '12,000+', label: '求职者使用' },
-  { value: '50 套', label: '专业模板' },
+  { value: '60 套', label: '专业模板' },
   { value: '98%', label: '用户满意' },
 ]
 

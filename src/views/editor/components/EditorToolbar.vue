@@ -4,13 +4,26 @@
 <template>
   <header class="glass fixed left-0 right-0 top-0 z-[100] h-[56px] shadow-glass lg:h-[70px]">
     <div class="mx-auto flex h-full max-w-[1400px] items-center justify-between gap-2 px-3 sm:gap-4 sm:px-5">
-      <!-- 左侧：返回 + 模板 -->
+      <!-- 模板入口同时说明可更换动作和当前款式，让用户能直接识别这是模板选择器。 -->
       <div class="flex items-center gap-1 shrink-0 sm:gap-2">
         <button class="px-2 text-xs btn-ghost sm:px-3" @click="router.push('/user')">
           <LeftOutlined /> <span class="hidden sm:inline">返回</span>
         </button>
-        <button class="btn-ghost max-w-[120px] truncate px-2 text-xs sm:max-w-none sm:px-3" @click="emit('template')">
-          <AppstoreOutlined /> <span class="hidden md:inline">模板：</span>{{ currentTemplateName }}
+        <button
+          type="button"
+          class="inline-flex h-10 min-w-0 max-w-[148px] items-center gap-1.5 rounded-xl border border-brand/20 bg-brand-lighter/60 px-2 text-left text-brand-dark shadow-sm transition-colors hover:border-brand/40 hover:bg-brand-lighter sm:max-w-none sm:gap-2 sm:px-2.5"
+          :aria-label="`更换简历模板，当前使用${currentTemplateName}`"
+          title="更换简历模板"
+          @click="emit('template')"
+        >
+          <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white text-brand shadow-sm">
+            <AppstoreOutlined />
+          </span>
+          <span class="min-w-0 flex-1 leading-tight">
+            <span class="block text-[9px] font-medium tracking-wide text-muted">更换模板</span>
+            <span class="block truncate text-[11px] font-semibold text-brand-dark sm:text-xs">{{ currentTemplateName }}</span>
+          </span>
+          <DownOutlined class="shrink-0 text-[10px] text-muted" />
         </button>
       </div>
 
@@ -137,7 +150,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  LeftOutlined, SaveOutlined, DownloadOutlined, MenuOutlined,
+  LeftOutlined, SaveOutlined, DownloadOutlined, MenuOutlined, DownOutlined,
   AimOutlined, BarChartOutlined, ThunderboltOutlined,
   AppstoreOutlined, ColumnWidthOutlined, FontSizeOutlined, BgColorsOutlined, HistoryOutlined,
 } from '@ant-design/icons-vue'
@@ -157,8 +170,8 @@ const contentColor = defineModel('contentColor', { type: String, required: true 
 const skinTheme = defineModel('skinTheme', { type: Object, required: true })
 
 defineProps({
-  templateId: { type: Number, default: 1 },
-  currentTemplateName: { type: String, default: '全职业通用' },
+  templateId: { type: Number, default: 56 },
+  currentTemplateName: { type: String, default: '轻简通用' },
   pageCount: { type: Number, default: 1 },
   saving: { type: Boolean, default: false },
   exporting: { type: Boolean, default: false },

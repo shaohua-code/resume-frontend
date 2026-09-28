@@ -12,8 +12,9 @@ import {
 } from '@/constants/skin'
 import { resetTemplateSkinColors, resolveSkinFieldDisplay } from '@/constants/templateSkinColors'
 
+// 未从调用方显式传入模板时统一展示默认款 ID 56。
 const props = defineProps({
-  templateId: { type: Number, default: 1 },
+  templateId: { type: Number, default: 56 },
 })
 
 const skinTheme = defineModel('skinTheme', { type: Object, required: true })

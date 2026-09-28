@@ -4,6 +4,7 @@
  */
 import { EMPTY_SKIN_OVERRIDES, SKIN_THEME_KEYS, normalizeSkinTheme } from '@/constants/skin'
 import { getTemplateFontColorDefaults } from '@/constants/templateFontColors'
+import { DEFAULT_TEMPLATE_ID } from '@/constants/templateRegistry'
 
 export const DEFAULT_SPACING = {
   sectionGap: 5,
@@ -73,7 +74,7 @@ export function fontColorsToCssVars({
   basicContentColor,
   nameColor,
   contentColor,
-  templateId = 1,
+  templateId = DEFAULT_TEMPLATE_ID,
 } = {}) {
   const defaults = getTemplateFontColorDefaults(templateId)
   return {

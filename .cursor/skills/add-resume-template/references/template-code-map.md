@@ -58,7 +58,7 @@
 - 编辑器抽屉由 `TEMPLATE_LIST` 渲染，选择后更新 `templateId` 并重置为该模板的字体/皮肤默认值。
 - 自动保存与手动保存都提交 `template_id`。
 
-后端 `resume.template_id` 是普通整数，默认 1；仓库层直接持久化，不维护模板最大值。因此新增模板不需要修改后端。
+ID 56「轻简通用」是应用默认模板。前端注册表导出 `DEFAULT_TEMPLATE_ID`，store 初始选择、无效/缺失 ID 回退、创建请求及各预览组件均使用该常量；后端仓库层在 API 未传、传非整数或越界模板 ID 时也回退到 56。已有简历读取已保存的有效 ID，不受默认值变化影响。数据库列定义保留旧默认值 1，但应用创建接口会显式传入模板 ID。
 
 ## 4. 预览与导出链路
 
@@ -82,15 +82,15 @@ PDF 导出等待分页测量和浏览器绘制稳定后，只克隆同一批屏�
 
 ## 5. 现有实现类型
 
-- 当前共 50 套模板，ID 连续为 1–50；`MAX_TEMPLATE_ID`、`TEMPLATE_LIST`、`TEMPLATE_LOADERS`、四类字体色和 11 类皮肤色映射必须保持同一集合。
-- 共享标准 DOM + 模板私有布局：3、5、7、9、14、15、16、17、21、22、23、24、25、26、27、28–50。
-- 独立定制 DOM：1、2、4、6、8、10、11、12、13、18、19、20。
+- 当前共 60 套模板，ID 连续为 1–60；`MAX_TEMPLATE_ID`、`TEMPLATE_LIST`、`TEMPLATE_LOADERS`、四类字体色和 11 类皮肤色映射必须保持同一集合。ID 1“全职业通用”保留为可选模板，ID 56“轻简通用”是新建简历默认通用模板。
+- 共享标准 DOM + 模板私有布局：3、5、7、9、14、15、16、17、21、22、23、24、25、26–55、57–60。
+- 独立定制 DOM：1、2、4、6、8、10、11、12、13、18、19、20、56。
 
 每个新模板必须有独立 `TplNNName.vue` 文件。仅需改变视觉结构时，可复用 `ResumeStandardContent` 并用模板根类与 scoped CSS 建立完全不同的版式；需要改变模块内部 DOM 时，再使用 `useResumeFields` 编写独立 DOM。不要为了一个新模板修改现有模板或共享标准 DOM。
 
-### 28–50 新增模板代码映射
+### 28–60 新增模板代码映射
 
-以下 23 套都复用 `ResumeStandardContent` 的标准字段与 `data-resume-module` 契约，只在各自 SFC 中定义独立布局和视觉；43、48、49、50 属于校招，其中 48–50 是用户追加的三套校招模板。
+以下 33 套都复用 `ResumeStandardContent` 的标准字段与 `data-resume-module` 契约，只在各自 SFC 中定义独立布局和视觉；43、48、49、50 属于校招，其中 48–50 是用户追加的三套校招模板；51–60 是新增的差异化方向。
 
 | ID | 名称 | 分类 | 组件 |
 |---|---|---|---|
@@ -117,3 +117,13 @@ PDF 导出等待分页测量和浏览器绘制稳定后，只克隆同一批屏�
 | 48 | 校园成长档案 | 校招 | `Tpl48CampusArchive.vue` |
 | 49 | 实践冲刺 | 校招 | `Tpl49PracticeSprint.vue` |
 | 50 | 新星作品集 | 校招 | `Tpl50GraduatePortfolio.vue` |
+| 51 | 瑞士清单 | 通用 | `Tpl51SwissRoster.vue` |
+| 52 | 海军蓝简报 | 职场 | `Tpl52NavyBrief.vue` |
+| 53 | 燕麦档案 | 通用 | `Tpl53OatArchive.vue` |
+| 54 | 都会分区 | 职场 | `Tpl54CityProfile.vue` |
+| 55 | 几何原色 | 创意 | `Tpl55BauhausPaper.vue` |
+| 56 | 轻简通用 | 通用 | `Tpl56LightGeneral.vue` |
+| 57 | 蓝图履历 | 行业 | `Tpl57BlueprintCv.vue` |
+| 58 | 墨绿商务 | 职场 | `Tpl58EvergreenBusiness.vue` |
+| 59 | 珊瑚创作 | 创意 | `Tpl59CoralStudio.vue` |
+| 60 | 黑白名片 | 通用 | `Tpl60MonoCard.vue` |

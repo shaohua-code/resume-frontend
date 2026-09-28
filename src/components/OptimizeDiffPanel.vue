@@ -12,6 +12,7 @@ import ResumeTemplatePreviewPane from '@/components/ResumeTemplatePreviewPane.vu
 
 const open = defineModel({ type: Boolean, default: false })
 
+// 未从调用方显式传入模板时统一展示默认款 ID 56。
 const props = defineProps({
   mode: { type: String, default: 'field' },
   title: { type: String, default: '优化对比' },
@@ -26,7 +27,7 @@ const props = defineProps({
   applyAllLabel: { type: String, default: '一键应用' },
   beforeResume: { type: Object, default: null },
   afterResume: { type: Object, default: null },
-  templateId: { type: Number, default: 1 },
+  templateId: { type: Number, default: 56 },
   // 流式阶段右侧用插槽展示预览
   showAfterSlot: { type: Boolean, default: false },
 })

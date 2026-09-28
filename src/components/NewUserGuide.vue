@@ -42,10 +42,11 @@ const steps = [
     icon: ThunderboltOutlined,
     iconClass: 'bg-accent-lighter text-accent',
   },
+  // 新手引导中的模板数量是静态产品文案，需随模板注册表同步更新。
   {
     shortTitle: '编辑导出',
     title: '进编辑器润色并导出投递版',
-    description: '生成成功后进入编辑器，可改内容、切换 50 套模板、调整字体间距，并用评分/匹配等工具查漏补缺，预览满意后导出 PDF 或 Word。简历列表、用量与账户资料在「用户中心」统一管理。',
+    description: '生成成功后进入编辑器，可改内容、切换 60 套模板、调整字体间距，并用评分/匹配等工具查漏补缺，预览满意后导出 PDF 或 Word。简历列表、用量与账户资料在「用户中心」统一管理。',
     tip: '导出前检查分页、联系方式和头像；投递前建议再对一下目标岗位关键词。',
     icon: EditOutlined,
     iconClass: 'bg-mint text-success',

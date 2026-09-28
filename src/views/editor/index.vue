@@ -145,27 +145,73 @@
       root-class-name="template-drawer"
     >
       <div class="template-scroll">
-        <div class="template-grid">
-          <div
-            v-for="t in templateList"
-            :key="t.id"
-            class="template-card"
-            :class="{ active: templateId === t.id }"
-            @click="selectTemplate(t.id)"
-          >
-            <div class="template-thumb" :style="{ background: t.color }">
-              <span class="template-num">{{ t.id }}</span>
-              <span class="template-paper-line" />
-              <span class="template-paper-line short" />
-              <span class="template-paper-line" />
+        <div class="template-browser">
+          <div class="template-browser__intro">
+            <div>
+              <p class="template-browser__eyebrow">{{ filteredTemplateList.length }} 款真实简历预览</p>
+              <p class="template-browser__hint">先看版式，再点击卡片切换；简历内容不会改变。</p>
             </div>
-            <div class="template-info">
-              <div class="template-name">{{ t.name }}</div>
-              <div class="template-desc">{{ t.desc }}</div>
-            </div>
-            <div v-if="templateId === t.id" class="template-check">
-              <CheckOutlined />
-            </div>
+            <span class="template-current"><CheckOutlined /> 当前：{{ currentTemplateName }}</span>
+          </div>
+
+          <label class="template-search">
+            <SearchOutlined aria-hidden="true" />
+            <input v-model="templateSearch" type="search" autocomplete="off" placeholder="搜索模板名称或风格" aria-label="搜索简历模板名称或风格" />
+            <span>{{ filteredTemplateList.length }} 款</span>
+          </label>
+
+          <div class="template-categories" role="group" aria-label="按模板类别筛选">
+            <button
+              v-for="category in templateCategories"
+              :key="category"
+              type="button"
+              class="template-category-filter"
+              :class="{ 'template-category-filter--active': activeTemplateCategory === category }"
+              :aria-pressed="activeTemplateCategory === category"
+              @click="activeTemplateCategory = category"
+            >
+              {{ category }}
+            </button>
+          </div>
+
+          <div v-if="!filteredTemplateList.length" class="template-empty">
+            <p>没有找到匹配的模板</p>
+            <button type="button" class="template-empty__reset" @click="resetTemplateFilters">清除搜索和分类</button>
+          </div>
+
+          <div v-else class="template-grid">
+            <button
+              v-for="t in filteredTemplateList"
+              :key="t.id"
+              type="button"
+              class="template-card"
+              :class="{ 'template-card--active': templateId === t.id }"
+              :aria-pressed="templateId === t.id"
+              :aria-label="`切换到${t.name}模板，${t.category}，${t.desc}`"
+              @click="selectTemplate(t.id)"
+            >
+              <div class="template-card__preview">
+                <LazyRender :min-height="templatePreviewMinHeight" root-margin="240px 0px">
+                  <TemplateMiniPreview
+                    :resume="resume"
+                    :template-id="t.id"
+                    :scale="templatePreviewScale"
+                    preview-mode="page"
+                    :show-label="false"
+                  />
+                </LazyRender>
+              </div>
+              <div class="template-info">
+                <span class="template-info__category">{{ t.category }}</span>
+                <span class="template-name">{{ t.name }}</span>
+                <span class="template-desc">{{ t.desc }}</span>
+                <span class="template-card__action">
+                  <CheckOutlined v-if="templateId === t.id" />
+                  {{ templateId === t.id ? '当前使用' : '点击切换' }}
+                </span>
+              </div>
+              <span v-if="templateId === t.id" class="template-check"><CheckOutlined /></span>
+            </button>
           </div>
         </div>
       </div>
@@ -258,7 +304,7 @@ import { reactive, ref, computed, onMounted, onBeforeUnmount, watch, nextTick } 
 // 编辑器提供回到目标和岗位进度的入口，避免保存后的简历与后续求职任务断开。
 import JourneyPath from '@/components/JourneyPath.vue'
 import { useRoute } from 'vue-router'
-import { DownloadOutlined, CheckOutlined } from '@ant-design/icons-vue'
+import { DownloadOutlined, CheckOutlined, SearchOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { useResumeStore } from '@/stores/resume'
 import { useUserStore } from '@/stores/user'
@@ -281,6 +327,9 @@ import EditorEditPanel from './components/EditorEditPanel.vue'
 import ResumePreview from './components/ResumePreview.vue'
 import JdResumeOptimizeModal from '@/components/JdResumeOptimizeModal.vue'
 import ResumeTemplatePreviewPane from '@/components/ResumeTemplatePreviewPane.vue'
+import LazyRender from '@/components/LazyRender.vue'
+// 编辑器使用全局模板缩略图，保持模板选择与首页展示共用同一渲染能力。
+import TemplateMiniPreview from '@/components/TemplateMiniPreview.vue'
 // Markdown 渲染组件（按需加载）
 import MdRender from '@/components/MdRender.vue'
 import { useResumeExportPrint } from '@/composables/useResumeExportPrint'
@@ -350,6 +399,29 @@ const templateList = TEMPLATE_LIST
 
 const showTemplateDrawer = ref(false)
 const currentTemplateName = computed(() => getTemplateName(templateId.value))
+// 模板面板使用真实模板组件做 A4 缩略预览，并按视口尺寸控制缩放比例。
+const templatePreviewScale = computed(() => (isMobile.value ? 0.135 : 0.16))
+const templatePreviewMinHeight = computed(() => `${Math.ceil(1123 * templatePreviewScale.value)}px`)
+// 60 款模板按分类与可见文案筛选，当前款固定排在筛选结果最前方便用户识别。
+const templateSearch = ref('')
+const activeTemplateCategory = ref('全部')
+const templateCategories = computed(() => [
+  '全部',
+  ...new Set(templateList.map((item) => item.category).filter(Boolean)),
+])
+const filteredTemplateList = computed(() => {
+  const query = templateSearch.value.trim().toLocaleLowerCase()
+  return templateList
+    .filter((item) => activeTemplateCategory.value === '全部' || item.category === activeTemplateCategory.value)
+    .filter((item) => !query || `${item.name} ${item.category} ${item.desc}`.toLocaleLowerCase().includes(query))
+    .sort((a, b) => Number(b.id === templateId.value) - Number(a.id === templateId.value))
+})
+
+// 空结果时一键恢复完整模板列表，避免筛选后无法继续浏览。
+function resetTemplateFilters() {
+  templateSearch.value = ''
+  activeTemplateCategory.value = '全部'
+}
 
 function selectTemplate(id) {
   templateId.value = clampTemplateId(id)
@@ -901,57 +973,108 @@ watch(
   @apply rounded-pill bg-canvas;
 }
 
-/* 模板网格布局：移动端单列 */
+/* 模板选择器先呈现真实 A4 版式，移动端保持单列便于对照，宽屏使用双列缩短浏览距离。 */
 .template-grid {
-  @apply grid grid-cols-1 gap-4 pb-2 sm:grid-cols-2;
+  @apply grid grid-cols-1 gap-3 pb-3 sm:grid-cols-2;
 }
 
 .template-card {
-  @apply relative flex cursor-pointer items-center gap-3.5 rounded-card border border-line/60 bg-gradient-to-b from-white to-canvas/50 p-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-lighter hover:shadow-card;
+  @apply relative flex min-h-[176px] w-full min-w-0 items-center gap-3 rounded-2xl border border-line/60 bg-gradient-to-b from-white to-canvas/50 p-3 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-lighter hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50;
 }
 
-.template-card.active {
+.template-card--active {
   @apply border-brand bg-brand-lighter/40 shadow-card-hover;
 }
 
-.template-thumb {
-  @apply relative flex h-20 w-16 flex-shrink-0 flex-col items-center justify-center gap-1.5 overflow-hidden rounded-button;
-}
-
-.template-num {
-  @apply z-10 text-2xl font-bold text-white/90;
-}
-
-.template-paper-line {
-  @apply absolute left-2 right-2 h-0.5 rounded-full bg-white/40;
-}
-
-.template-paper-line:nth-of-type(2) {
-  @apply top-5;
-}
-
-.template-paper-line:nth-of-type(3) {
-  @apply top-9 w-2/3;
-}
-
-.template-paper-line:nth-of-type(4) {
-  @apply top-12;
+.template-card__preview {
+  @apply flex w-[116px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-line/50 bg-white p-1;
 }
 
 .template-info {
-  @apply min-w-0 flex-1;
+  @apply flex min-w-0 flex-1 flex-col items-start justify-center gap-1;
+}
+
+.template-info__category {
+  @apply rounded-full bg-brand-lighter px-2 py-0.5 text-[10px] font-medium text-brand-dark;
 }
 
 .template-name {
-  @apply truncate text-sm font-semibold text-ink;
+  @apply max-w-full break-words text-sm font-semibold leading-snug text-ink;
 }
 
 .template-desc {
-  @apply mt-0.5 line-clamp-2 text-xs text-muted;
+  @apply line-clamp-3 text-xs leading-relaxed text-muted;
+}
+
+.template-card__action {
+  @apply mt-1 inline-flex min-h-7 items-center gap-1 rounded-full bg-canvas px-2.5 text-[11px] font-medium text-ink-secondary;
+}
+
+.template-card--active .template-card__action {
+  @apply bg-brand text-white;
 }
 
 .template-check {
-  @apply absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs text-white;
+  @apply absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-brand text-xs text-white shadow-sm;
+}
+
+.template-browser {
+  @apply flex flex-col gap-3;
+}
+
+.template-browser__intro {
+  @apply flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-brand/10 bg-gradient-to-r from-brand-lighter/70 to-white px-4 py-3;
+}
+
+.template-browser__eyebrow {
+  @apply text-sm font-semibold text-ink;
+}
+
+.template-browser__hint {
+  @apply mt-0.5 text-xs leading-relaxed text-muted;
+}
+
+.template-current {
+  @apply inline-flex max-w-full items-center gap-1.5 rounded-full border border-brand/15 bg-white px-3 py-1.5 text-xs font-medium text-brand-dark shadow-sm;
+}
+
+.template-search {
+  @apply flex min-h-11 items-center gap-2 rounded-xl border border-line/70 bg-white px-3 text-ink-secondary transition-colors focus-within:border-brand/50 focus-within:ring-2 focus-within:ring-brand/10;
+}
+
+.template-search input {
+  @apply min-w-0 flex-1 border-0 bg-transparent text-sm text-ink outline-none placeholder:text-muted focus:ring-0;
+}
+
+.template-search > span {
+  @apply shrink-0 text-xs text-muted;
+}
+
+.template-categories {
+  @apply flex gap-2 overflow-x-auto pb-1;
+  scrollbar-width: thin;
+}
+
+.template-category-filter {
+  @apply min-h-9 shrink-0 rounded-full border border-line/70 bg-white px-3 text-xs font-medium text-ink-secondary transition-colors hover:border-brand/40 hover:text-brand-dark;
+}
+
+.template-category-filter--active {
+  @apply border-brand bg-brand text-white shadow-sm;
+}
+
+.template-empty {
+  @apply rounded-2xl border border-dashed border-line bg-canvas px-4 py-12 text-center text-sm text-muted;
+}
+
+.template-empty__reset {
+  @apply mt-3 min-h-9 rounded-full bg-brand-lighter px-4 text-xs font-semibold text-brand-dark transition-colors hover:bg-brand/10;
+}
+
+@media (min-width: 640px) {
+  .template-card__preview {
+    @apply w-[144px];
+  }
 }
 
 /* 弹窗统一覆盖：输入框、选择框 */

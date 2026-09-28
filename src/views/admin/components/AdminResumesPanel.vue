@@ -112,11 +112,12 @@ onMounted(loadResumes)
         <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
           <span>标题：{{ resumeDetail.title || '-' }}</span>
           <span>评分：{{ resumeDetail.score ?? '-' }}</span>
-          <span>模板：{{ previewTemplateName }}（ID {{ resumeDetail.template_id || 1 }}）</span>
+          <!-- 历史记录缺少模板号时用当前应用默认值进行只读预览。 -->
+          <span>模板：{{ previewTemplateName }}（ID {{ resumeDetail.template_id || 56 }}）</span>
         </div>
         <ResumeTemplatePreviewPane
           :resume="resumeDetail.resume_json"
-          :template-id="resumeDetail.template_id || 1"
+          :template-id="resumeDetail.template_id || 56"
           :scale="previewScale"
           max-height="60vh"
           scrollable

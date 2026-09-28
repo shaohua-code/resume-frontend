@@ -17,7 +17,7 @@ import OptimizeDiffPanel from '@/components/OptimizeDiffPanel.vue'
 import StreamResumePreview from '@/views/generate/components/StreamResumePreview.vue'
 import { useJdResumeOptimize } from '@/composables/useJdResumeOptimize'
 import { extractJdFromImageStream } from '@/api/resume'
-import { clampTemplateId } from '@/constants/templateRegistry'
+import { clampTemplateId, DEFAULT_TEMPLATE_ID } from '@/constants/templateRegistry'
 import { useMediaQuery } from '@/composables/useMediaQuery'
 import { useScrollToStreamPreview } from '@/composables/useScrollToStreamPreview'
 import {
@@ -29,6 +29,7 @@ import {
 // 弹窗显隐，父组件 v-model:open 控制
 const open = defineModel('open', { type: Boolean, default: false })
 
+// 未从调用方显式传入模板时统一展示默认款 ID 56。
 const props = defineProps({
   // 当前待优化的简历对象（编辑器预览阶段需要）
   resume: {
@@ -38,7 +39,7 @@ const props = defineProps({
   // 流式预览使用的模板 ID
   templateId: {
     type: Number,
-    default: 1,
+    default: DEFAULT_TEMPLATE_ID,
   },
   // true：仅输入后关闭弹窗；false：编辑器保留弹窗内预览
   inputOnly: {

@@ -6,8 +6,9 @@ import { computed } from 'vue'
 import { FONT_OPTIONS, FONT_SIZE_OPTIONS } from '@/constants/editorSettings'
 import { resolveFontColorDisplay, resetTemplateFontColors } from '@/constants/templateFontColors'
 
+// 未从调用方显式传入模板时统一展示默认款 ID 56。
 const props = defineProps({
-  templateId: { type: Number, default: 1 },
+  templateId: { type: Number, default: 56 },
 })
 
 const fontFamily = defineModel('fontFamily', { type: String, required: true })

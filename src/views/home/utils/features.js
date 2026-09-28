@@ -42,7 +42,8 @@ export const HOME_FEATURES = [
   },
   {
     icon: AppstoreOutlined,
-    title: '50 套专业模板',
+    // 首页是轻量入口，模板数量在此静态展示并随注册表变更同步维护。
+    title: '60 套专业模板',
     path: '/templates',
     desc: '覆盖校招、社招与多行业场景，字体、间距均可自由调整',
     iconBg: 'bg-accent-lighter/60',

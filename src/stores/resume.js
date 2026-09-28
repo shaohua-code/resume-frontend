@@ -21,7 +21,7 @@ import {
   getResumeCount as getCountApi,
 } from '@/api/resume'
 import message from 'ant-design-vue/es/message'
-import { clampTemplateId } from '@/constants/templateRegistry'
+import { clampTemplateId, DEFAULT_TEMPLATE_ID } from '@/constants/templateRegistry'
 import { useWalletStore } from '@/stores/wallet'
 import { normalizeResumeFields } from '@/constants/resumeFieldSchema'
 import { getCurrentSessionOwner } from '@/utils/emailBindingGate'
@@ -47,7 +47,7 @@ export const useResumeStore = defineStore('resume', () => {
   // 当前简历ID（编辑已有简历时使用，新建时为 null）
   const currentResumeId = ref(null)
   // 当前选中的模板ID
-  const currentTemplateId = ref(1)
+  const currentTemplateId = ref(DEFAULT_TEMPLATE_ID)
   // 简历列表
   const resumeList = ref([])
   // 简历总数
@@ -76,7 +76,7 @@ export const useResumeStore = defineStore('resume', () => {
     const payload = {
       title: normalized.name ? `${normalized.name}的简历` : '未命名简历',
       resume_json: normalized,
-      template_id: currentTemplateId.value || 1,
+      template_id: currentTemplateId.value || DEFAULT_TEMPLATE_ID,
       score: 0,
       // 首次创建携带稳定幂等键；服务端已提交但响应丢失时，重试会返回同一条简历。
       client_request_id: clientRequestId || undefined,

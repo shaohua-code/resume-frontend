@@ -8,6 +8,7 @@ import {
   SKIN_THEME_KEYS,
   getTemplateSkinDefaults,
 } from '@/constants/templateSkinColors'
+import { DEFAULT_TEMPLATE_ID } from '@/constants/templateRegistry'
 
 export { EMPTY_SKIN_OVERRIDES, SKIN_THEME_KEYS }
 
@@ -178,7 +179,7 @@ export const DEFAULT_SKIN = 'blue'
 export const DEFAULT_SKIN_THEME = { ...EMPTY_SKIN_OVERRIDES }
 
 /** 合并用户皮肤覆盖与模板/推荐 preset 默认（注入 CSS 变量用） */
-export function mergeSkinThemeWithTemplate(skinTheme, templateId = 1) {
+export function mergeSkinThemeWithTemplate(skinTheme, templateId = DEFAULT_TEMPLATE_ID) {
   const templateDefaults = getTemplateSkinDefaults(templateId)
   const raw = skinTheme && typeof skinTheme === 'object' ? skinTheme : { ...EMPTY_SKIN_OVERRIDES }
   const presetKey = raw.preset
@@ -223,7 +224,7 @@ export function normalizeSkinTheme(skin) {
 }
 
 /** 将 skinTheme 转为预览 CSS 变量；null 字段合并 templateSkinColors 当前模板预设 */
-export function skinThemeToCssVars(theme, templateId = 1) {
+export function skinThemeToCssVars(theme, templateId = DEFAULT_TEMPLATE_ID) {
   const t = mergeSkinThemeWithTemplate(theme, templateId)
   return {
     '--skin-title-color': t.titleColor,

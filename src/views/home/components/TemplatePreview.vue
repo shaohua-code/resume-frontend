@@ -6,7 +6,8 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Carousel from 'ant-design-vue/es/carousel'
 import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
-import TemplateMiniPreview from './TemplateMiniPreview.vue'
+// 首页精选模板使用共享缩略图，保证与编辑器和模板中心展示一致。
+import TemplateMiniPreview from '@/components/TemplateMiniPreview.vue'
 import { getDemoResume, FEATURED_TEMPLATE_IDS } from '../utils/demoResume'
 import { TEMPLATE_LIST } from '@/constants/templateRegistry'
 

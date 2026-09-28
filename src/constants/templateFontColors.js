@@ -1,5 +1,5 @@
 /**
- * 50 套模板字体颜色独立默认预设
+ * 60 套模板字体颜色独立默认预设
  * - label / basicValue / name / content 对应编辑器四项颜色
  * - 用户未自定义（null）时由 CSS fallback 与本表 picker 展示值共同决定
  */
@@ -81,6 +81,17 @@ export const TEMPLATE_FONT_COLOR_PRESETS = {
   48: { label: '#9a6b16', basicValue: '#3e514a', name: '#275d4d', content: '#384740' },
   49: { label: '#76e0d2', basicValue: '#ffffff', name: '#ffffff', content: '#304154' },
   50: { label: '#5a44b5', basicValue: '#302b46', name: '#392a78', content: '#3d3850' },
+  // 51–60 为瑞士网格、商务简报、暖纸、几何、清简和黑白等新增视觉方向配置文字层级。
+  51: { label: '#e63946', basicValue: '#30343a', name: '#202124', content: '#30343a' },
+  52: { label: '#c8dce8', basicValue: '#334b5a', name: '#173b57', content: '#34434c' },
+  53: { label: '#89684c', basicValue: '#55493e', name: '#594632', content: '#49443e' },
+  54: { label: '#496d7e', basicValue: '#344856', name: '#334155', content: '#35414a' },
+  55: { label: '#a63b31', basicValue: '#292929', name: '#202124', content: '#303030' },
+  56: { label: '#637887', basicValue: '#354958', name: '#263e50', content: '#37434b' },
+  57: { label: '#357c98', basicValue: '#29414b', name: '#155b78', content: '#29414b' },
+  58: { label: '#8caa9a', basicValue: '#334b40', name: '#245448', content: '#34443c' },
+  59: { label: '#a85c52', basicValue: '#59433f', name: '#854d48', content: '#4b403d' },
+  60: { label: '#b08b52', basicValue: '#373737', name: '#222222', content: '#303030' },
 }
 
 /** 获取指定模板的字体色默认值（供颜色选择器展示） */

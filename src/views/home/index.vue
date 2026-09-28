@@ -49,7 +49,8 @@ const HOME_FLOW = [
   {
     icon: EditOutlined,
     title: "在线编辑排版",
-    description: "50 套模板，内容与样式随心调整",
+    // 首页轻量摘要不导入模板注册表，数量更新时与模板目录保持一致。
+    description: "60 套模板，内容与样式随心调整",
   },
   {
     icon: FileDoneOutlined,

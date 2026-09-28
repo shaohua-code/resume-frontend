@@ -664,7 +664,7 @@ async function goToEditor() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-[1500px] pb-28 sm:pb-24">
+  <div class="mx-auto max-w-[1500px] pb-10 sm:pb-12">
     <div class="generate-workspace" :class="{ 'has-result': hasGenerationPanel }">
       <main class="generate-main min-w-0">
     <RecognitionPanel
@@ -782,72 +782,34 @@ async function goToEditor() {
       </div>
     </div>
 
-    <!-- 吸底操作栏按生成状态呈现下一步动作，避免完成后继续误点付费生成。 -->
-    <div
-      class="fixed bottom-0 left-0 right-0 z-40 border-t border-line/50 bg-surface/95 pb-[env(safe-area-inset-bottom)] shadow-card backdrop-blur-sm"
-    >
-      <div class="generate-action-bar">
-        <p v-if="!hasGenerationPanel">填写姓名和意向岗位即可开始，生成后仍可逐项核对</p>
-        <div class="flex flex-row items-center justify-center gap-2 sm:gap-3">
-          <template v-if="draft.generation.phase === 'complete'">
-            <GradientButton class="min-h-11 min-w-0 flex-1 justify-center px-2 text-sm sm:flex-none sm:min-w-[170px] sm:px-4 sm:text-base" @click="goToEditor">
-              <EditOutlined /> 进入编辑
-            </GradientButton>
-            <button type="button" class="btn-ghost min-h-11 min-w-0 flex-1 px-2 text-sm sm:flex-none sm:min-w-[150px] sm:px-4 sm:text-base" @click="restartGeneration">
-              <ReloadOutlined /> 重新生成
-            </button>
-          </template>
-          <template v-else-if="draft.generation.phase === 'review'">
-            <GradientButton class="min-h-11 min-w-0 flex-1 justify-center px-2 text-sm sm:flex-none sm:min-w-[190px] sm:px-4 sm:text-base" @click="jdDiffOpen = true">
-              查看优化对比
-            </GradientButton>
-            <button type="button" class="btn-ghost min-h-11 min-w-0 flex-1 px-2 text-sm sm:flex-none sm:min-w-[140px] sm:px-4 sm:text-base" @click="discardJdDiff">
-              放弃结果
-            </button>
-          </template>
-          <template v-else-if="draft.generation.phase === 'save_error'">
-            <GradientButton class="min-h-11 min-w-0 flex-1 justify-center px-2 text-sm sm:flex-none sm:min-w-[190px] sm:px-4 sm:text-base" @click="retrySaveResult">
-              <ReloadOutlined /> 重试保存结果
-            </GradientButton>
-          </template>
-          <template v-else-if="['error', 'interrupted'].includes(draft.generation.phase)">
-            <GradientButton class="min-h-11 min-w-0 flex-1 justify-center px-2 text-sm sm:flex-none sm:min-w-[190px] sm:px-4 sm:text-base" @click="restartGeneration">
-              <ReloadOutlined /> 重新尝试本次操作
-            </GradientButton>
-          </template>
-          <template v-else>
-            <GradientButton
-              class="min-h-11 min-w-0 flex-1 justify-center px-2 text-sm sm:flex-none sm:min-w-[170px] sm:px-4 sm:text-base"
-              :loading="generationLoading && draft.generation.kind === 'generate'"
-              :disabled="formLocked && !(generationLoading && draft.generation.kind === 'generate')"
-              @click="handleGenerate"
-            >
-              <ThunderboltOutlined v-if="!generationLoading || draft.generation.kind !== 'generate'" />
-              开始 AI 生成
-            </GradientButton>
-            <button
-              type="button"
-              class="btn-ghost min-h-11 min-w-0 flex-1 px-2 text-sm sm:flex-none sm:min-w-[180px] sm:px-4 sm:text-base"
-              :disabled="formLocked"
-              @click="openJdOptimize"
-            >
-              <AimOutlined /> 按岗位优化简历
-            </button>
-          </template>
-        </div>
-      </div>
-    </div>
-
-    <!-- 流式结果：单层外框；生成/岗位优化时自动滚入并贴底 -->
+    <!-- 结果区在生成开始时自动滚入视口；完成后操作入口放在标题行。 -->
     <div
       v-if="hasGenerationPanel"
       ref="generationPanelRef"
       class="mt-5 overflow-hidden rounded-card border border-line/40 bg-surface px-4 py-5 sm:px-6"
     >
-      <div class="mb-4 flex items-center gap-2 text-base font-semibold text-ink">
-        <a-spin v-if="generationLoading" size="small" />
-        <CheckCircleFilled v-else-if="['complete', 'review'].includes(draft.generation.phase)" class="text-success" />
-        <span>{{ draft.generation.status || 'AI 处理结果' }}</span>
+      <div class="mb-5 flex flex-col gap-3 border-b border-line/60 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-2 text-base font-semibold text-ink">
+          <a-spin v-if="generationLoading" size="small" />
+          <CheckCircleFilled v-else-if="['complete', 'review'].includes(draft.generation.phase)" class="text-success" />
+          <span>{{ draft.generation.status || 'AI 处理结果' }}</span>
+        </div>
+        <div v-if="!generationLoading" class="generate-result-actions">
+          <template v-if="draft.generation.phase === 'complete'">
+            <GradientButton class="min-h-10 justify-center px-4" @click="goToEditor"><EditOutlined /> 进入编辑</GradientButton>
+            <button type="button" class="btn-ghost min-h-10 px-4" @click="restartGeneration"><ReloadOutlined /> 重新生成</button>
+          </template>
+          <template v-else-if="draft.generation.phase === 'review'">
+            <GradientButton class="min-h-10 justify-center px-4" @click="jdDiffOpen = true">查看优化对比</GradientButton>
+            <button type="button" class="btn-ghost min-h-10 px-4" @click="discardJdDiff">放弃结果</button>
+          </template>
+          <template v-else-if="draft.generation.phase === 'save_error'">
+            <GradientButton class="min-h-10 justify-center px-4" @click="retrySaveResult"><ReloadOutlined /> 重试保存</GradientButton>
+          </template>
+          <template v-else-if="['error', 'interrupted', 'cancelled'].includes(draft.generation.phase)">
+            <GradientButton class="min-h-10 justify-center px-4" @click="restartGeneration"><ReloadOutlined /> 重新尝试本次操作</GradientButton>
+          </template>
+        </div>
       </div>
 
       <div class="generation-result-grid">
@@ -870,10 +832,15 @@ async function goToEditor() {
         </section>
 
         <aside class="generation-summary-card" aria-label="结果说明">
-          <template v-if="['error', 'interrupted'].includes(draft.generation.phase)">
+          <template v-if="generationLoading">
+            <p class="generation-summary-card__eyebrow">正在处理</p>
+            <h3>简历整理中</h3>
+            <p class="generation-summary-card__copy">完成后可以先核对经历和联系方式，再决定是否继续编辑。</p>
+          </template>
+          <template v-else-if="['error', 'interrupted', 'cancelled'].includes(draft.generation.phase)">
             <p class="generation-summary-card__eyebrow">操作未完成</p>
             <h3>你的填写内容已保留</h3>
-            <p class="generation-summary-card__copy">检查网络后，可以从底部重新尝试；不会清空已填写的简历信息。</p>
+            <p class="generation-summary-card__copy">检查网络后，使用上方按钮重新尝试；不会清空已填写的简历信息。</p>
           </template>
           <template v-else-if="displayOptimizationNotes.length">
             <p class="generation-summary-card__eyebrow">本次优化</p>
@@ -896,7 +863,31 @@ async function goToEditor() {
         </aside>
       </div>
     </div>
-    </main>
+
+    <!-- 桌面操作区留在表单之后；移动端固定在底部，有结果时操作移到结果标题旁。 -->
+    <div v-if="!hasGenerationPanel" class="generate-inline-actions">
+      <p>填写姓名和意向岗位即可开始，生成后仍可逐项核对。</p>
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        <GradientButton
+          class="min-h-11 w-full justify-center px-4 sm:w-auto sm:min-w-[170px]"
+          :loading="generationLoading && draft.generation.kind === 'generate'"
+          :disabled="formLocked && !(generationLoading && draft.generation.kind === 'generate')"
+          @click="handleGenerate"
+        >
+          <ThunderboltOutlined v-if="!generationLoading || draft.generation.kind !== 'generate'" />
+          开始 AI 生成
+        </GradientButton>
+        <button
+          type="button"
+          class="btn-ghost min-h-11 w-full px-4 sm:w-auto sm:min-w-[180px]"
+          :disabled="formLocked"
+          @click="openJdOptimize"
+        >
+          <AimOutlined /> 按岗位优化简历
+        </button>
+      </div>
+    </div>
+      </main>
 
       <aside class="generate-aside" aria-label="简历准备情况">
         <section class="readiness-card">
@@ -997,8 +988,9 @@ async function goToEditor() {
 .generate-workspace.has-result { grid-template-columns: minmax(0, 1fr); }
 .generate-aside { display: none; }
 .generate-workspace.has-result .generate-aside { display: none; }
-.generate-action-bar { display: flex; max-width: 1452px; margin: 0 auto; align-items: center; justify-content: space-between; gap: 20px; padding: 10px 24px; }
-.generate-action-bar > p { margin: 0; color: var(--color-ink-secondary); font-size: 13px; }
+.generate-inline-actions { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 16px; padding: 14px 0; }
+.generate-inline-actions > p { margin: 0; color: var(--color-ink-secondary); font-size: 13px; }
+.generate-result-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
 .readiness-card, .experience-card { padding: 20px; border: 1px solid var(--color-line); border-radius: 18px; background: var(--color-surface); box-shadow: 0 10px 28px color-mix(in srgb, var(--color-ink) 5%, transparent); }
 .readiness-card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .readiness-card__eyebrow { margin: 0 0 7px; color: var(--color-brand-dark); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
@@ -1051,8 +1043,28 @@ async function goToEditor() {
 }
 
 @media (max-width: 767px) {
-  .generate-action-bar { padding: 9px 12px; }
-  .generate-action-bar > p { display: none; }
+  .generate-workspace:not(.has-result) .generate-main { padding-bottom: env(safe-area-inset-bottom); }
+  .generate-inline-actions {
+    position: fixed;
+    z-index: 60;
+    inset-inline: 0;
+    bottom: 0;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid color-mix(in srgb, var(--color-line) 80%, transparent);
+    background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+    box-shadow: 0 -8px 24px rgb(25 35 58 / 8%);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+  }
+  .generate-inline-actions > p { width: 100%; max-width: 720px; margin-inline: auto; font-size: 12px; }
+  .generate-inline-actions > div { display: grid; width: 100%; max-width: 720px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-inline: auto; }
+  .generate-inline-actions > div > :deep(button) { min-width: 0; min-height: 44px; padding-inline: 6px; font-size: 13px; white-space: nowrap; }
+  .generate-result-actions { justify-content: flex-start; }
+  .generate-result-actions > :deep(button) { flex: 1 1 auto; }
   .generation-preview-card { padding: 8px; }
   .generation-summary-card { padding: 16px; }
 }

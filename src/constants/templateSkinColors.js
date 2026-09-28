@@ -1,5 +1,5 @@
 /**
- * 50 套模板皮肤默认预设（唯一配置源）
+ * 60 套模板皮肤默认预设（唯一配置源）
  * - 11 项字段对应 EditorSkinPanel 自定义颜色
  * - 用户未覆盖（null）时由 mergeSkinThemeWithTemplate + skinThemeToCssVars 注入
  */
@@ -50,7 +50,7 @@ const GRAY_SKIN = {
   topBandBg: '#374151',
 }
 
-/** 50 套模板皮肤独立默认色（含中文注释说明视觉意图） */
+/** 60 套模板皮肤独立默认色（含中文注释说明视觉意图） */
 export const TEMPLATE_SKIN_PRESETS = {
   // 1. 全职业通用：深靛蓝、朱砂橙与薄荷灰编辑杂志
   1: {
@@ -783,6 +783,18 @@ export const TEMPLATE_SKIN_PRESETS = {
     skillBorder: '#5dbb9b',
     topBandBg: '#d8ff4f',
   },
+
+  // 51–60 为新增模板提供低饱和且打印清楚的独立皮肤默认值。
+  51: { titleColor: '#202124', dividerColor: '#d2d3cf', headerBg: '#fcfcfa', headerBorder: '#202124', itemBg: '#ffffff', itemBorder: '#d7d8d4', basicRowBg: '#f7f7f4', basicRowBorder: '#d2d3cf', skillBg: '#f1f1ed', skillBorder: '#8a8c88', topBandBg: '#e63946' },
+  52: { titleColor: '#173b57', dividerColor: '#c8d8e1', headerBg: '#f5f8fa', headerBorder: '#456579', itemBg: '#ffffff', itemBorder: '#d5e0e5', basicRowBg: '#edf3f6', basicRowBorder: '#c3d4dc', skillBg: '#eaf1f4', skillBorder: '#7f9eae', topBandBg: '#f05d5e' },
+  53: { titleColor: '#684f3a', dividerColor: '#d8cbbb', headerBg: '#f7efe2', headerBorder: '#987a5c', itemBg: '#fffdf8', itemBorder: '#e5d9c8', basicRowBg: '#f3eadb', basicRowBorder: '#d7c5ac', skillBg: '#eee4d5', skillBorder: '#b7855b', topBandBg: '#7b5c43' },
+  54: { titleColor: '#334155', dividerColor: '#ccd7dc', headerBg: '#f3f6f8', headerBorder: '#647f8b', itemBg: '#fbfcfd', itemBorder: '#d2dce1', basicRowBg: '#edf2f4', basicRowBorder: '#c8d4da', skillBg: '#e9f0f3', skillBorder: '#7f9da9', topBandBg: '#5b8a9d' },
+  55: { titleColor: '#202124', dividerColor: '#c9c6bd', headerBg: '#faf8f2', headerBorder: '#202124', itemBg: '#fffdf8', itemBorder: '#202124', basicRowBg: '#f1eee6', basicRowBorder: '#202124', skillBg: '#f4e8c9', skillBorder: '#202124', topBandBg: '#d94b3d' },
+  56: { titleColor: '#334b5c', dividerColor: '#d5dee3', headerBg: '#f4f7f8', headerBorder: '#7b929e', itemBg: '#ffffff', itemBorder: '#d9e0e3', basicRowBg: '#eef2f4', basicRowBorder: '#d0dbe0', skillBg: '#edf2f3', skillBorder: '#8ca1aa', topBandBg: '#bd8b65' },
+  57: { titleColor: '#155b78', dividerColor: '#bfd8e2', headerBg: '#f3f9fc', headerBorder: '#3985a2', itemBg: '#fafdfe', itemBorder: '#c8dce4', basicRowBg: '#eaf4f7', basicRowBorder: '#bdd5de', skillBg: '#e7f3f7', skillBorder: '#67a9bf', topBandBg: '#39a6c7' },
+  58: { titleColor: '#245448', dividerColor: '#c8d7ce', headerBg: '#f1f6f2', headerBorder: '#507567', itemBg: '#fbfdfb', itemBorder: '#d2dfd6', basicRowBg: '#e8f0e9', basicRowBorder: '#c3d4c8', skillBg: '#e7efe8', skillBorder: '#729483', topBandBg: '#b28a58' },
+  59: { titleColor: '#854d48', dividerColor: '#e2cbc5', headerBg: '#fff6f2', headerBorder: '#bd796d', itemBg: '#fffdfb', itemBorder: '#ead4ce', basicRowBg: '#f8ebe6', basicRowBorder: '#e4c7bf', skillBg: '#f8ebe6', skillBorder: '#d59183', topBandBg: '#e18472' },
+  60: { titleColor: '#222222', dividerColor: '#d1d1d1', headerBg: '#f7f7f7', headerBorder: '#222222', itemBg: '#ffffff', itemBorder: '#d8d8d8', basicRowBg: '#f2f2f2', basicRowBorder: '#cccccc', skillBg: '#f2f2f2', skillBorder: '#777777', topBandBg: '#b08b52' },
 }
 
 /** 未自定义皮肤时的空覆盖（preset: template 表示走模板默认） */

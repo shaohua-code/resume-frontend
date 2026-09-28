@@ -1,9 +1,11 @@
 /**
- * 50 套 AI 简历风格模板注册表
+ * 60 套 AI 简历风格模板注册表
  * 元数据与组件加载器分离：列表页只引元数据，渲染时再按 id 动态 import 组件。
  */
 
-export const MAX_TEMPLATE_ID = 50
+export const MAX_TEMPLATE_ID = 60
+// 新建简历及未知模板 ID 的统一回退目标；有效历史模板号仍按原值保留。
+export const DEFAULT_TEMPLATE_ID = 56
 
 export const TEMPLATE_LIST = [
   { id: 1, name: '全职业通用', category: '通用', desc: '清晰稳妥的单栏结构，适合大多数岗位', color: 'linear-gradient(135deg,#334155,#64748b)' },
@@ -59,9 +61,20 @@ export const TEMPLATE_LIST = [
   { id: 48, name: '校园成长档案', category: '校招', desc: '学期索引与成长刻度，完整串联教育和校园历程', color: 'linear-gradient(135deg,#275d4d,#e9b949)' },
   { id: 49, name: '实践冲刺', category: '校招', desc: '冲刺看板突出实习与项目贡献，行动成果更醒目', color: 'linear-gradient(135deg,#173b67,#f47a3c)' },
   { id: 50, name: '新星作品集', category: '校招', desc: '展览票签与能力证明墙，集中呈现作品和应届潜力', color: 'linear-gradient(135deg,#4d3ca6,#d8ff4f)' },
+  // 51–60 以网格、商务、档案、几何和极简等不同视觉方向扩展通用模板库。
+  { id: 51, name: '瑞士清单', category: '通用', desc: '严格网格与信号红编号，让信息密集仍然一目了然', color: 'linear-gradient(135deg,#202124,#e63946)' },
+  { id: 52, name: '海军蓝简报', category: '职场', desc: '海军蓝刊头与规整联系栏，呈现稳重清晰的商务气质', color: 'linear-gradient(135deg,#173b57,#f05d5e)' },
+  { id: 53, name: '燕麦档案', category: '通用', desc: '温润纸色配低饱和色彩，呈现亲和可靠的职业档案', color: 'linear-gradient(135deg,#7b5c43,#b7855b)' },
+  { id: 54, name: '都会分区', category: '职场', desc: '石墨与雾蓝构成清楚分区，精炼呈现成熟职场经历', color: 'linear-gradient(135deg,#334155,#5b8a9d)' },
+  { id: 55, name: '几何原色', category: '创意', desc: '基础几何与砖红芥黄点色，醒目同时保留阅读秩序', color: 'linear-gradient(135deg,#202124,#d94b3d)' },
+  { id: 56, name: '轻简通用', category: '通用', desc: '默认通用模板：清晰易读，适配不同行业与职业阶段', color: 'linear-gradient(135deg,#334b5c,#bd8b65)' },
+  { id: 57, name: '蓝图履历', category: '行业', desc: '坐标蓝与工程线构成理性框架，适合技术和工程岗位', color: 'linear-gradient(135deg,#155b78,#39a6c7)' },
+  { id: 58, name: '墨绿商务', category: '职场', desc: '深松绿与浅石色稳健组合，强调责任范围和专业积累', color: 'linear-gradient(135deg,#245448,#b28a58)' },
+  { id: 59, name: '珊瑚创作', category: '创意', desc: '珊瑚点色配暖白底，轻快适合跨行业作品叙述', color: 'linear-gradient(135deg,#854d48,#e18472)' },
+  { id: 60, name: '黑白名片', category: '通用', desc: '黑白标题结构与金色标记，利落适配正式投递和打印', color: 'linear-gradient(135deg,#222222,#b08b52)' },
 ]
 
-/** 模板 ID -> 动态 import，避免 50 套组件同步打进首页包 */
+/** 模板 ID -> 动态 import，避免 60 套组件同步打进首页包 */
 export const TEMPLATE_LOADERS = {
   1: () => import('@/components/resume-templates/Tpl01Universal.vue'),
   2: () => import('@/components/resume-templates/Tpl02Business.vue'),
@@ -113,23 +126,33 @@ export const TEMPLATE_LOADERS = {
   48: () => import('@/components/resume-templates/Tpl48CampusArchive.vue'),
   49: () => import('@/components/resume-templates/Tpl49PracticeSprint.vue'),
   50: () => import('@/components/resume-templates/Tpl50GraduatePortfolio.vue'),
+  51: () => import('@/components/resume-templates/Tpl51SwissRoster.vue'),
+  52: () => import('@/components/resume-templates/Tpl52NavyBrief.vue'),
+  53: () => import('@/components/resume-templates/Tpl53OatArchive.vue'),
+  54: () => import('@/components/resume-templates/Tpl54CityProfile.vue'),
+  55: () => import('@/components/resume-templates/Tpl55BauhausPaper.vue'),
+  56: () => import('@/components/resume-templates/Tpl56LightGeneral.vue'),
+  57: () => import('@/components/resume-templates/Tpl57BlueprintCv.vue'),
+  58: () => import('@/components/resume-templates/Tpl58EvergreenBusiness.vue'),
+  59: () => import('@/components/resume-templates/Tpl59CoralStudio.vue'),
+  60: () => import('@/components/resume-templates/Tpl60MonoCard.vue'),
 }
 
 /** @deprecated 兼容旧引用：请改用 TEMPLATE_LOADERS / getTemplateLoader */
 export const TEMPLATE_MAP = TEMPLATE_LOADERS
 
 export function clampTemplateId(id) {
-  const n = Number(id) || 1
-  if (n < 1) return 1
-  if (n > MAX_TEMPLATE_ID) return 1
+  const n = Number(id) || DEFAULT_TEMPLATE_ID
+  if (n < 1) return DEFAULT_TEMPLATE_ID
+  if (n > MAX_TEMPLATE_ID) return DEFAULT_TEMPLATE_ID
   return n
 }
 
 export function getTemplateLoader(id) {
   const safeId = clampTemplateId(id)
-  return TEMPLATE_LOADERS[safeId] || TEMPLATE_LOADERS[1]
+  return TEMPLATE_LOADERS[safeId] || TEMPLATE_LOADERS[DEFAULT_TEMPLATE_ID]
 }
 
 export function getTemplateName(id) {
-  return TEMPLATE_LIST.find((t) => t.id === clampTemplateId(id))?.name || '全职业通用'
+  return TEMPLATE_LIST.find((t) => t.id === clampTemplateId(id))?.name || '轻简通用'
 }

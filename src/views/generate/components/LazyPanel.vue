@@ -355,7 +355,8 @@ async function runJdOptimize(jdText) {
           ? `${jdOptimizeResult.value.resume.name}的简历`
           : '未命名简历',
         resume_json: jdOptimizeResult.value.resume,
-        template_id: resumeStore.currentTemplateId || 1,
+        // 自动创建记录沿用当前模板；空状态回退到默认通用模板 ID 56。
+        template_id: resumeStore.currentTemplateId || 56,
         score: 0,
         history_type: 'jd_resume_optimize',
       })

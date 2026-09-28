@@ -1,14 +1,15 @@
 <!--
   简历模板路由组件
-  根据 templateId 动态加载对应模板 chunk，避免 50 套组件同步打进首包
+  根据 templateId 动态加载对应模板 chunk，避免 60 套组件同步打进首包
 -->
 <script setup>
 import { computed, defineAsyncComponent } from 'vue'
-import { clampTemplateId, getTemplateLoader } from '@/constants/templateRegistry'
+import { clampTemplateId, DEFAULT_TEMPLATE_ID, getTemplateLoader } from '@/constants/templateRegistry'
 
+// 未从调用方显式传入模板时统一展示默认款 ID 56。
 const props = defineProps({
   resume: { type: Object, default: () => ({}) },
-  templateId: { type: Number, default: 1 },
+  templateId: { type: Number, default: DEFAULT_TEMPLATE_ID },
   visibleModules: { type: Array, default: () => [] },
 })
 

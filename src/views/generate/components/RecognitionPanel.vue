@@ -579,11 +579,8 @@ onBeforeUnmount(() => {
       </a-modal>
     </div>
 
-    <!-- 文字：提示条 + 输入区 + 唯一主按钮 -->
+    <!-- 文字识别：直接输入，使用 placeholder 提示内容格式。 -->
     <div v-else class="space-y-3">
-      <div class="rounded-lg border border-line/30 bg-cream/50 px-2.5 py-2 text-xs leading-5 text-muted sm:px-3">
-        粘贴整段简历即可；系统只抽取明确写出的事实，不会补写或润色。建议至少 20 字。
-      </div>
       <a-textarea
         v-model:value="state.rawText"
         :disabled="loading || disabled"
@@ -720,6 +717,32 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 @media (max-width: 640px) {
+  :deep(.ant-segmented) {
+    display: flex;
+    width: 100%;
+    min-height: 48px;
+    padding: 4px;
+    border: 1px solid color-mix(in srgb, var(--color-brand) 10%, var(--color-line));
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--color-brand-lighter) 34%, var(--color-cream));
+  }
+  :deep(.ant-segmented-group) { display: flex; width: 100%; }
+  :deep(.ant-segmented-item) { flex: 1; min-width: 0; border-radius: 10px; }
+  :deep(.ant-segmented-item-label) {
+    display: flex;
+    min-height: 38px;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 8px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  :deep(.ant-segmented-thumb) {
+    border-radius: 10px;
+    background: var(--color-surface);
+    box-shadow: 0 2px 8px rgb(49 39 102 / 11%), 0 1px 2px rgb(25 35 58 / 6%);
+  }
+  :deep(.ant-segmented-item-selected) { color: var(--color-brand-dark); font-weight: 700; }
   :deep(.resume-upload-dropzone.ant-upload-wrapper .ant-upload-drag) {
     min-height: 84px;
     padding: 13px 12px;

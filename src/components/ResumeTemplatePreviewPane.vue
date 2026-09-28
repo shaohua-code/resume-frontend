@@ -12,15 +12,16 @@ import {
   fontColorsToCssVars,
 } from '@/constants/editorSettings'
 import { EMPTY_SKIN_OVERRIDES, skinThemeToCssVars } from '@/constants/skin'
-import { clampTemplateId } from '@/constants/templateRegistry'
+import { clampTemplateId, DEFAULT_TEMPLATE_ID } from '@/constants/templateRegistry'
 import { normalizeResumeFields } from '@/constants/resumeFieldSchema'
 import { useMediaQuery } from '@/composables/useMediaQuery'
 
 const A4_WIDTH_PX = 794
 
+// 未从调用方显式传入模板时统一展示默认款 ID 56。
 const props = defineProps({
   resume: { type: [Object, String], default: () => ({}) },
-  templateId: { type: Number, default: 1 },
+  templateId: { type: Number, default: DEFAULT_TEMPLATE_ID },
   scale: { type: Number, default: 0.45 },
   maxHeight: { type: String, default: 'none' },
   scrollable: { type: Boolean, default: false },

@@ -14,6 +14,7 @@ import { parsePartialResumeJson, hasStreamResumeContent } from '../utils/streamR
 const A4_WIDTH_PX = 794
 const MAX_PREVIEW_VH = 0.7
 
+// 未从调用方显式传入模板时统一展示默认款 ID 56。
 const props = defineProps({
   streamText: {
     type: String,
@@ -31,7 +32,7 @@ const props = defineProps({
   // 预览模板 ID，与 /templates 选择及编辑器 templateId 对齐
   templateId: {
     type: Number,
-    default: 3,
+    default: 56,
   },
   // 流式过程中的提示文案
   loadingHint: {

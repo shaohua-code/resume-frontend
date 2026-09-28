@@ -11,9 +11,10 @@ const resume = defineModel({ type: Object, required: true })
 const activeModule = defineModel('activeModule', { type: String, default: 'basic' })
 const modules = defineModel('modules', { type: Array, required: true })
 
+// 未从调用方显式传入模板时统一展示默认款 ID 56。
 const props = defineProps({
   highlightModule: { type: String, default: '' },
-  templateId: { type: Number, default: 1 },
+  templateId: { type: Number, default: 56 },
 })
 
 const emit = defineEmits(['collapsed-change', 'ai-optimized'])

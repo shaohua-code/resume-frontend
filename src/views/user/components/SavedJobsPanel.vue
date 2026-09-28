@@ -297,7 +297,7 @@ onMounted(loadJobs)
       </a-empty>
     </a-spin>
 
-    <a-modal v-model:open="detailOpen" title="岗位详情" :footer="null" width="680px">
+    <a-modal v-model:open="detailOpen" title="岗位详情" :footer="null" width="680px" wrap-class-name="saved-job-detail-modal">
       <a-spin :spinning="detailLoading">
         <section v-if="selectedJob" class="saved-job-detail">
           <a-alert v-if="needsRefresh(selectedJob)" class="saved-job-detail__warning" type="warning" show-icon message="该岗位由旧版插件保存，返回原招聘页重新识别后会自动补全字段。" />
@@ -324,7 +324,13 @@ onMounted(loadJobs)
               <label>投递日期<input v-model="progressDraft.applied_at" type="date" /></label>
               <label>下一步日期<input v-model="progressDraft.next_action_at" type="date" /></label>
             </div>
-            <label>进度备注<a-textarea v-model:value="progressDraft.progress_note" :maxlength="1000" :rows="3" show-count placeholder="记录投递渠道、面试反馈或下一步准备事项" /></label>
+            <label>
+              进度备注
+              <div class="saved-job-progress__note">
+                <a-textarea v-model:value="progressDraft.progress_note" :maxlength="1000" :rows="3" placeholder="记录投递渠道、面试反馈或下一步准备事项" />
+                <span>{{ (progressDraft.progress_note || '').length }} / 1000</span>
+              </div>
+            </label>
             <a-button type="primary" :loading="progressSaving" @click="saveProgress">保存求职进度</a-button>
             <div class="saved-job-progress__history">
               <b>阶段变化</b>
@@ -407,16 +413,34 @@ onMounted(loadJobs)
 .saved-job-card__next-action{margin:7px 0 0;color:var(--color-brand-dark);font-size:12px;font-weight:600}
 .saved-job-card__goal{margin:6px 0 0;color:var(--color-brand);font-size:12px;font-weight:600}
 .saved-jobs-stage-filter{width:180px}
+/* 求职筛选保留 Ant 控件行高，只把选中值和占位内容放到控件水平中心。 */
+.saved-jobs-stage-filter :deep(.ant-select-selector){align-items:center}
+.saved-jobs-stage-filter :deep(.ant-select-selection-item),.saved-jobs-stage-filter :deep(.ant-select-selection-placeholder){flex:1;min-width:0;padding-inline:24px!important;text-align:center}
 .saved-job-progress{display:grid;gap:12px}
-.saved-job-progress label{display:grid;gap:6px;color:var(--color-ink-secondary);font-size:13px}
-.saved-job-progress :deep(.ant-select){width:100%}
-.saved-job-progress input{min-height:38px;padding:6px 10px;border:1px solid var(--color-line);border-radius:6px;background:var(--color-surface);color:var(--color-ink)}
+.saved-job-progress label{display:grid;min-width:0;gap:6px;color:var(--color-ink-secondary);font-size:13px}
+.saved-job-progress :deep(.ant-select){width:100%;min-width:0}
+.saved-job-progress :deep(.ant-select-selector){align-items:center}
+.saved-job-progress :deep(.ant-select-selection-item),.saved-job-progress :deep(.ant-select-selection-placeholder){flex:1;min-width:0;padding-inline:24px!important;text-align:center}
+.saved-job-progress input{display:block;width:100%;min-width:0;min-height:44px;box-sizing:border-box;padding:8px 10px;border:1px solid var(--color-line);border-radius:8px;background:var(--color-surface);color:var(--color-ink);font-size:16px}
 .saved-job-progress__dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.saved-job-progress__note{position:relative;min-width:0;padding-bottom:20px}
+.saved-job-progress__note :deep(.ant-input){width:100%;min-height:112px;box-sizing:border-box;padding-bottom:8px}
+.saved-job-progress__note>span{position:absolute;right:2px;bottom:0;color:var(--color-muted);font-size:12px;line-height:16px;pointer-events:none}
+:global(.saved-job-detail-modal .ant-modal){max-width:calc(100vw - 24px)}
 .saved-job-progress__history{display:grid;gap:8px;padding-top:12px;border-top:1px solid var(--color-line)}
 .saved-job-progress__history ol{display:grid;gap:10px;margin:0;padding-left:20px}
 .saved-job-progress__history li{color:var(--color-ink-secondary);font-size:13px}
 .saved-job-progress__history li small{display:block;color:var(--color-muted)}
 .saved-job-progress__history li p{margin:3px 0;white-space:pre-wrap}
 .saved-job-progress__empty{color:var(--color-muted);font-size:12px}
-@media(max-width:560px){.saved-jobs-stage-filter{width:160px}.saved-job-progress__dates{grid-template-columns:1fr}}
+@media(max-width:640px){
+  .saved-jobs-stage-filter{width:160px}
+  .saved-job-progress__dates{grid-template-columns:minmax(0,1fr)}
+  :global(.saved-job-detail-modal .ant-modal){width:calc(100vw - 24px)!important;max-width:calc(100vw - 24px);margin:12px auto}
+  :global(.saved-job-detail-modal .ant-modal-body){max-height:none;overflow:visible;padding:16px;overscroll-behavior:auto}
+  .saved-job-detail{max-height:calc(100dvh - 180px);padding-right:3px}
+  .saved-job-detail__heading{flex-direction:column;gap:10px}
+  .saved-job-detail h2{font-size:18px;line-height:1.45;overflow-wrap:anywhere}
+  .saved-job-detail__meta{gap:9px;margin:12px 0}
+}
 </style>

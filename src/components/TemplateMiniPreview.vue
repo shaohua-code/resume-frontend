@@ -7,12 +7,12 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import ResumeTemplate from '@/components/ResumeTemplate.vue'
 import { DEFAULT_MODULES, fontColorsToCssVars } from '@/constants/editorSettings'
 import { skinThemeToCssVars, EMPTY_SKIN_OVERRIDES } from '@/constants/skin'
-import { getTemplateName } from '@/constants/templateRegistry'
+import { DEFAULT_TEMPLATE_ID, getTemplateName } from '@/constants/templateRegistry'
 
 const props = defineProps({
   templateId: {
     type: Number,
-    default: 1,
+    default: DEFAULT_TEMPLATE_ID,
   },
   resume: {
     type: Object,

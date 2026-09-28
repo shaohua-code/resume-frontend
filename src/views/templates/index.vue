@@ -7,7 +7,8 @@ import { useRouter } from 'vue-router'
 import PageHero from '@/components/PageHero.vue'
 import GradientButton from '@/components/GradientButton.vue'
 import LazyRender from '@/components/LazyRender.vue'
-import TemplateMiniPreview from '@/views/home/components/TemplateMiniPreview.vue'
+// 模板中心与编辑器共用真实模板缩略预览，避免依赖首页页面组件。
+import TemplateMiniPreview from '@/components/TemplateMiniPreview.vue'
 import { getDemoResume } from '@/views/home/utils/demoResume'
 import { TEMPLATE_LIST } from '@/constants/templateRegistry'
 import { useResumeStore } from '@/stores/resume'
@@ -137,7 +138,7 @@ onUnmounted(() => {
             @click="openPreview(tpl.id)"
           >
             <div class="template-preview-stage flex min-h-[354px] items-start justify-center overflow-hidden px-3 pt-6">
-              <!-- 仅在卡片接近视口时加载真实模板，50 套模板不会同时触发组件请求和 A4 渲染。 -->
+              <!-- 仅在卡片接近视口时加载真实模板，60 套模板不会同时触发组件请求和 A4 渲染。 -->
               <LazyRender min-height="320px" root-margin="360px 0px" class="w-full">
                 <div class="flex w-full justify-center">
                   <TemplateMiniPreview

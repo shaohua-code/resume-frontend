@@ -492,10 +492,14 @@ input.ant-input.input-field:not(textarea) {
   textarea,
   .ant-input,
   .ant-input-number-input,
-  .ant-select-selection-item,
   .ant-picker-input > input {
     font-size: 16px !important; /* iOS Safari 要求 ≥ 16px 才不会放大 */
     line-height: 1.5 !important;
+  }
+
+  /* 下拉选中值只统一字号，垂直行高由 Ant 按控件尺寸计算，避免移动端文字偏上。 */
+  .ant-select-selection-item {
+    font-size: 16px !important;
   }
 
   /* 确保占位符文字也足够大 */
