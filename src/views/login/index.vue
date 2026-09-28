@@ -4,12 +4,13 @@
  * H5 移动端优化：Tab 栏触摸友好、表单间距优化、按钮高度适配
  * 随机注册账号默认使用账号密码登录，验证码登录仅服务于已绑定邮箱。
  */
-import { reactive, ref, onUnmounted } from 'vue'
+import { reactive, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import GradientButton from '@/components/GradientButton.vue'
 import LoginCard from './components/LoginCard.vue'
 import { createCountdown } from './utils/countdown'
+import { getIamLoginConfig, startIamLogin } from '@/api/auth'
 
 const router = useRouter()
 const route = useRoute()
@@ -23,6 +24,57 @@ const pwdLogging = ref(false)
 const codeForm = reactive({ email: '', code: '' })
 const sending = ref(false)
 const codeLogging = ref(false)
+const iamEnabled = ref(false)
+const iamLogging = ref(false)
+const iamErrorMessage = ref('')
+
+/** 处理 IAM 回调的一次性桥接码；URL fragment 不会进入 HTTP 访问日志。 */
+onMounted(async () => {
+  const errorCode = String(route.query.iam_error || '')
+  if (errorCode === 'identity_not_linked') {
+    iamErrorMessage.value = '此统一账号尚未关联简历账号。请先用原账号登录，再到“用户中心-账户资料”完成绑定。'
+  } else if (errorCode) {
+    iamErrorMessage.value = '统一账号登录暂未完成，请重试或使用原登录方式。'
+  }
+  if (errorCode) {
+    const safeQuery = { ...route.query }
+    delete safeQuery.iam_error
+    await router.replace({ path: '/login', query: safeQuery })
+  }
+
+  const code = new URLSearchParams(String(route.hash || '').replace(/^#/, '')).get('iam_code')
+  if (code) {
+    await router.replace({ path: '/login', query: route.query, hash: '' })
+    try {
+      await userStore.loginWithIamCode(code)
+      await router.replace(route.query.redirect || '/')
+    } catch {
+      iamErrorMessage.value = '统一账号登录凭证已失效，请重新登录。'
+    }
+  }
+
+  try {
+    const config = await getIamLoginConfig()
+    iamEnabled.value = config?.enabled === true
+  } catch {
+    iamEnabled.value = false
+  }
+})
+
+/** 跳转到服务端 OIDC 授权入口；client secret 不进入浏览器。 */
+async function handleIamLogin() {
+  if (iamLogging.value) return
+  iamLogging.value = true
+  iamErrorMessage.value = ''
+  try {
+    const attempt = await startIamLogin()
+    if (!attempt?.authorization_url) throw new Error('IAM login URL missing')
+    window.location.assign(attempt.authorization_url)
+  } catch {
+    iamLogging.value = false
+    iamErrorMessage.value = '统一账号登录暂不可用，请使用原登录方式。'
+  }
+}
 
 // 账号密码登录
 async function handlePasswordLogin() {
@@ -118,6 +170,24 @@ onUnmounted(() => countdown.stop())
         </a-form>
       </a-tab-pane>
     </a-tabs>
+
+    <div v-if="iamEnabled || iamErrorMessage" class="mt-4 flex flex-col gap-3">
+      <a-alert v-if="iamErrorMessage" type="warning" show-icon :message="iamErrorMessage" />
+      <div v-if="iamEnabled" class="flex items-center gap-3 text-xs text-muted">
+        <span class="h-px flex-1 bg-line" />
+        <span>统一身份认证</span>
+        <span class="h-px flex-1 bg-line" />
+      </div>
+      <button
+        v-if="iamEnabled"
+        type="button"
+        class="inline-flex min-h-11 w-full items-center justify-center rounded-button border border-brand/30 bg-brand-lighter/30 px-4 text-sm font-semibold text-brand-dark transition hover:bg-brand-lighter"
+        :disabled="iamLogging"
+        @click="handleIamLogin"
+      >
+        {{ iamLogging ? '正在跳转…' : '使用统一账号登录' }}
+      </button>
+    </div>
 
     <!-- 底部链接：移动端换行显示避免拥挤 -->
     <template #footer>

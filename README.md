@@ -157,7 +157,8 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 
 | 前缀 | 前端文件 | 后端路由 | 职责 |
 | --- | --- | --- | --- |
-| `/api/auth` | `api/auth.js` | `routers/auth.js` | 随机账号注册、登录、邮箱绑定验证码、密码重置 |
+| `/api/auth` | `api/auth.js` | `routers/auth.js` | 随机账号注册、登录、邮箱绑定验证码、密码重置 |
+| /api/auth | api/auth.js | routers/auth.js + routers/iam.js | 原有认证、IAM OIDC 登录与显式身份绑定 |
 | `/api/ai` | `api/resume.js` | `routers/ai.js` | AI 生成、分模块优化、岗位匹配分析、评分 |
 | `/api/pdf` | `api/resume.js` | `routers/pdf.js` | PDF 上传、解析、优化 |
 | `/api/wallet` | `api/wallet.js` | `routers/wallet.js` | 余额、流水 |
@@ -241,3 +242,7 @@ npm run preview  # 预览构建
 ## 十六、风格提示词
 
 新增页面或模块时，请复制 [`STYLE_PROMPT.md`](STYLE_PROMPT.md) 中的 Prompt 模板，确保视觉一致。
+
+## IAM 统一登录入口
+
+登录页读取 IAM 开关后显示统一账号按钮。回调单次码通过 URL fragment 交给前端，绝不传递本地 access/refresh token；前端立即兑换为原有会话并清除 fragment。用户中心账户资料提供主动 IAM 身份绑定入口，只显示绑定状态，不显示 subject 或密钥。启动接口通过 withCredentials 接收 HttpOnly、SameSite=Lax 状态 cookie；部署时让前后端处于同站点并启用 HTTPS。
