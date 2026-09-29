@@ -5,6 +5,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { message } from 'ant-design-vue'
 import DOMPurify from 'dompurify'
+import { useRoute, useRouter } from 'vue-router'
 import {
   getAdminRechargeRequests,
   getAdminRechargeRequestDetail,
@@ -15,15 +16,31 @@ import {
 import { resolveUploadUrl } from '@/api/upload'
 import { useUserStore } from '@/stores/user'
 import AdminUserInfoCell from './AdminUserInfoCell.vue'
+import AdminFilterCard from './AdminFilterCard.vue'
 import { formatDateTime } from '@/utils/date'
 
 const userStore = useUserStore()
+const route = useRoute()
+const router = useRouter()
 const isSuperAdmin = computed(() => userStore.role === 'SUPER_ADMIN')
+// 跨页按钮与路由权限同源，只提供当前账号确实可以访问的目标页。
+const canViewUsers = computed(() => userStore.hasPermission('admin:manage_users'))
+const canViewLedgers = computed(() => userStore.hasPermission('admin:view_ledgers'))
 
 const loading = ref(false)
 const records = ref([])
 const total = ref(0)
-const query = reactive({ page: 1, size: 10 })
+// 初始聚焦待审核队列；深链用户范围与日期边界会随查询参数一起发送。
+const query = reactive({
+  page: 1,
+  size: 10,
+  status: 'PENDING',
+  keyword: '',
+  user_id: '',
+  create_time_from: '',
+  create_time_to: '',
+})
+const dateRange = ref(null)
 
 // 超管额外展示归属管理员列
 const columns = computed(() => {
@@ -38,7 +55,7 @@ const columns = computed(() => {
     { title: '充值金额', dataIndex: 'grant_amount', key: 'grant_amount', width: 120 },
     { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
     { title: '提交时间', dataIndex: 'create_time', key: 'create_time', width: 180 },
-    { title: '操作', key: 'action', width: 220 },
+    { title: '操作', key: 'action', width: 300 },
   )
   return baseColumns
 })
@@ -72,16 +89,61 @@ const GRANT_PREVIEW_DEBOUNCE_MS = 300
 // 打开弹窗初始化期间跳过 grantAmount 监听，避免误清空默认预览
 const skipGrantWatch = ref(false)
 
-/** 状态标签：待充值 / 已完成 */
+/** 状态标签：待审核 / 已入账 */
 function getStatusLabel(status) {
-  return status === 'APPROVED' ? '已完成' : '待充值'
+  return status === 'APPROVED' ? '已入账' : '待审核'
+}
+
+// 日期选择按本地自然日转成 ISO 边界，后端以左闭右开区间查询。
+function updateDateRange(dates) {
+  dateRange.value = dates?.[0] && dates?.[1] ? dates : null
+  query.create_time_from = dates?.[0] ? dates[0].startOf('day').toISOString() : ''
+  query.create_time_to = dates?.[1] ? dates[1].add(1, 'day').startOf('day').toISOString() : ''
+}
+
+function searchRecords() {
+  query.page = 1
+  loadRecords()
+}
+
+function resetFilters() {
+  query.page = 1
+  query.keyword = ''
+  query.user_id = String(route.query.user_id || '')
+  query.status = query.user_id ? 'ALL' : 'PENDING'
+  query.create_time_from = ''
+  query.create_time_to = ''
+  dateRange.value = null
+  loadRecords()
+}
+
+// 清除深链用户条件时同步更新地址栏，避免重置后重新套回旧用户范围。
+function clearUserFilter() {
+  query.user_id = ''
+  const { user_id, ...remainingQuery } = route.query
+  router.replace({ path: route.path, query: remainingQuery })
+  searchRecords()
+}
+
+// 通过现有菜单权限打开关联账号，不在行内暴露越权入口。
+function openUser(record) {
+  router.push({ path: '/admin/users', query: { user_id: record.user_id } })
+}
+
+// 充值申请保存了准确流水主键，跳转后可直接核对本次入账记录。
+function openLedger(record) {
+  router.push({
+    path: '/admin/ledgers',
+    query: { ledger_id: String(record.ledger_id), user_id: record.user_id },
+  })
 }
 
 /** 加载充值记录列表 */
 async function loadRecords() {
   loading.value = true
   try {
-    const res = await getAdminRechargeRequests({ ...query })
+    // UI 使用具名“全部状态”选项，提交给接口时将 ALL 转成无状态过滤条件。
+    const res = await getAdminRechargeRequests({ ...query, status: query.status === 'ALL' ? '' : query.status })
     records.value = res.items || []
     total.value = res.total || 0
   } finally {
@@ -221,7 +283,12 @@ watch(
   },
 )
 
-onMounted(loadRecords)
+onMounted(() => {
+  // 普通入口默认聚焦待审核队列；从用户账号深链进入时显示该用户全部申请。
+  query.user_id = String(route.query.user_id || '')
+  if (query.user_id) query.status = 'ALL'
+  loadRecords()
+})
 
 onUnmounted(() => {
   if (grantPreviewTimer) {
@@ -233,9 +300,41 @@ onUnmounted(() => {
 <template>
   <div class="space-y-4">
     <div>
-      <h2 class="text-lg font-semibold text-ink sm:text-xl">充值记录</h2>
-      <p class="mt-1 text-sm text-muted">审核用户提交的充值凭证并入账</p>
+      <h2 class="text-lg font-semibold text-ink sm:text-xl">充值审核</h2>
+      <p class="mt-1 text-sm text-muted">优先处理待审核申请；入账后可沿流水与用户账号继续核对</p>
     </div>
+
+    <AdminFilterCard title="筛选充值申请" description="按审核状态、用户或提交日期查找充值记录">
+      <!-- 将状态、用户和提交日期集中到同一查询栏，筛选结果仍遵循后端归属权限。 -->
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(150px,0.8fr)_minmax(220px,1.4fr)_minmax(260px,1.2fr)_max-content]">
+        <a-select v-model:value="query.status" class="input-field w-full" aria-label="充值申请状态" placeholder="选择申请状态">
+          <a-select-option value="PENDING">待审核</a-select-option>
+          <a-select-option value="APPROVED">已入账</a-select-option>
+          <a-select-option value="ALL">全部状态</a-select-option>
+        </a-select>
+        <a-input
+          v-model:value="query.keyword"
+          allow-clear
+          class="input-field"
+          placeholder="搜索用户邮箱或昵称"
+          @press-enter="searchRecords"
+        />
+        <a-range-picker
+          :value="dateRange"
+          class="input-field w-full"
+          :placeholder="['提交开始日期', '提交结束日期']"
+          @change="updateDateRange"
+        />
+        <div class="flex gap-2">
+          <button class="btn-primary min-h-11 flex-1 whitespace-nowrap" @click="searchRecords">查询</button>
+          <button class="btn-ghost min-h-11 flex-1 whitespace-nowrap" @click="resetFilters">重置</button>
+        </div>
+      </div>
+      <template #context>
+        <span v-if="query.user_id">当前限定为指定用户申请</span>
+        <button v-if="query.user_id" class="link-text min-h-11 px-2" @click="clearUserFilter">清除用户限定</button>
+      </template>
+    </AdminFilterCard>
 
     <a-card :bordered="false" class="card-base">
       <a-table
@@ -277,7 +376,7 @@ onUnmounted(() => {
             <!-- 已完成置灰，待充值保留可点击态 -->
             <span
               :class="record.status === 'APPROVED'
-                ? 'text-sm text-muted opacity-60'
+                ? 'badge-success'
                 : 'tag-soft'"
             >
               {{ getStatusLabel(record.status) }}
@@ -289,15 +388,30 @@ onUnmounted(() => {
           <template v-if="column.key === 'action'">
             <div class="flex flex-wrap gap-2">
               <button class="btn-ghost-sm" @click="openPreview(record)">预览</button>
-              <!-- 仅待充值记录显示待充值按钮 -->
+              <button
+                v-if="canViewUsers"
+                class="btn-ghost-sm"
+                @click="openUser(record)"
+              >
+                查看用户
+              </button>
+              <!-- 已入账申请通过保存的流水主键直达对应账户流水。 -->
+              <button
+                v-if="record.status === 'APPROVED' && record.ledger_id && canViewLedgers"
+                class="btn-ghost-sm"
+                @click="openLedger(record)"
+              >
+                查看流水
+              </button>
+              <!-- 审核入口只对仍待处理的申请显示。 -->
               <button
                 v-if="record.status === 'PENDING'"
                 class="btn-primary-sm"
                 @click="openApprove(record)"
               >
-                待充值
+                审核入账
               </button>
-              <!-- 超管可删除待充值记录 -->
+              <!-- 超管可删除待审核记录 -->
               <a-popconfirm
                 v-if="isSuperAdmin && record.status === 'PENDING'"
                 title="确定删除该待充值记录？"

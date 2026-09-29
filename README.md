@@ -249,4 +249,4 @@ npm run preview  # 预览构建
 
 ## IAM 统一登录入口
 
-登录页读取 IAM 开关后显示统一账号按钮。回调单次码通过 URL fragment 交给前端，绝不传递本地 access/refresh token；前端立即兑换为原有会话并清除 fragment。用户中心账户资料提供主动 IAM 身份绑定入口，只显示绑定状态，不显示 subject 或密钥。启动接口通过 withCredentials 接收 HttpOnly、SameSite=Lax 状态 cookie；部署时让前后端处于同站点并启用 HTTPS。
+登录页读取 IAM 开关后显示统一账号按钮。回调单次码通过 URL fragment 交给前端，前端立即兑换为原有本地 access/refresh session 并清除 fragment；IAM access/refresh token 不返回浏览器，只由后端用专用密钥加密保管。用户中心账户资料提供主动 IAM 身份绑定入口，只显示绑定状态，不显示 subject 或密钥。启动接口通过 withCredentials 接收 HttpOnly、SameSite=Lax 状态 cookie；部署时让前后端处于同站点并启用 HTTPS。

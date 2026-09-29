@@ -1,15 +1,22 @@
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { getAdminLedgers, getAdminUsers } from '@/api/admin'
 import AdminUserInfoCell from './AdminUserInfoCell.vue'
 import { formatDateTime } from '@/utils/date'
 import { getLedgerTypeLabel, getLedgerTypeOptions, hasPaidAmount } from '@/constants/roles'
 import { replaceAiTaskLabels } from '@/constants/aiTasks'
+import { useUserStore } from '@/stores/user'
 
+const route = useRoute()
+const router = useRouter()
+const userStore = useUserStore()
+const canViewRechargeRequests = computed(() => userStore.hasPermission('admin:view_recharge_requests'))
 const loading = ref(false)
 const ledgers = ref([])
 const total = ref(0)
-const query = reactive({ page: 1, size: 10, user_id: '', type: '' })
+// 支持流水页常规筛选，也接收充值审核传入的具体流水与用户定位。
+const query = reactive({ page: 1, size: 10, user_id: '', ledger_id: '', type: '' })
 
 // 用户下拉选项（用于用户筛选）
 const userOptions = ref([])
@@ -77,7 +84,24 @@ function handleTableChange(pagination) {
   loadLedgers()
 }
 
+// 从精确充值流水返回该用户的充值申请，保留来源筛选。
+function openRechargeRequests() {
+  router.push({ path: '/admin/recharge-requests', query: { user_id: query.user_id } })
+}
+
+// 清除深链条件时同步移除地址栏参数，避免重置后又恢复旧定位。
+function clearLedgerTarget() {
+  query.ledger_id = ''
+  query.user_id = ''
+  const { ledger_id, user_id, ...remainingQuery } = route.query
+  router.replace({ path: route.path, query: remainingQuery })
+  loadLedgers()
+}
+
 onMounted(() => {
+  // 识别充值审核传入的流水 ID 与用户 ID，避免在流水表中手动翻找。
+  query.ledger_id = String(route.query.ledger_id || '')
+  query.user_id = String(route.query.user_id || '')
   loadUserOptions()
   loadLedgers()
 })
@@ -86,6 +110,14 @@ onMounted(() => {
 <template>
   <div class="space-y-4">
     <a-card :bordered="false" class="card-base">
+      <div v-if="query.ledger_id || query.user_id" class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-brand-lighter px-4 py-3 text-sm text-brand-dark">
+        <span v-if="query.ledger_id">当前仅显示充值申请关联的流水 #{{ query.ledger_id }}</span>
+        <span v-else>当前按指定用户筛选账户流水</span>
+        <div class="flex flex-wrap gap-3">
+          <button v-if="query.user_id && canViewRechargeRequests" class="link-text" @click="openRechargeRequests">查看该用户充值申请</button>
+          <button class="link-text" @click="clearLedgerTarget">清除定位</button>
+        </div>
+      </div>
       <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
         <!-- 用户筛选下拉 -->
         <a-select

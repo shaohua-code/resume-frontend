@@ -8,7 +8,7 @@ import { MenuOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useTheme } from '@/composables/useTheme'
 import { getRoleLabel } from '@/constants/roles'
-import { Search, Moon, User, LogOut } from 'lucide-vue-next'
+import { User, LogOut } from 'lucide-vue-next'
 import AdminSidebar from './components/AdminSidebar.vue'
 import AdminNotificationBell from './components/AdminNotificationBell.vue'
 import { ADMIN_MENU_ITEMS, getMenuByPath } from './utils/menu'
@@ -64,10 +64,11 @@ function handleLogout() {
     <!-- 桌面端固定侧边栏：流式宽度为 0，避免与 ml 叠加产生空隙 -->
     <a-layout-sider :width="248" :collapsed-width="0"
       class="admin-sider fixed left-0 top-0 z-30 hidden h-screen overflow-hidden border-r border-line/60 !bg-sidebar lg:block">
-      <AdminSidebar :menus="menuItems" :keyword="searchKeyword" @navigate="closeDrawer" />
+      <AdminSidebar :menus="menuItems" :keyword="searchKeyword" @update:keyword="searchKeyword = $event" @navigate="closeDrawer" />
     </a-layout-sider>
 
-    <a-layout class="flex flex-col h-screen min-w-0 overflow-hidden ">
+    <!-- 侧栏作为布局子项提供桌面宽度；主区不再叠加偏移，避免与侧栏占位重复。 -->
+    <a-layout class="flex h-screen min-w-0 flex-col overflow-hidden">
       <a-layout-header
         class="z-20 flex !h-[72px] !bg-surface shrink-0 items-center justify-between gap-3 border-b border-line/60 px-4 shadow-card sm:px-6">
         <div class="flex items-center min-w-0 gap-3">
@@ -80,22 +81,7 @@ function handleLogout() {
           </div>
         </div>
         <div class="flex items-center gap-2 shrink-0 sm:gap-3">
-          <a-input
-            v-model:value="searchKeyword"
-            placeholder="搜索菜单"
-            allow-clear
-            size="small"
-            class="hidden admin-search sm:block"
-          >
-          
-          </a-input>
           <AdminNotificationBell />
-          <a-tooltip title="暗黑模式即将上线">
-            <button type="button"
-              class="items-center justify-center hidden transition-colors rounded-full h-9 w-9 text-muted hover:bg-brand-lighter hover:text-brand-dark sm:flex">
-              <Moon class="w-4 h-4" />
-            </button>
-          </a-tooltip>
           <a-dropdown placement="bottomRight" overlay-class-name="admin-user-dropdown">
             <div
               class="flex items-center gap-2 py-1 pl-1 pr-2 transition-opacity rounded-full cursor-pointer hover:opacity-90 sm:pr-3">
@@ -134,7 +120,7 @@ function handleLogout() {
 
     <!-- 小屏侧边栏 Drawer -->
     <a-drawer v-model:open="drawerOpen" placement="left" :width="280" :body-style="{ padding: 0 }">
-      <AdminSidebar :menus="menuItems" :keyword="searchKeyword" @navigate="closeDrawer" />
+      <AdminSidebar :menus="menuItems" :keyword="searchKeyword" @update:keyword="searchKeyword = $event" @navigate="closeDrawer" />
     </a-drawer>
   </a-layout>
 </template>
@@ -144,33 +130,6 @@ function handleLogout() {
   @apply flex h-full flex-col;
 }
 
-:deep(.admin-search) {
-  @apply w-[200px];
-}
-
-:deep(.admin-search .ant-input-affix-wrapper) {
-  @apply flex h-[35px] flex-nowrap items-center rounded-full border border-line/60 bg-canvas/50 px-3 py-0;
-}
-
-:deep(.admin-search .ant-input-affix-wrapper:hover),
-:deep(.admin-search .ant-input-affix-wrapper-focused) {
-  @apply border-brand/40 bg-surface;
-}
-
-:deep(.admin-search .ant-input) {
-  @apply h-[33px] leading-[33px];
-}
-
-:deep(.admin-search .ant-input-prefix),
-:deep(.admin-search .ant-input-suffix) {
- display: none;
-}
-:deep(.ant-input-affix-wrapper::before) {
-  display: none;
-}
-:deep(.admin-search .ant-input-prefix) {
-  @apply mr-1.5;
-}
 </style>
 
 <style>

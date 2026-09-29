@@ -7,6 +7,7 @@ import AdminUserInfoCell from './AdminUserInfoCell.vue'
 import AdminInviteLinkPanel from './AdminInviteLinkPanel.vue'
 import { formatDateTime } from '@/utils/date'
 import { useUserStore } from '@/stores/user'
+import { useRoute, useRouter } from 'vue-router'
 
 const props = defineProps({
   mode: {
@@ -17,12 +18,18 @@ const props = defineProps({
 
 // 获取当前登录用户信息，用于判断是否为超级管理员
 const userStore = useUserStore()
+const route = useRoute()
+const router = useRouter()
 const isSuperAdmin = computed(() => userStore.role === 'SUPER_ADMIN')
+// 账号关联入口遵循用户当前权限，避免提供无法打开的后台目标页。
+const canViewLedgers = computed(() => userStore.hasPermission('admin:view_ledgers'))
+const canViewRechargeRequests = computed(() => userStore.hasPermission('admin:view_recharge_requests'))
 
 const loading = ref(false)
 const users = ref([])
 const total = ref(0)
-const query = reactive({ page: 1, size: 10, keyword: '', role: '', status: '' })
+// user_id 用于接收充值/流水页面的精确账号深链，其余字段保留列表本地筛选状态。
+const query = reactive({ page: 1, size: 10, keyword: '', role: '', status: '', user_id: '' })
 
 // 邮箱认领弹窗状态
 const claimModalOpen = ref(false)
@@ -158,13 +165,22 @@ function handleTableChange(pagination) {
   loadUsers()
 }
 
+// 从指定用户页进入流水或充值申请，继续携带相同的用户范围。
+function navigateWithUser(path, userId) {
+  router.push({ path, query: { user_id: userId } })
+}
+
 watch(() => props.mode, () => {
   query.role = ''
   query.page = 1
+  query.user_id = props.mode === 'users' ? String(route.query.user_id || '') : ''
   loadUsers()
 })
 
-onMounted(loadUsers)
+onMounted(() => {
+  query.user_id = props.mode === 'users' ? String(route.query.user_id || '') : ''
+  loadUsers()
+})
 </script>
 
 <template>
@@ -174,20 +190,29 @@ onMounted(loadUsers)
       <div
         class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[minmax(180px,1.4fr)_minmax(136px,0.9fr)_minmax(136px,0.9fr)_max-content]"
       >
-        <a-input :value="query.keyword" placeholder="搜索邮箱/昵称" class="input-field"
-          @update:value="query.keyword = $event" />
-        <a-select :value="query.role" allow-clear placeholder="角色筛选" class="input-field w-full"
-          @update:value="query.role = $event">
+        <label class="block min-w-0 text-xs font-medium text-muted">
+          搜索账号
+          <a-input :value="query.keyword" aria-label="搜索用户邮箱或昵称" placeholder="输入邮箱或昵称" class="input-field mt-1.5 w-full"
+            @update:value="query.keyword = $event" />
+        </label>
+        <label class="block min-w-0 text-xs font-medium text-muted">
+          账号角色
+          <a-select :value="query.role" allow-clear aria-label="按账号角色筛选" placeholder="全部角色" class="input-field mt-1.5 w-full"
+            @update:value="query.role = $event">
           <a-select-option v-for="role in roleOptions" :key="role" :value="role">{{ getRoleLabel(role)
             }}</a-select-option>
-        </a-select>
-        <a-select :value="query.status" allow-clear placeholder="状态筛选" class="input-field w-full"
-          @update:value="query.status = $event">
+          </a-select>
+        </label>
+        <label class="block min-w-0 text-xs font-medium text-muted">
+          账号状态
+          <a-select :value="query.status" allow-clear aria-label="按账号状态筛选" placeholder="全部状态" class="input-field mt-1.5 w-full"
+            @update:value="query.status = $event">
           <a-select-option value="ACTIVE">正常</a-select-option>
           <a-select-option value="BANNED">已封禁</a-select-option>
-        </a-select>
-        <div class="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-3 lg:justify-end xl:col-span-1 xl:flex-nowrap">
-          <button class="btn-primary shrink-0 whitespace-nowrap" @click="loadUsers">查询用户</button>
+          </a-select>
+        </label>
+        <div class="flex flex-wrap items-end gap-2 sm:col-span-2 lg:col-span-3 lg:justify-end xl:col-span-1 xl:flex-nowrap">
+          <button class="btn-primary min-h-10 shrink-0 whitespace-nowrap" @click="loadUsers">查询用户</button>
           <!-- 用户管理模式下显示添加用户和邀请链接入口 -->
           <template v-if="mode === 'users'">
             <button class="btn-ghost shrink-0 whitespace-nowrap" @click="openClaimModal">添加用户</button>
@@ -233,6 +258,21 @@ onMounted(loadUsers)
                 {{ saveLoadingMap[record.user_id] ? '保存中...' : '保存' }}
               </button>
               <button class="btn-ghost-sm" @click="resetPassword(record)">重置密码</button>
+              <!-- 相关页面入口继续传递用户 ID，避免人工复制账号标识。 -->
+              <button
+                v-if="mode === 'users' && canViewLedgers"
+                class="btn-ghost-sm"
+                @click="navigateWithUser('/admin/ledgers', record.user_id)"
+              >
+                资金流水
+              </button>
+              <button
+                v-if="mode === 'users' && canViewRechargeRequests"
+                class="btn-ghost-sm"
+                @click="navigateWithUser('/admin/recharge-requests', record.user_id)"
+              >
+                充值申请
+              </button>
             </a-space>
           </template>
         </template>

@@ -6,7 +6,7 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTheme } from '@/composables/useTheme'
 
-const emit = defineEmits(['navigate'])
+const emit = defineEmits(['navigate', 'update:keyword'])
 
 const props = defineProps({
   menus: {
@@ -92,6 +92,18 @@ function selectMenu(item) {
     </div>
 
     <nav class="sidebar-nav min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-4">
+      <!-- 将搜索放在导航内，桌面和移动抽屉使用同一套菜单筛选行为。 -->
+      <a-input
+        :value="keyword"
+        aria-label="筛选后台菜单"
+        placeholder="筛选菜单名称"
+        allow-clear
+        class="mb-5 rounded-xl"
+        @update:value="emit('update:keyword', $event)"
+      />
+      <p v-if="groupedMenus.length === 0" class="px-3 py-6 text-center text-sm text-muted" role="status">
+        没有匹配的菜单
+      </p>
       <div v-for="group in groupedMenus" :key="group.name" class="mb-5 last:mb-0">
         <p class="mb-2 px-3 text-xs font-semibold text-muted">{{ group.name }}</p>
         <div class="flex flex-col gap-1">
