@@ -465,10 +465,17 @@ function cancel() {
 .appearance-panel__apply:disabled { cursor: not-allowed; opacity: .48; }
 .appearance-panel__full-preview { max-height: 70vh; overflow: auto; border: 1px solid #e1e7ef; border-radius: 12px; background: #f1f4f8; padding: 1rem; }
 @media (max-width: 767px) {
-  .appearance-panel { min-height: 80vh; }
+  /* 移动端让抽屉内容区成为固定高度容器，底部操作区留在视口内。 */
+  :global(.appearance-drawer .ant-drawer-body) { display: flex; min-height: 0; flex-direction: column; overflow: hidden; padding: .75rem 1rem calc(.75rem + env(safe-area-inset-bottom, 0px)); }
+  .appearance-panel { height: 100%; min-height: 0; }
+  .appearance-panel__tabs { flex: none; overflow-x: auto; }
   .appearance-panel__workspace { grid-template-columns: 1fr; grid-template-rows: minmax(240px, 38vh) minmax(0, 1fr); gap: .7rem; padding-top: .7rem; }
   .appearance-panel__preview { position: static; grid-row: 1; max-height: 38vh; overflow: hidden; }
   .appearance-panel__controls { grid-row: 2; }
+  .appearance-panel__footer { flex: none; flex-wrap: wrap; }
+  .appearance-panel__footer > span { flex: 1 1 auto; }
+  .appearance-panel__footer > div { margin-left: auto; }
+  .appearance-panel__cancel, .appearance-panel__apply { padding-right: .75rem; padding-left: .75rem; }
   .appearance-template-card__select { min-height: 160px; align-items: flex-start; }
   .appearance-panel__color-grid { grid-template-columns: 1fr; }
 }
