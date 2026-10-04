@@ -31,7 +31,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:selectedKeys', 'delete'])
+const emit = defineEmits(['update:selectedKeys', 'delete', 'interview'])
 
 const router = useRouter()
 const { chartColors } = useTheme()
@@ -94,6 +94,10 @@ function handleEdit(id) {
           @click="handleEdit(record.id)"
         >
           编辑
+        </button>
+        <!-- 移动端列表也提供与桌面相同的 AI 面试入口。 -->
+        <button type="button" class="btn-ghost-sm flex-1" @click="emit('interview', record.id)">
+          AI 面试
         </button>
         <a-popconfirm title="确定删除？" @confirm="emit('delete', record.id)">
           <button

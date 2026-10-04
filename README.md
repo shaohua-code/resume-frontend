@@ -157,7 +157,7 @@ AI 简历生成支持 SSE 流式输出（`/api/ai/generate/stream`），生成�
 
 | 前缀 | 前端文件 | 后端路由 | 职责 |
 | --- | --- | --- | --- |
-| `/api/auth` | `api/auth.js` | `routers/auth.js` | 随机账号注册、登录、邮箱绑定验证码、密码重置 |
+| `/api/auth` | `api/auth.js` | `routers/auth.js` | 随机账号注册、登录、邮箱绑定验证码、密码重置 |
 | /api/auth | api/auth.js | routers/auth.js + routers/iam.js | 原有认证、IAM OIDC 登录与显式身份绑定 |
 | `/api/ai` | `api/resume.js` | `routers/ai.js` | AI 生成、分模块优化、岗位匹配分析、评分 |
 | `/api/pdf` | `api/resume.js` | `routers/pdf.js` | PDF 上传、解析、优化 |
@@ -250,3 +250,12 @@ npm run preview  # 预览构建
 ## IAM 统一登录入口
 
 登录页读取 IAM 开关后显示统一账号按钮。回调单次码通过 URL fragment 交给前端，前端立即兑换为原有本地 access/refresh session 并清除 fragment；IAM access/refresh token 不返回浏览器，只由后端用专用密钥加密保管。用户中心账户资料提供主动 IAM 身份绑定入口，只显示绑定状态，不显示 subject 或密钥。启动接口通过 withCredentials 接收 HttpOnly、SameSite=Lax 状态 cookie；部署时让前后端处于同站点并启用 HTTPS。
+
+简历 API、整个 `/api/ai/*` 路由组、受保护的 `/api/pdf/*` 文件与 AI 路由及每次真实 Provider 调用的 IAM 权限检查均由 Express 服务端执行，分别检查 `resume.*`、`ai.generate` 和实际模型实例的 `model.invoke`；PDF 上传 AI 路由要求 `resume.write`，已存文件 AI 路由要求 `resume.read`，文件读取与删除分别检查读写权限；不改变 Vue 本地会话或请求协议。IAM 本地开发库 revision `0016_permission_status` 已包含 `0012`–`0015`，其它目标环境仍需迁移；权限不会自动授予角色。管理员还需显式授权，并由服务端 `IAM_MODEL_ID_MAP_JSON` 配置本地模型键到 IAM 模型 UUID 的映射。授权失败或映射缺失时不调用 Provider，且不会 fallback 绕过模型权限。Express 后端可选配置服务端 `IAM_MODEL_USAGE_API_KEY` 接入 IAM RPM/TPM 预留与报告/结算；quota 执行开关仍默认关闭，用量估算明确标记；Vue 协议不变且不持有密钥；后端简历表暂未建 tenant/organization 列，因此没有启用中心 data_scope。共享 `/api/upload/file` 未接入中心权限。IAM 权限守卫的 6 项后端回归和现有 Node 后端测试集 14/14 通过；真实 IAM 会话、业务数据范围及登录态浏览器流程仍待验收。
+
+
+## AI 面试题库（验收中）
+
+用户中心的个人题库通过 InterviewQuestionBank.vue 管理套题和练习；简历列表与编辑器可带入简历上下文发起生成。管理端 AdminInterviewQuestionBank.vue 只读展示题目，不显示用户回答/复盘。前端接口封装位于 src/api/interviewQuestions.js，访问仍由服务端权限检查兜底。
+
+生产构建通过（6021 个模块）。尚未完成登录态桌面/375px 视觉验收、同其他任务的 API 实测及数据库迁移演练。

@@ -7,7 +7,7 @@ const FRIENDLY_FALLBACK = '操作失败，请稍后重试'
 const BUSY_FALLBACK = '服务暂时繁忙，请稍后重试'
 
 /** 明显的技术噪声：不应直接展示给终端用户 */
-const TECHNICAL_PATTERN = /(at\s+\S+|stack|ECONN|ENOENT|postgres|sql|syntax error|TypeError|ReferenceError|Cannot read|undefined is not|ETIMEDOUT|ECONNREFUSED)/i
+const TECHNICAL_PATTERN = /(at\s+\S+|stack|ECONN|ENOENT|postgres|sql|syntax error|TypeError|ReferenceError|Cannot read|undefined is not|ETIMEDOUT|ECONNREFUSED|socket hang up|reset by peer|network socket disconnected|client network socket disconnected|secure TLS connection)/i
 
 /**
  * @param {unknown} error - Axios / fetch / Error / 字符串

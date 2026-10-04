@@ -2,7 +2,7 @@
  * 管理后台菜单配置
  */
 import {
-  LayoutDashboard, ShieldCheck, Users, Wallet, Bot, FileText,
+  LayoutDashboard, ShieldCheck, Users, Wallet, Bot, FileText, ListChecks,
   Megaphone, Cpu, Settings, MessageSquare, Receipt, Eye, QrCode, ClipboardList, Share2,
 } from 'lucide-vue-next'
 
@@ -17,6 +17,7 @@ export const ADMIN_MENU_ITEMS = [
   { key: 'ledgers', path: '/admin/ledgers', label: '资金流水', desc: '额度变动记录', group: '用户与资金', permission: 'admin:view_ledgers', icon: Receipt },
   { key: 'aiCalls', path: '/admin/ai-calls', label: 'AI调用记录', desc: '模型调用审计', group: '运营与审计', permission: 'admin:view_ai_calls', icon: Bot },
   { key: 'resumes', path: '/admin/resumes', label: '简历资源', desc: '只读查看简历', group: '运营与审计', permission: 'admin:view_resumes', icon: FileText },
+  { key: 'interview-bank', path: '/admin/interview-bank', label: '面试题库', desc: '按权限只读查看生成题库', group: '运营与审计', permission: 'admin:view_interview_bank', icon: ListChecks },
   { key: 'feedbacks', path: '/admin/feedbacks', label: '用户反馈', desc: '用户意见与建议', group: '运营与审计', permission: 'admin:view_feedback', icon: MessageSquare },
   { key: 'announcements', path: '/admin/announcements', label: '公告管理', desc: '运营通知内容', group: '运营与审计', permission: 'admin:announcement', icon: Megaphone },
   { key: 'models', path: '/admin/models', label: '模型管理', desc: '模型、供应商与单价', group: 'AI 配置', permission: 'admin:ai_model', icon: Cpu },

@@ -18,6 +18,9 @@ export const AI_TASK_TYPES = {
   WORK_EXPERIENCE_OPTIMIZE: 'work_experience_optimize',
   JD_MATCH: 'jd_match',
   SCORE: 'score',
+  INTERVIEW_QUESTIONS: 'interview_questions',
+  // 回答点评独立计费与配置，避免被误记为题目生成任务。
+  INTERVIEW_ANSWER_REVIEW: 'interview_answer_review',
   PDF_OPTIMIZE: 'pdf_optimize',
   JD_RESUME_OPTIMIZE: 'jd_resume_optimize',
   PDF_JD_OPTIMIZE: 'pdf_jd_optimize',
@@ -37,6 +40,8 @@ export const AI_TASK_TYPE_LABEL_MAP = {
   [AI_TASK_TYPES.WORK_EXPERIENCE_OPTIMIZE]: '工作经历优化',
   [AI_TASK_TYPES.JD_MATCH]: '岗位匹配度分析',
   [AI_TASK_TYPES.SCORE]: '简历评分',
+  [AI_TASK_TYPES.INTERVIEW_QUESTIONS]: 'AI 面试题生成',
+  [AI_TASK_TYPES.INTERVIEW_ANSWER_REVIEW]: 'AI 面试回答点评',
   [AI_TASK_TYPES.PDF_OPTIMIZE]: 'PDF优化',
   [AI_TASK_TYPES.JD_RESUME_OPTIMIZE]: 'JD简历优化',
   [AI_TASK_TYPES.PDF_JD_OPTIMIZE]: 'PDF+基于岗位优化',

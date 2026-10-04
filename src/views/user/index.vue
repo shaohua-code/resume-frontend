@@ -141,6 +141,7 @@
               :loading="loading"
               :get-template-name="getTemplateName"
               @delete="handleDelete"
+              @interview="startInterview"
             />
 
             <a-table
@@ -176,6 +177,7 @@
                 <template v-else-if="column.key === 'action'">
                   <div class="flex items-center gap-3">
                     <button class="link-text" @click="router.push(`/editor/${record.id}`)">编辑</button>
+                    <button class="link-text" @click="startInterview(record.id)">AI 面试</button>
                     <a-popconfirm title="确定删除？" @confirm="handleDelete(record.id)">
                       <button class="text-sm font-medium transition-colors text-danger hover:text-danger/80">删除</button>
                     </a-popconfirm>
@@ -204,6 +206,14 @@
               />
             </div>
           </a-card>
+        </section>
+
+        <!-- 题库数据由服务端按当前登录用户隔离。 -->
+        <section v-else-if="activeTab === 'interview-bank'" class="workspace-content-body">
+          <InterviewQuestionBank
+            :initial-resume-id="route.query.resume_id"
+            :auto-generate="route.query.generate === '1'"
+          />
         </section>
 
         <section v-else-if="activeTab === 'usage'" class="workspace-content-body">
@@ -265,6 +275,7 @@ import {
   UserOutlined,
   BookOutlined,
   AimOutlined,
+  ReadOutlined,
 } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useWalletStore } from '@/stores/wallet'
@@ -278,6 +289,7 @@ import UserProfilePanel from './components/UserProfilePanel.vue'
 import UserTaskModelsPanel from './components/UserTaskModelsPanel.vue'
 import UserTaskPromptsPanel from './components/UserTaskPromptsPanel.vue'
 import ResumeCardList from './components/ResumeCardList.vue'
+import InterviewQuestionBank from './components/InterviewQuestionBank.vue'
 import RechargeModal from './components/RechargeModal.vue'
 import SavedJobsPanel from './components/SavedJobsPanel.vue'
 import CareerGoalsPanel from './components/CareerGoalsPanel.vue'
@@ -331,6 +343,14 @@ const workspaceGroups = computed(() => {
           longDescription: '集中管理简历版本、模板、评分与最近更新时间。',
           eyebrow: 'RESUME LIBRARY',
           icon: FileTextOutlined,
+        },
+        {
+          key: 'interview-bank',
+          label: '我的面试题库',
+          description: '生成专属面试练习题',
+          longDescription: '基于本人简历和目标岗位生成面试题，并记录每次练习与复盘。',
+          eyebrow: 'INTERVIEW PRACTICE',
+          icon: ReadOutlined,
         },
         {
           key: 'saved-jobs',
@@ -400,8 +420,13 @@ const columns = [
   { title: '模板', dataIndex: 'template_id', key: 'template_id', width: 130 },
   { title: '评分', dataIndex: 'score', key: 'score', width: 150 },
   { title: '更新时间', dataIndex: 'update_time', key: 'update_time', width: 180 },
-  { title: '操作', key: 'action', width: 130 },
+  { title: '操作', key: 'action', width: 190 },
 ]
+
+// 从简历列表发起面试准备时保留简历上下文并自动打开生成表单。
+function startInterview(resumeId) {
+  router.push({ path: '/user', query: { tab: 'interview-bank', resume_id: String(resumeId), generate: '1' } })
+}
 
 function onSelectChange(keys) {
   selectedRowKeys.value = keys
@@ -442,7 +467,7 @@ watch(
 watch(
   () => route.query.tab,
   (tab) => {
-    if (['overview', 'resumes', 'saved-jobs', 'career-goals', 'usage', 'profile', 'models', 'prompts'].includes(tab)) {
+    if (['overview', 'resumes', 'interview-bank', 'saved-jobs', 'career-goals', 'usage', 'profile', 'models', 'prompts'].includes(tab)) {
       activeTab.value = tab
     }
   },

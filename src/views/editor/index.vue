@@ -15,6 +15,7 @@
       @appearance="openAppearancePanel"
       @match="showMatchModal = true"
       @jd-optimize="openJdOptimizeModal"
+      @interview="handleInterview"
       @history="openHistoryModal"
       @score="handleScore"
       @save="handleSave"
@@ -241,7 +242,7 @@
 import { reactive, ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 // 编辑器提供回到目标和岗位进度的入口，避免保存后的简历与后续求职任务断开。
 import JourneyPath from '@/components/JourneyPath.vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { DownloadOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { useResumeStore } from '@/stores/resume'
@@ -270,6 +271,7 @@ import { useResumeExportPrint } from '@/composables/useResumeExportPrint'
 import { useMediaQuery } from '@/composables/useMediaQuery'
 
 const route = useRoute()
+const router = useRouter()
 const resumeStore = useResumeStore()
 const userStore = useUserStore()
 const isMobile = useMediaQuery()
@@ -662,6 +664,21 @@ async function saveResumeData({ silent = false, skipValidation = false } = {}) {
     },
     { silent }
   )
+}
+
+// 进入题库前先保存编辑内容，避免生成题目时使用过期简历。
+async function handleInterview() {
+  try {
+    const savedResume = await saveResumeData({ silent: true })
+    const resumeId = savedResume?.id || currentResumeId.value || resumeStore.currentResumeId
+    if (!resumeId) {
+      message.error('简历保存失败，请先保存简历后再生成面试题')
+      return
+    }
+    await router.push({ path: '/user', query: { tab: 'interview-bank', resume_id: String(resumeId), generate: '1' } })
+  } catch (error) {
+    message.error(error?.message || '简历保存失败，请检查必填信息后重试')
+  }
 }
 
 async function handleSave() {

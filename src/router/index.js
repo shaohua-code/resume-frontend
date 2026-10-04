@@ -135,6 +135,12 @@ const routes = [
         meta: { title: '简历资源', permission: 'admin:view_resumes' },
       },
       {
+        path: 'interview-bank',
+        name: 'AdminInterviewBank',
+        component: () => import('@/views/admin/components/AdminInterviewQuestionBank.vue'),
+        meta: { title: '面试题库', permission: 'admin:view_interview_bank' },
+      },
+      {
         path: 'feedbacks',
         name: 'AdminFeedbacks',
         component: () => import('@/views/admin/components/AdminFeedbackPanel.vue'),

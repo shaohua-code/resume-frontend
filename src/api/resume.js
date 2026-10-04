@@ -47,6 +47,25 @@ async function authorizedSSEFetch(url, options = {}) {
   return fetch(url, { ...options, headers })
 }
 
+/** 通用认证 SSE POST，面试题等结构化流复用邮箱绑定与令牌刷新逻辑。 */
+export async function postAuthenticatedSSE(path, payload, handlers = {}) {
+  const response = await fetchSSEWithEmailGate(() => authorizedSSEFetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    signal: handlers.signal,
+  }), { signal: handlers.signal })
+  if (!response.ok) {
+    let detail = '生成失败，请重试'
+    try {
+      const errJson = await response.json()
+      detail = errJson.detail || errJson.message || detail
+    } catch { /* 非 JSON 错误使用通用提示。 */ }
+    throw new Error(detail)
+  }
+  return readSSEStream(response, handlers)
+}
+
 /**
  * 分模块 AI 流式优化
  * @param {'summary'|'skills'|'project'|'internship'} type 优化类型
@@ -159,7 +178,7 @@ export async function extractResumeTextStream(rawText, handlers = {}, model = ''
  * 解析 SSE 行事件（与 generateResumeStream 共用格式）
  */
 async function readSSEStream(response, handlers = {}) {
-  const { onChunk, onDone, onError, onStatus } = handlers
+  const { onChunk, onDone, onError, onStatus, onQuestion } = handlers
   const reader = response.body?.getReader()
   if (!reader) {
     const err = new Error('浏览器不支持流式响应')
@@ -182,8 +201,9 @@ async function readSSEStream(response, handlers = {}) {
     } catch {
       return
     }
-    if (event.status) onStatus?.(event.status)
+    if (event.status) onStatus?.(event.status, event.stage)
     if (event.chunk) onChunk?.(event.chunk)
+    if (event.question) onQuestion?.(event.question, event.index)
     if (event.error) {
       const streamError = new Error(event.error)
       streamError.code = event.code || ''

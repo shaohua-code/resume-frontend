@@ -31,6 +31,7 @@
       <div class="items-center hidden gap-2 shrink-0 lg:flex">
         <button class="px-3 text-xs btn-ghost" @click="emit('match')"><AimOutlined /> JD匹配</button>
         <button class="px-3 text-xs btn-ghost" @click="emit('jd-optimize')"><ThunderboltOutlined /> 基于岗位优化</button>
+        <button class="px-3 text-xs btn-ghost" @click="emit('interview')">AI 面试</button>
         <button class="px-3 text-xs btn-ghost" @click="emit('history')"><HistoryOutlined /> 历史</button>
         <button class="px-3 text-xs btn-ghost" :disabled="scoring" @click="emit('score')">
           <a-spin v-if="scoring" size="small" class="mr-1" />
@@ -66,6 +67,7 @@
               
               <a-menu-item @click="emit('match')">岗位匹配分析</a-menu-item>
               <a-menu-item @click="emit('jd-optimize')">岗位优化简历</a-menu-item>
+              <a-menu-item @click="emit('interview')">AI 面试</a-menu-item>
               <a-menu-item @click="emit('history')">历史版本</a-menu-item>
               <a-menu-item :disabled="scoring" @click="emit('score')">AI 评分</a-menu-item>
               <a-menu-divider />
@@ -99,7 +101,7 @@ defineProps({
 })
 
 const emit = defineEmits([
-  'appearance', 'match', 'jd-optimize', 'history', 'score', 'save', 'export-pdf', 'export-word',
+  'appearance', 'match', 'jd-optimize', 'interview', 'history', 'score', 'save', 'export-pdf', 'export-word',
 ])
 
 const router = useRouter()
