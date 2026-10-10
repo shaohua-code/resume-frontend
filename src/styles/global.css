@@ -115,7 +115,7 @@ html[data-system-theme] .system-ui-shell {
 
   .btn-primary {
     /* 主操作以单一主题色建立稳定层级，避免渐变和外发光同时竞争。 */
-    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button bg-brand px-5 py-0 text-sm font-semibold leading-none text-white shadow-soft transition-all duration-200 ease-smooth active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button bg-brand px-5 py-0 text-sm font-semibold leading-none text-white shadow-soft transition-all duration-200 ease-smooth active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-100;
   }
 
   .btn-primary:hover {
@@ -123,15 +123,15 @@ html[data-system-theme] .system-ui-shell {
   }
 
   .btn-primary-sm {
-    @apply inline-flex h-10 min-h-10 items-center justify-center gap-1.5 rounded-button bg-brand px-3 py-0 text-sm font-semibold leading-none text-white shadow-soft transition-all duration-200 ease-smooth active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-1.5 rounded-button bg-brand px-3 py-0 text-sm font-semibold leading-none text-white shadow-soft transition-all duration-200 ease-smooth active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-100;
   }
 
   .btn-ghost {
-    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button border border-line bg-surface px-5 py-0 text-sm font-medium leading-none text-ink-secondary transition-all duration-200 ease-smooth hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button border border-line bg-surface px-5 py-0 text-sm font-medium leading-none text-ink-secondary transition-all duration-200 ease-smooth hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-100;
   }
 
   .btn-ghost-sm {
-    @apply inline-flex h-10 min-h-10 items-center justify-center gap-1.5 rounded-button border border-line bg-surface px-3 py-0 text-sm font-medium leading-none text-ink-secondary transition-all duration-200 ease-smooth hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-1.5 rounded-button border border-line bg-surface px-3 py-0 text-sm font-medium leading-none text-ink-secondary transition-all duration-200 ease-smooth hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-100;
   }
 
   /* 全宽虚线添加按钮（添加项目/教育/实习等） */
@@ -140,7 +140,7 @@ html[data-system-theme] .system-ui-shell {
   }
 
   .btn-mint {
-    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button bg-mint px-5 py-0 text-sm font-medium leading-none shadow-sm transition-all duration-200 ease-smooth hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button bg-mint px-5 py-0 text-sm font-medium leading-none shadow-sm transition-all duration-200 ease-smooth hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-100;
     color: color-mix(in srgb, var(--color-success) 78%, #000);
   }
 
@@ -149,7 +149,7 @@ html[data-system-theme] .system-ui-shell {
   }
 
   .btn-danger {
-    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button bg-danger px-5 py-0 text-sm font-medium leading-none text-white shadow-sm transition-all duration-200 ease-smooth hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button bg-danger px-5 py-0 text-sm font-medium leading-none text-white shadow-sm transition-all duration-200 ease-smooth hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-100;
   }
 
   .input-field {
@@ -175,7 +175,7 @@ html[data-system-theme] .system-ui-shell {
 
   /* 兼容首页 Hero 旧变体，视觉仍遵循实体主按钮和清晰焦点边界。 */
   .btn-hero-primary {
-    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button border border-brand bg-brand px-5 py-0 text-sm font-semibold leading-none text-white shadow-soft transition-all duration-200 ease-smooth hover:bg-brand-dark active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button border border-brand bg-brand px-5 py-0 text-sm font-semibold leading-none text-white shadow-soft transition-all duration-200 ease-smooth hover:bg-brand-dark active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-100;
   }
 
   .btn-hero-primary:hover {
@@ -184,7 +184,7 @@ html[data-system-theme] .system-ui-shell {
 
   /* 次级 CTA 可在浅色与主题背景中稳定读取。 */
   .btn-hero-ghost {
-    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button border border-line bg-surface px-5 py-0 text-sm font-medium leading-none text-ink-secondary transition-all duration-200 ease-smooth hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-button border border-line bg-surface px-5 py-0 text-sm font-medium leading-none text-ink-secondary transition-all duration-200 ease-smooth hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-100;
   }
 
   .badge-success {
@@ -395,32 +395,45 @@ input.ant-input.input-field:not(textarea) {
   background: var(--color-danger-active);
 }
 
+/* 禁用态保留按钮类型色彩，并提供足够对比度，避免主操作褪成难辨认的灰块。 */
 .btn-primary:disabled,
 .btn-primary-sm:disabled,
-.btn-ghost:disabled,
-.btn-ghost-sm:disabled,
-.btn-ghost-dashed:disabled,
-.btn-hero-primary:disabled,
-.btn-hero-ghost:disabled,
-.btn-mint:disabled,
-.btn-danger:disabled {
-  color: var(--color-disabled-text);
+.btn-hero-primary:disabled {
+  border-color: color-mix(in srgb, var(--color-brand) 30%, var(--color-line));
+  background: color-mix(in srgb, var(--color-brand) 19%, var(--color-surface));
+  color: var(--color-brand-dark);
   box-shadow: none;
-  filter: saturate(0.45);
 }
 
 .btn-ghost:disabled,
 .btn-ghost-sm:disabled,
-.btn-ghost-dashed:disabled {
+.btn-ghost-dashed:disabled,
+.btn-hero-ghost:disabled {
   border-color: var(--color-line);
-  background: var(--color-disabled-bg);
+  background: color-mix(in srgb, var(--color-brand-lighter) 24%, var(--color-surface));
+  color: color-mix(in srgb, var(--color-ink-secondary) 84%, var(--color-ink));
+  box-shadow: none;
+}
+
+.btn-mint:disabled {
+  border: 1px solid color-mix(in srgb, var(--color-success) 20%, var(--color-line));
+  background: color-mix(in srgb, var(--color-success) 11%, var(--color-surface));
+  color: color-mix(in srgb, var(--color-success) 72%, var(--color-ink));
+  box-shadow: none;
+}
+
+.btn-danger:disabled {
+  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, var(--color-line));
+  background: color-mix(in srgb, var(--color-danger) 9%, var(--color-surface));
+  color: color-mix(in srgb, var(--color-danger) 70%, var(--color-ink));
+  box-shadow: none;
 }
 
 .input-field:disabled,
 .input-field[aria-disabled='true'] {
-  border-color: var(--color-line);
-  background: var(--color-disabled-bg);
-  color: var(--color-disabled-text);
+  border-color: color-mix(in srgb, var(--color-brand) 13%, var(--color-line));
+  background: color-mix(in srgb, var(--color-brand-lighter) 18%, var(--color-surface));
+  color: var(--color-ink-secondary);
 }
 
 /* ConfigProvider 之外的局部覆盖同样使用动态令牌，避免表格/分页/弹窗残留固定颜色。 */
@@ -468,9 +481,36 @@ input.ant-input.input-field:not(textarea) {
   background: var(--color-sidebar);
 }
 
+/* Ant Design 禁用控件统一使用柔和品牌底色与清晰文字，不依赖组件默认低对比透明度。 */
+.system-ui-shell .ant-btn:disabled,
+.system-ui-shell .ant-btn.ant-btn-disabled {
+  border-color: var(--color-line) !important;
+  background: color-mix(in srgb, var(--color-brand-lighter) 24%, var(--color-surface)) !important;
+  color: color-mix(in srgb, var(--color-ink-secondary) 84%, var(--color-ink)) !important;
+  opacity: 1 !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+}
+
+.system-ui-shell .ant-btn-primary:disabled,
+.system-ui-shell .ant-btn-primary.ant-btn-disabled {
+  border-color: color-mix(in srgb, var(--color-brand) 30%, var(--color-line)) !important;
+  background: color-mix(in srgb, var(--color-brand) 19%, var(--color-surface)) !important;
+  color: var(--color-brand-dark) !important;
+}
+
+.system-ui-shell .ant-btn-dangerous:disabled,
+.system-ui-shell .ant-btn-dangerous.ant-btn-disabled {
+  border-color: color-mix(in srgb, var(--color-danger) 20%, var(--color-line)) !important;
+  background: color-mix(in srgb, var(--color-danger) 9%, var(--color-surface)) !important;
+  color: color-mix(in srgb, var(--color-danger) 70%, var(--color-ink)) !important;
+}
+
 .system-ui-shell :where(.ant-input-disabled, .ant-select-disabled .ant-select-selector) {
-  background: var(--color-disabled-bg) !important;
-  color: var(--color-disabled-text) !important;
+  border-color: color-mix(in srgb, var(--color-brand) 13%, var(--color-line)) !important;
+  background: color-mix(in srgb, var(--color-brand-lighter) 18%, var(--color-surface)) !important;
+  color: var(--color-ink-secondary) !important;
+  opacity: 1 !important;
 }
 
 /**
@@ -538,6 +578,26 @@ input.ant-input.input-field:not(textarea) {
   .btn-danger,
   .ant-btn:not(.ant-btn-link):not(.ant-btn-text) {
     min-height: 44px !important;
+  }
+
+  /* 小号文字按钮也保持可触控尺寸，避免列表操作在手机上难以点中。 */
+  .system-ui-shell .ant-btn-sm {
+    display: inline-flex;
+    height: auto !important;
+    min-height: 44px !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 搜索框外壳与单选下拉统一到 44px，内部输入文字仍由上方规则设为 16px。 */
+  .system-ui-shell .ant-input-affix-wrapper {
+    min-height: 44px !important;
+  }
+
+  .system-ui-shell .ant-select-single,
+  .system-ui-shell .ant-select-single .ant-select-selector {
+    min-height: 44px !important;
+    height: 44px !important;
   }
 
   input.ant-input.input-field:not(textarea),

@@ -12,7 +12,6 @@ import {
   loginPassword as loginPasswordApi,
   sendEmailBindingCode as sendEmailBindingCodeApi,
   bindEmail as bindEmailApi,
-  exchangeIamLoginCode as exchangeIamLoginCodeApi,
 } from '@/api/auth'
 import message from 'ant-design-vue/es/message'
 import { useWalletStore } from '@/stores/wallet'
@@ -122,15 +121,6 @@ export const useUserStore = defineStore('user', () => {
     return res
   }
 
-  /** 完成 IAM 登录后仍复用现有本地 UUID、权限资料与 refresh token 会话。 */
-  async function loginWithIamCode(code) {
-    const res = await exchangeIamLoginCodeApi(code)
-    saveSession(res)
-    void emitProductEvent('login_completed', { login_method: 'iam_sso' })
-    message.success('统一账号登录成功')
-    return res
-  }
-
   async function register(inviteCode = '') {
     const res = await registerApi(inviteCode)
     saveSession(res)
@@ -233,7 +223,6 @@ export const useUserStore = defineStore('user', () => {
     sendCode,
     login,
     loginWithPassword,
-    loginWithIamCode,
     register,
     sendEmailBindingCode,
     bindAccountEmail,

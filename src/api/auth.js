@@ -54,28 +54,3 @@ export function resetPassword(email) {
 export function updatePassword(email, code, password) {
   return request.post('/auth/updatePassword', { email, code, password })
 }
-
-/** 读取 IAM 登录开关，不回显任何机密配置。 */
-export function getIamLoginConfig() {
-  return request.get('/auth/iam/config')
-}
-
-/** 启动 IAM 授权码登录并允许浏览器接收一次性 HttpOnly state cookie。 */
-export function startIamLogin() {
-  return request.post('/auth/iam/login/start', {}, { withCredentials: true })
-}
-
-/** 将 URL fragment 中的一次性桥接码兑换为既有本地会话。 */
-export function exchangeIamLoginCode(code) {
-  return request.post('/auth/iam/exchange', { code })
-}
-
-/** 读取当前本地用户的显式 IAM 身份绑定状态。 */
-export function getIamLinkStatus() {
-  return request.get('/auth/iam/link/status')
-}
-
-/** 已登录用户主动启动 IAM 身份绑定。 */
-export function startIamLink() {
-  return request.post('/auth/iam/link/start', {}, { withCredentials: true })
-}

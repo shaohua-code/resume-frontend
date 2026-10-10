@@ -17,6 +17,7 @@ import {
   FileAddOutlined,
   HomeOutlined,
   LogoutOutlined,
+  MessageOutlined,
   MenuOutlined,
   RightOutlined,
   SettingOutlined,
@@ -28,6 +29,7 @@ import { useWalletStore } from "@/stores/wallet";
 import { formatBalanceText, getRoleLabel } from "@/constants/roles";
 import { useMediaQuery } from "@/composables/useMediaQuery";
 import { useTheme } from "@/composables/useTheme";
+import { feedbackDialogOpen } from "@/composables/useFeedbackDialog";
 
 const route = useRoute();
 const router = useRouter();
@@ -36,6 +38,12 @@ const walletStore = useWalletStore();
 const drawerOpen = ref(false);
 const accountThemePanelOpen = ref(false);
 const isMobile = useMediaQuery();
+// 与根布局的反馈可见范围保持一致，认证页不展示无法打开的菜单项。
+const mobileFeedbackAvailable = computed(() =>
+  !route.meta.hideFeedback &&
+  !route.path.startsWith('/admin') &&
+  !['/login', '/register', '/forgot-password'].includes(route.path),
+);
 const {
   currentThemeKey,
   currentTheme,
@@ -181,6 +189,17 @@ function navToMobile(path) {
   navTo(path);
 }
 
+// 移动端反馈由导航抽屉统一承载，避免悬浮按钮压住页面操作。
+function openFeedbackFromMobileMenu() {
+  drawerOpen.value = false;
+  feedbackDialogOpen.value = true;
+}
+
+function openFeedbackFromAccountMenu() {
+  accountThemePanelOpen.value = false;
+  feedbackDialogOpen.value = true;
+}
+
 function chooseTheme(themeKey) {
   setTheme(themeKey);
   accountThemePanelOpen.value = false;
@@ -207,7 +226,7 @@ function handleLogout() {
         @click="navTo('/')"
       >
         <div
-          class="mr-0.5 flex h-[35px] w-[35px] items-center justify-center rounded-full [background-image:var(--gradient-primary)] text-[20px] font-bold text-white"
+          class="mr-0.5 flex h-11 w-11 items-center justify-center rounded-full [background-image:var(--gradient-primary)] text-[20px] font-bold text-white"
         >
         <span class="text-[20px] font-bold">AI</span>
         
@@ -374,6 +393,16 @@ function handleLogout() {
                     />
                   </button>
                 </div>
+
+                <button
+                  v-if="mobileFeedbackAvailable"
+                  type="button"
+                  class="grid w-full min-h-12 grid-cols-[20px_1fr_auto] items-center gap-2 rounded-[10px] border-0 bg-transparent px-2.5 text-left text-sm text-ink-secondary hover:bg-canvas hover:text-brand-dark"
+                  @click="openFeedbackFromAccountMenu"
+                >
+                  <MessageOutlined /><span>意见反馈</span>
+                  <RightOutlined />
+                </button>
 
                 <button
                   type="button"
@@ -547,7 +576,7 @@ function handleLogout() {
       <p
         class="mx-1 mb-2.5 text-[10px] font-extrabold tracking-[0.16em] text-muted"
       >
-        探索职简
+        快捷导航
       </p>
       <nav class="grid gap-2" aria-label="移动端主导航">
         <button
@@ -570,6 +599,15 @@ function handleLogout() {
           <RightOutlined class="text-[10px] text-line" />
         </button>
       </nav>
+
+      <button
+        v-if="mobileFeedbackAvailable"
+        type="button"
+        class="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[11px] border border-line bg-surface text-xs font-bold text-ink-secondary hover:border-brand/30 hover:text-brand-dark"
+        @click="openFeedbackFromMobileMenu"
+      >
+        <MessageOutlined /> 意见反馈
+      </button>
 
       <div
         v-if="userStore.isLoggedIn"

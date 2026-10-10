@@ -9,7 +9,6 @@ import { getRoleLabel, getStatusLabel } from '@/constants/roles'
 import { getErrorMessage } from '@/utils/errorMessage'
 import { requestEmailBinding } from '@/utils/emailBindingGate'
 import { changeUserPassword, getUserProfile, updateUserProfile } from '@/api/user'
-import { getIamLinkStatus, startIamLink } from '@/api/auth'
 
 const userStore = useUserStore()
 const loading = ref(false)
@@ -17,9 +16,6 @@ const savingNickname = ref(false)
 const savingPassword = ref(false)
 const nicknameFormRef = ref(null)
 const passwordFormRef = ref(null)
-const iamEnabled = ref(false)
-const iamLinked = ref(false)
-const linkingIam = ref(false)
 
 const profile = reactive({
   account: '',
@@ -179,35 +175,8 @@ async function handleBindEmail() {
   }
 }
 
-/** 只呈现当前本地账号的 IAM 绑定状态；Subject 与令牌不返回浏览器。 */
-async function loadIamLinkStatus() {
-  try {
-    const result = await getIamLinkStatus()
-    iamEnabled.value = result?.enabled === true
-    iamLinked.value = result?.linked === true
-  } catch {
-    iamEnabled.value = false
-    iamLinked.value = false
-  }
-}
-
-/** 当前已登录用户必须主动确认并完成 OIDC 登录才能建立身份绑定。 */
-async function handleLinkIam() {
-  if (linkingIam.value) return
-  linkingIam.value = true
-  try {
-    const attempt = await startIamLink()
-    if (!attempt?.authorization_url) throw new Error('IAM link URL missing')
-    window.location.assign(attempt.authorization_url)
-  } catch (error) {
-    message.error(getErrorMessage(error) || '统一账号绑定暂不可用')
-    linkingIam.value = false
-  }
-}
-
 onMounted(() => {
   void loadProfile()
-  void loadIamLinkStatus()
 })
 </script>
 
@@ -247,26 +216,6 @@ onMounted(() => {
               </button>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- 统一身份绑定只关联 (issuer, sub)，不会按邮箱自动合并账号。 -->
-      <div v-if="iamEnabled" class="flex flex-col gap-3 rounded-card border border-line/60 bg-surface p-5 shadow-card md:p-6">
-        <div>
-          <p class="text-base font-semibold text-ink">统一身份账号</p>
-          <p class="mt-1 text-xs text-muted">绑定后可使用统一账号登录；现有简历、角色和数据归属保持在当前账号。</p>
-        </div>
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <span class="text-sm font-medium text-ink">{{ iamLinked ? '已绑定' : '尚未绑定' }}</span>
-          <button
-            v-if="!iamLinked"
-            type="button"
-            class="inline-flex min-h-10 w-fit items-center justify-center rounded-button border border-line bg-surface px-3 text-sm text-ink-secondary transition hover:border-brand/30 hover:bg-brand-lighter/50 hover:text-brand-dark"
-            :disabled="linkingIam"
-            @click="handleLinkIam"
-          >
-            {{ linkingIam ? '正在跳转…' : '绑定统一账号' }}
-          </button>
         </div>
       </div>
 

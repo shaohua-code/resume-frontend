@@ -60,7 +60,7 @@ function handleLogout() {
 </script>
 
 <template>
-  <a-layout class="h-screen overflow-hidden font-sans bg-cream text-ink">
+  <a-layout class="admin-layout h-screen overflow-hidden font-sans bg-cream text-ink">
     <!-- 桌面端固定侧边栏：流式宽度为 0，避免与 ml 叠加产生空隙 -->
     <a-layout-sider :width="248" :collapsed-width="0"
       class="admin-sider fixed left-0 top-0 z-30 hidden h-screen overflow-hidden border-r border-line/60 !bg-sidebar lg:block">
@@ -72,7 +72,7 @@ function handleLogout() {
       <a-layout-header
         class="z-20 flex !h-[72px] !bg-surface shrink-0 items-center justify-between gap-3 border-b border-line/60 px-4 shadow-card sm:px-6">
         <div class="flex items-center min-w-0 gap-3">
-          <a-button type="text" class="lg:hidden" @click="drawerOpen = true">
+          <a-button type="text" class="!h-11 !w-11 shrink-0 lg:hidden" @click="drawerOpen = true">
             <MenuOutlined class="text-lg" />
           </a-button>
           <div class="min-w-0">
@@ -151,6 +151,18 @@ function handleLogout() {
 .admin-user-dropdown .ant-dropdown-menu-item-active {
   background-color: var(--color-brand-lighter) !important;
   color: var(--color-brand-dark);
+}
+
+/* 后台宽表在手机上保持横向滚动，并明确提示还有未显示的列。 */
+@media (max-width: 640px) {
+  .admin-layout .ant-table-wrapper::before {
+    content: '左右滑动查看完整表格 →';
+    display: block;
+    margin: 0 2px 8px;
+    color: var(--color-muted);
+    font-size: 12px;
+    text-align: right;
+  }
 }
 
 :deep(.ant-layout-header) {

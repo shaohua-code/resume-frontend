@@ -47,6 +47,7 @@ import ResumeBasicFieldsSection from './ResumeBasicFieldsSection.vue'
 import ResumeEducationListSection from './ResumeEducationListSection.vue'
 import ResumeExperienceSections from './ResumeExperienceSections.vue'
 import StreamResumePreview from './StreamResumePreview.vue'
+import { hasStreamResumeContent, parsePartialResumeJson } from '../utils/streamResumeParser'
 import { useGenerateDraft } from '../composables/useGenerateDraft'
 
 const router = useRouter()
@@ -171,6 +172,8 @@ if (draft.generation.phase === 'save_error' && !draft.generation.saveRequestId) 
 }
 
 const generationLoading = computed(() => draft.generation.phase === 'streaming')
+// 汇总异常状态，让结果说明与空预览共用同一判定。
+const generationFailed = computed(() => ['error', 'interrupted', 'cancelled'].includes(draft.generation.phase))
 const formLocked = computed(() => recognitionLoading.value || generationLoading.value || operationStarting.value)
 const hasGenerationPanel = computed(() => !['idle', 'cancelled'].includes(draft.generation.phase) || !!draft.generation.streamText)
 const profileReadiness = computed(() => {
@@ -205,6 +208,8 @@ const previewStreamText = computed(() => {
   if (draft.generation.streamText) return draft.generation.streamText
   return draft.generation.result ? JSON.stringify(draft.generation.result, null, 2) : ''
 })
+// 非空流文本不一定已组成可预览简历；失败时仅展示解析成功的真实内容。
+const hasPreviewContent = computed(() => hasStreamResumeContent(parsePartialResumeJson(previewStreamText.value)))
 const jdOptimizeResume = computed(() => getFormSnapshot())
 
 // 岗位优化对比面板数据
@@ -664,7 +669,8 @@ async function goToEditor() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-[1500px] pb-10 sm:pb-12">
+  <!-- 限定工作区最大宽度，避免宽屏下识别、表单和结果区横向铺满。 -->
+  <div class="mx-auto max-w-[1200px] pb-10 sm:pb-12">
     <div class="generate-workspace" :class="{ 'has-result': hasGenerationPanel }">
       <main class="generate-main min-w-0">
     <RecognitionPanel
@@ -687,7 +693,7 @@ async function goToEditor() {
     >
       <div ref="tabScrollRef" class="overflow-x-auto scrollbar-hide">
         <ul
-          class="mx-auto flex w-full max-w-3xl items-stretch px-0 sm:px-0"
+          class="mx-auto flex w-full max-w-4xl items-stretch px-0 sm:px-0"
           role="tablist"
         >
           <li
@@ -728,12 +734,23 @@ async function goToEditor() {
     >
       <div
         class="px-3 py-4 sm:px-6 sm:py-6"
-        :class="formLocked ? 'pointer-events-none select-none opacity-60' : ''"
+        :class="formLocked ? 'pointer-events-none select-none' : ''"
         :inert="formLocked ? '' : null"
         :aria-busy="formLocked"
       >
-        <!-- 内容区限宽居中，避免宽屏左右空、表单拉得过散 -->
-        <div class="mx-auto w-full max-w-3xl">
+        <!-- 明确说明资料区的填写目标，并同步展示两个必填项的完成度。 -->
+        <div class="mx-auto mb-4 flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-line/60 bg-cream/45 px-4 py-3 sm:mb-5 sm:px-5">
+          <div class="min-w-0">
+            <h2 class="m-0 text-base font-bold leading-6 text-ink sm:text-lg">核对并补充你的简历信息</h2>
+            <p class="mb-0 mt-1 text-xs leading-5 text-ink-secondary sm:text-sm">姓名和意向岗位为必填，其余资料可按需补充。</p>
+          </div>
+          <span class="form-completion-chip" :class="{ 'is-complete': profileReadiness.requiredCount === 2 }">
+            <CheckCircleFilled v-if="profileReadiness.requiredCount === 2" />
+            {{ profileReadiness.requiredCount === 2 ? '必填已完成' : `必填 ${profileReadiness.requiredCount}/2` }}
+          </span>
+        </div>
+        <!-- 表单宽度与工作区匹配，字段不会挤在宽卡片的正中间。 -->
+        <div class="mx-auto w-full max-w-4xl">
           <template v-if="activeFormTab === 'basic'">
             <!-- 个人评价复用既有 summary 字段，保持选填并承接识别结果回填。 -->
             <ResumeBasicFieldsSection
@@ -771,12 +788,12 @@ async function goToEditor() {
         </div>
       </div>
 
-      <!-- 锁定层只覆盖表单内容，不挡住吸顶 Tab -->
+      <!-- 生成期间保持表单内容清晰可读；inert 阻止编辑，状态提示说明当前锁定原因。 -->
       <div
         v-if="formLocked"
-        class="pointer-events-none absolute inset-0 z-10 flex items-start justify-center bg-surface/20 pt-16 backdrop-blur-[1px]"
+        class="pointer-events-none absolute inset-0 z-10 flex items-start justify-center bg-transparent pt-3 sm:pt-4"
       >
-        <div class="rounded-full bg-surface/95 px-4 py-2 text-sm font-medium text-brand-dark shadow-card">
+        <div class="inline-flex max-w-[calc(100%-24px)] items-center rounded-xl border border-brand/15 bg-surface/95 px-4 py-2.5 text-sm font-semibold text-brand-dark shadow-card">
           <a-spin size="small" class="mr-2" />{{ recognitionLoading ? '识别中，表单暂时锁定' : 'AI 输出中，表单暂时锁定' }}
         </div>
       </div>
@@ -806,7 +823,7 @@ async function goToEditor() {
           <template v-else-if="draft.generation.phase === 'save_error'">
             <GradientButton class="min-h-10 justify-center px-4" @click="retrySaveResult"><ReloadOutlined /> 重试保存</GradientButton>
           </template>
-          <template v-else-if="['error', 'interrupted', 'cancelled'].includes(draft.generation.phase)">
+          <template v-else-if="generationFailed">
             <GradientButton class="min-h-10 justify-center px-4" @click="restartGeneration"><ReloadOutlined /> 重新尝试本次操作</GradientButton>
           </template>
         </div>
@@ -814,10 +831,10 @@ async function goToEditor() {
 
       <div class="generation-result-grid">
         <section class="generation-preview-card" aria-label="简历预览">
-          <div v-if="!generationLoading && !previewStreamText" class="generation-empty-preview">
+          <div v-if="!generationLoading && !hasPreviewContent" class="generation-empty-preview">
             <span aria-hidden="true">!</span>
-            <strong>{{ draft.generation.status || '暂时没有可预览内容' }}</strong>
-            <p>已填写的信息仍然保留，可以重新尝试本次操作。</p>
+            <strong>{{ generationFailed ? '暂时没有可预览内容' : (draft.generation.status || '简历内容正在整理') }}</strong>
+            <p>{{ generationFailed ? '你已填写的资料仍然保留，检查网络后可重新尝试。' : '已有资料会保留，你可以重新尝试生成。' }}</p>
           </div>
           <StreamResumePreview
             v-else
@@ -837,7 +854,7 @@ async function goToEditor() {
             <h3>简历整理中</h3>
             <p class="generation-summary-card__copy">完成后可以先核对经历和联系方式，再决定是否继续编辑。</p>
           </template>
-          <template v-else-if="['error', 'interrupted', 'cancelled'].includes(draft.generation.phase)">
+          <template v-else-if="generationFailed">
             <p class="generation-summary-card__eyebrow">操作未完成</p>
             <h3>你的填写内容已保留</h3>
             <p class="generation-summary-card__copy">检查网络后，使用上方按钮重新尝试；不会清空已填写的简历信息。</p>
@@ -893,12 +910,12 @@ async function goToEditor() {
         <section class="readiness-card">
           <div class="readiness-card__top">
             <div>
-              <p class="readiness-card__eyebrow">创作进度</p>
-              <h2>让简历从真实信息开始</h2>
+              <p class="readiness-card__eyebrow">生成准备</p>
+              <h2>{{ profileReadiness.requiredCount === 2 ? '已满足生成条件' : '填写两项即可开始' }}</h2>
             </div>
             <span class="readiness-card__count">{{ profileReadiness.requiredCount }}<small>/2</small></span>
           </div>
-          <p class="readiness-card__caption">填写两项必需信息即可开始；其他经历可以稍后补充。</p>
+          <p class="readiness-card__caption">只需填写姓名和意向岗位。教育、工作及项目经历都可以之后补充。</p>
           <div class="readiness-progress" role="progressbar" :aria-valuenow="profileReadiness.percent" aria-valuemin="0" aria-valuemax="100" aria-label="必填信息完成度">
             <span :style="{ width: `${profileReadiness.percent}%` }" />
           </div>
@@ -918,19 +935,19 @@ async function goToEditor() {
 
         <section class="experience-card">
           <p class="readiness-card__eyebrow">可选补充</p>
-          <h2>让经历更完整</h2>
+          <h2>让内容更贴合岗位</h2>
           <div class="experience-counts">
             <div><strong>{{ profileReadiness.educationCount }}</strong><span>段教育经历</span></div>
             <div><strong>{{ profileReadiness.experienceCount }}</strong><span>段工作或项目</span></div>
           </div>
-          <p>暂时没有也没关系，生成后仍可在编辑器里继续完善。</p>
+          <p>补充真实经历有助于完善简历；暂时没有也可以先生成，再继续编辑。</p>
         </section>
 
         <section class="trust-card">
           <span class="trust-card__spark"><BulbOutlined /></span>
           <div>
-            <h2>内容由你做主</h2>
-            <p>识别只回填原文。AI 整理完成后，你可以先核对，再决定是否保存。</p>
+            <h2>生成后由你确认</h2>
+            <p>AI 会整理已填写的信息。生成后请核对事实与联系方式，再决定是否保存。</p>
           </div>
         </section>
       </aside>
@@ -978,20 +995,25 @@ async function goToEditor() {
   display: none;
 }
 
-/* 三段表单导航使用轻量胶囊态，清楚标记进度又不做成后台标签栏。 */
-.resume-form-tab { min-height: 62px; margin: 5px 3px; border: 0; border-radius: 13px; }
-.resume-form-tab.is-active { border: 0; background: var(--color-brand-lighter); color: var(--color-brand-dark); }
-.resume-form-tab > span:last-child { color: var(--color-ink-secondary); font-size: 10px; }
+/* 三段表单导航与表单内容等宽，活动项成为清晰的当前步骤。 */
+.resume-form-tab { min-height: 66px; margin: 5px 4px; border: 0; border-radius: 14px; }
+.resume-form-tab.is-active { border: 0; background: var(--color-brand-lighter); color: var(--color-brand-dark); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-brand) 9%, transparent); }
+.resume-form-tab > span:last-child { color: var(--color-ink-secondary); font-size: 11px; }
 
-/* 桌面创作页采用工作区与真实表单准备度双栏；小屏完整保留单栏填写流。 */
-.generate-workspace { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 20px; }
+/* 桌面采用工作区与准备度双栏；进入生成/结果状态后收拢主列，避免内容被拉得过宽。 */
+.generate-workspace { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 24px; }
 .generate-workspace.has-result { grid-template-columns: minmax(0, 1fr); }
 .generate-aside { display: none; }
 .generate-workspace.has-result .generate-aside { display: none; }
-.generate-inline-actions { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 16px; padding: 14px 0; }
+.generate-workspace.has-result .generate-main { width: min(100%, 1160px); margin-inline: auto; }
+/* 桌面滚动时让核心操作保持可见；窄屏在下方改用安全区固定栏。 */
+.generate-inline-actions { position: sticky; z-index: 20; bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 18px; padding: 14px 18px; border: 1px solid color-mix(in srgb, var(--color-brand) 16%, var(--color-line)); border-radius: 18px; background: color-mix(in srgb, var(--color-surface) 94%, transparent); box-shadow: 0 12px 32px rgb(25 35 58 / 10%); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
 .generate-inline-actions > p { margin: 0; color: var(--color-ink-secondary); font-size: 13px; }
+.form-completion-chip { display: inline-flex; min-height: 30px; flex: 0 0 auto; align-items: center; gap: 6px; padding: 0 11px; border: 1px solid color-mix(in srgb, var(--color-brand) 13%, var(--color-line)); border-radius: 999px; background: color-mix(in srgb, var(--color-brand-lighter) 55%, white); color: var(--color-brand-dark); font-size: 11px; font-weight: 700; }
+.form-completion-chip.is-complete { border-color: color-mix(in srgb, var(--color-success) 25%, var(--color-line)); background: color-mix(in srgb, var(--color-success) 9%, white); color: var(--color-success); }
 .generate-result-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
-.readiness-card, .experience-card { padding: 20px; border: 1px solid var(--color-line); border-radius: 18px; background: var(--color-surface); box-shadow: 0 10px 28px color-mix(in srgb, var(--color-ink) 5%, transparent); }
+/* 准备度卡片用低饱和品牌色承接主流程，不额外增加强色块干扰表单。 */
+.readiness-card, .experience-card { padding: 20px; border: 1px solid color-mix(in srgb, var(--color-brand) 10%, var(--color-line)); border-radius: 18px; background: color-mix(in srgb, var(--color-surface) 95%, var(--color-brand-lighter)); box-shadow: 0 12px 30px color-mix(in srgb, var(--color-ink) 6%, transparent); }
 .readiness-card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .readiness-card__eyebrow { margin: 0 0 7px; color: var(--color-brand-dark); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
 .readiness-card h2, .experience-card h2, .trust-card h2 { margin: 0; color: var(--color-ink); font-size: 16px; font-weight: 750; line-height: 1.4; }
@@ -1036,14 +1058,16 @@ async function goToEditor() {
 .generation-trust-note :deep(.anticon) { flex: 0 0 auto; color: var(--color-brand-dark); }
 
 @media (min-width: 1280px) {
-  .generate-workspace { grid-template-columns: minmax(0, 1fr) 294px; gap: 22px; }
+  .generate-workspace { grid-template-columns: minmax(0, 1fr) 294px; gap: 24px; }
   .generate-aside { position: sticky; top: 86px; display: block; }
-  .generation-result-grid { grid-template-columns: minmax(0, 794px) 286px; justify-content: center; gap: 18px; }
+  /* 预览与说明并列时固定说明栏阅读宽度，并让预览承担主要空间。 */
+  .generation-result-grid { grid-template-columns: minmax(0, 794px) 260px; justify-content: center; gap: 16px; }
   .generation-preview-card { padding: 18px; }
 }
 
 @media (max-width: 767px) {
-  .generate-workspace:not(.has-result) .generate-main { padding-bottom: env(safe-area-inset-bottom); }
+  /* 底部固定操作栏不遮挡最后一行表单，并保留设备安全区。 */
+  .generate-workspace:not(.has-result) .generate-main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
   .generate-inline-actions {
     position: fixed;
     z-index: 60;
@@ -1054,6 +1078,7 @@ async function goToEditor() {
     gap: 8px;
     margin: 0;
     padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    border-radius: 18px 18px 0 0;
     border-top: 1px solid color-mix(in srgb, var(--color-line) 80%, transparent);
     background: color-mix(in srgb, var(--color-surface) 94%, transparent);
     box-shadow: 0 -8px 24px rgb(25 35 58 / 8%);

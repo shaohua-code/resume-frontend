@@ -3,7 +3,7 @@
   账户概览 + 可扩展侧边导航（简历 / 用量 / 后续模型与提示词配置）
 -->
 <template>
-  <div class="page-container user-center-page animate-fade-in">
+  <div class="page-container user-center-page animate-fade-in" :class="{ 'user-center-page--subpage': activeTab !== 'overview' }">
     <section class="workspace-hero">
       <div class="workspace-hero-copy">
         <span class="workspace-eyebrow">ACCOUNT WORKSPACE</span>
@@ -705,7 +705,7 @@ function handleLogout() {
 .account-edit-button {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
+  min-height: 44px;
   padding: 0 10px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-pill);
@@ -762,6 +762,10 @@ function handleLogout() {
 }
 
 .metric-card button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 4px;
   margin-top: 2px;
   border: 0;
   background: transparent;
@@ -1095,6 +1099,12 @@ function handleLogout() {
 }
 
 @media (max-width: 860px) {
+  /* 平板与手机的子页直接进入工作内容，账户概览仍可从工作台首页查看。 */
+  .user-center-page--subpage .workspace-hero,
+  .user-center-page--subpage .account-overview {
+    display: none;
+  }
+
   .workspace-hero {
     min-height: 98px;
     padding: 3px 2px 17px;

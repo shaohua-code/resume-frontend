@@ -97,7 +97,7 @@ onMounted(loadUnreadCount)
     <a-badge :count="unreadCount" size="small" class="inline-flex">
       <button
         type="button"
-        class="flex h-9 w-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-brand-lighter hover:text-brand-dark"
+        class="flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-brand-lighter hover:text-brand-dark"
         aria-label="消息"
       >
         <Bell class="w-4 h-4" />

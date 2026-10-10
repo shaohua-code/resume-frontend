@@ -93,18 +93,19 @@ function removeCustomField(index) {
 
 <template>
   <a-form ref="formRef" :model="resume" :rules="formRules" layout="vertical" size="small">
+    <!-- 手机单列、平板两列、桌面三列，给意向岗位等长字段留出可读宽度。 -->
     <a-row :gutter="12">
       <a-col v-if="showAvatar" :span="24">
         <a-form-item label="头像">
           <AvatarUpload v-model="resume.avatar" />
         </a-form-item>
       </a-col>
-      <a-col :xs="24" :sm="8">
+      <a-col :xs="24" :sm="12" :md="8">
         <a-form-item label="姓名" name="name" :required="requiredBasic">
           <a-input v-model:value="resume.name" class="input-field" placeholder="请输入姓名" />
         </a-form-item>
       </a-col>
-      <a-col :xs="24" :sm="8">
+      <a-col :xs="24" :sm="12" :md="8">
         <a-form-item label="意向岗位" name="target_position" :required="requiredBasic">
           <a-input
             v-model:value="resume.target_position"
@@ -113,12 +114,12 @@ function removeCustomField(index) {
           />
         </a-form-item>
       </a-col>
-      <a-col :xs="24" :sm="8">
+      <a-col :xs="24" :sm="12" :md="8">
         <a-form-item label="手机">
           <a-input v-model:value="resume.phone" placeholder="请输入手机号" class="input-field" />
         </a-form-item>
       </a-col>
-      <a-col :xs="24" :sm="8">
+      <a-col :xs="24" :sm="12" :md="8">
         <a-form-item label="邮箱">
           <a-input v-model:value="resume.email" placeholder="请输入邮箱" class="input-field" />
         </a-form-item>
@@ -128,7 +129,8 @@ function removeCustomField(index) {
         v-for="field in regularExtendedFields"
         :key="field.key"
         :xs="24"
-        :sm="8"
+        :sm="12"
+        :md="8"
       >
         <a-form-item :label="field.label">
           <a-select
@@ -161,7 +163,8 @@ function removeCustomField(index) {
           v-for="field in advancedExtendedFields"
           :key="field.key"
           :xs="24"
-          :sm="8"
+          :sm="12"
+          :md="8"
         >
           <a-form-item :label="field.label">
             <a-select

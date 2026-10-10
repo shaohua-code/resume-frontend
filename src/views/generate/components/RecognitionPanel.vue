@@ -1,5 +1,5 @@
 <!--
-  统一生成页顶部的辅助识别区。
+  统一生成页顶部的先导入已有简历区。
   PDF/Word 与文字两种模式各自只保留一个主识别按钮；支持复用已存唯一源文件。
 -->
 <script setup>
@@ -450,21 +450,24 @@ onBeforeUnmount(() => {
   >
     <template #title>
       <div class="flex flex-col gap-0.5">
-        <span class="text-base font-semibold text-ink">辅助识别</span>
-        <span class="text-xs font-normal text-muted">只提取并回填原文，不生成简历；AI 生成会单独确认并按页面规则计费。</span>
+        <span class="text-base font-semibold text-ink">先导入已有简历</span>
+        <span class="text-xs font-normal text-muted">上传或粘贴简历，识别后填入下方资料；没有电子简历也可以直接填写。</span>
       </div>
     </template>
 
-    <a-segmented
-      v-model:value="state.method"
-      :disabled="loading || disabled"
-      :options="[
-        { label: '智能文件识别', value: 'pdf' },
-        { label: '智能文字识别', value: 'text' },
-      ]"
-      size="middle"
-      class="mb-3 w-full sm:w-auto"
-    />
+    <!-- 切换组在卡片内容区水平居中；窄屏保持按钮等宽，便于触控。 -->
+    <div class="mb-3 flex justify-center">
+      <a-segmented
+        v-model:value="state.method"
+        :disabled="loading || disabled"
+        :options="[
+          { label: '上传简历文件', value: 'pdf' },
+          { label: '粘贴简历内容', value: 'text' },
+        ]"
+        size="middle"
+        class="w-full sm:w-auto"
+      />
+    </div>
 
     <!-- 文件识别：已存状态 + 可选替换区 + 唯一主按钮 -->
     <div v-if="state.method === 'pdf'" class="space-y-2.5">
@@ -473,7 +476,7 @@ onBeforeUnmount(() => {
         class="flex flex-col gap-2 rounded-lg border border-line/30 bg-cream/50 p-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-3"
       >
         <div class="min-w-0 space-y-1">
-          <div class="flex items-center gap-2 text-sm font-medium text-ink">
+          <div class="existing-file-title flex items-center gap-2 text-sm font-medium text-ink">
             <FileDoneOutlined class="shrink-0 text-success" />
             <span>已保存一份简历文件，可直接识别</span>
           </div>
@@ -484,7 +487,7 @@ onBeforeUnmount(() => {
             <span v-if="pdfFile" class="text-brand-dark">已选新文件，识别时将覆盖</span>
           </div>
         </div>
-        <div class="flex flex-col gap-1.5 sm:flex-row sm:shrink-0 sm:gap-2">
+        <div class="existing-file-actions flex flex-col gap-1.5 sm:flex-row sm:shrink-0 sm:gap-2">
           <a-button
             class="w-full min-h-10 sm:w-auto sm:min-h-11"
             :disabled="loading || disabled"
@@ -527,7 +530,7 @@ onBeforeUnmount(() => {
           <div class="resume-upload-inner">
             <span class="resume-upload-icon"><InboxOutlined /></span>
             <span class="resume-upload-copy">
-              <strong>{{ existingFile ? '选择新文件，替换当前简历材料' : '上传已有简历' }}</strong>
+              <strong>{{ existingFile ? '选择新文件，替换当前简历材料' : '上传简历文件' }}</strong>
               <span>拖到这里，或从设备选择 · PDF / DOCX · 最大 10MB</span>
             </span>
             <span class="resume-upload-action" aria-hidden="true">浏览文件&nbsp; →</span>
@@ -546,7 +549,7 @@ onBeforeUnmount(() => {
           </a-button>
         </div>
         <p class="text-xs leading-5 text-muted">
-          扫描件需先 OCR；也可以切换「智能文字识别」，粘贴可复制的简历内容。
+          扫描件需先 OCR；扫描件无法读取时，可以切换到「粘贴简历内容」手动导入。
         </p>
       </div>
 
@@ -579,16 +582,28 @@ onBeforeUnmount(() => {
       </a-modal>
     </div>
 
-    <!-- 文字识别：直接输入，使用 placeholder 提示内容格式。 -->
+    <!-- 明确标出粘贴内容、识别门槛和字数，减少首次使用时的猜测。 -->
     <div v-else class="space-y-3">
+      <div class="flex flex-col gap-1">
+        <label for="generate-resume-text" class="text-sm font-semibold text-ink">粘贴简历内容</label>
+        <p class="text-xs leading-5 text-muted">建议粘贴完整简历，识别后会填入下方资料；至少输入 20 个字。</p>
+      </div>
+      <!-- 保留足够的粘贴空间，同时把下方资料区提前带入首屏。 -->
       <a-textarea
+        id="generate-resume-text"
         v-model:value="state.rawText"
         :disabled="loading || disabled"
-        :auto-size="{ minRows: 8, maxRows: 16 }"
+        :auto-size="{ minRows: isMobile ? 4 : 5, maxRows: 14 }"
         :maxlength="8000"
-        placeholder="例如：姓名、求职意向、教育经历、工作/项目经历、技能…"
+        placeholder="粘贴简历正文，包含个人信息、教育经历、工作或项目经历、技能等。"
         class="input-field"
       />
+      <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs">
+        <span :class="textLength >= 20 ? 'text-success' : 'text-muted'">
+          {{ textLength >= 20 ? '内容长度满足识别要求' : '至少输入 20 个字后即可识别' }}
+        </span>
+        <span class="shrink-0 tabular-nums text-muted">{{ textLength }} / 8000</span>
+      </div>
       <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
         <div class="flex flex-col gap-1.5 sm:flex-row sm:gap-2">
           <a-button
@@ -607,16 +622,15 @@ onBeforeUnmount(() => {
           </a-button>
         </div>
         <GradientButton
-          class="min-h-10 w-full justify-center sm:min-h-11 sm:w-auto sm:min-w-[180px]"
+          class="min-h-10 w-full justify-center sm:min-h-11 sm:w-auto sm:min-w-[200px]"
           :loading="loading"
           :disabled="disabled || textLength < 20"
           @click="recognizeText"
         >
-          <FileTextOutlined v-if="!loading" /> 开始文字识别
+          <FileTextOutlined v-if="!loading" /> 识别并填入表单
         </GradientButton>
       </div>
     </div>
-
     <!-- 流式结果：识别期间展开，完成后默认收起，避免长原文挤压下方表单。 -->
     <div
       v-if="hasRun"
@@ -657,6 +671,14 @@ onBeforeUnmount(() => {
 <style scoped>
 /* 识别模块是创作流程的起点，用清爽实体卡片和主题色文件投递区建立亲和感。 */
 :deep(.recognition-panel.ant-card) { overflow: hidden; border-radius: 21px; }
+/* 禁用时降低背景饱和度但保留深色文字，按钮仍清楚可读。 */
+.recognition-panel :deep(.btn-primary:disabled),
+.recognition-panel :deep(.btn-primary-sm:disabled) {
+  border-color: color-mix(in srgb, var(--color-brand) 24%, var(--color-line));
+  background: color-mix(in srgb, var(--color-brand) 17%, var(--color-surface));
+  color: var(--color-brand-dark);
+  box-shadow: none;
+}
 :deep(.ant-card-head) {
   @apply min-h-0 border-b border-line/40 px-4 py-4 sm:px-6 sm:py-5;
 }
@@ -717,9 +739,21 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 @media (max-width: 640px) {
+  .existing-file-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .existing-file-actions :deep(.ant-btn) {
+    min-width: 0;
+    min-height: 40px;
+    padding-inline: 4px;
+    font-size: 12px;
+  }
+  .existing-file-title { gap: 6px; font-size: 13px; }
   :deep(.ant-segmented) {
     display: flex;
-    width: 100%;
+    width: min(100%, 420px);
     min-height: 48px;
     padding: 4px;
     border: 1px solid color-mix(in srgb, var(--color-brand) 10%, var(--color-line));
