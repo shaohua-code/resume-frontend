@@ -75,22 +75,27 @@ onBeforeUnmount(() => {
         <router-view v-if="route.meta.lightweight || antDesignReady" />
         <div
           v-else
-          class="flex min-h-[40vh] items-center justify-center px-4"
+          class="app-loading flex min-h-[40vh] items-center justify-center px-4"
           role="status"
           aria-live="polite"
         >
-          <div class="w-full max-w-sm rounded-banner border border-line/60 bg-surface/95 px-5 py-4 text-sm font-medium text-ink shadow-soft">
-            <div class="mb-3 flex items-center justify-between gap-4">
-              <span>页面加载中，请稍候…</span>
-              <span class="text-xs text-muted">加载组件</span>
+          <div class="app-loading__card">
+            <div class="app-loading__header">
+              <div class="app-loading__mark" aria-hidden="true"><span>AI</span></div>
+              <div class="app-loading__copy">
+                <strong>正在为你准备工作台</strong>
+                <span>界面组件加载中，请稍候片刻</span>
+              </div>
+              <span class="app-loading__status"><i aria-hidden="true" />正在加载</span>
             </div>
-            <!-- 非轻量业务页等待 Ant Design 按需组件注册完成，这里用非确定进度条表达加载中。 -->
-            <div
-              class="h-2 overflow-hidden rounded-full bg-brand-lighter/50"
-              role="progressbar"
-              aria-label="页面加载进度"
-            >
-              <div class="h-full w-1/2 animate-loading-progress rounded-full bg-gradient-to-r from-brand-light via-brand to-brand-dark" />
+            <!-- 这里只等待组件就绪，没有真实百分比；用带流光的循环进度表达状态。 -->
+            <div class="app-loading__track" role="progressbar" aria-label="页面正在加载">
+              <span class="app-loading__bar" />
+            </div>
+            <div class="app-loading__footer">
+              <span>界面初始化</span>
+              <span class="app-loading__steps" aria-hidden="true"><i /><i /><i /></span>
+              <span>即将就绪</span>
             </div>
           </div>
         </div>
@@ -117,15 +122,100 @@ onBeforeUnmount(() => {
 <style scoped>
 @keyframes loading-progress {
   0% {
-    transform: translateX(-120%);
+    transform: translateX(-112%);
+    opacity: .55;
+  }
+  45% {
+    opacity: 1;
   }
   100% {
-    transform: translateX(220%);
+    transform: translateX(245%);
+    opacity: .72;
   }
 }
 
-/* 根加载态没有真实百分比，使用循环位移动画保持轻量并避免阻塞首屏。 */
-.animate-loading-progress {
-  animation: loading-progress 1.15s ease-in-out infinite;
+@keyframes loading-glow {
+  0%, 100% { opacity: .4; transform: scale(.86); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+@keyframes loading-dot {
+  0%, 60%, 100% { opacity: .35; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+@keyframes loading-orbit {
+  to { transform: rotate(360deg); }
+}
+
+/* 组件预热期间展示品牌色流光，不伪造百分比，也不延长页面就绪时间。 */
+.app-loading__card {
+  position: relative;
+  width: min(100%, 520px);
+  overflow: hidden;
+  padding: 22px 24px 17px;
+  border: 1px solid color-mix(in srgb, var(--color-brand) 17%, var(--color-line));
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--color-brand) 10%, transparent), transparent 48%),
+    color-mix(in srgb, var(--color-surface) 96%, white);
+  box-shadow: 0 18px 52px rgb(25 35 58 / 10%), 0 3px 10px rgb(25 35 58 / 4%);
+}
+
+.app-loading__header { display: flex; align-items: center; gap: 14px; }
+.app-loading__mark {
+  position: relative;
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 15px;
+  background: linear-gradient(145deg, var(--color-brand-dark), var(--color-brand) 58%, var(--color-brand-light));
+  color: white;
+  font-size: 15px;
+  font-weight: 800;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--color-brand) 30%, transparent);
+}
+.app-loading__mark::after {
+  position: absolute;
+  inset: -5px;
+  border: 1px solid color-mix(in srgb, var(--color-brand) 42%, transparent);
+  border-top-color: var(--color-brand-light);
+  border-radius: 19px;
+  content: '';
+  animation: loading-orbit 2.8s linear infinite;
+}
+.app-loading__copy { display: grid; min-width: 0; gap: 4px; }
+.app-loading__copy strong { color: var(--color-ink); font-size: 15px; font-weight: 750; line-height: 1.35; }
+.app-loading__copy span { color: var(--color-ink-secondary); font-size: 12px; line-height: 1.5; }
+.app-loading__status { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; margin-left: auto; padding: 6px 9px; border: 1px solid color-mix(in srgb, var(--color-brand) 15%, var(--color-line)); border-radius: 999px; background: color-mix(in srgb, var(--color-brand-lighter) 65%, white); color: var(--color-brand-dark); font-size: 10px; font-weight: 700; }
+.app-loading__status i { width: 6px; height: 6px; border-radius: 50%; background: var(--color-brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand) 14%, transparent); animation: loading-glow 1.4s ease-in-out infinite; }
+.app-loading__track { position: relative; height: 10px; overflow: hidden; margin-top: 24px; padding: 2px; border: 1px solid color-mix(in srgb, var(--color-brand) 12%, var(--color-line)); border-radius: 999px; background: color-mix(in srgb, var(--color-brand-lighter) 42%, var(--color-surface)); }
+.app-loading__track::after { position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgb(255 255 255 / 44%), transparent); content: ''; transform: translateX(-100%); animation: loading-progress 2.4s ease-in-out infinite; }
+.app-loading__bar { position: absolute; inset-block: 1px; left: 0; width: 42%; border-radius: inherit; background: linear-gradient(90deg, var(--color-brand-dark), var(--color-brand), var(--color-brand-light)); box-shadow: 0 0 12px color-mix(in srgb, var(--color-brand) 48%, transparent); animation: loading-progress 1.45s cubic-bezier(.46,.03,.52,.96) infinite; }
+.app-loading__footer { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--color-muted); font-size: 10px; }
+.app-loading__steps { display: flex; align-items: center; gap: 4px; margin-inline: auto; }
+.app-loading__steps i { width: 4px; height: 4px; border-radius: 50%; background: var(--color-brand); opacity: .45; animation: loading-dot 1.05s ease-in-out infinite; }
+.app-loading__steps i:nth-child(2) { animation-delay: .15s; }
+.app-loading__steps i:nth-child(3) { animation-delay: .3s; }
+
+@media (max-width: 520px) {
+  .app-loading__card { padding: 18px 17px 14px; border-radius: 19px; }
+  .app-loading__header { gap: 11px; }
+  .app-loading__mark { width: 42px; height: 42px; border-radius: 14px; }
+  .app-loading__mark::after { border-radius: 18px; }
+  .app-loading__copy strong { font-size: 14px; }
+  .app-loading__copy span { font-size: 11px; }
+  .app-loading__status { padding: 5px 7px; font-size: 9px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-loading__mark::after,
+  .app-loading__status i,
+  .app-loading__track::after,
+  .app-loading__bar,
+  .app-loading__steps i { animation: none; }
+  .app-loading__bar { left: 29%; opacity: .9; }
 }
 </style>

@@ -71,6 +71,9 @@ if (state.phase === 'running') {
   state.status = '上次识别因页面刷新中断，请检查已回填内容后重新识别'
 }
 
+// 普通创作入口先展示简洁导入提示；从上传/文字入口进入或已有识别草稿时自动展开。
+const panelExpanded = ref(Boolean(route.query.mode || state.phase !== 'idle' || String(state.rawText || '').trim()))
+
 const pdfFile = ref(null)
 const fileList = ref([])
 // 服务端已保存的唯一简历源文件元信息（size / mtime / ext）
@@ -443,17 +446,29 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <!-- 不用 card-base 的 p-5，避免与 ant-card-body 双重内边距导致两侧空白过大 -->
-  <a-card
-    class="recognition-panel mb-3 rounded-card border border-line/60 bg-surface shadow-card sm:mb-4"
-    :bordered="false"
-  >
-    <template #title>
-      <div class="flex flex-col gap-0.5">
-        <span class="text-base font-semibold text-ink">先导入已有简历</span>
-        <span class="text-xs font-normal text-muted">上传或粘贴简历，识别后填入下方资料；没有电子简历也可以直接填写。</span>
+  <!-- 导入是可选捷径：常规入口先露出资料表单，指定导入入口与已有任务仍直接展开。 -->
+  <section class="recognition-panel mb-4" :class="{ 'is-open': panelExpanded }">
+    <div class="recognition-header">
+      <span class="recognition-header__icon" aria-hidden="true"><FileTextOutlined /></span>
+      <div class="recognition-header__copy">
+        <span class="recognition-header__eyebrow">{{ state.phase === 'complete' ? '资料已导入' : '可选 · 已有简历' }}</span>
+        <h2>导入已有简历，快速填好资料</h2>
+        <p>上传文件或粘贴文字，识别后自动填入下方表单。</p>
       </div>
-    </template>
+      <button
+        type="button"
+        class="recognition-toggle"
+        :aria-expanded="panelExpanded"
+        :disabled="loading || disabled"
+        @click="panelExpanded = !panelExpanded"
+      >
+        {{ panelExpanded ? '收起导入' : '导入简历' }}
+        <UpOutlined v-if="panelExpanded" />
+        <DownOutlined v-else />
+      </button>
+    </div>
+
+    <div v-if="panelExpanded" class="recognition-body">
 
     <!-- 切换组在卡片内容区水平居中；窄屏保持按钮等宽，便于触控。 -->
     <div class="mb-3 flex justify-center">
@@ -665,12 +680,24 @@ onBeforeUnmount(() => {
         <p v-else class="px-2.5 py-2 text-xs text-muted sm:px-3 sm:py-2.5">识别内容会逐步显示在这里，并同步写入下方表单。</p>
       </div>
     </div>
-  </a-card>
+    </div>
+  </section>
 </template>
 
 <style scoped>
-/* 识别模块是创作流程的起点，用清爽实体卡片和主题色文件投递区建立亲和感。 */
-:deep(.recognition-panel.ant-card) { overflow: hidden; border-radius: 21px; }
+/* 导入区退居为辅助入口，展开时仍承载完整文件、文字与流式识别流程。 */
+.recognition-panel { overflow: hidden; border: 1px solid color-mix(in srgb, var(--color-brand) 14%, var(--color-line)); border-radius: 20px; background: var(--color-surface); box-shadow: 0 8px 24px rgb(25 35 58 / 4%); }
+.recognition-header { display: flex; align-items: center; gap: 15px; padding: 17px 20px; background: linear-gradient(100deg, color-mix(in srgb, var(--color-brand-lighter) 50%, var(--color-surface)), var(--color-surface) 75%); }
+.recognition-header__icon { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border-radius: 13px; background: var(--color-surface); color: var(--color-brand-dark); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-brand) 15%, transparent); font-size: 19px; }
+.recognition-header__copy { min-width: 0; flex: 1; }
+.recognition-header__eyebrow { color: var(--color-brand-dark); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.recognition-header h2 { margin: 3px 0 0; color: var(--color-ink); font-size: 16px; font-weight: 750; line-height: 1.35; }
+.recognition-header p { margin: 4px 0 0; color: var(--color-ink-secondary); font-size: 12px; line-height: 1.55; }
+.recognition-toggle { display: inline-flex; min-height: 38px; flex: 0 0 auto; align-items: center; justify-content: center; gap: 7px; padding: 0 14px; border: 1px solid color-mix(in srgb, var(--color-brand) 20%, var(--color-line)); border-radius: 11px; background: var(--color-surface); color: var(--color-brand-dark); font-size: 12px; font-weight: 700; transition: border-color 160ms ease, background 160ms ease; }
+.recognition-toggle:hover:not(:disabled) { border-color: var(--color-brand); background: color-mix(in srgb, var(--color-brand-lighter) 36%, var(--color-surface)); }
+.recognition-toggle:focus-visible { outline: 3px solid var(--color-focus-ring); outline-offset: 2px; }
+.recognition-toggle:disabled { cursor: not-allowed; opacity: .65; }
+.recognition-body { padding: 18px 20px 20px; border-top: 1px solid var(--color-line); }
 /* 禁用时降低背景饱和度但保留深色文字，按钮仍清楚可读。 */
 .recognition-panel :deep(.btn-primary:disabled),
 .recognition-panel :deep(.btn-primary-sm:disabled) {
@@ -678,15 +705,6 @@ onBeforeUnmount(() => {
   background: color-mix(in srgb, var(--color-brand) 17%, var(--color-surface));
   color: var(--color-brand-dark);
   box-shadow: none;
-}
-:deep(.ant-card-head) {
-  @apply min-h-0 border-b border-line/40 px-4 py-4 sm:px-6 sm:py-5;
-}
-:deep(.ant-card-body) {
-  @apply px-4 py-4 sm:px-6 sm:py-5;
-}
-:deep(.ant-card-head-title) {
-  @apply overflow-visible whitespace-normal;
 }
 :deep(.resume-upload-dropzone.ant-upload-wrapper .ant-upload-drag) {
   min-height: 102px;
@@ -789,8 +807,13 @@ onBeforeUnmount(() => {
     width: 38px;
     height: 38px;
   }
-  :deep(.ant-card-head) { padding-right: 15px; padding-left: 15px; }
-  :deep(.ant-card-body) { padding: 15px; }
+  .recognition-header { flex-wrap: wrap; gap: 10px; padding: 14px 15px; }
+  .recognition-header__icon { width: 38px; height: 38px; }
+  .recognition-header__copy { flex-basis: calc(100% - 48px); }
+  .recognition-header h2 { font-size: 14px; }
+  .recognition-header p { font-size: 11px; }
+  .recognition-toggle { width: 100%; }
+  .recognition-body { padding: 15px; }
   .resume-upload-action { display: none; }
 }
 @media (max-width: 375px) {

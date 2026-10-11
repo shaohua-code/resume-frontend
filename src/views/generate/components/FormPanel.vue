@@ -670,55 +670,71 @@ async function goToEditor() {
 
 <template>
   <!-- 限定工作区最大宽度，避免宽屏下识别、表单和结果区横向铺满。 -->
-  <div class="mx-auto max-w-[1200px] pb-10 sm:pb-12">
+  <div class="mx-auto max-w-[1328px] pb-10 sm:pb-12">
     <div class="generate-workspace" :class="{ 'has-result': hasGenerationPanel }">
       <main class="generate-main min-w-0">
-    <RecognitionPanel
-      ref="recognitionRef"
-      :disabled="generationLoading || operationStarting"
-      @loading-change="recognitionLoading = $event"
-      @partial="applyRecognizedResume"
-      @complete="applyRecognizedResume"
-    />
+        <RecognitionPanel
+          ref="recognitionRef"
+          :disabled="generationLoading || operationStarting"
+          @loading-change="recognitionLoading = $event"
+          @partial="applyRecognizedResume"
+          @complete="applyRecognizedResume"
+        />
+
+        <!-- 资料填写是页面主任务；标题与完成状态放在导航前，避免埋在表单卡片内部。 -->
+        <div class="generate-form-heading">
+          <div>
+            <p class="generate-form-heading__eyebrow">开始创作</p>
+            <h2>填写简历资料</h2>
+            <p>先完成姓名和意向岗位，再按需补充教育与经历。</p>
+          </div>
+          <span class="form-completion-chip" :class="{ 'is-complete': profileReadiness.requiredCount === 2 }">
+            <CheckCircleFilled v-if="profileReadiness.requiredCount === 2" />
+            {{ profileReadiness.requiredCount === 2 ? '必填已完成' : `必填 ${profileReadiness.requiredCount}/2` }}
+          </span>
+        </div>
 
     <!-- 哨兵：滚出顶栏下方后切换 Tab 为 fixed 吸顶 -->
     <div ref="tabSentinelRef" class="h-px w-full" aria-hidden="true" />
 
     <div
       ref="tabBarRef"
-      class="z-30 border-b border-line/40 bg-cream/95 backdrop-blur-md"
+      class="generate-tab-bar z-30"
       :class="tabsStuck
-        ? 'fixed inset-x-0 top-16 shadow-[0_6px_16px_rgba(15,23,42,0.08)]'
-        : 'relative rounded-t-card border border-b-0 border-line/60'"
+        ? 'fixed inset-x-0 top-16 is-stuck'
+        : 'relative'"
     >
       <div ref="tabScrollRef" class="overflow-x-auto scrollbar-hide">
         <ul
-          class="mx-auto flex w-full max-w-4xl items-stretch px-0 sm:px-0"
+          class="generate-tab-list mx-auto flex w-full items-stretch"
           role="tablist"
         >
           <li
             v-for="tab in FORM_TABS"
             :key="tab.key"
-            data-form-tab
-            role="tab"
-            :aria-selected="activeFormTab === tab.key"
-            class="resume-form-tab flex min-h-12 flex-1 cursor-pointer flex-col items-center justify-center border-b-2 border-transparent px-2 py-2.5 text-sm text-ink-secondary transition-colors duration-200 hover:text-brand-dark sm:px-4"
-            :class="{
-              'is-active border-b-brand-dark font-semibold text-brand-dark': activeFormTab === tab.key,
-            }"
-            @click="selectFormTab(tab.key)"
+            class="generate-tab-item"
           >
-            <span class="flex items-center justify-center gap-1.5">
-              <UserOutlined v-if="tab.key === 'basic'" />
-              <ReadOutlined v-else-if="tab.key === 'education'" />
-              <AimOutlined v-else />
-              <b class="font-semibold">{{ tab.title }}</b>
-            </span>
-            <span class="mt-0.5 text-center text-xs font-normal text-muted">{{ tab.hint }}</span>
+            <button
+              type="button"
+              data-form-tab
+              role="tab"
+              :aria-selected="activeFormTab === tab.key"
+              class="resume-form-tab"
+              :class="{ 'is-active': activeFormTab === tab.key }"
+              @click="selectFormTab(tab.key)"
+            >
+              <span class="resume-form-tab__label">
+                <UserOutlined v-if="tab.key === 'basic'" />
+                <ReadOutlined v-else-if="tab.key === 'education'" />
+                <AimOutlined v-else />
+                <b>{{ tab.title }}</b>
+              </span>
+              <span class="resume-form-tab__hint">{{ tab.hint }}</span>
+            </button>
           </li>
         </ul>
       </div>
-      </div>
+    </div>
 
     <!-- fixed 后保留原高度，避免表单内容上窜 -->
     <div
@@ -729,28 +745,17 @@ async function goToEditor() {
     />
 
     <div
-      class="relative mb-4 overflow-hidden border border-line/60 bg-surface shadow-card"
-      :class="tabsStuck ? 'rounded-card' : 'rounded-b-card border-t-0'"
+      class="generate-form-surface relative mb-4 overflow-hidden"
+      :class="{ 'is-locked': formLocked }"
     >
       <div
-        class="px-3 py-4 sm:px-6 sm:py-6"
+        class="generate-form-body"
         :class="formLocked ? 'pointer-events-none select-none' : ''"
         :inert="formLocked ? '' : null"
         :aria-busy="formLocked"
       >
-        <!-- 明确说明资料区的填写目标，并同步展示两个必填项的完成度。 -->
-        <div class="mx-auto mb-4 flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-line/60 bg-cream/45 px-4 py-3 sm:mb-5 sm:px-5">
-          <div class="min-w-0">
-            <h2 class="m-0 text-base font-bold leading-6 text-ink sm:text-lg">核对并补充你的简历信息</h2>
-            <p class="mb-0 mt-1 text-xs leading-5 text-ink-secondary sm:text-sm">姓名和意向岗位为必填，其余资料可按需补充。</p>
-          </div>
-          <span class="form-completion-chip" :class="{ 'is-complete': profileReadiness.requiredCount === 2 }">
-            <CheckCircleFilled v-if="profileReadiness.requiredCount === 2" />
-            {{ profileReadiness.requiredCount === 2 ? '必填已完成' : `必填 ${profileReadiness.requiredCount}/2` }}
-          </span>
-        </div>
-        <!-- 表单宽度与工作区匹配，字段不会挤在宽卡片的正中间。 -->
-        <div class="mx-auto w-full max-w-4xl">
+        <!-- 输入内容与分区导航同宽，形成一条稳定阅读轴。 -->
+        <div class="generate-form-fields">
           <template v-if="activeFormTab === 'basic'">
             <!-- 个人评价复用既有 summary 字段，保持选填并承接识别结果回填。 -->
             <ResumeBasicFieldsSection
@@ -791,7 +796,7 @@ async function goToEditor() {
       <!-- 生成期间保持表单内容清晰可读；inert 阻止编辑，状态提示说明当前锁定原因。 -->
       <div
         v-if="formLocked"
-        class="pointer-events-none absolute inset-0 z-10 flex items-start justify-center bg-transparent pt-3 sm:pt-4"
+        class="generate-form-lock pointer-events-none absolute inset-0 z-10 flex items-start justify-center pt-4 sm:pt-6"
       >
         <div class="inline-flex max-w-[calc(100%-24px)] items-center rounded-xl border border-brand/15 bg-surface/95 px-4 py-2.5 text-sm font-semibold text-brand-dark shadow-card">
           <a-spin size="small" class="mr-2" />{{ recognitionLoading ? '识别中，表单暂时锁定' : 'AI 输出中，表单暂时锁定' }}
@@ -881,29 +886,41 @@ async function goToEditor() {
       </div>
     </div>
 
-    <!-- 桌面操作区留在表单之后；移动端固定在底部，有结果时操作移到结果标题旁。 -->
-    <div v-if="!hasGenerationPanel" class="generate-inline-actions">
-      <p>填写姓名和意向岗位即可开始，生成后仍可逐项核对。</p>
-      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-        <GradientButton
-          class="min-h-11 w-full justify-center px-4 sm:w-auto sm:min-w-[170px]"
-          :loading="generationLoading && draft.generation.kind === 'generate'"
-          :disabled="formLocked && !(generationLoading && draft.generation.kind === 'generate')"
-          @click="handleGenerate"
-        >
-          <ThunderboltOutlined v-if="!generationLoading || draft.generation.kind !== 'generate'" />
-          开始 AI 生成
-        </GradientButton>
-        <button
-          type="button"
-          class="btn-ghost min-h-11 w-full px-4 sm:w-auto sm:min-w-[180px]"
-          :disabled="formLocked"
-          @click="openJdOptimize"
-        >
-          <AimOutlined /> 按岗位优化简历
-        </button>
+    <!-- 无结果时将操作栏固定在视口底部；出现结果后由结果区承接操作。 -->
+    <!-- 传送到 body，避免页面动画/布局容器影响 fixed 定位；主按钮组保持居中。 -->
+    <Teleport to="body">
+      <div v-if="!hasGenerationPanel" class="generate-inline-actions" aria-label="简历生成操作">
+        <div class="generate-inline-actions__inner">
+          <p class="generate-inline-actions__copy">填写姓名和意向岗位即可开始，生成后仍可逐项核对。</p>
+          <div class="generate-inline-actions__buttons">
+            <GradientButton
+              class="min-h-11 w-full justify-center px-4 sm:w-auto sm:min-w-[170px]"
+              :loading="generationLoading && draft.generation.kind === 'generate'"
+              :disabled="formLocked && !(generationLoading && draft.generation.kind === 'generate')"
+              @click="handleGenerate"
+            >
+              <ThunderboltOutlined v-if="!generationLoading || draft.generation.kind !== 'generate'" />
+              开始 AI 生成
+            </GradientButton>
+            <button
+              type="button"
+              class="btn-ghost min-h-11 w-full px-4 sm:w-auto sm:min-w-[180px]"
+              :disabled="formLocked"
+              @click="openJdOptimize"
+            >
+              <AimOutlined /> 按岗位优化简历
+            </button>
+          </div>
+          <div class="generate-inline-actions__readiness" aria-live="polite">
+            <span class="generate-inline-actions__readiness-label">必填进度</span>
+            <strong>{{ profileReadiness.requiredCount }}<small> / 2</small></strong>
+            <span class="generate-inline-actions__progress" aria-hidden="true">
+              <i :style="{ width: `${profileReadiness.percent}%` }" />
+            </span>
+          </div>
+        </div>
       </div>
-    </div>
+    </Teleport>
       </main>
 
       <aside class="generate-aside" aria-label="简历准备情况">
@@ -995,25 +1012,54 @@ async function goToEditor() {
   display: none;
 }
 
-/* 三段表单导航与表单内容等宽，活动项成为清晰的当前步骤。 */
-.resume-form-tab { min-height: 66px; margin: 5px 4px; border: 0; border-radius: 14px; }
-.resume-form-tab.is-active { border: 0; background: var(--color-brand-lighter); color: var(--color-brand-dark); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-brand) 9%, transparent); }
-.resume-form-tab > span:last-child { color: var(--color-ink-secondary); font-size: 11px; }
+/* 资料区以明确标题和连续导航开场，减少大块装饰卡片造成的层级混乱。 */
+.generate-form-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 29px 0 17px; }
+.generate-form-heading__eyebrow { margin: 0 0 6px; color: var(--color-brand-dark); font-size: 10px; font-weight: 800; letter-spacing: .13em; }
+.generate-form-heading h2 { margin: 0; color: var(--color-ink); font-size: clamp(22px, 2vw, 27px); font-weight: 780; line-height: 1.3; letter-spacing: -.03em; }
+.generate-form-heading p:last-child { margin: 5px 0 0; color: var(--color-ink-secondary); font-size: 13px; line-height: 1.6; }
+.generate-tab-bar { border: 1px solid var(--color-line); border-bottom: 0; border-radius: 18px 18px 0 0; background: var(--color-surface); }
+.generate-tab-bar.is-stuck { border-inline: 0; border-top: 0; border-radius: 0; box-shadow: 0 8px 22px rgb(25 35 58 / 8%); }
+.generate-tab-bar.is-stuck .generate-tab-list { max-width: 1200px; margin-inline: auto; padding-inline: 24px; }
+.generate-tab-list { min-width: 0; padding-inline: 22px; }
+.generate-tab-item { min-width: 0; flex: 1 1 0; }
+.resume-form-tab { position: relative; display: grid; width: 100%; min-height: 68px; align-content: center; justify-items: center; gap: 2px; padding: 10px 8px 12px; border: 0; background: transparent; color: var(--color-ink-secondary); cursor: pointer; transition: color 160ms ease, background 160ms ease; }
+.resume-form-tab:hover { color: var(--color-brand-dark); background: color-mix(in srgb, var(--color-brand-lighter) 24%, var(--color-surface)); }
+.resume-form-tab:focus-visible { z-index: 1; outline: 3px solid var(--color-focus-ring); outline-offset: -3px; }
+.resume-form-tab::after { position: absolute; right: 12px; bottom: 0; left: 12px; height: 3px; border-radius: 3px 3px 0 0; background: transparent; content: ''; }
+.resume-form-tab.is-active { color: var(--color-brand-dark); }
+.resume-form-tab.is-active::after { background: var(--color-brand); }
+.resume-form-tab__label { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 14px; white-space: nowrap; }
+.resume-form-tab__label b { font-weight: 700; }
+.resume-form-tab__hint { color: var(--color-muted); font-size: 11px; white-space: nowrap; }
+.generate-form-surface { border: 1px solid var(--color-line); border-radius: 0 0 18px 18px; background: var(--color-surface); box-shadow: 0 14px 32px rgb(25 35 58 / 5%); }
+.generate-form-body { padding: 26px 30px 32px; }
+.generate-form-fields { width: 100%; }
 
-/* 桌面采用工作区与准备度双栏；进入生成/结果状态后收拢主列，避免内容被拉得过宽。 */
+/* 桌面工作区在足够宽度时同时展示表单和准备度，让右侧空间有实际信息承接。 */
 .generate-workspace { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 24px; }
 .generate-workspace.has-result { grid-template-columns: minmax(0, 1fr); }
 .generate-aside { display: none; }
 .generate-workspace.has-result .generate-aside { display: none; }
-.generate-workspace.has-result .generate-main { width: min(100%, 1160px); margin-inline: auto; }
-/* 桌面滚动时让核心操作保持可见；窄屏在下方改用安全区固定栏。 */
-.generate-inline-actions { position: sticky; z-index: 20; bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 18px; padding: 14px 18px; border: 1px solid color-mix(in srgb, var(--color-brand) 16%, var(--color-line)); border-radius: 18px; background: color-mix(in srgb, var(--color-surface) 94%, transparent); box-shadow: 0 12px 32px rgb(25 35 58 / 10%); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
-.generate-inline-actions > p { margin: 0; color: var(--color-ink-secondary); font-size: 13px; }
+.generate-workspace.has-result .generate-main { width: min(100%, 1480px); margin-inline: auto; }
+/* 固定操作条以三栏承载提示、居中按钮和必填进度，避免宽屏两侧空置。 */
+.generate-workspace:not(.has-result) .generate-main { padding-bottom: 142px; }
+.generate-inline-actions { position: fixed; z-index: 60; bottom: 18px; left: 50%; width: min(calc(100vw - 48px), 1328px); transform: translateX(-50%); padding: 14px 26px; border: 1px solid color-mix(in srgb, var(--color-brand) 17%, var(--color-line)); border-radius: 20px; background: color-mix(in srgb, var(--color-surface) 97%, transparent); box-shadow: 0 14px 38px rgb(25 35 58 / 14%); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+.generate-inline-actions__inner { display: grid; min-height: 56px; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 22px; }
+.generate-inline-actions__copy { max-width: 300px; margin: 0; color: var(--color-ink-secondary); font-size: 13px; line-height: 1.6; }
+.generate-inline-actions__buttons { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.generate-inline-actions__readiness { display: grid; grid-template-columns: auto auto; align-items: center; justify-self: end; column-gap: 10px; }
+.generate-inline-actions__readiness-label { color: var(--color-muted); font-size: 11px; }
+.generate-inline-actions__readiness strong { color: var(--color-brand-dark); font-size: 17px; font-variant-numeric: tabular-nums; }
+.generate-inline-actions__readiness strong small { color: var(--color-muted); font-size: 11px; font-weight: 600; }
+.generate-inline-actions__progress { grid-column: 1 / -1; width: 100%; height: 4px; overflow: hidden; border-radius: 99px; background: var(--color-brand-lighter); }
+.generate-inline-actions__progress i { display: block; height: 100%; border-radius: inherit; background: var(--color-brand); transition: width 180ms ease; }
+.generate-form-surface.is-locked .generate-form-body { filter: grayscale(.72); opacity: .62; transition: filter 180ms ease, opacity 180ms ease; }
+.generate-form-lock { background: color-mix(in srgb, var(--color-cream) 38%, transparent); -webkit-backdrop-filter: saturate(.5); backdrop-filter: saturate(.5); }
 .form-completion-chip { display: inline-flex; min-height: 30px; flex: 0 0 auto; align-items: center; gap: 6px; padding: 0 11px; border: 1px solid color-mix(in srgb, var(--color-brand) 13%, var(--color-line)); border-radius: 999px; background: color-mix(in srgb, var(--color-brand-lighter) 55%, white); color: var(--color-brand-dark); font-size: 11px; font-weight: 700; }
 .form-completion-chip.is-complete { border-color: color-mix(in srgb, var(--color-success) 25%, var(--color-line)); background: color-mix(in srgb, var(--color-success) 9%, white); color: var(--color-success); }
 .generate-result-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
 /* 准备度卡片用低饱和品牌色承接主流程，不额外增加强色块干扰表单。 */
-.readiness-card, .experience-card { padding: 20px; border: 1px solid color-mix(in srgb, var(--color-brand) 10%, var(--color-line)); border-radius: 18px; background: color-mix(in srgb, var(--color-surface) 95%, var(--color-brand-lighter)); box-shadow: 0 12px 30px color-mix(in srgb, var(--color-ink) 6%, transparent); }
+.readiness-card, .experience-card { padding: 20px; border: 1px solid var(--color-line); border-radius: 18px; background: var(--color-surface); box-shadow: 0 8px 25px rgb(25 35 58 / 4%); }
 .readiness-card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .readiness-card__eyebrow { margin: 0 0 7px; color: var(--color-brand-dark); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
 .readiness-card h2, .experience-card h2, .trust-card h2 { margin: 0; color: var(--color-ink); font-size: 16px; font-weight: 750; line-height: 1.4; }
@@ -1057,21 +1103,30 @@ async function goToEditor() {
 .generation-trust-note { display: flex; gap: 8px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--color-line); color: var(--color-muted); font-size: 11px; line-height: 1.6; }
 .generation-trust-note :deep(.anticon) { flex: 0 0 auto; color: var(--color-brand-dark); }
 
-@media (min-width: 1280px) {
-  .generate-workspace { grid-template-columns: minmax(0, 1fr) 294px; gap: 24px; }
+@media (min-width: 1180px) {
+  .generate-workspace { grid-template-columns: minmax(0, 1fr) 310px; gap: 28px; }
   .generate-aside { position: sticky; top: 86px; display: block; }
   /* 预览与说明并列时固定说明栏阅读宽度，并让预览承担主要空间。 */
-  .generation-result-grid { grid-template-columns: minmax(0, 794px) 260px; justify-content: center; gap: 16px; }
+  .generation-result-grid { grid-template-columns: minmax(0, 1fr) 280px; justify-content: center; gap: 20px; }
   .generation-preview-card { padding: 18px; }
 }
 
 @media (max-width: 767px) {
+  /* H5 只保留标题、表单与固定操作的核心信息，Tab 可触控且不会被长文案挤宽。 */
+  .generate-form-heading { align-items: flex-start; margin: 23px 0 14px; }
+  .generate-form-heading p:last-child { max-width: 260px; font-size: 12px; }
+  .generate-tab-list { padding-inline: 5px; }
+  .generate-tab-bar.is-stuck .generate-tab-list { padding-inline: 5px; }
+  .resume-form-tab { min-height: 58px; padding: 8px 3px 10px; }
+  .resume-form-tab__label { gap: 4px; font-size: 12px; }
+  .resume-form-tab__hint { display: none; }
+  .generate-form-body { padding: 19px 16px 25px; }
   /* 底部固定操作栏不遮挡最后一行表单，并保留设备安全区。 */
-  .generate-workspace:not(.has-result) .generate-main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+  .generate-workspace:not(.has-result) .generate-main { padding-bottom: calc(126px + env(safe-area-inset-bottom)); }
   .generate-inline-actions {
-    position: fixed;
-    z-index: 60;
-    inset-inline: 0;
+    left: 0;
+    width: 100%;
+    transform: none;
     bottom: 0;
     align-items: stretch;
     flex-direction: column;
@@ -1085,12 +1140,22 @@ async function goToEditor() {
     -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
   }
-  .generate-inline-actions > p { width: 100%; max-width: 720px; margin-inline: auto; font-size: 12px; }
-  .generate-inline-actions > div { display: grid; width: 100%; max-width: 720px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-inline: auto; }
-  .generate-inline-actions > div > :deep(button) { min-width: 0; min-height: 44px; padding-inline: 6px; font-size: 13px; white-space: nowrap; }
+  .generate-inline-actions__inner { display: flex; min-height: 0; flex-direction: column; align-items: stretch; gap: 8px; }
+  .generate-inline-actions__copy { width: 100%; max-width: 720px; margin-inline: auto; font-size: 12px; text-align: left; }
+  .generate-inline-actions__buttons { display: grid; width: 100%; max-width: 720px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-inline: auto; }
+  .generate-inline-actions__buttons > :deep(button) { min-width: 0; min-height: 44px; padding-inline: 6px; font-size: 13px; white-space: nowrap; }
+  .generate-inline-actions__readiness { display: none; }
   .generate-result-actions { justify-content: flex-start; }
   .generate-result-actions > :deep(button) { flex: 1 1 auto; }
   .generation-preview-card { padding: 8px; }
   .generation-summary-card { padding: 16px; }
+}
+
+@media (min-width: 768px) and (max-width: 1179px) {
+  /* 小桌面/平板保留按钮居中，隐藏侧栏进度避免与提示抢宽度。 */
+  .generate-inline-actions { width: min(calc(100vw - 32px), 980px); padding-inline: 20px; }
+  .generate-inline-actions__inner { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 14px; }
+  .generate-inline-actions__copy { max-width: 230px; font-size: 12px; }
+  .generate-inline-actions__readiness { display: none; }
 }
 </style>
