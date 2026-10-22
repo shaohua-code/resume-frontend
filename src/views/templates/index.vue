@@ -3,10 +3,15 @@
  * 全部模板预览页 - 模板网格 + 弹窗完整简历预览
  */
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { message } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import PageHero from '@/components/PageHero.vue'
 import GradientButton from '@/components/GradientButton.vue'
 import LazyRender from '@/components/LazyRender.vue'
+import { saveAdminConfig } from '@/api/admin'
+import { useAppSettingsStore } from '@/stores/appSettings'
+import { useUserStore } from '@/stores/user'
+import { getErrorMessage } from '@/utils/errorMessage'
 // 模板中心与编辑器共用真实模板缩略预览，避免依赖首页页面组件。
 import TemplateMiniPreview from '@/components/TemplateMiniPreview.vue'
 import { getDemoResume } from '@/views/home/utils/demoResume'
@@ -16,7 +21,11 @@ import { useMediaQuery } from '@/composables/useMediaQuery'
 
 const router = useRouter()
 const resumeStore = useResumeStore()
+const userStore = useUserStore()
+const appSettingsStore = useAppSettingsStore()
 const isNarrowScreen = useMediaQuery('(max-width: 640px)')
+const isSuperAdmin = computed(() => userStore.role === 'SUPER_ADMIN')
+const defaultTemplateSavingId = ref(null)
 const previewId = ref(null)
 const modalPreviewRef = ref(null)
 const activeCategory = ref('全部')
@@ -46,6 +55,31 @@ function openPreview(id) {
 
 function closePreview() {
   previewId.value = null
+}
+
+function isDefaultTemplate(id) {
+  return Number(id) === Number(appSettingsStore.defaultTemplateId)
+}
+
+/** 超级管理员：将某套模板设为全站新建默认 */
+async function setAsDefaultTemplate(id, event) {
+  event?.stopPropagation?.()
+  event?.preventDefault?.()
+  if (!isSuperAdmin.value) return
+  defaultTemplateSavingId.value = id
+  try {
+    await saveAdminConfig('default_template_id', {
+      config_value: { id },
+      description: '新建简历默认模板 ID（1–60，仅超级管理员可改）',
+    })
+    appSettingsStore.setDefaultTemplateId(id)
+    resumeStore.applyDefaultTemplateFromSettings()
+    message.success('已设为默认模板')
+  } catch (e) {
+    message.error(getErrorMessage(e))
+  } finally {
+    defaultTemplateSavingId.value = null
+  }
 }
 
 function goGenerate() {
@@ -154,10 +188,27 @@ onUnmounted(() => {
             <div class="relative border-t border-line/50 bg-surface px-4 py-4">
               <div class="mb-2 flex items-center justify-between gap-3">
                 <h2 class="truncate text-base font-semibold text-ink">{{ tpl.name }}</h2>
-                <span class="shrink-0 rounded-full bg-brand-lighter/70 px-2.5 py-1 text-[11px] font-medium text-brand-dark">
-                  {{ tpl.category || '通用' }}
-                </span>
+                <div class="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                  <span
+                    v-if="isDefaultTemplate(tpl.id)"
+                    class="rounded-full bg-brand-dark px-2.5 py-1 text-[11px] font-medium text-white"
+                  >
+                    默认
+                  </span>
+                  <span class="rounded-full bg-brand-lighter/70 px-2.5 py-1 text-[11px] font-medium text-brand-dark">
+                    {{ tpl.category || '通用' }}
+                  </span>
+                </div>
               </div>
+              <button
+                v-if="isSuperAdmin && !isDefaultTemplate(tpl.id)"
+                type="button"
+                class="mt-2 min-h-11 w-full rounded-card border border-line/80 bg-surface px-3 text-xs font-medium text-brand-dark transition-colors hover:border-brand/40"
+                :disabled="defaultTemplateSavingId === tpl.id"
+                @click="setAsDefaultTemplate(tpl.id, $event)"
+              >
+                {{ defaultTemplateSavingId === tpl.id ? '保存中…' : '设为默认模板' }}
+              </button>
               <p class="min-h-10 text-sm leading-5 text-ink-secondary">{{ tpl.desc }}</p>
               <span class="template-card-action mt-3 inline-flex items-center text-xs font-semibold text-brand-dark">
                 查看完整预览 <span class="ml-1 transition-transform group-hover:translate-x-1">→</span>
@@ -203,6 +254,15 @@ onUnmounted(() => {
         </div>
         <div class="mt-3 flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button type="button" class="btn-ghost" @click="closePreview">继续浏览</button>
+          <button
+            v-if="isSuperAdmin && previewId && !isDefaultTemplate(previewId)"
+            type="button"
+            class="btn-ghost min-h-11"
+            :disabled="defaultTemplateSavingId === previewId"
+            @click="setAsDefaultTemplate(previewId, $event)"
+          >
+            {{ defaultTemplateSavingId === previewId ? '保存中…' : '设为默认模板' }}
+          </button>
           <GradientButton class="min-w-[140px]" @click="goGenerate">使用此模板生成</GradientButton>
         </div>
       </div>

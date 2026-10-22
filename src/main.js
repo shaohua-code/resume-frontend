@@ -12,6 +12,8 @@ import 'ant-design-vue/dist/reset.css'
 import './styles/global.css'
 import { antDesignReady } from '@/utils/uiReady'
 import { initializeSystemTheme } from '@/composables/useTheme'
+import { useAppSettingsStore } from '@/stores/appSettings'
+import { useResumeStore } from '@/stores/resume'
 // import { activateServiceSwitchRedirect } from '@/utils/serviceRedirect'
 
 dayjs.locale('zh-cn')
@@ -42,9 +44,14 @@ router.beforeEach((to) => {
   if (!to.meta.lightweight) void ensureAntDesign()
 })
 
-app.use(createPinia()) // Pinia 状态管理
-app.use(router) // Vue Router 路由
+const pinia = createPinia()
+app.use(pinia)
+app.use(router)
 
-// if (!serviceSwitchRedirectActive) {
+async function bootstrap() {
+  await useAppSettingsStore(pinia).fetchPublicSettings()
+  useResumeStore(pinia).applyDefaultTemplateFromSettings()
   app.mount('#app')
-// }
+}
+
+bootstrap()

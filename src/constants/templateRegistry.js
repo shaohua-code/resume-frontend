@@ -141,10 +141,11 @@ export const TEMPLATE_LOADERS = {
 /** @deprecated 兼容旧引用：请改用 TEMPLATE_LOADERS / getTemplateLoader */
 export const TEMPLATE_MAP = TEMPLATE_LOADERS
 
-export function clampTemplateId(id) {
-  const n = Number(id) || DEFAULT_TEMPLATE_ID
-  if (n < 1) return DEFAULT_TEMPLATE_ID
-  if (n > MAX_TEMPLATE_ID) return DEFAULT_TEMPLATE_ID
+export function clampTemplateId(id, fallback = DEFAULT_TEMPLATE_ID) {
+  const fbRaw = Number(fallback)
+  const fb = Number.isInteger(fbRaw) && fbRaw >= 1 && fbRaw <= MAX_TEMPLATE_ID ? fbRaw : DEFAULT_TEMPLATE_ID
+  const n = Number(id)
+  if (!Number.isInteger(n) || n < 1 || n > MAX_TEMPLATE_ID) return fb
   return n
 }
 

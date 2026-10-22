@@ -22,6 +22,7 @@ import {
 } from '@/api/resume'
 import message from 'ant-design-vue/es/message'
 import { clampTemplateId, DEFAULT_TEMPLATE_ID } from '@/constants/templateRegistry'
+import { useAppSettingsStore } from '@/stores/appSettings'
 import { useWalletStore } from '@/stores/wallet'
 import { normalizeResumeFields } from '@/constants/resumeFieldSchema'
 import { getCurrentSessionOwner } from '@/utils/emailBindingGate'
@@ -63,6 +64,18 @@ export const useResumeStore = defineStore('resume', () => {
   // 评分加载状态
   const scoring = ref(false)
 
+  /** 读取后台配置的默认模板（未加载完成时回退编译期默认值） */
+  function resolveDefaultTemplateId() {
+    return useAppSettingsStore().defaultTemplateId || DEFAULT_TEMPLATE_ID
+  }
+
+  /** 应用启动后，新建场景同步默认模板 */
+  function applyDefaultTemplateFromSettings() {
+    if (!currentResumeId.value) {
+      currentTemplateId.value = resolveDefaultTemplateId()
+    }
+  }
+
   /**
    * 将最终 AI 结果落到当前简历。
    * 已有 ID 时只更新同一条记录，重新生成不会不断新增简历。
@@ -76,7 +89,7 @@ export const useResumeStore = defineStore('resume', () => {
     const payload = {
       title: normalized.name ? `${normalized.name}的简历` : '未命名简历',
       resume_json: normalized,
-      template_id: currentTemplateId.value || DEFAULT_TEMPLATE_ID,
+      template_id: currentTemplateId.value || resolveDefaultTemplateId(),
       score: 0,
       // 首次创建携带稳定幂等键；服务端已提交但响应丢失时，重试会返回同一条简历。
       client_request_id: clientRequestId || undefined,
@@ -358,6 +371,7 @@ export const useResumeStore = defineStore('resume', () => {
     scoring,
     generateResume,
     persistGeneratedResume,
+    applyDefaultTemplateFromSettings,
     resetGenerationContext,
     matchJd,
     scoreResume,

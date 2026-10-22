@@ -6,11 +6,18 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { getAdminConfigs, saveAdminConfig } from '@/api/admin'
 import { getErrorMessage } from '@/utils/errorMessage'
+import { TEMPLATE_LIST } from '@/constants/templateRegistry'
+import { useAppSettingsStore } from '@/stores/appSettings'
 
 const loading = ref(false)
 const configs = ref([])
 const configDrafts = reactive({})
 const flagSaving = ref('')
+const defaultTemplateSaving = ref(false)
+const defaultTemplateDraft = ref(56)
+const appSettingsStore = useAppSettingsStore()
+
+const DEFAULT_TEMPLATE_KEY = 'default_template_id'
 
 const FEATURE_FLAGS = [
   {
@@ -34,8 +41,20 @@ const flagMap = computed(() => {
 })
 
 const otherConfigs = computed(() => configs.value.filter(
-  (item) => !FEATURE_FLAGS.some((flag) => flag.key === item.config_key),
+  (item) => !FEATURE_FLAGS.some((flag) => flag.key === item.config_key)
+    && item.config_key !== DEFAULT_TEMPLATE_KEY,
 ))
+
+const defaultTemplateOptions = computed(() => TEMPLATE_LIST.map((item) => ({
+  value: item.id,
+  label: `${item.id} · ${item.name}`,
+})))
+
+const currentDefaultTemplateId = computed(() => {
+  const value = flagMap.value[DEFAULT_TEMPLATE_KEY]?.config_value || {}
+  const id = Number(value.id)
+  return Number.isInteger(id) ? id : 56
+})
 
 function isFlagEnabled(key) {
   const value = flagMap.value[key]?.config_value || {}
@@ -50,6 +69,7 @@ async function loadConfigs() {
     configs.value.forEach((item) => {
       configDrafts[item.config_key] = JSON.stringify(item.config_value || {}, null, 2)
     })
+    defaultTemplateDraft.value = currentDefaultTemplateId.value
   } finally {
     loading.value = false
   }
@@ -69,6 +89,24 @@ async function toggleFlag(flag, enabled) {
     message.error(getErrorMessage(e))
   } finally {
     flagSaving.value = ''
+  }
+}
+
+async function saveDefaultTemplate() {
+  defaultTemplateSaving.value = true
+  try {
+    const existing = flagMap.value[DEFAULT_TEMPLATE_KEY]
+    await saveAdminConfig(DEFAULT_TEMPLATE_KEY, {
+      config_value: { id: defaultTemplateDraft.value },
+      description: existing?.description || '新建简历默认模板 ID（1–60，仅超级管理员可改）',
+    })
+    appSettingsStore.setDefaultTemplateId(defaultTemplateDraft.value)
+    message.success('默认模板已更新')
+    await loadConfigs()
+  } catch (e) {
+    message.error(getErrorMessage(e))
+  } finally {
+    defaultTemplateSaving.value = false
   }
 }
 
@@ -111,6 +149,32 @@ onMounted(loadConfigs)
               @update:checked="toggleFlag(flag, $event)"
             />
           </div>
+        </div>
+      </a-card>
+
+      <a-card :bordered="false" class="rounded-card shadow-card">
+        <p class="text-base font-semibold text-ink">默认简历模板</p>
+        <p class="mt-1 text-xs text-muted">新建简历、未指定或无效 template_id 时使用；已有简历不受影响。</p>
+        <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div class="min-w-0 flex-1">
+            <p class="mb-2 text-xs text-muted">选择模板</p>
+            <a-select
+              :value="defaultTemplateDraft"
+              :options="defaultTemplateOptions"
+              class="w-full"
+              show-search
+              option-filter-prop="label"
+              @update:value="defaultTemplateDraft = $event"
+            />
+          </div>
+          <button
+            type="button"
+            class="btn-primary min-h-11 shrink-0 px-6"
+            :disabled="defaultTemplateSaving"
+            @click="saveDefaultTemplate"
+          >
+            {{ defaultTemplateSaving ? '保存中…' : '保存默认模板' }}
+          </button>
         </div>
       </a-card>
 
