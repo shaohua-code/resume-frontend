@@ -87,7 +87,6 @@ const announcementEditorOptions = {
 // 预置常用值，同时允许直接输入新供应商或新模型类型，为后续扩展保留入口。
 const providerOptions = [
   { value: 'deepseek' },
-  { value: 'dashscope' },
 ]
 const modelTypeOptions = [
   { value: 'text', label: '文本模型' },
@@ -199,7 +198,7 @@ function updateField(key, value) {
             :value="form.provider"
             :options="providerOptions"
             class="input-field w-full"
-            placeholder="deepseek / dashscope / 其他"
+            placeholder="deepseek / 其他"
             @update:value="updateField('provider', $event)"
           />
         </a-form-item>
