@@ -51,14 +51,67 @@ onBeforeUnmount(() => observer?.disconnect())
     :style="visible ? undefined : { minHeight: props.minHeight }"
   >
     <slot v-if="visible" />
-    <div v-else class="lazy-render-placeholder" aria-hidden="true" />
+    <!-- 骨架屏占位：模拟简历预览卡片的加载状态 -->
+    <div v-else class="lazy-render-skeleton" aria-hidden="true">
+      <div class="skeleton-header" />
+      <div class="skeleton-line skeleton-line--long" />
+      <div class="skeleton-line skeleton-line--medium" />
+      <div class="skeleton-line skeleton-line--short" />
+      <div class="skeleton-block" />
+      <div class="skeleton-line skeleton-line--long" />
+      <div class="skeleton-line skeleton-line--medium" />
+    </div>
   </div>
 </template>
 
 <style scoped>
 /* 隔离占位区域的布局与绘制，降低首屏渲染成本。 */
-.lazy-render-placeholder {
+.lazy-render-skeleton {
   min-height: inherit;
   contain: layout paint;
+  padding: 12px;
+  background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* 骨架屏动画 */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.skeleton-header {
+  width: 60%;
+  height: 16px;
+  margin-bottom: 12px;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  border-radius: 4px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 10px;
+  margin-bottom: 8px;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  border-radius: 3px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-line--long { width: 90%; }
+.skeleton-line--medium { width: 70%; animation-delay: 0.1s; }
+.skeleton-line--short { width: 50%; animation-delay: 0.2s; }
+
+.skeleton-block {
+  width: 100%;
+  height: 40px;
+  margin: 12px 0;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  border-radius: 4px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  animation-delay: 0.3s;
 }
 </style>
