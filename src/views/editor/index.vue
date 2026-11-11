@@ -269,6 +269,7 @@ import EditorAppearancePanel from './components/EditorAppearancePanel.vue'
 import MdRender from '@/components/MdRender.vue'
 import { useResumeExportPrint } from '@/composables/useResumeExportPrint'
 import { useMediaQuery } from '@/composables/useMediaQuery'
+import { useEditorShortcuts, getShortcutHint } from '@/composables/useEditorShortcuts'
 
 const route = useRoute()
 const router = useRouter()
@@ -823,6 +824,30 @@ async function handleExportMarkdown() {
     exporting.value = false
   }
 }
+
+// 编辑器键盘快捷键
+useEditorShortcuts({
+  onSave: () => {
+    if (!saving.value && !exporting.value) {
+      handleSave()
+      message.info(`已保存 (${getShortcutHint('save')})`)
+    }
+  },
+  onExportPdf: () => {
+    if (!exporting.value) handleExportPDF()
+  },
+  onExportWord: () => {
+    if (!exporting.value) handleExportWord()
+  },
+  onTogglePanel: () => {
+    editPanelCollapsed.value = !editPanelCollapsed.value
+  },
+  onUndo: () => {
+    if (lastAppearanceUndo.value) {
+      undoAppearance()
+    }
+  },
+})
 
 onMounted(async () => {
   const id = route.params.id
