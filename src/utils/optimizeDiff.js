@@ -214,7 +214,8 @@ export function applyResumeSection(target, after, sectionKey) {
   const dst = target
 
   if (sectionKey === 'basic') {
-    ;['name', 'target_position', 'phone', 'email', 'work_years', 'expected_salary'].forEach((key) => {
+    const basicKeys = ['name', 'target_position', 'phone', 'email', 'work_years', 'expected_salary']
+    basicKeys.forEach((key) => {
       if (src[key] !== undefined) dst[key] = src[key]
     })
     return syncFlatEducationFields(dst)

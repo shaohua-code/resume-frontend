@@ -684,7 +684,8 @@ export function mergeOptimizedResume(target = {}, optimized = {}, sectionKeys = 
 function applySectionToResume(dst, optimized, sectionKey) {
   const src = normalizeResumeFields(optimized)
   if (sectionKey === 'basic') {
-    ;['name', 'target_position', 'phone', 'email', 'work_years', 'expected_salary'].forEach((key) => {
+    const basicKeys = ['name', 'target_position', 'phone', 'email', 'work_years', 'expected_salary']
+    basicKeys.forEach((key) => {
       if (src[key] !== undefined) dst[key] = src[key]
     })
     return
