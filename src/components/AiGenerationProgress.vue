@@ -12,9 +12,12 @@ import {
   EditOutlined,
   RocketOutlined,
 } from '@ant-design/icons-vue'
+import { mapBackendStage } from '@/utils/aiStageMapping'
 
 const props = defineProps({
-  // 当前阶段：'connecting' | 'analyzing' | 'generating' | 'optimizing' | 'completed' | 'error'
+  // 当前阶段，支持后端返回的 stage 值和前端内部值
+  // 后端值：preparing | connecting | analyzing | generating | optimizing | extracting | validating | completed
+  // 前端值：connecting | analyzing | generating | optimizing | completed | error
   stage: {
     type: String,
     default: 'connecting',
@@ -35,6 +38,9 @@ const props = defineProps({
     default: false,
   },
 })
+
+// 规范化后的当前阶段（映射后端 stage 值到前端进度阶段）
+const normalizedStage = computed(() => mapBackendStage(props.stage, props.taskType))
 
 // 根据任务类型定义不同的阶段配置
 const stageConfigs = computed(() => {
@@ -65,16 +71,16 @@ const stageConfigs = computed(() => {
   return baseStages[props.taskType] || baseStages.generate
 })
 
-// 当前阶段索引
+// 当前阶段索引（使用规范化后的阶段值）
 const currentStageIndex = computed(() => {
-  const idx = stageConfigs.value.findIndex((s) => s.key === props.stage)
+  const idx = stageConfigs.value.findIndex((s) => s.key === normalizedStage.value)
   return idx >= 0 ? idx : 0
 })
 
 // 进度百分比
 const progressPercent = computed(() => {
   const total = stageConfigs.value.length
-  if (!props.loading && props.stage !== 'error') return 100
+  if (!props.loading && normalizedStage.value !== 'error') return 100
   return Math.round(((currentStageIndex.value + 0.5) / total) * 100)
 })
 
