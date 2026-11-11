@@ -37,17 +37,23 @@
           <a-spin v-if="scoring" size="small" class="mr-1" />
           <BarChartOutlined v-else class="mr-1" /> 评分
         </button>
-        <GradientButton :loading="saving" @click="emit('save')">
+        <GradientButton :loading="saving" :title="saveShortcutHint" @click="emit('save')">
           <SaveOutlined /> {{ saving ? '保存中' : '保存' }}
         </GradientButton>
         <a-dropdown :disabled="exporting">
-          <GradientButton :loading="exporting">
+          <GradientButton :loading="exporting" :title="exportShortcutHint">
             <DownloadOutlined /> {{ exporting ? '导出中' : '导出' }}
           </GradientButton>
           <template #overlay>
             <a-menu>
-              <a-menu-item key="pdf" @click="emit('export-pdf')">导出 PDF</a-menu-item>
-              <a-menu-item key="word" @click="emit('export-word')">导出 Word</a-menu-item>
+              <a-menu-item key="pdf" @click="emit('export-pdf')">
+                导出 PDF
+                <span class="ml-2 text-[10px] text-muted">{{ pdfShortcutHint }}</span>
+              </a-menu-item>
+              <a-menu-item key="word" @click="emit('export-word')">
+                导出 Word
+                <span class="ml-2 text-[10px] text-muted">{{ wordShortcutHint }}</span>
+              </a-menu-item>
             </a-menu>
           </template>
         </a-dropdown>
@@ -71,8 +77,12 @@
               <a-menu-item @click="emit('history')">历史版本</a-menu-item>
               <a-menu-item :disabled="scoring" @click="emit('score')">AI 评分</a-menu-item>
               <a-menu-divider />
-              <a-menu-item v-if="!isMobile" @click="emit('export-pdf')">导出 PDF</a-menu-item>
-              <a-menu-item v-if="!isMobile" @click="emit('export-word')">导出 Word</a-menu-item>
+              <!-- 移动端也启用导出，但 PDF 使用浏览器打印 API 可能效果因设备而异 -->
+              <a-menu-item @click="emit('export-pdf')">
+                <span>导出 PDF</span>
+                <span v-if="isMobile" class="ml-1 text-[10px] text-muted">（建议横屏）</span>
+              </a-menu-item>
+              <a-menu-item @click="emit('export-word')">导出 Word</a-menu-item>
             </a-menu>
           </template>
         </a-dropdown>
@@ -83,6 +93,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   LeftOutlined, SaveOutlined, DownloadOutlined, MenuOutlined, DownOutlined,
@@ -91,6 +102,7 @@ import {
 } from '@ant-design/icons-vue'
 import GradientButton from '@/components/GradientButton.vue'
 import { useMediaQuery } from '@/composables/useMediaQuery'
+import { getShortcutHint } from '@/composables/useEditorShortcuts'
 
 defineProps({
   templateId: { type: Number, default: 56 },
@@ -106,4 +118,10 @@ const emit = defineEmits([
 
 const router = useRouter()
 const isMobile = useMediaQuery()
+
+// 快捷键提示文本
+const saveShortcutHint = computed(() => `保存 (${getShortcutHint('save')})`)
+const exportShortcutHint = computed(() => '导出简历')
+const pdfShortcutHint = computed(() => getShortcutHint('exportPdf'))
+const wordShortcutHint = computed(() => getShortcutHint('exportWord'))
 </script>

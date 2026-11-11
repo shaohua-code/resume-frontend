@@ -44,7 +44,6 @@ function runDeferredTasks() {
 
 // 主题立即生效；访客追踪和富文本反馈让出关键渲染阶段。
 onMounted(() => {
-  console.log('LG onMounted')
   applyCssVariables()
   if ('requestIdleCallback' in window) {
     deferredHandleType = 'idle'

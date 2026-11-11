@@ -201,6 +201,11 @@ async function readSSEStream(response, handlers = {}) {
     } catch {
       return
     }
+    // 忽略心跳事件（后端每 15 秒发送一次，用于保持连接活跃）
+    if (event.type === 'heartbeat') {
+      return
+    }
+    // 状态事件：携带 status 文本和可选的 stage 阶段标识
     if (event.status) onStatus?.(event.status, event.stage)
     if (event.chunk) onChunk?.(event.chunk)
     if (event.question) onQuestion?.(event.question, event.index)
@@ -217,6 +222,8 @@ async function readSSEStream(response, handlers = {}) {
   }
 
   try {
+    // 持续读取 SSE 流直到完成
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
