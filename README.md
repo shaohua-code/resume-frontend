@@ -232,9 +232,39 @@ npm install
 npm run dev      # 开发服务器 http://localhost:5173
 npm run build    # 生产构建
 npm run preview  # 预览构建
+npm run lint     # ESLint 检查并自动修复
+npm run lint:check  # ESLint 检查（不自动修复）
+npm run test     # 运行单元测试
+npm run test:watch  # 监听模式运行测试
+npm run test:coverage  # 运行测试并生成覆盖率报告
 ```
 
 提交代码前阅读 [`CONTRIBUTING.md`](CONTRIBUTING.md)。输入 `--提交` 时，项目的 `commit-ai-resume` Skill 会审查当前差异、运行必要验证，并按规范创建本地提交；不会自动推送。
+
+## 十五.一、编辑器快捷键
+
+编辑器支持以下键盘快捷键：
+
+| 快捷键 | Mac | 功能 |
+| --- | --- | --- |
+| Ctrl+S | ⌘S | 保存简历 |
+| Ctrl+Shift+P | ⌘⇧P | 导出 PDF |
+| Ctrl+Shift+W | ⌘⇧W | 导出 Word |
+| Ctrl+B | ⌘B | 折叠/展开编辑面板 |
+| Ctrl+Z | ⌘Z | 撤销上次样式应用 |
+
+## 十五.二、AI 生成进度指示器
+
+AI 生成简历时会显示四阶段进度指示器：连接 AI → 分析资料 → 生成简历 → 优化润色。
+
+前端根据后端 SSE 返回的 `stage` 字段自动更新进度，支持的阶段值：
+- `preparing` / `connecting` → 连接 AI
+- `analyzing` / `extracting` → 分析资料
+- `generating` → 生成简历
+- `optimizing` / `validating` → 优化润色
+- `completed` → 完成
+
+后端每 15 秒发送一次心跳事件 `{"type":"heartbeat"}`，前端会自动忽略该事件。
 
 ## 十六、注意事项
 
@@ -242,7 +272,6 @@ npm run preview  # 预览构建
 2. **编辑器组件**位于 `src/views/editor/components/`
 3. 环境变量：`.env.development` / `.env.production`；生产通过 `VITE_API_URL` 指定后端
 4. **计费与门禁**：AI 按账户余额扣费，余额不足时接口返回 402；未绑定邮箱时返回 `EMAIL_BINDING_REQUIRED` 并由全局弹窗完成绑定后重试一次；导出对登录用户免费
-5. 全功能说明见项目根目录 [`AI简历-项目全功能说明.md`](../AI简历-项目全功能说明.md)
 
 ## 十七、风格提示词
 
