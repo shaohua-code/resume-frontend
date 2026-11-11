@@ -273,21 +273,29 @@ export function useResumeExportPrint({
 }) {
   async function handleExportPDF() {
     onStart?.()
+    // 显示进度提示
+    const hideProgress = message.loading('正在准备导出...', 0)
     try {
       // 导出前权限校验与后端导出记录
       if (beforeExport) {
+        hideProgress()
+        message.loading('正在保存简历...', 0)
         const canExport = await beforeExport()
         if (!canExport) return
       }
 
       // 连续三帧读取到相同屏幕分页后才导出，PDF 只使用这批可见页克隆。
+      message.loading('正在生成预览分页...', 0)
       const content = await getStablePrintContent(getPrintContent)
       if (!content?.pages?.length) {
         message.error('预览分页尚未稳定，请稍后重试')
         return
       }
 
+      message.loading('正在构建打印文档...', 0)
+      
       // 引导用户在打印对话框中选择「另存为 PDF」
+      message.destroy()
       message.info('请在打印窗口中选择「另存为 PDF」或「Microsoft Print to PDF」完成导出', 5)
 
       await openPrintDialog(content)
@@ -296,6 +304,7 @@ export function useResumeExportPrint({
       console.error('[导出PDF失败]', e)
       message.error('PDF导出失败')
     } finally {
+      message.destroy()
       onEnd?.()
     }
   }
