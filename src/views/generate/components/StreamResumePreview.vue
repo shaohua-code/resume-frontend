@@ -2,9 +2,11 @@
 /**
  * 流式生成/优化时的简历模板实时预览
  * 使用当前选中模板渲染，不展示原始 JSON
+ * 支持显示 AI 生成进度指示器
  */
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import ResumeTemplate from '@/components/ResumeTemplate.vue'
+import AiGenerationProgress from '@/components/AiGenerationProgress.vue'
 import { DEFAULT_MODULES, fontColorsToCssVars } from '@/constants/editorSettings'
 import { skinThemeToCssVars, EMPTY_SKIN_OVERRIDES } from '@/constants/skin'
 import { clampTemplateId } from '@/constants/templateRegistry'
@@ -43,6 +45,21 @@ const props = defineProps({
   expandCompletedPreview: {
     type: Boolean,
     default: false,
+  },
+  // AI 任务类型：generate | optimize | recognize | jd-optimize
+  taskType: {
+    type: String,
+    default: 'generate',
+  },
+  // 当前 AI 处理阶段：connecting | analyzing | generating | optimizing | completed
+  stage: {
+    type: String,
+    default: 'generating',
+  },
+  // 是否显示进度指示器
+  showProgress: {
+    type: Boolean,
+    default: true,
   },
 })
 
@@ -152,6 +169,15 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="containerRef" class="animate-fade-in">
+    <!-- AI 生成进度指示器：流式输出时展示当前阶段 -->
+    <div v-if="showProgress && loading" class="mb-4 flex justify-center lg:mb-5">
+      <AiGenerationProgress
+        :stage="stage"
+        :loading="loading"
+        :task-type="taskType"
+      />
+    </div>
+
     <p class="mb-2 text-center text-sm font-medium text-brand-dark lg:mb-3">
       {{ loadingHint }}
     </p>

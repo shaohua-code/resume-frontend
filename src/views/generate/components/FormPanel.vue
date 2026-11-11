@@ -125,6 +125,8 @@ const emptyGeneration = () => ({
   resumeId: null,
   saveRequestId: '',
   lastJdText: '',
+  // AI 处理阶段：connecting | analyzing | generating | optimizing | completed
+  stage: 'connecting',
 })
 
 /** 为一次 AI 结果生成稳定保存键；重试保存复用该键，不会重复创建简历。 */
@@ -391,6 +393,8 @@ function beginGeneration(kind, status) {
   draft.generation.result = null
   draft.generation.notes = []
   draft.generation.saveRequestId = createSaveRequestId()
+  // 初始化 AI 处理阶段为连接中
+  draft.generation.stage = 'connecting'
   persistDraft()
   // 开始流式输出时把结果区滚入视口；预览内部由 StreamResumePreview 自动贴底
   scrollToStreamPreview({ behavior: 'smooth', block: 'start' })
@@ -437,12 +441,26 @@ async function executeGenerate() {
     const outcome = await resumeStore.generateResume(getFormSnapshot(), {
       signal: controller.signal,
       clientRequestId: draft.generation.saveRequestId,
-      onStatus: (status) => {
+      onStatus: (status, stageHint) => {
         draft.generation.status = status || 'AI 正在生成并优化简历...'
+        // 根据后端返回的阶段提示更新进度；无提示时按内容推断
+        if (stageHint) {
+          draft.generation.stage = stageHint
+        } else if (status?.includes('分析') || status?.includes('解析')) {
+          draft.generation.stage = 'analyzing'
+        } else if (status?.includes('生成') || status?.includes('撰写')) {
+          draft.generation.stage = 'generating'
+        } else if (status?.includes('优化') || status?.includes('润色')) {
+          draft.generation.stage = 'optimizing'
+        }
       },
       onChunk: (chunk) => {
         draft.generation.streamText += chunk
         draft.generation.status = 'AI 正在流式输出简历内容...'
+        // 收到内容块说明已进入生成阶段
+        if (draft.generation.stage === 'connecting' || draft.generation.stage === 'analyzing') {
+          draft.generation.stage = 'generating'
+        }
       },
       onResult: (result, notes) => preserveGeneratedResult(result, notes),
     })
@@ -495,15 +513,31 @@ async function executeJdOptimize(jdText) {
   try {
     const returned = await optimizeResumeByJdStream(snapshot, jdText, {
       signal: controller.signal,
-      onStatus: (status) => {
+      onStatus: (status, stageHint) => {
         draft.generation.status = status || 'AI 正在结合岗位要求优化简历...'
+        // 根据后端返回的阶段提示更新进度
+        if (stageHint) {
+          draft.generation.stage = stageHint
+        } else if (status?.includes('分析') || status?.includes('解析') || status?.includes('岗位')) {
+          draft.generation.stage = 'analyzing'
+        } else if (status?.includes('匹配') || status?.includes('生成')) {
+          draft.generation.stage = 'generating'
+        } else if (status?.includes('优化') || status?.includes('润色')) {
+          draft.generation.stage = 'optimizing'
+        }
       },
       onChunk: (chunk) => {
         draft.generation.streamText += chunk
         draft.generation.status = '岗位优化内容正在流式输出...'
+        // 收到内容块说明已进入生成阶段
+        if (draft.generation.stage === 'connecting' || draft.generation.stage === 'analyzing') {
+          draft.generation.stage = 'generating'
+        }
       },
       onDone: (data) => {
         finalData = data
+        // 完成时进入优化阶段
+        draft.generation.stage = 'optimizing'
       },
     })
     finalData = finalData || returned
@@ -850,6 +884,9 @@ async function goToEditor() {
             :template-id="resumeStore.currentTemplateId"
             :expand-completed-preview="true"
             :loading-hint="generationLoading ? (draft.generation.status || 'AI 正在处理...') : '简历预览'"
+            :task-type="draft.generation.kind === 'jd' ? 'jd-optimize' : 'generate'"
+            :stage="draft.generation.stage || 'connecting'"
+            :show-progress="generationLoading"
           />
         </section>
 

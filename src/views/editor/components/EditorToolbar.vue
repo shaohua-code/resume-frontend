@@ -71,8 +71,12 @@
               <a-menu-item @click="emit('history')">历史版本</a-menu-item>
               <a-menu-item :disabled="scoring" @click="emit('score')">AI 评分</a-menu-item>
               <a-menu-divider />
-              <a-menu-item v-if="!isMobile" @click="emit('export-pdf')">导出 PDF</a-menu-item>
-              <a-menu-item v-if="!isMobile" @click="emit('export-word')">导出 Word</a-menu-item>
+              <!-- 移动端也启用导出，但 PDF 使用浏览器打印 API 可能效果因设备而异 -->
+              <a-menu-item @click="emit('export-pdf')">
+                <span>导出 PDF</span>
+                <span v-if="isMobile" class="ml-1 text-[10px] text-muted">（建议横屏）</span>
+              </a-menu-item>
+              <a-menu-item @click="emit('export-word')">导出 Word</a-menu-item>
             </a-menu>
           </template>
         </a-dropdown>
